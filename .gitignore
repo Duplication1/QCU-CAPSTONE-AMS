@@ -1,0 +1,50 @@
+# Environment files
+.env
+
+# Node modules (if using npm)
+node_modules/
+package-lock.json
+
+# Compiled CSS
+assets/css/output.css
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Uploaded files (if not needed in repo)
+uploads/
+assets/uploads/
+
+# Backup files
+*.bak
+*.backup
+backup/
+
+# Composer
+vendor/
+composer.lock
+
+# Node modules (if using npm)
+node_modules/
+package-lock.json
+
+# Cache
+cache/
+*.cache
