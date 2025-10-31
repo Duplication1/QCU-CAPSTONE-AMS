@@ -1,100 +1,83 @@
--- Asset Management System Database
--- Create database
-CREATE DATABASE IF NOT EXISTS ams_database;
-USE ams_database;
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Oct 31, 2025 at 08:51 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_number VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    role ENUM('Student', 'Faculty', 'Technician', 'Laboratory Staff', 'Administrator') NOT NULL,
-    status ENUM('Active', 'Inactive', 'Suspended') DEFAULT 'Active',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    last_login DATETIME DEFAULT NULL,
-    INDEX idx_id_number (id_number),
-    INDEX idx_role (role),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Insert sample users for testing
--- Password for all users: password123
 
--- Administrator
-INSERT INTO users (id_number, password, full_name, email, role) VALUES
-('A2024-001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin User', 'admin@ams.edu', 'Administrator');
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- Technician
-INSERT INTO users (id_number, password, full_name, email, role) VALUES
-('T2024-001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John Technician', 'technician@ams.edu', 'Technician');
+--
+-- Database: `ams_database`
+--
 
--- Laboratory Staff
-INSERT INTO users (id_number, password, full_name, email, role) VALUES
-('L2024-001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff');
+-- --------------------------------------------------------
 
--- Faculty
-INSERT INTO users (id_number, password, full_name, email, role) VALUES
-('F2024-001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty');
+--
+-- Table structure for table `users`
+--
 
--- Students
-INSERT INTO users (id_number, password, full_name, email, role) VALUES
-('S2024-001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Student One', 'student1@ams.edu', 'Student'),
-('S2024-002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Student Two', 'student2@ams.edu', 'Student');
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `id_number` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `role` enum('Student','Faculty','Technician','Laboratory Staff','Administrator') NOT NULL,
+  `status` enum('Active','Inactive','Suspended') DEFAULT 'Active',
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `last_login` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Assets table (for future use)
-CREATE TABLE IF NOT EXISTS assets (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    asset_code VARCHAR(50) UNIQUE NOT NULL,
-    asset_name VARCHAR(200) NOT NULL,
-    category VARCHAR(100),
-    description TEXT,
-    status ENUM('Available', 'In Use', 'Maintenance', 'Damaged', 'Disposed') DEFAULT 'Available',
-    location VARCHAR(200),
-    purchase_date DATE,
-    purchase_cost DECIMAL(10,2),
-    assigned_to INT DEFAULT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_asset_code (asset_code),
-    INDEX idx_status (status),
-    INDEX idx_category (category)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+--
+-- Dumping data for table `users`
+--
 
--- Asset requests table (for future use)
-CREATE TABLE IF NOT EXISTS asset_requests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    asset_id INT,
-    request_type ENUM('Borrow', 'Return', 'Maintenance', 'Report Issue') NOT NULL,
-    request_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    requested_from DATE,
-    requested_until DATE,
-    purpose TEXT,
-    status ENUM('Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled') DEFAULT 'Pending',
-    approved_by INT DEFAULT NULL,
-    approval_date DATETIME DEFAULT NULL,
-    notes TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE SET NULL,
-    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    INDEX idx_request_date (request_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`) VALUES
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-10-28 22:08:12', NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-10-28 23:03:14', NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-10-28 23:03:26', NULL),
+(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-10-28 22:01:26', NULL),
+(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:41:09', NULL);
 
--- Activity logs table
-CREATE TABLE IF NOT EXISTS activity_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    action VARCHAR(100) NOT NULL,
-    description TEXT,
-    ip_address VARCHAR(45),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `id_number` (`id_number`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_id_number` (`id_number`),
+  ADD KEY `idx_role` (`role`),
+  ADD KEY `idx_status` (`status`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
