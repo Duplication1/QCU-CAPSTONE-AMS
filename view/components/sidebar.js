@@ -28,18 +28,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDesktopSidebar() {
         if (isCollapsed) {
             sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
+            sidebar.style.width = '80px'; // Adjusted to 80px (75px + 5px)
             mainWrapper.classList.remove('lg:ml-64');
-            mainWrapper.classList.add('lg:ml-20');
+            mainWrapper.style.marginLeft = '80px';
             hideTexts();
-            toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>';
+            // Change icon to chevron-right when collapsed
+            toggleIcon.className = 'fa-solid fa-chevron-right';
         } else {
-            sidebar.classList.remove('w-20');
+            sidebar.style.width = '256px'; // w-64 equivalent
             sidebar.classList.add('w-64');
             mainWrapper.classList.remove('lg:ml-20');
-            mainWrapper.classList.add('lg:ml-64');
+            mainWrapper.style.marginLeft = '256px';
             showAllTexts();
-            toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7"></path>';
+            // Change icon to chevron-left when expanded
+            toggleIcon.className = 'fa-solid fa-chevron-left';
         }
     }
 
@@ -113,17 +115,28 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.add('-translate-x-full', 'lg:translate-x-0');
             mobileOverlay.classList.add('hidden');
             document.body.style.overflow = 'auto';
+            // Reset main wrapper margin for desktop based on collapsed state
+            if (!isCollapsed) {
+                mainWrapper.style.marginLeft = '256px';
+            } else {
+                mainWrapper.style.marginLeft = '80px';
+            }
         } else {
             // Mobile view - hide sidebar by default
             sidebar.classList.add('-translate-x-full');
             mobileOverlay.classList.add('hidden');
             document.body.style.overflow = 'auto';
+            mainWrapper.style.marginLeft = '0';
         }
     });
 
     // Initialize sidebar state based on screen size
     if (window.innerWidth < 1024) {
         sidebar.classList.add('-translate-x-full');
+        mainWrapper.style.marginLeft = '0';
+    } else {
+        // Desktop - ensure proper initial margin
+        mainWrapper.style.marginLeft = '256px';
     }
 
     // Add keyboard support for accessibility

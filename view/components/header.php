@@ -33,9 +33,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
             <!-- Mobile Menu Button & Logo -->
             <div class="flex items-center space-x-4">
                 <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
+                    <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center space-x-3">
                     <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-8 h-8">
