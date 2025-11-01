@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // Create user model instance
+    // Create user model instances
     $userModel = new User();
     
     // Authenticate user
