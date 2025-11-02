@@ -9,15 +9,14 @@
 <body class="min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-5">
     <div class="w-full max-w-md">
         <div class="bg-white rounded-xl shadow-2xl p-8 md:p-10">
+            
             <!-- Header -->
             <div class="text-center mb-8">
-                <div class="mb-4">
-                    <svg class="w-16 h-16 mx-auto text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+                <div class="flex justify-center mb-4">
+                    <img src="../assets/images/qcu-logo.png" alt="QCU Logo" class="w-20 h-20">
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Asset Management System</h1>
-                <p class="text-gray-600 text-sm">Please login to continue</p>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Sign Up</h1>
+                <p class="text-gray-600 text-sm">Enter your student number to continue</p>
             </div>
             
             <?php
@@ -35,10 +34,12 @@
             ?>
             
             <!-- Login Form -->
-            <form action="../controller/login_controller.php" method="POST" class="space-y-6">
+            <form action="../controller/signup_controller.php" method="POST" class="space-y-6 text-left">
+
+                <!-- Student Number -->
                 <div>
                     <label for="id_number" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Student No. / Employee No.
+                        Student No. / Employee No. <span class="text-red-500">*</span>
                     </label>
                     <input type="text" 
                            id="id_number" 
@@ -46,40 +47,46 @@
                            placeholder="Enter your ID number" 
                            required 
                            autocomplete="off"
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition duration-200">
-                   
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                 </div>
-                
+
+                <!-- Password -->
                 <div>
                     <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Password
+                        Password <span class="text-red-500">*</span>
                     </label>
                     <input type="password" 
                            id="password" 
                            name="password" 
                            placeholder="Enter your password" 
                            required
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition duration-200">
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                 </div>
-                
+
+                <!-- Submit Button -->
                 <div>
                     <button type="submit" 
-                            class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg hover:scale-[1.02] active:scale-100 transition duration-200">
-                        Login
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                        Submit
                     </button>
                 </div>
-                
-                <div class="text-center">
-                    <a href="forgot_password.php" class="text-sm text-primary hover:text-secondary hover:underline transition">
-                        Forgot Password?
-                    </a>
-                </div>
-            </form>
+        </form>
+
+        <!-- Divider -->
+            <div class="mt-8 border-t border-gray-200"></div>
+
+         <!-- Link to Login -->
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-600">Already have an account? 
+                    <a href="login.php" class="text-blue-600 hover:text-blue-700 font-semibold">Login</a>
+                </p>
+            </div>
      
         <!-- Footer -->
         <div class="text-center mt-6">
             <p class="text-white text-sm opacity-90">© 2025 Asset Management System. All rights reserved.</p>
         </div>
+
     </div>
 </body>
 </html>
