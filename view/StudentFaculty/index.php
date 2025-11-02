@@ -285,7 +285,7 @@ function handleIssueClick(issueType) {
             break;
             
         case 'borrow':
-            alert('Borrow Equipment feature coming soon!');
+            openBorrowingModal();
             return;
         case 'laboratory':
             alert('Laboratory Concern feature coming soon!');
@@ -391,6 +391,922 @@ document.addEventListener('click', function(e) {
     const modal = document.getElementById('issueModal');
     if (e.target === modal) {
         closeIssueModal();
+    }
+});
+</script>
+
+<!-- Borrowing Equipment Modal -->
+<div id="borrowingModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-6">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="bg-yellow-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
+                <h3 class="text-xl font-bold">
+                    <i class="fa-solid fa-box mr-2"></i>
+                    <span id="borrowingModalTitle">Borrow Equipment</span>
+                </h3>
+                <button onclick="closeBorrowingModal()" class="text-white hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="px-6 py-4 border-b flex-shrink-0 bg-yellow-50">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1 flex items-center">
+                        <div id="step1Indicator" class="w-8 h-8 rounded-full bg-yellow-600 text-white flex items-center justify-center font-bold">1</div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2">
+                            <div id="progress1" class="h-full bg-yellow-600" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex items-center">
+                        <div id="step2Indicator" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2">
+                            <div id="progress2" class="h-full bg-yellow-600" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex items-center">
+                        <div id="step3Indicator" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">3</div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-gray-600">
+                    <span class="flex-1 text-center">Select Asset</span>
+                    <span class="flex-1 text-center">Terms & Conditions</span>
+                    <span class="flex-1 text-center">Preview & Submit</span>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto px-6 py-4 bg-yellow-50/30" style="max-height: calc(90vh - 200px);">
+                <!-- Step 1: Asset Selection -->
+                <div id="step1" class="step-content">
+                    <h4 class="text-lg font-semibold mb-4">Select Equipment to Borrow</h4>
+                    <div id="assetsLoading" class="text-center py-8">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-yellow-600"></i>
+                        <p class="mt-2 text-gray-600">Loading available assets...</p>
+                    </div>
+                    <div id="assetsTableContainer" class="hidden">
+                        <div class="mb-3 p-2 bg-yellow-50 rounded text-sm text-yellow-800 border border-yellow-200">
+                            <i class="fa-solid fa-info-circle mr-2"></i>
+                            Click on any row to select an asset
+                        </div>
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table id="assetsTable" class="display w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Asset Tag</th>
+                                        <th>Asset Name</th>
+                                        <th>Type</th>
+                                        <th>Brand</th>
+                                        <th>Model</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="assetsError" class="hidden text-center py-8 text-red-600"></div>
+                    
+                    <!-- Next Button for Step 1 -->
+                    <div class="mt-6 flex justify-end pb-4">
+                        <button type="button" id="step1NextBtn" onclick="proceedToDetails()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg hidden">
+                            Next: Fill Details<i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 1b: Borrowing Details Form (sub-step) -->
+                <div id="step1b" class="step-content hidden">
+                    <h4 class="text-lg font-semibold mb-4">Borrowing Details</h4>
+                    
+                    <div class="p-4 bg-yellow-50 rounded-lg mb-4 border border-yellow-200">
+                        <h5 class="font-semibold mb-2 text-yellow-900">Selected Asset:</h5>
+                        <div id="selectedAssetInfo" class="text-sm text-yellow-800"></div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Borrow Date: *</label>
+                                <input type="date" id="borrowDate" class="w-full border rounded px-3 py-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Expected Return Date: *</label>
+                                <input type="date" id="returnDate" class="w-full border rounded px-3 py-2" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Purpose: *</label>
+                            <textarea id="borrowPurpose" rows="4" class="w-full border rounded px-3 py-2" placeholder="Describe the purpose of borrowing this equipment..." required></textarea>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-50 rounded border border-gray-300">
+                            <p class="text-sm text-gray-700">
+                                <i class="fa-solid fa-info-circle text-blue-600 mr-2"></i>
+                                Please ensure all information is accurate. You will need to agree to terms and conditions in the next step.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Buttons for Step 1b -->
+                    <div class="mt-6 flex justify-between pb-4">
+                        <button type="button" onclick="backToAssetSelection()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium shadow-lg">
+                            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Selection
+                        </button>
+                        <button type="button" onclick="proceedToTerms()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg">
+                            Next: Terms & Conditions<i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Terms & Conditions -->
+                <div id="step2" class="step-content hidden">
+                    <h4 class="text-lg font-semibold mb-4">Terms and Conditions</h4>
+                    <div class="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto" id="termsContainer">
+                        <div class="prose prose-sm max-w-none">
+                            <h5 class="font-bold text-gray-800 mb-3">Equipment Borrowing Terms and Conditions</h5>
+                            
+                            <p class="mb-3">Please read and understand the following terms and conditions before borrowing any equipment:</p>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">1. Eligibility and Authorization</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>Only enrolled students and authorized faculty members may borrow equipment.</li>
+                                <li>Valid student/faculty ID must be presented upon pickup.</li>
+                                <li>All borrowing requests are subject to approval by laboratory staff.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">2. Borrower's Responsibilities</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>The borrower is solely responsible for the equipment from the time of pickup until return.</li>
+                                <li>Equipment must be used only for the stated academic purpose.</li>
+                                <li>Equipment must not be lent, transferred, or subleased to any other person.</li>
+                                <li>The borrower must handle the equipment with care and follow all safety guidelines.</li>
+                                <li>Any malfunction or damage must be reported immediately to laboratory staff.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">3. Inspection and Condition</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>Equipment will be inspected before lending and upon return.</li>
+                                <li>The borrower must verify the equipment's condition and functionality at pickup.</li>
+                                <li>Any existing damage must be noted and acknowledged before leaving the laboratory.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">4. Return Policy</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>Equipment must be returned on or before the specified return date.</li>
+                                <li>Late returns may result in suspension of borrowing privileges.</li>
+                                <li>Equipment must be returned in the same condition as when borrowed.</li>
+                                <li>All accessories, cables, and components must be returned together.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">5. Damage, Loss, and Liability</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>The borrower is liable for any damage, loss, or theft of the equipment.</li>
+                                <li>Repair or replacement costs will be charged to the borrower's account.</li>
+                                <li>Deliberate damage or misuse may result in disciplinary action.</li>
+                                <li>In case of theft, a police report must be filed and submitted to the university.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">6. Prohibited Use</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>Equipment must not be used for commercial purposes.</li>
+                                <li>Equipment must not be taken outside university premises without authorization.</li>
+                                <li>Equipment must not be modified, disassembled, or repaired by the borrower.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">7. Penalties and Sanctions</h6>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                <li>Failure to return equipment on time may result in borrowing privilege suspension.</li>
+                                <li>Repeated violations may lead to permanent revocation of borrowing privileges.</li>
+                                <li>Academic holds may be placed on accounts with unreturned or damaged equipment.</li>
+                            </ul>
+                            
+                            <h6 class="font-semibold text-gray-800 mt-4 mb-2">8. Acknowledgment</h6>
+                            <p class="text-gray-700 text-sm">By signing this agreement, I acknowledge that I have read, understood, and agree to comply with all the terms and conditions stated above. I understand that violation of these terms may result in penalties, financial liability, and/or disciplinary action.</p>
+                            
+                            <div class="mt-6 p-3 bg-yellow-50 border border-yellow-300 rounded">
+                                <p class="text-sm text-yellow-800 font-medium">
+                                    <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+                                    Important: Please scroll through and read all terms before proceeding.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="flex items-start space-x-3">
+                            <input type="checkbox" id="agreeTerms" class="mt-1" onchange="toggleTermsButton()">
+                            <span class="text-sm text-gray-700">
+                                I have read and agree to all the terms and conditions stated above. I understand my responsibilities and liabilities as a borrower.
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div id="scrollWarning" class="hidden mt-4 p-3 bg-red-50 border border-red-300 rounded">
+                        <p class="text-sm text-red-700">
+                            <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                            Please scroll through the entire terms and conditions document before proceeding.
+                        </p>
+                    </div>
+                    
+                    <!-- Navigation Buttons for Step 2 -->
+                    <div class="mt-6 flex justify-between pb-4">
+                        <button type="button" onclick="backToDetails()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium shadow-lg">
+                            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Details
+                        </button>
+                        <button type="button" id="termsNextBtn" onclick="proceedToPreview()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg opacity-50 cursor-not-allowed" disabled>
+                            Next: Preview & Submit<i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Preview & Submit -->
+                <div id="step3" class="step-content hidden">
+                    <h4 class="text-lg font-semibold mb-4">Equipment Borrowing Agreement Preview</h4>
+                    
+                    <!-- Printable Document Preview -->
+                    <div id="printableDocument" class="border-2 border-gray-300 rounded-lg p-8 bg-white shadow-inner">
+                        <!-- Document Header -->
+                        <div class="text-center mb-6 pb-4 border-b-2 border-gray-800">
+                            <h3 class="text-2xl font-bold text-gray-800">QUEZON CITY UNIVERSITY</h3>
+                            <p class="text-sm text-gray-600">Asset Management System</p>
+                            <h4 class="text-xl font-semibold mt-3 text-gray-800">EQUIPMENT BORROWING AGREEMENT</h4>
+                        </div>
+                        
+                        <!-- Document Content -->
+                        <div class="space-y-4 text-sm">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-gray-600">Date:</p>
+                                    <p class="font-semibold" id="previewDate"></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">Reference No:</p>
+                                    <p class="font-semibold" id="previewRefNo"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h5 class="font-bold text-gray-800 mb-3 text-base">BORROWER INFORMATION</h5>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-600">Name:</p>
+                                        <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['full_name']); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">ID Number:</p>
+                                        <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['id_number'] ?? 'N/A'); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Role:</p>
+                                        <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['role']); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Email:</p>
+                                        <p class="font-semibold"><?php echo htmlspecialchars($_SESSION['email'] ?? 'N/A'); ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h5 class="font-bold text-gray-800 mb-3 text-base">EQUIPMENT DETAILS</h5>
+                                <div class="space-y-2">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-gray-600">Asset Tag:</p>
+                                            <p class="font-semibold" id="previewAssetTag"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">Asset Name:</p>
+                                            <p class="font-semibold" id="previewAssetName"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">Type:</p>
+                                            <p class="font-semibold" id="previewAssetType"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">Brand/Model:</p>
+                                            <p class="font-semibold" id="previewBrandModel"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h5 class="font-bold text-gray-800 mb-3 text-base">BORROWING DETAILS</h5>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-gray-600">Borrow Date:</p>
+                                        <p class="font-semibold" id="previewBorrowDate"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Expected Return Date:</p>
+                                        <p class="font-semibold" id="previewReturnDate"></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-gray-600">Purpose:</p>
+                                    <p class="font-semibold" id="previewPurpose"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 p-4 bg-gray-50 rounded border border-gray-300">
+                                <h5 class="font-bold text-gray-800 mb-2 text-base">BORROWER'S DECLARATION</h5>
+                                <p class="text-xs text-gray-700 leading-relaxed">
+                                    I hereby acknowledge that I have received the above-mentioned equipment in good working condition. 
+                                    I agree to take full responsibility for the equipment and to return it on or before the expected return date 
+                                    in the same condition as received. I have read, understood, and agree to comply with all terms and conditions 
+                                    of the Equipment Borrowing Agreement.
+                                </p>
+                            </div>
+                            
+                            <!-- Signature Section -->
+                            <div class="mt-8 grid grid-cols-2 gap-8">
+                                <div>
+                                    <p class="text-gray-600 mb-2">Borrower's E-Signature:</p>
+                                    <div class="border-2 border-dashed border-gray-400 rounded p-4 bg-gray-50 min-h-24 flex items-center justify-center">
+                                        <?php
+                                        // Get user's e-signature
+                                        require_once '../../model/Database.php';
+                                        $user_id = $_SESSION['user_id'];
+                                        $signature_path = null;
+                                        try {
+                                            $db = new Database();
+                                            $conn = $db->getConnection();
+                                            $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
+                                            $stmt->execute([$user_id]);
+                                            $signature_file = $stmt->fetchColumn();
+                                            if ($signature_file && file_exists('../../uploads/signatures/' . $signature_file)) {
+                                                $signature_path = '../../uploads/signatures/' . $signature_file;
+                                            }
+                                        } catch (PDOException $e) {
+                                            // Handle error silently
+                                        }
+                                        
+                                        if ($signature_path): ?>
+                                            <img src="<?php echo htmlspecialchars($signature_path); ?>" alt="E-Signature" class="max-h-20 max-w-full object-contain" id="borrowerSignature">
+                                        <?php else: ?>
+                                            <p class="text-red-600 text-sm text-center">
+                                                <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+                                                No e-signature found. Please upload your signature in the <a href="e-signature.php" class="text-blue-600 underline">E-Signature page</a>.
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="mt-2 text-center font-semibold border-t border-gray-400 pt-1"><?php echo htmlspecialchars($_SESSION['full_name']); ?></p>
+                                    <p class="text-center text-xs text-gray-600">Borrower's Name</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-gray-600 mb-2">Released By:</p>
+                                    <div class="border-2 border-dashed border-gray-400 rounded p-4 bg-gray-50 min-h-24 flex items-center justify-center">
+                                        <p class="text-gray-400 text-sm text-center">
+                                            <i class="fa-solid fa-user-clock text-2xl mb-2 block"></i>
+                                            To be signed by Laboratory Staff
+                                        </p>
+                                    </div>
+                                    <p class="mt-2 text-center font-semibold border-t border-gray-400 pt-1">_______________________</p>
+                                    <p class="text-center text-xs text-gray-600">Laboratory Staff Signature</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-yellow-50 rounded border border-yellow-300 mb-4">
+                        <p class="text-sm text-yellow-800">
+                            <i class="fa-solid fa-info-circle mr-2"></i>
+                            This is a preview of your borrowing agreement. You can print this document after submission for your records.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-yellow-50 rounded-b-lg flex justify-between items-center flex-shrink-0 border-t border-yellow-200">
+                <div class="text-sm text-gray-600 font-medium" id="stepIndicatorText">Step 1 of 4</div>
+                <div class="flex gap-3">
+                    <button type="button" id="submitBorrowBtn" onclick="submitBorrowing()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
+                        <i class="fa-solid fa-check mr-2"></i>Submit Request
+                    </button>
+                    <button type="button" id="printBtn" onclick="printDocument()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
+                        <i class="fa-solid fa-print mr-2"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* DataTables Custom Styling */
+#assetsTable {
+    font-size: 0.875rem;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+#assetsTable thead th {
+    background-color: #fef3c7;
+    font-weight: 600;
+    padding: 12px 16px !important;
+    border-bottom: 2px solid #fcd34d;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#assetsTable tbody td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+#assetsTable tbody tr {
+    transition: all 0.2s ease;
+}
+
+#assetsTable tbody tr:hover {
+    background-color: #fef9e7 !important;
+}
+
+#assetsTable tbody tr.bg-yellow-100 {
+    background-color: #fef3c7 !important;
+    border-left: 4px solid #f59e0b !important;
+}
+
+#assetsTable tbody tr.border-l-4 {
+    border-left: 4px solid #d97706 !important;
+}
+
+/* DataTables Wrapper Styling */
+.dataTables_wrapper {
+    width: 100%;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    padding: 0.375rem 2rem 0.375rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    margin: 0 0.5rem;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    margin-left: 0.5rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.375rem 0.75rem;
+    margin: 0 0.125rem;
+    border-radius: 0.375rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #d97706 !important;
+    color: white !important;
+    border: 1px solid #d97706 !important;
+}
+
+/* Fix table header/body alignment */
+.dataTables_scrollHead {
+    overflow: visible !important;
+}
+
+.dataTables_scrollBody {
+    overflow: visible !important;
+}
+
+/* Ensure buttons are always visible */
+.step-content {
+    min-height: 400px;
+}
+
+/* Row selection styling */
+#assetsTable tbody tr.cursor-pointer {
+    cursor: pointer;
+}
+
+#assetsTable tbody tr.selected {
+    background-color: #fef3c7 !important;
+    border-left: 4px solid #d97706;
+}
+</style>
+
+<script>
+let currentStep = 1;
+let selectedAsset = null;
+let borrowingData = {};
+let hasScrolledTerms = false;
+let availableAssets = [];
+let assetsDataTable = null;
+
+// Open Borrowing Modal
+async function openBorrowingModal() {
+    document.getElementById('borrowingModal').classList.remove('hidden');
+    currentStep = 1;
+    updateStepDisplay();
+    loadBorrowableAssets();
+}
+
+// Close Borrowing Modal
+function closeBorrowingModal() {
+    document.getElementById('borrowingModal').classList.add('hidden');
+    if (assetsDataTable) {
+        assetsDataTable.destroy();
+        assetsDataTable = null;
+    }
+    resetBorrowingModal();
+}
+
+// Reset Modal
+function resetBorrowingModal() {
+    currentStep = 1;
+    selectedAsset = null;
+    borrowingData = {};
+    hasScrolledTerms = false;
+    
+    // Reset form fields
+    document.getElementById('agreeTerms').checked = false;
+    document.getElementById('borrowDate').value = '';
+    document.getElementById('returnDate').value = '';
+    document.getElementById('borrowPurpose').value = '';
+    document.getElementById('step1NextBtn').classList.add('hidden');
+    
+    // Hide all steps
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step1b').classList.add('hidden');
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.add('hidden');
+    
+    // Show step 1
+    document.getElementById('step1').classList.remove('hidden');
+    
+    // Reset table selection
+    $('#assetsTable tbody tr').removeClass('bg-yellow-100 border-l-4 border-yellow-600');
+    
+    // Reset loading/error states
+    document.getElementById('assetsLoading').classList.remove('hidden');
+    document.getElementById('assetsTableContainer').classList.add('hidden');
+    document.getElementById('assetsError').classList.add('hidden');
+    
+    // Reset terms scroll
+    document.getElementById('scrollWarning').classList.add('hidden');
+    const termsNextBtn = document.getElementById('termsNextBtn');
+    if (termsNextBtn) {
+        termsNextBtn.disabled = true;
+        termsNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // Update step display
+    updateStepDisplay();
+}
+
+// Load Borrowable Assets
+async function loadBorrowableAssets() {
+    const loadingDiv = document.getElementById('assetsLoading');
+    const tableContainer = document.getElementById('assetsTableContainer');
+    const errorDiv = document.getElementById('assetsError');
+    
+    try {
+        const response = await fetch('../../controller/get_borrowable_assets.php');
+        const data = await response.json();
+        
+        if (data.success && data.assets.length > 0) {
+            availableAssets = data.assets;
+            displayAssetsTable(data.assets);
+            loadingDiv.classList.add('hidden');
+            tableContainer.classList.remove('hidden');
+        } else {
+            loadingDiv.classList.add('hidden');
+            errorDiv.classList.remove('hidden');
+            errorDiv.innerHTML = '<i class="fa-solid fa-box-open text-4xl text-gray-400 mb-2"></i><p>No borrowable assets available at the moment.</p>';
+        }
+    } catch (error) {
+        loadingDiv.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-2"></i><p>Error loading assets. Please try again.</p>';
+    }
+}
+
+// Display Assets in DataTable
+function displayAssetsTable(assets) {
+    // Destroy existing DataTable if it exists
+    if (assetsDataTable) {
+        assetsDataTable.destroy();
+    }
+    
+    // Prepare data for DataTable with asset IDs
+    const tableData = assets.map(asset => ({
+        id: asset.id,
+        data: [
+            asset.asset_tag,
+            asset.asset_name,
+            asset.asset_type,
+            asset.brand || '-',
+            asset.model || '-',
+            asset.room_name || '-'
+        ]
+    }));
+    
+    // Initialize DataTable
+    assetsDataTable = $('#assetsTable').DataTable({
+        data: tableData.map(item => item.data),
+        pageLength: 10,
+        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+        language: {
+            search: "Search assets:",
+            lengthMenu: "Show _MENU_ assets",
+            info: "Showing _START_ to _END_ of _TOTAL_ assets",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            },
+            emptyTable: "No borrowable assets available",
+            zeroRecords: "No matching assets found"
+        },
+        order: [[0, 'asc']], // Sort by asset tag by default
+        dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
+        scrollX: false,
+        autoWidth: true,
+        createdRow: function(row, data, dataIndex) {
+            // Store asset ID in row
+            $(row).attr('data-asset-id', tableData[dataIndex].id);
+            // Make row clickable
+            $(row).addClass('cursor-pointer hover:bg-yellow-50 transition-colors');
+        }
+    });
+    
+    // Add click event to rows
+    $('#assetsTable tbody').on('click', 'tr', function() {
+        const assetId = $(this).attr('data-asset-id');
+        if (assetId) {
+            selectAssetFromTable(parseInt(assetId));
+        }
+    });
+}
+
+// Select Asset from Table
+function selectAssetFromTable(assetId) {
+    selectedAsset = availableAssets.find(a => a.id == assetId);
+    
+    // Show next button
+    document.getElementById('step1NextBtn').classList.remove('hidden');
+    
+    // Highlight selected row
+    $('#assetsTable tbody tr').removeClass('bg-yellow-100 border-l-4 border-yellow-600');
+    $('#assetsTable tbody tr[data-asset-id="' + assetId + '"]').addClass('bg-yellow-100 border-l-4 border-yellow-600');
+}
+
+// Proceed to Details Form
+function proceedToDetails() {
+    if (!selectedAsset) {
+        alert('Please select an asset first.');
+        return;
+    }
+    
+    // Hide step 1, show step 1b
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step1b').classList.remove('hidden');
+    
+    // Update step indicator
+    currentStep = 1.5;
+    updateStepDisplay();
+    
+    // Display selected asset info
+    document.getElementById('selectedAssetInfo').innerHTML = `
+        <p><strong>Asset Tag:</strong> ${selectedAsset.asset_tag}</p>
+        <p><strong>Name:</strong> ${selectedAsset.asset_name}</p>
+        <p><strong>Type:</strong> ${selectedAsset.asset_type}</p>
+        ${selectedAsset.brand ? `<p><strong>Brand/Model:</strong> ${selectedAsset.brand} ${selectedAsset.model || ''}</p>` : ''}
+    `;
+    
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('borrowDate').min = today;
+    document.getElementById('returnDate').min = today;
+}
+
+// Back to Asset Selection
+function backToAssetSelection() {
+    document.getElementById('step1b').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    currentStep = 1;
+    updateStepDisplay();
+}
+
+// Proceed to Terms
+function proceedToTerms() {
+    const borrowDate = document.getElementById('borrowDate').value;
+    const returnDate = document.getElementById('returnDate').value;
+    const purpose = document.getElementById('borrowPurpose').value;
+    
+    if (!borrowDate || !returnDate || !purpose) {
+        alert('Please fill in all borrowing details.');
+        return;
+    }
+    
+    if (new Date(returnDate) <= new Date(borrowDate)) {
+        alert('Return date must be after borrow date.');
+        return;
+    }
+    
+    borrowingData = {
+        asset_id: selectedAsset.id,
+        asset_tag: selectedAsset.asset_tag,
+        asset_name: selectedAsset.asset_name,
+        asset_type: selectedAsset.asset_type,
+        brand: selectedAsset.brand,
+        model: selectedAsset.model,
+        borrow_date: borrowDate,
+        return_date: returnDate,
+        purpose: purpose
+    };
+    
+    // Hide step 1b, show step 2
+    document.getElementById('step1b').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    currentStep = 2;
+    updateStepDisplay();
+}
+
+// Back to Details
+function backToDetails() {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step1b').classList.remove('hidden');
+    currentStep = 1.5;
+    updateStepDisplay();
+}
+
+// Proceed to Preview
+function proceedToPreview() {
+    if (!hasScrolledTerms) {
+        document.getElementById('scrollWarning').classList.remove('hidden');
+        return;
+    }
+    
+    if (!document.getElementById('agreeTerms').checked) {
+        alert('Please agree to the terms and conditions.');
+        return;
+    }
+    
+    // Populate preview
+    populatePreview();
+    
+    // Hide step 2, show step 3
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.remove('hidden');
+    currentStep = 3;
+    updateStepDisplay();
+}
+
+// Track Terms Scroll
+document.getElementById('termsContainer')?.addEventListener('scroll', function() {
+    const container = this;
+    const scrollPercentage = (container.scrollTop / (container.scrollHeight - container.clientHeight)) * 100;
+    if (scrollPercentage > 90) {
+        hasScrolledTerms = true;
+        document.getElementById('scrollWarning').classList.add('hidden');
+        toggleTermsButton();
+    }
+});
+
+// Toggle Terms Button
+function toggleTermsButton() {
+    const termsCheckbox = document.getElementById('agreeTerms');
+    const termsNextBtn = document.getElementById('termsNextBtn');
+    
+    if (termsCheckbox.checked && hasScrolledTerms) {
+        termsNextBtn.disabled = false;
+        termsNextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        termsNextBtn.disabled = true;
+        termsNextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+// Update Step Display
+function updateStepDisplay() {
+    // Update progress indicators
+    const stepMap = {
+        1: 1,      // Asset selection
+        1.5: 1,    // Details form
+        2: 2,      // Terms
+        3: 3       // Preview
+    };
+    
+    const displayStep = stepMap[currentStep] || currentStep;
+    
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}Indicator`);
+        if (i < displayStep) {
+            indicator.className = 'w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold';
+            indicator.innerHTML = '<i class="fa-solid fa-check"></i>';
+            if (i < 3) document.getElementById(`progress${i}`).style.width = '100%';
+        } else if (i === displayStep) {
+            indicator.className = 'w-8 h-8 rounded-full bg-yellow-600 text-white flex items-center justify-center font-bold';
+            indicator.textContent = i;
+            if (i > 1) document.getElementById(`progress${i-1}`).style.width = '100%';
+        } else {
+            indicator.className = 'w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold';
+            indicator.textContent = i;
+            if (i < 3) document.getElementById(`progress${i}`).style.width = '0%';
+        }
+    }
+    
+    // Update footer step indicator
+    const stepTexts = {
+        1: 'Step 1 of 4: Select Asset',
+        1.5: 'Step 2 of 4: Fill Details',
+        2: 'Step 3 of 4: Terms & Conditions',
+        3: 'Step 4 of 4: Preview & Submit'
+    };
+    document.getElementById('stepIndicatorText').textContent = stepTexts[currentStep] || 'Step 1 of 4';
+    
+    // Update buttons
+    document.getElementById('submitBorrowBtn').classList.toggle('hidden', currentStep !== 3);
+    document.getElementById('printBtn').classList.toggle('hidden', currentStep !== 3);
+}
+
+// Populate Preview
+function populatePreview() {
+    const now = new Date();
+    document.getElementById('previewDate').textContent = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('previewRefNo').textContent = 'BR-' + now.getTime();
+    document.getElementById('previewAssetTag').textContent = borrowingData.asset_tag;
+    document.getElementById('previewAssetName').textContent = borrowingData.asset_name;
+    document.getElementById('previewAssetType').textContent = borrowingData.asset_type;
+    document.getElementById('previewBrandModel').textContent = borrowingData.brand ? `${borrowingData.brand} ${borrowingData.model || ''}` : 'N/A';
+    document.getElementById('previewBorrowDate').textContent = new Date(borrowingData.borrow_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('previewReturnDate').textContent = new Date(borrowingData.return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('previewPurpose').textContent = borrowingData.purpose;
+}
+
+// Submit Borrowing
+function submitBorrowing() {
+    // Check if user has e-signature
+    const signatureImg = document.getElementById('borrowerSignature');
+    if (!signatureImg) {
+        alert('You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to submit this borrowing request?')) {
+        return;
+    }
+    
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '../../controller/submit_borrowing.php';
+    
+    const fields = {
+        asset_id: borrowingData.asset_id,
+        borrowed_date: borrowingData.borrow_date,
+        expected_return_date: borrowingData.return_date,
+        purpose: borrowingData.purpose,
+        agreed_to_terms: '1'
+    };
+    
+    for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Print Document
+function printDocument() {
+    const printContent = document.getElementById('printableDocument').innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    location.reload(); // Reload to restore event listeners
+}
+
+// Set min date for borrow date on load
+document.addEventListener('DOMContentLoaded', function() {
+    const borrowDateInput = document.getElementById('borrowDate');
+    const returnDateInput = document.getElementById('returnDate');
+    
+    if (borrowDateInput) {
+        borrowDateInput.addEventListener('change', function() {
+            returnDateInput.min = this.value;
+        });
     }
 });
 </script>

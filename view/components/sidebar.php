@@ -76,6 +76,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-list',
             'color' => 'yellow',
             'href' => 'registry.php'
+        ],
+        [
+            'id' => 'e-signature',
+            'label' => 'My E-Signature',
+            'icon' => 'fa-solid fa-signature',
+            'color' => 'yellow',
+            'href' => 'e-signature.php'
         ]
     ],
     'Student' => [
@@ -92,6 +99,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-check',
             'color' => 'yellow',
             'href' => 'requests.php'
+        ],
+        [
+            'id' => 'e-signature',
+            'label' => 'My E-Signature',
+            'icon' => 'fa-solid fa-signature',
+            'color' => 'yellow',
+            'href' => 'e-signature.php'
         ]
     ],
     'Faculty' => [
@@ -108,6 +122,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-check',
             'color' => 'yellow',
             'href' => 'requests.php'
+        ],
+        [
+            'id' => 'e-signature',
+            'label' => 'My E-Signature',
+            'icon' => 'fa-solid fa-signature',
+            'color' => 'yellow',
+            'href' => 'e-signature.php'
         ]
     ],
     'Technician' => [
