@@ -26,32 +26,32 @@ if (!isset($conn)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $ticketId = intval($_POST['ticket_id']);
     $newStatus = $_POST['status'];
-    
+
     if (in_array($newStatus, ['Open', 'In Progress', 'Resolved', 'Closed'])) {
-        $updateStmt = $conn->prepare("UPDATE hardware_issues SET status = ? WHERE id = ?");
+        $updateStmt = $conn->prepare("UPDATE issues SET status = ? WHERE id = ?");
         $updateStmt->bind_param('si', $newStatus, $ticketId);
         $updateStmt->execute();
         $updateStmt->close();
-        
+
         $_SESSION['success_message'] = 'Ticket status updated successfully!';
-        echo "<script>window.location.href = 'tickets.php';</script>";
+        header("Location: tickets.php");
         exit;
     }
 }
 
-// Handle assign technician
+// Handle assign technician (stored in assigned_group column)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician'])) {
     $ticketId = intval($_POST['ticket_id']);
     $technicianName = trim($_POST['technician_name']);
-    
+
     if (!empty($technicianName)) {
-        $assignStmt = $conn->prepare("UPDATE hardware_issues SET assigned_technician = ? WHERE id = ?");
+        $assignStmt = $conn->prepare("UPDATE issues SET assigned_group = ? WHERE id = ?");
         $assignStmt->bind_param('si', $technicianName, $ticketId);
         $assignStmt->execute();
         $assignStmt->close();
-        
+
         $_SESSION['success_message'] = 'Technician assigned successfully!';
-        echo "<script>window.location.href = 'tickets.php';</script>";
+        header("Location: tickets.php");
         exit;
     }
 }
@@ -69,47 +69,47 @@ if ($techniciansResult && $techniciansResult->num_rows > 0) {
 // Get filter from URL parameter
 $filterType = isset($_GET['type']) ? $_GET['type'] : 'all';
 
-// Build query based on filter
-if ($filterType === 'all') {
-    $query = "SELECT * FROM hardware_issues ORDER BY 
-              CASE priority 
-                WHEN 'High' THEN 1 
-                WHEN 'Medium' THEN 2 
-                WHEN 'Low' THEN 3 
-              END, 
-              created_at DESC";
-} else {
-    $query = "SELECT * FROM hardware_issues WHERE issue_type = ? ORDER BY 
-              CASE priority 
-                WHEN 'High' THEN 1 
-                WHEN 'Medium' THEN 2 
-                WHEN 'Low' THEN 3 
-              END, 
-              created_at DESC";
-}
+// Normalize filter (categories stored as lowercase or mixed — compare case-insensitively)
+$allowed = ['all','hardware','software','network','laboratory','other'];
+$filterKey = strtolower($filterType);
+if (!in_array($filterKey, $allowed)) $filterKey = 'all';
 
-// Execute query
-if ($filterType === 'all') {
+// Build query based on filter — use unified issues table and join users for reporter name
+if ($filterKey === 'all') {
+    $query = "SELECT i.*, u.full_name AS reporter_name
+              FROM issues i
+              LEFT JOIN users u ON u.id = i.user_id
+              WHERE COALESCE(i.category,'') <> 'borrow'
+              ORDER BY 
+                CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
+                i.created_at DESC";
     $result = $conn->query($query);
 } else {
+    $query = "SELECT i.*, u.full_name AS reporter_name
+              FROM issues i
+              LEFT JOIN users u ON u.id = i.user_id
+              WHERE LOWER(COALESCE(i.category,'')) = ?
+                AND COALESCE(i.category,'') <> 'borrow'
+              ORDER BY 
+                CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
+                i.created_at DESC";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('s', $filterType);
+    $stmt->bind_param('s', $filterKey);
     $stmt->execute();
     $result = $stmt->get_result();
 }
 
-// Count tickets by type
-$countQuery = "SELECT 
-                issue_type,
-                COUNT(*) as count
-              FROM hardware_issues 
-              GROUP BY issue_type";
+// Count tickets by category (exclude borrow)
+$countQuery = "SELECT LOWER(COALESCE(category,'')) AS category, COUNT(*) as count FROM issues WHERE COALESCE(category,'') <> 'borrow' GROUP BY LOWER(COALESCE(category,''))";
 $countResult = $conn->query($countQuery);
-$counts = ['Hardware' => 0, 'Software' => 0, 'Network' => 0, 'all' => 0];
-
-while ($row = $countResult->fetch_assoc()) {
-    $counts[$row['issue_type']] = $row['count'];
-    $counts['all'] += $row['count'];
+$counts = ['all' => 0, 'hardware' => 0, 'software' => 0, 'network' => 0, 'laboratory' => 0, 'other' => 0];
+if ($countResult) {
+    while ($row = $countResult->fetch_assoc()) {
+        $cat = $row['category'];
+        if (!isset($counts[$cat])) $counts[$cat] = 0;
+        $counts[$cat] = (int)$row['count'];
+        $counts['all'] += (int)$row['count'];
+    }
 }
 
 // Get success message
@@ -135,34 +135,50 @@ include '../components/layout_header.php';
                     <!-- Filter Tabs -->
                     <div class="flex flex-wrap gap-2 mb-4">
                         <a href="tickets.php?type=all" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterType === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                             All Issues
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterType === 'all' ? 'bg-gray-700' : 'bg-gray-300'; ?>">
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'all' ? 'bg-gray-700' : 'bg-gray-300'; ?>">
                                 <?php echo $counts['all']; ?>
                             </span>
                         </a>
                         
-                        <a href="tickets.php?type=Hardware" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterType === 'Hardware' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'; ?>">
+                        <a href="tickets.php?type=hardware" 
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'hardware' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'; ?>">
                             Hardware
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterType === 'Hardware' ? 'bg-blue-500' : 'bg-blue-200'; ?>">
-                                <?php echo $counts['Hardware']; ?>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'hardware' ? 'bg-gray-500' : 'bg-blue-200'; ?>">
+                                <?php echo $counts['hardware']; ?>
                             </span>
                         </a>
                         
-                        <a href="tickets.php?type=Software" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterType === 'Software' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'; ?>">
+                        <a href="tickets.php?type=software" 
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'software' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'; ?>">
                             Software
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterType === 'Software' ? 'bg-green-500' : 'bg-green-200'; ?>">
-                                <?php echo $counts['Software']; ?>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'software' ? 'bg-green-500' : 'bg-green-200'; ?>">
+                                <?php echo $counts['software']; ?>
                             </span>
                         </a>
                         
-                        <a href="tickets.php?type=Network" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterType === 'Network' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800 hover:bg-purple-200'; ?>">
+                        <a href="tickets.php?type=network" 
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'network' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800 hover:bg-purple-200'; ?>">
                             Network
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterType === 'Network' ? 'bg-purple-500' : 'bg-purple-200'; ?>">
-                                <?php echo $counts['Network']; ?>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'network' ? 'bg-purple-500' : 'bg-purple-200'; ?>">
+                                <?php echo $counts['network']; ?>
+                            </span>
+                        </a>
+
+                        <a href="tickets.php?type=laboratory" 
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'laboratory' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'; ?>">
+                            Laboratory
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'laboratory' ? 'bg-indigo-500' : 'bg-indigo-200'; ?>">
+                                <?php echo $counts['laboratory']; ?>
+                            </span>
+                        </a>
+
+                        <a href="tickets.php?type=other" 
+                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'other' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                            Other
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'other' ? 'bg-gray-700' : 'bg-gray-300'; ?>">
+                                <?php echo $counts['other']; ?>
                             </span>
                         </a>
                     </div>
@@ -171,10 +187,10 @@ include '../components/layout_header.php';
                     <div class="text-sm text-gray-600">
                         Showing: <span class="font-semibold text-gray-800">
                             <?php 
-                            if ($filterType === 'all') {
+                            if ($filterKey === 'all') {
                                 echo 'All Issues';
                             } else {
-                                echo $filterType . ' Issues';
+                                echo ucfirst($filterKey) . ' Issues';
                             }
                             ?>
                         </span>
@@ -188,42 +204,41 @@ include '../components/layout_header.php';
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Technician</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php while ($ticket = $result->fetch_assoc()): ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    #<?php echo htmlspecialchars($ticket['id']); ?>
-                                </td>
+                                <!-- ID column hidden for list view (still available in detail modal) -->
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Technician</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <!-- Reporter hidden in list; shown in modal details -->
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                             </tr>
+                         </thead>
+                         <tbody class="bg-white divide-y divide-gray-200">
+                             <?php while ($ticket = $result->fetch_assoc()): ?>
+                             <tr class="hover:bg-gray-50" data-ticket-id="<?php echo (int)$ticket['id']; ?>">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php
-                                    $typeColors = [
-                                        'Hardware' => 'bg-blue-100 text-blue-800',
-                                        'Software' => 'bg-green-100 text-green-800',
-                                        'Network' => 'bg-purple-100 text-purple-800'
-                                    ];
-                                    $issueType = $ticket['issue_type'] ?? 'Hardware';
-                                    $typeClass = $typeColors[$issueType] ?? 'bg-gray-100 text-gray-800';
-                                    ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $typeClass; ?>">
-                                        <?php echo htmlspecialchars($issueType); ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                     <?php
+                                     $typeColors = [
+                                         'hardware' => 'bg-blue-100 text-blue-800',
+                                         'software' => 'bg-green-100 text-green-800',
+                                         'network' => 'bg-purple-100 text-purple-800',
+                                         'laboratory' => 'bg-indigo-100 text-indigo-800',
+                                         'other' => 'bg-gray-100 text-gray-800'
+                                     ];
+                                     $issueType = strtolower($ticket['category'] ?? 'hardware');
+                                     $typeClass = $typeColors[$issueType] ?? 'bg-gray-100 text-gray-800';
+                                     ?>
+                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $typeClass; ?>">
+                                         <?php echo htmlspecialchars(ucfirst($issueType)); ?>
+                                     </span>
+                                 </td>
+                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 assigned-cell">
                                     <?php 
-                                    $technician = $ticket['assigned_technician'] ?? null;
+                                    $technician = $ticket['assigned_group'] ?? null;
                                     if ($technician) {
                                         echo '<span class="text-green-700 font-medium">' . htmlspecialchars($technician) . '</span>';
                                     } else {
@@ -232,13 +247,13 @@ include '../components/layout_header.php';
                                     ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($ticket['room']); ?>
+                                    <?php echo htmlspecialchars($ticket['room'] ?? '-'); ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($ticket['terminal']); ?>
+                                    <?php echo htmlspecialchars($ticket['terminal'] ?? '-'); ?>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($ticket['title']); ?>
+                                    <?php echo htmlspecialchars($ticket['title'] ?? '-'); ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <?php
@@ -250,7 +265,7 @@ include '../components/layout_header.php';
                                     $priorityClass = $priorityColors[$ticket['priority']] ?? 'bg-gray-100 text-gray-800';
                                     ?>
                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $priorityClass; ?>">
-                                        <?php echo htmlspecialchars($ticket['priority']); ?>
+                                        <?php echo htmlspecialchars($ticket['priority'] ?? 'Medium'); ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -264,23 +279,20 @@ include '../components/layout_header.php';
                                     $statusClass = $statusColors[$ticket['status']] ?? 'bg-gray-100 text-gray-800';
                                     ?>
                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
-                                        <?php echo htmlspecialchars($ticket['status']); ?>
+                                        <?php echo htmlspecialchars($ticket['status'] ?? 'Open'); ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($ticket['submitted_by'] ?? $ticket['requester_name'] ?? 'N/A'); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo date('M d, Y H:i', strtotime($ticket['created_at'])); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onclick="viewTicket(<?php echo $ticket['id']; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                    <button onclick="assignTechnician(<?php echo $ticket['id']; ?>, '<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>')" class="text-purple-600 hover:text-purple-900 mr-3">Assign</button>
-                                    <button onclick="updateStatus(<?php echo $ticket['id']; ?>, '<?php echo $ticket['status']; ?>')" class="text-green-600 hover:text-green-900">Update</button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
+                                <!-- Reporter column removed from list view -->
+                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                     <?php echo !empty($ticket['created_at']) ? date('M d, Y H:i', strtotime($ticket['created_at'])) : '-'; ?>
+                                 </td>
+                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                     <button onclick="viewTicket(<?php echo (int)$ticket['id']; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                     <button onclick="assignTechnician(<?php echo (int)$ticket['id']; ?>, '<?php echo htmlspecialchars($ticket['assigned_group'] ?? '', ENT_QUOTES); ?>')" class="text-gray-600 hover:text-gray-900">Assign</button>
+                                 </td>
+                             </tr>
+                             <?php endwhile; ?>
+                         </tbody>
                     </table>
                 </div>
                 <?php else: ?>
@@ -291,10 +303,10 @@ include '../components/layout_header.php';
                     <h3 class="mt-2 text-sm font-medium text-gray-900">No tickets found</h3>
                     <p class="mt-1 text-sm text-gray-500">
                         <?php 
-                        if ($filterType === 'all') {
+                        if ($filterKey === 'all') {
                             echo 'No issues have been submitted yet.';
                         } else {
-                            echo 'No ' . htmlspecialchars($filterType) . ' issues found.';
+                            echo 'No ' . htmlspecialchars(ucfirst($filterKey)) . ' issues found.';
                         }
                         ?>
                     </p>
@@ -328,7 +340,7 @@ include '../components/layout_header.php';
             <h3 class="text-lg font-semibold">Assign Technician</h3>
             <button onclick="closeAssignModal()" class="text-gray-600 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        <form method="POST" class="space-y-4">
+        <form id="assignForm" class="space-y-4">
             <input type="hidden" name="ticket_id" id="assignTicketId">
             <input type="hidden" name="assign_technician" value="1">
             <div>
@@ -342,7 +354,7 @@ include '../components/layout_header.php';
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeAssignModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">Cancel</button>
-                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Assign</button>
+                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">Assign</button>
             </div>
         </form>
     </div>
@@ -383,7 +395,7 @@ function viewTicket(ticketId) {
         .then(data => {
             if (data.success) {
                 const ticket = data.ticket;
-                const issueType = ticket.issue_type || 'Hardware';
+                const issueType = ticket.category || 'Hardware';
                 document.getElementById('ticketDetails').innerHTML = `
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -396,40 +408,40 @@ function viewTicket(ticketId) {
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Assigned Technician</p>
-                            <p class="text-base text-gray-900">${ticket.assigned_technician || 'Not assigned'}</p>
+                            <p class="text-base text-gray-900">${ticket.assigned_group || 'Not assigned'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Submitted By</p>
-                            <p class="text-base text-gray-900">${ticket.submitted_by || ticket.requester_name || 'N/A'}</p>
+                            <p class="text-base text-gray-900">${ticket.reporter_name || 'N/A'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Room</p>
-                            <p class="text-base text-gray-900">${ticket.room}</p>
+                            <p class="text-base text-gray-900">${ticket.room || '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Terminal</p>
-                            <p class="text-base text-gray-900">${ticket.terminal}</p>
+                            <p class="text-base text-gray-900">${ticket.terminal || '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Priority</p>
-                            <p class="text-base text-gray-900">${ticket.priority}</p>
+                            <p class="text-base text-gray-900">${ticket.priority || '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Status</p>
-                            <p class="text-base text-gray-900">${ticket.status}</p>
+                            <p class="text-base text-gray-900">${ticket.status || '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Created At</p>
-                            <p class="text-base text-gray-900">${new Date(ticket.created_at).toLocaleString()}</p>
+                            <p class="text-base text-gray-900">${ticket.created_at ? new Date(ticket.created_at).toLocaleString() : '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Last Updated</p>
-                            <p class="text-base text-gray-900">${new Date(ticket.updated_at).toLocaleString()}</p>
+                            <p class="text-base text-gray-900">${ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : '-'}</p>
                         </div>
                     </div>
                     <div class="mt-4">
                         <p class="text-sm font-medium text-gray-500">Issue Title</p>
-                        <p class="text-base text-gray-900">${ticket.title}</p>
+                        <p class="text-base text-gray-900">${ticket.title || '-'}</p>
                     </div>
                     <div class="mt-4">
                         <p class="text-sm font-medium text-gray-500">Description</p>
@@ -457,6 +469,38 @@ function assignTechnician(ticketId, currentTechnician) {
     document.getElementById('assignModal').classList.remove('hidden');
     setTimeout(() => techSelect.focus(), 100);
 }
+
+document.getElementById('assignForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    console.log('assignForm data:', Array.from(fd.entries()));
+    fetch('../../controller/assign_ticket.php', { method:'POST', body: fd, credentials:'same-origin' })
+    .then(async r => {
+        const text = await r.text();
+        console.log('HTTP status', r.status, 'response text:', text);
+        try { return JSON.parse(text); } 
+        catch (err) { throw new Error('Invalid JSON response: ' + text); }
+    })
+    .then(json => {
+        console.log('Parsed JSON:', json);
+        if (json.success) {
+            // update UI
+            const row = document.querySelector('tr[data-ticket-id="'+json.ticket_id+'"]');
+            if (row) {
+                const assignedCell = row.querySelector('.assigned-cell');
+                if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_group||'') +'</span>';
+            }
+            closeAssignModal();
+            alert(json.message || 'Assigned');
+        } else {
+            alert('Server error: ' + (json.message||'Unknown'));
+        }
+    })
+    .catch(err => {
+        console.error('Fetch/parse error:', err);
+        alert('Error: Failed to submit. See console Network / Response for details.');
+    });
+});
 
 function closeAssignModal() {
     document.getElementById('assignModal').classList.add('hidden');

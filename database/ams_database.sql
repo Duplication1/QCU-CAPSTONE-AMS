@@ -3,13 +3,13 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 02, 2025 at 06:07 AM
+-- Generation Time: Nov 03, 2025 at 06:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
-SET time_zone   = "+00:00";
+SET time_zone = "+00:00";
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -133,58 +133,65 @@ CREATE TABLE `asset_maintenance` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `hardware_issues`
+-- Table structure for table `issues`
 --
 
-CREATE TABLE `hardware_issues` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `requester_name` varchar(150) DEFAULT NULL,
-  `assigned_technician` varchar(150) DEFAULT NULL,
-  `room` varchar(50) NOT NULL,
-  `terminal` varchar(50) NOT NULL,
+CREATE TABLE `issues` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `category` enum('hardware','software','network','laboratory','other') NOT NULL,
+  `room` varchar(64) NOT NULL,
+  `terminal` varchar(16) NOT NULL,
+  `hardware_component` varchar(255) DEFAULT NULL,
+  `hardware_component_other` varchar(255) DEFAULT NULL,
+  `software_name` varchar(255) DEFAULT NULL,
+  `network_issue_type` varchar(255) DEFAULT NULL,
+  `network_issue_type_other` varchar(255) DEFAULT NULL,
+  `laboratory_concern_type` varchar(255) DEFAULT NULL,
+  `laboratory_concern_other` varchar(255) DEFAULT NULL,
+  `other_concern_category` varchar(255) DEFAULT NULL,
+  `other_concern_other` varchar(255) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `priority` enum('Low','Medium','High') DEFAULT 'Medium',
   `status` enum('Open','In Progress','Resolved','Closed') DEFAULT 'Open',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `technician_notes` text DEFAULT NULL,
-  `issue_type` enum('Hardware','Software','Network') DEFAULT 'Hardware',
-  `submitted_by` varchar(150) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `assigned_technician` varchar(255) DEFAULT NULL,
+  `submitted_by` varchar(255) DEFAULT NULL,
+  `assigned_group` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `hardware_issues`
+-- Dumping data for table `issues`
 --
 
-INSERT INTO `hardware_issues` (`id`, `user_id`, `requester_name`, `assigned_technician`, `room`, `terminal`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `technician_notes`, `issue_type`, `submitted_by`) VALUES
-(1, 5, 'Student One', 'John Technician', 'IK501', '1', 'Keyboard - asdas', 'dasdasd', 'Low', 'In Progress', '2025-11-01 13:34:23', '2025-11-01 13:46:34', '\n2025-11-01 14:46:34 - Status changed to In Progress: ', 'Hardware', 'Student One'),
-(2, 5, 'Student One', 'John Technician', 'IK502', '1', 'qwrq - rqwrwq', 'qwrqw', 'Low', 'Resolved', '2025-11-01 13:34:31', '2025-11-01 13:46:31', '\n2025-11-01 14:46:31 - Status changed to Resolved: ', 'Hardware', 'Student One'),
-(3, 5, 'Student One', 'John Technician', 'IK501', '1', 'Google - Walang Bold Sir', 'Di maka nood ng bold naka block', 'Medium', 'Resolved', '2025-11-01 13:44:57', '2025-11-01 13:46:27', '\n2025-11-01 14:46:27 - Status changed to Resolved: ', 'Software', 'Student One'),
-(4, 5, 'Student One', 'John Technician', 'IK501', '3', 'WiFi Problem - Mahina WIFI', 'Mahina wifi di maka load ng bold tanginangyan', 'Medium', 'Resolved', '2025-11-01 13:45:17', '2025-11-01 13:46:20', '\n2025-11-01 14:46:20 - Status changed to Resolved: ', 'Network', 'Student One');
+INSERT INTO `issues` (`id`, `user_id`, `category`, `room`, `terminal`, `hardware_component`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `assigned_group`) VALUES
+(1, 5, 'hardware', 'IK501', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Not working', 'May kagat yung keycaps!', '', 'Open', '2025-11-03 05:52:52', '2025-11-03 05:52:52', NULL, NULL, NULL),
+(2, 5, 'hardware', 'IK502', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'May kagat yung keycaps', 'May kulangot yung letter M!', '', 'Open', '2025-11-03 05:53:19', '2025-11-03 05:53:19', NULL, NULL, NULL),
+(3, 5, 'software', 'IK501', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'May google', 'Google tate', '', 'Open', '2025-11-03 05:54:36', '2025-11-03 05:55:13', NULL, NULL, 'John Technician');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `network_issues`
+-- Table structure for table `items`
 --
 
-CREATE TABLE `network_issues` (
+CREATE TABLE `items` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `requester_name` varchar(150) DEFAULT NULL,
-  `assigned_technician` varchar(150) DEFAULT NULL,
-  `room` varchar(100) NOT NULL,
-  `terminal` varchar(20) NOT NULL,
-  `issue_type` enum('No Connection','Slow Internet','WiFi Problem','Other') NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `priority` enum('Low','Medium','High') NOT NULL DEFAULT 'Medium',
-  `status` enum('Open','In Progress','Resolved','Closed') NOT NULL DEFAULT 'Open',
-  `technician_notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `item_type` enum('hardware','software','network') NOT NULL,
+  `asset_tag` varchar(100) DEFAULT NULL,
+  `component` varchar(255) DEFAULT NULL,
+  `brand` varchar(255) DEFAULT NULL,
+  `model` varchar(255) DEFAULT NULL,
+  `software_name` varchar(255) DEFAULT NULL,
+  `version` varchar(100) DEFAULT NULL,
+  `license_info` varchar(255) DEFAULT NULL,
+  `network_item` varchar(255) DEFAULT NULL,
+  `area` varchar(255) DEFAULT NULL,
+  `details` text DEFAULT NULL,
+  `meta` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -209,29 +216,6 @@ INSERT INTO `rooms` (`id`, `name`, `created_at`) VALUES
 (3, 'IK503', '2025-10-31 13:02:25'),
 (4, 'IK504', '2025-10-31 13:02:25'),
 (5, 'IK505', '2025-10-31 13:02:25');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `software_issues`
---
-
-CREATE TABLE `software_issues` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `requester_name` varchar(150) DEFAULT NULL,
-  `assigned_technician` varchar(150) DEFAULT NULL,
-  `room` varchar(100) NOT NULL,
-  `terminal` varchar(20) NOT NULL,
-  `software_name` varchar(255) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `priority` enum('Low','Medium','High') NOT NULL DEFAULT 'Medium',
-  `status` enum('Open','In Progress','Resolved','Closed') NOT NULL DEFAULT 'Open',
-  `technician_notes` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -306,25 +290,20 @@ ALTER TABLE `asset_maintenance`
   ADD KEY `idx_performed_by` (`performed_by`);
 
 --
--- Indexes for table `hardware_issues`
+-- Indexes for table `issues`
 --
-ALTER TABLE `hardware_issues`
+ALTER TABLE `issues`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `room` (`room`),
-  ADD KEY `priority` (`priority`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `category` (`category`),
   ADD KEY `status` (`status`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `assigned_group` (`assigned_group`);
 
 --
--- Indexes for table `network_issues`
+-- Indexes for table `items`
 --
-ALTER TABLE `network_issues`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `room` (`room`),
-  ADD KEY `priority` (`priority`),
-  ADD KEY `status` (`status`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `assigned_technician` (`assigned_technician`);
+ALTER TABLE `items`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `rooms`
@@ -332,17 +311,6 @@ ALTER TABLE `network_issues`
 ALTER TABLE `rooms`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `software_issues`
---
-ALTER TABLE `software_issues`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `room` (`room`),
-  ADD KEY `priority` (`priority`),
-  ADD KEY `status` (`status`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `assigned_technician` (`assigned_technician`);
 
 --
 -- Indexes for table `users`
@@ -378,15 +346,15 @@ ALTER TABLE `asset_maintenance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `hardware_issues`
+-- AUTO_INCREMENT for table `issues`
 --
-ALTER TABLE `hardware_issues`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+ALTER TABLE `issues`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `network_issues`
+-- AUTO_INCREMENT for table `items`
 --
-ALTER TABLE `network_issues`
+ALTER TABLE `items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -394,12 +362,6 @@ ALTER TABLE `network_issues`
 --
 ALTER TABLE `rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `software_issues`
---
-ALTER TABLE `software_issues`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`

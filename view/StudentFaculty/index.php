@@ -196,54 +196,44 @@ include '../components/layout_header.php';
 
             <!-- Laboratory Concern Fields (only for Laboratory issues) -->
             <div id="laboratoryFieldsContainer" class="hidden space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Laboratory Room: *</label>
-                    <select name="laboratory_room" id="laboratoryRoom" class="mt-1 block w-full border rounded px-3 py-2" required>
-                        <option value="">Select laboratory</option>
-                        <option value="IK501">IK501 - Computer Laboratory 1</option>
-                        <option value="IK502">IK502 - Computer Laboratory 2</option>
-                        <option value="IK503">IK503 - Computer Laboratory 3</option>
-                        <option value="IK504">IK504 - Networking Laboratory</option>
-                        <option value="IK505">IK505 - Electronics Laboratory</option>
-                    </select>
-                </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700">Concern Type: *</label>
+                     <!-- removed static required; JS will set required when Laboratory is selected -->
+                     <select name="laboratory_concern_type" id="laboratoryConcernType" class="mt-1 block w-full border rounded px-3 py-2">
+                          <option value="">Select concern type</option>
+                          <option value="Access Issue">Access Issue (Locked/Cannot Enter)</option>
+                          <option value="Cleanliness">Cleanliness & Maintenance</option>
+                          <option value="Safety Hazard">Safety Hazard</option>
+                          <option value="Equipment Availability">Equipment Availability</option>
+                          <option value="Air Conditioning">Air Conditioning/Ventilation</option>
+                          <option value="Lighting">Lighting Issue</option>
+                          <option value="Furniture">Furniture/Seating Issue</option>
+                          <option value="Others">Others</option>
+                      </select>
+                  </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Concern Type: *</label>
-                    <select name="laboratory_concern_type" id="laboratoryConcernType" class="mt-1 block w-full border rounded px-3 py-2" required>
-                        <option value="">Select concern type</option>
-                        <option value="Access Issue">Access Issue (Locked/Cannot Enter)</option>
-                        <option value="Cleanliness">Cleanliness & Maintenance</option>
-                        <option value="Safety Hazard">Safety Hazard</option>
-                        <option value="Equipment Availability">Equipment Availability</option>
-                        <option value="Air Conditioning">Air Conditioning/Ventilation</option>
-                        <option value="Lighting">Lighting Issue</option>
-                        <option value="Furniture">Furniture/Seating Issue</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-
-                <div id="laboratoryConcernOthersField" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700">Specify Concern: *</label>
-                    <input name="laboratory_concern_other" id="laboratoryConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe your concern">
-                </div>
-            </div>
+                 <div id="laboratoryConcernOthersField" class="hidden">
+                     <label class="block text-sm font-medium text-gray-700">Specify Concern: *</label>
+                     <input name="laboratory_concern_other" id="laboratoryConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe your concern">
+                 </div>
+             </div>
 
             <!-- Other Concern Fields (only for Other issues) -->
             <div id="otherFieldsContainer" class="hidden space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Concern Category: *</label>
-                    <select name="other_concern_category" id="otherConcernCategory" class="mt-1 block w-full border rounded px-3 py-2" required>
-                        <option value="">Select category</option>
-                        <option value="Account Issue">Account/Login Issue</option>
-                        <option value="Access Request">Access/Permission Request</option>
-                        <option value="Training Request">Training/Assistance Request</option>
-                        <option value="Feedback">Feedback/Suggestion</option>
-                        <option value="Lost & Found">Lost & Found</option>
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700">Concern Category: *</label>
+                     <!-- removed static required; JS will set required when Other is selected -->
+                     <select name="other_concern_category" id="otherConcernCategory" class="mt-1 block w-full border rounded px-3 py-2">
+                         <option value="">Select category</option>
+                         <option value="Account Issue">Account/Login Issue</option>
+                         <option value="Access Request">Access/Permission Request</option>
+                         <option value="Training Request">Training/Assistance Request</option>
+                         <option value="Feedback">Feedback/Suggestion</option>
+                         <option value="Lost & Found">Lost & Found</option>
+                         <option value="General Inquiry">General Inquiry</option>
+                         <option value="Others">Others</option>
+                     </select>
+                 </div>
 
                 <div id="otherConcernOthersField" class="hidden">
                     <label class="block text-sm font-medium text-gray-700">Specify Category: *</label>
@@ -252,9 +242,12 @@ include '../components/layout_header.php';
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Issue Title: *</label>
-                <input name="title" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Brief description of the issue" required>
-            </div>
+                <!-- Issue Title (restored). Hidden by default and made required via JS for non-laboratory categories -->
+                <div id="issueTitleField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Issue Title: *</label>
+                    <input name="title" id="issueTitle" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Brief description of the issue">
+                </div>
+             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Description:</label>
@@ -301,6 +294,10 @@ function handleIssueClick(issueType) {
     const hardwareComponentOther = document.getElementById('hardwareComponentOther');
     const softwareNameInput = document.querySelector('input[name="software_name"]');
     const networkIssueTypeOther = document.getElementById('networkIssueTypeOther');
+    const otherConcernCategory = document.getElementById('otherConcernCategory');
+    const laboratoryConcernType = document.getElementById('laboratoryConcernType');
+    const issueTitleField = document.getElementById('issueTitleField');
+    const issueTitleInput = document.getElementById('issueTitle');
     
     // Reset form
     issueForm.reset();
@@ -315,6 +312,12 @@ function handleIssueClick(issueType) {
     hardwareComponentOther.removeAttribute('required');
     softwareNameInput.removeAttribute('required');
     networkIssueTypeOther.removeAttribute('required');
+    // Ensure these conditional fields are not required when hidden
+    otherConcernCategory?.removeAttribute('required');
+    laboratoryConcernType?.removeAttribute('required');
+    // title handled via JS; remove required and hide initially
+    issueTitleInput?.removeAttribute('required');
+    issueTitleField?.classList.add('hidden');
     
     switch(issueType) {
         case 'hardware':
@@ -325,6 +328,9 @@ function handleIssueClick(issueType) {
             submitBtn.textContent = 'Submit';
             hardwareComponentField.classList.remove('hidden');
             hardwareComponentInput.setAttribute('required', 'required');
+            // show and require title
+            issueTitleField?.classList.remove('hidden');
+            issueTitleInput?.setAttribute('required','required');
             document.getElementById('issueCategory').value = 'hardware';
             break;
             
@@ -336,6 +342,9 @@ function handleIssueClick(issueType) {
             submitBtn.textContent = 'Submit';
             softwareNameField.classList.remove('hidden');
             softwareNameInput.setAttribute('required', 'required');
+            // show and require title
+            issueTitleField?.classList.remove('hidden');
+            issueTitleInput?.setAttribute('required','required');
             document.getElementById('issueCategory').value = 'software';
             break;
             
@@ -346,6 +355,9 @@ function handleIssueClick(issueType) {
             submitBtn.className = 'bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded';
             submitBtn.textContent = 'Submit';
             networkTypeField.classList.remove('hidden');
+            // show and require title
+            issueTitleField?.classList.remove('hidden');
+            issueTitleInput?.setAttribute('required','required');
             document.getElementById('issueCategory').value = 'network';
             break;
             
@@ -360,6 +372,11 @@ function handleIssueClick(issueType) {
             submitBtn.textContent = 'Submit';
             document.getElementById('issueCategory').value = 'laboratory';
             document.getElementById('laboratoryFieldsContainer').classList.remove('hidden');
+            // make lab concern type required when laboratory selected
+            laboratoryConcernType?.setAttribute('required','required');
+            // hide and do NOT require title for laboratory
+            issueTitleField?.classList.add('hidden');
+            issueTitleInput?.removeAttribute('required');
             break;
             
         case 'other':
@@ -370,6 +387,9 @@ function handleIssueClick(issueType) {
             submitBtn.textContent = 'Submit';
             document.getElementById('issueCategory').value = 'other';
             document.getElementById('otherFieldsContainer').classList.remove('hidden');
+            // make other concern category required when Other selected
+            otherConcernCategory?.setAttribute('required','required');
+            // Do not show or require the Issue Title for Other concerns
             break;
             
         default:
@@ -380,7 +400,7 @@ function handleIssueClick(issueType) {
     // Show modal
     modal.classList.remove('hidden');
 }
-
+    
 function closeIssueModal() {
     const modal = document.getElementById('issueModal');
     const issueForm = document.getElementById('issueForm');
@@ -395,6 +415,10 @@ function closeIssueModal() {
     const hardwareComponentOther = document.getElementById('hardwareComponentOther');
     const softwareNameInput = document.querySelector('input[name="software_name"]');
     const networkIssueTypeOther = document.getElementById('networkIssueTypeOther');
+    const otherConcernCategory = document.getElementById('otherConcernCategory');
+    const laboratoryConcernType = document.getElementById('laboratoryConcernType');
+    const issueTitleField = document.getElementById('issueTitleField');
+    const issueTitleInput = document.getElementById('issueTitle');
     
     modal.classList.add('hidden');
     issueForm.reset();
@@ -411,6 +435,11 @@ function closeIssueModal() {
     hardwareComponentOther.removeAttribute('required');
     softwareNameInput.removeAttribute('required');
     networkIssueTypeOther.removeAttribute('required');
+    // ensure removed on close
+    otherConcernCategory?.removeAttribute('required');
+    laboratoryConcernType?.removeAttribute('required');
+    issueTitleInput?.removeAttribute('required');
+    issueTitleField?.classList.add('hidden');
 }
 
 // Show/hide "Others" text field when hardware component or network issue type changes
@@ -1425,6 +1454,72 @@ document.addEventListener('DOMContentLoaded', function() {
             returnDateInput.min = this.value;
         });
     }
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+  const form = document.getElementById('issueForm');
+  if (!form) return;
+
+  function showTopAlert(type, msg) {
+    // remove existing
+    const existing = document.getElementById('topAjaxAlert');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.id = 'topAjaxAlert';
+    if (type === 'success') {
+      div.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+      div.innerHTML = '<strong>Success:</strong> ' + msg;
+    } else {
+      div.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+      div.innerHTML = '<strong>Error:</strong> ' + msg;
+    }
+    // insert at top of main content (before <main>)
+    const main = document.querySelector('main');
+    if (main && main.parentNode) main.parentNode.insertBefore(div, main);
+    // auto-remove after 6s
+    setTimeout(() => div.remove(), 6000);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const submitBtn = form.querySelector('#submitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    const fd = new FormData(form);
+    fetch(form.action, {
+      method: 'POST',
+      body: fd,
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(async res => {
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        throw new Error('Invalid server response');
+      }
+    })
+    .then(json => {
+      if (json.success) {
+        showTopAlert('success', json.message || 'Issue is successfuly submitted!');
+        form.reset();
+        // close modal if open
+        const modal = document.getElementById('issueModal');
+        if (modal) modal.classList.add('hidden');
+      } else {
+        showTopAlert('error', json.message || 'Failed to submit. Please try again.');
+      }
+    })
+    .catch(err => {
+      console.error('Submit error:', err);
+      showTopAlert('error', 'Failed to submit. Please try again.');
+    })
+    .finally(() => {
+      if (submitBtn) submitBtn.disabled = false;
+    });
+  });
 });
 </script>
 
