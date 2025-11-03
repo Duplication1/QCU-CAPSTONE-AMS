@@ -34,7 +34,7 @@
             ?>
             
             <!-- Login Form -->
-            <form action="../controller/signup_controller.php" method="POST" class="space-y-6 text-left">
+            <form action="../controller/login_controller.php" method="POST" class="space-y-6 text-left">
 
                 <!-- Student Number -->
                 <div>

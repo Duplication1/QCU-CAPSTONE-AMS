@@ -127,6 +127,7 @@ include '../components/layout_header.php';
         </div>
 
         <form id="issueForm" class="space-y-4" method="post">
+            <input type="hidden" name="category" id="issueCategory" value="">
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Room: *</label>
@@ -193,6 +194,63 @@ include '../components/layout_header.php';
                 <input name="network_issue_type_other" id="networkIssueTypeOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="e.g., Port blocked, DNS issue, VPN problem">
             </div>
 
+            <!-- Laboratory Concern Fields (only for Laboratory issues) -->
+            <div id="laboratoryFieldsContainer" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Laboratory Room: *</label>
+                    <select name="laboratory_room" id="laboratoryRoom" class="mt-1 block w-full border rounded px-3 py-2" required>
+                        <option value="">Select laboratory</option>
+                        <option value="IK501">IK501 - Computer Laboratory 1</option>
+                        <option value="IK502">IK502 - Computer Laboratory 2</option>
+                        <option value="IK503">IK503 - Computer Laboratory 3</option>
+                        <option value="IK504">IK504 - Networking Laboratory</option>
+                        <option value="IK505">IK505 - Electronics Laboratory</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Concern Type: *</label>
+                    <select name="laboratory_concern_type" id="laboratoryConcernType" class="mt-1 block w-full border rounded px-3 py-2" required>
+                        <option value="">Select concern type</option>
+                        <option value="Access Issue">Access Issue (Locked/Cannot Enter)</option>
+                        <option value="Cleanliness">Cleanliness & Maintenance</option>
+                        <option value="Safety Hazard">Safety Hazard</option>
+                        <option value="Equipment Availability">Equipment Availability</option>
+                        <option value="Air Conditioning">Air Conditioning/Ventilation</option>
+                        <option value="Lighting">Lighting Issue</option>
+                        <option value="Furniture">Furniture/Seating Issue</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <div id="laboratoryConcernOthersField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Specify Concern: *</label>
+                    <input name="laboratory_concern_other" id="laboratoryConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe your concern">
+                </div>
+            </div>
+
+            <!-- Other Concern Fields (only for Other issues) -->
+            <div id="otherFieldsContainer" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Concern Category: *</label>
+                    <select name="other_concern_category" id="otherConcernCategory" class="mt-1 block w-full border rounded px-3 py-2" required>
+                        <option value="">Select category</option>
+                        <option value="Account Issue">Account/Login Issue</option>
+                        <option value="Access Request">Access/Permission Request</option>
+                        <option value="Training Request">Training/Assistance Request</option>
+                        <option value="Feedback">Feedback/Suggestion</option>
+                        <option value="Lost & Found">Lost & Found</option>
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <div id="otherConcernOthersField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Specify Category: *</label>
+                    <input name="other_concern_other" id="otherConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe the category">
+                </div>
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Issue Title: *</label>
                 <input name="title" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Brief description of the issue" required>
@@ -237,6 +295,8 @@ function handleIssueClick(issueType) {
     const softwareNameField = document.getElementById('softwareNameField');
     const networkTypeField = document.getElementById('networkTypeField');
     const networkOthersField = document.getElementById('networkOthersField');
+    const laboratoryFieldsContainer = document.getElementById('laboratoryFieldsContainer');
+    const otherFieldsContainer = document.getElementById('otherFieldsContainer');
     const hardwareComponentInput = document.getElementById('hardwareComponent');
     const hardwareComponentOther = document.getElementById('hardwareComponentOther');
     const softwareNameInput = document.querySelector('input[name="software_name"]');
@@ -249,6 +309,8 @@ function handleIssueClick(issueType) {
     softwareNameField.classList.add('hidden');
     networkTypeField.classList.add('hidden');
     networkOthersField.classList.add('hidden');
+    document.getElementById('laboratoryFieldsContainer')?.classList.add('hidden');
+    document.getElementById('otherFieldsContainer')?.classList.add('hidden');
     hardwareComponentInput.removeAttribute('required');
     hardwareComponentOther.removeAttribute('required');
     softwareNameInput.removeAttribute('required');
@@ -258,41 +320,58 @@ function handleIssueClick(issueType) {
         case 'hardware':
             modalTitle.textContent = 'Submit Hardware Issue';
             modalTitle.className = 'text-lg font-semibold text-blue-700';
-            issueForm.action = '../../controller/submit_hardware.php';
+            issueForm.action = '../../controller/submit_issue.php';
             submitBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded';
             submitBtn.textContent = 'Submit';
             hardwareComponentField.classList.remove('hidden');
             hardwareComponentInput.setAttribute('required', 'required');
+            document.getElementById('issueCategory').value = 'hardware';
             break;
             
         case 'software':
             modalTitle.textContent = 'Submit Software Issue';
             modalTitle.className = 'text-lg font-semibold text-green-700';
-            issueForm.action = '../../controller/submit_software.php';
+            issueForm.action = '../../controller/submit_issue.php';
             submitBtn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
             submitBtn.textContent = 'Submit';
             softwareNameField.classList.remove('hidden');
             softwareNameInput.setAttribute('required', 'required');
+            document.getElementById('issueCategory').value = 'software';
             break;
             
         case 'network':
             modalTitle.textContent = 'Submit Network Issue';
             modalTitle.className = 'text-lg font-semibold text-purple-700';
-            issueForm.action = '../../controller/submit_network.php';
+            issueForm.action = '../../controller/submit_issue.php';
             submitBtn.className = 'bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded';
             submitBtn.textContent = 'Submit';
             networkTypeField.classList.remove('hidden');
+            document.getElementById('issueCategory').value = 'network';
             break;
             
         case 'borrow':
             openBorrowingModal();
             return;
         case 'laboratory':
-            alert('Laboratory Concern feature coming soon!');
-            return;
+            modalTitle.textContent = 'Submit Laboratory Concern';
+            modalTitle.className = 'text-lg font-semibold text-indigo-700';
+            issueForm.action = '../../controller/submit_issue.php';
+            submitBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded';
+            submitBtn.textContent = 'Submit';
+            document.getElementById('issueCategory').value = 'laboratory';
+            document.getElementById('laboratoryFieldsContainer').classList.remove('hidden');
+            break;
+            
         case 'other':
-            alert('Other concerns feature coming soon!');
-            return;
+            modalTitle.textContent = 'Submit Other Concern';
+            modalTitle.className = 'text-lg font-semibold text-gray-700';
+            issueForm.action = '../../controller/submit_issue.php';
+            submitBtn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded';
+            submitBtn.textContent = 'Submit';
+            document.getElementById('issueCategory').value = 'other';
+            document.getElementById('otherFieldsContainer').classList.remove('hidden');
+            break;
+            
         default:
             alert('Please select a valid option.');
             return;
@@ -310,6 +389,8 @@ function closeIssueModal() {
     const softwareNameField = document.getElementById('softwareNameField');
     const networkTypeField = document.getElementById('networkTypeField');
     const networkOthersField = document.getElementById('networkOthersField');
+    const laboratoryFieldsContainer = document.getElementById('laboratoryFieldsContainer');
+    const otherFieldsContainer = document.getElementById('otherFieldsContainer');
     const hardwareComponentInput = document.getElementById('hardwareComponent');
     const hardwareComponentOther = document.getElementById('hardwareComponentOther');
     const softwareNameInput = document.querySelector('input[name="software_name"]');
@@ -324,6 +405,8 @@ function closeIssueModal() {
     softwareNameField.classList.add('hidden');
     networkTypeField.classList.add('hidden');
     networkOthersField.classList.add('hidden');
+    laboratoryFieldsContainer?.classList.add('hidden');
+    otherFieldsContainer?.classList.add('hidden');
     hardwareComponentInput.removeAttribute('required');
     hardwareComponentOther.removeAttribute('required');
     softwareNameInput.removeAttribute('required');
@@ -341,6 +424,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const networkIssueType = document.getElementById('networkIssueType');
     const networkOthersField = document.getElementById('networkOthersField');
     const networkIssueTypeOther = document.getElementById('networkIssueTypeOther');
+    const laboratoryConcernType = document.getElementById('laboratoryConcernType');
+    const laboratoryConcernOthersField = document.getElementById('laboratoryConcernOthersField');
+    const laboratoryConcernOther = document.getElementById('laboratoryConcernOther');
+    const otherConcernCategory = document.getElementById('otherConcernCategory');
+    const otherConcernOthersField = document.getElementById('otherConcernOthersField');
+    const otherConcernOther = document.getElementById('otherConcernOther');
     
     function updatePreview() {
         const room = roomSelect.value;
@@ -384,6 +473,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Toggle "Others" text field for Laboratory Concern
+    if (laboratoryConcernType) {
+        laboratoryConcernType.addEventListener('change', function() {
+            if (this.value === 'Others') {
+                laboratoryConcernOthersField.classList.remove('hidden');
+                laboratoryConcernOther.setAttribute('required', 'required');
+            } else {
+                laboratoryConcernOthersField.classList.add('hidden');
+                laboratoryConcernOther.removeAttribute('required');
+                laboratoryConcernOther.value = '';
+            }
+        });
+    }
+    
+    // Toggle "Others" text field for Other Concern
+    if (otherConcernCategory) {
+        otherConcernCategory.addEventListener('change', function() {
+            if (this.value === 'Others') {
+                otherConcernOthersField.classList.remove('hidden');
+                otherConcernOther.setAttribute('required', 'required');
+            } else {
+                otherConcernOthersField.classList.add('hidden');
+                otherConcernOther.removeAttribute('required');
+                otherConcernOther.value = '';
+            }
+        });
+    }
 });
 
 // Close modal when clicking outside
@@ -406,7 +523,7 @@ document.addEventListener('click', function(e) {
                     <span id="borrowingModalTitle">Borrow Equipment</span>
                 </h3>
                 <button onclick="closeBorrowingModal()" class="text-white hover:text-gray-200">
-                    <i class="fa-solid fa-xmark text-2xl"></i>
+                    <i class="fa-solid fa-xmark text-2xl mb-2 block"></i>
                 </button>
             </div>
 
