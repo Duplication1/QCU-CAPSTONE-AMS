@@ -97,8 +97,16 @@ if (!$result || $result->num_rows === 0): ?>
             </td>
             <td class="px-4 py-3 text-sm text-gray-700"><?php echo $loc; ?></td>
             <td class="px-4 py-3 text-sm">
-              <span class="px-2 py-1 rounded-full text-xs <?php echo $ticket['priority'] === 'High' ? 'bg-red-100 text-red-800' : ($ticket['priority'] === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); ?>">
-                <?php echo htmlspecialchars($ticket['priority'] ?? 'Medium'); ?>
+              <?php
+                // Normalize priority value: treat empty/null as 'Medium'
+                $rawPriority = $ticket['priority'] ?? '';
+                $priority = trim((string)$rawPriority);
+                if ($priority === '') $priority = 'Medium';
+                $priorityEsc = htmlspecialchars($priority);
+                $priorityClass = ($priority === 'High') ? 'bg-red-100 text-red-800' : (($priority === 'Medium') ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800');
+              ?>
+              <span class="px-2 py-1 rounded-full text-xs <?php echo $priorityClass; ?>">
+                <?php echo $priorityEsc; ?>
               </span>
             </td>
             <td class="px-4 py-3 text-sm">

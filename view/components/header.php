@@ -46,6 +46,12 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 
             <!-- User Info -->
             <div class="flex items-center space-x-4">
+                <?php if (in_array($current_role, ['Student', 'Faculty', 'StudentFaculty'])): ?>
+                <!-- Dark Mode Toggle (Student/Faculty only) - hidden, toggled via keyboard shortcut -->
+                <button id="dark-mode-toggle" title="Toggle dark mode" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 hidden">
+                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                <?php endif; ?>
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-900"><?php echo htmlspecialchars($user_name); ?></p>
                     <p class="text-xs text-gray-500"><?php echo htmlspecialchars($current_role); ?></p>

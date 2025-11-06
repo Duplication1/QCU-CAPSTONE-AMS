@@ -35,7 +35,7 @@ include '../components/layout_header.php';
         <!-- Help Options -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
             <!-- Hardware Issue -->
-            <div onclick="handleIssueClick('hardware')" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1">
+            <div onclick="handleIssueClick('hardware')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-blue-300 group transform hover:scale-105">
                 <div class="flex gap-6">
                     <div class="bg-blue-100 p-4 rounded-xl group-hover:bg-blue-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
                         <i class="fa-solid fa-desktop text-blue-600 text-3xl"></i>
@@ -48,7 +48,7 @@ include '../components/layout_header.php';
             </div>
 
             <!-- Software Issue -->
-            <div onclick="handleIssueClick('software')" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1">
+            <div onclick="handleIssueClick('software')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-green-300 group transform hover:scale-105">
                 <div class="flex gap-6">
                     <div class="bg-green-100 p-4 rounded-xl group-hover:bg-green-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
                         <i class="fa-solid fa-mobile-screen-button text-green-600 text-3xl"></i>
@@ -61,7 +61,7 @@ include '../components/layout_header.php';
             </div>
 
             <!-- Network Issue -->
-            <div onclick="handleIssueClick('network')" class="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1">
+            <div onclick="handleIssueClick('network')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-purple-300 group transform hover:scale-105">
                 <div class="flex gap-6">
                     <div class="bg-purple-100 p-4 rounded-xl group-hover:bg-purple-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
                         <i class="fa-solid fa-wifi text-purple-600 text-3xl"></i>
