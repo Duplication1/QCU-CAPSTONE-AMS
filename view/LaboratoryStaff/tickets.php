@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician']))
         $assignStmt->execute();
         $assignStmt->close();
 
-        $_SESSION['success_message'] = 'Technician assigned successfully!';
+        $_SESSION['success_message'] = 'Successfully Technician Assigned!';
         header("Location: tickets.php");
         exit;
     }

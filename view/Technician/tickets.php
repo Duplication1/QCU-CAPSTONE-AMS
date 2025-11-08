@@ -153,6 +153,41 @@ function updateRowStatus(row, newStatus) {
     (newStatus === 'Open' ? 'bg-blue-100 text-blue-800' : (newStatus === 'In Progress' ? 'bg-purple-100 text-purple-800' : (newStatus === 'Resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')));
 }
 
+// Row-level processing indicator and 1.5s minimum visual delay
+const ROW_MIN_MS = 1500;
+
+function showRowProcessing(row) {
+  // disable the select control while processing
+  const select = row.querySelector('.statusSelect');
+  if (select) select.disabled = true;
+
+  // avoid duplicate indicator
+  let p = row.querySelector('.row-processing');
+  if (!p) {
+    p = document.createElement('div');
+    // center the indicator inside the actions cell and make it full width
+    p.className = 'row-processing flex items-center justify-center gap-2 text-sm text-gray-600 w-full';
+    p.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm text-blue-600"></i><span>Processing, please wait...</span>';
+    // append to actions cell (last td) and hide the select for cleaner centering
+    const actionCell = row.querySelector('td:last-child');
+    if (actionCell) {
+      actionCell.appendChild(p);
+      if (select) select.classList.add('hidden');
+    }
+  }
+  return p;
+}
+
+function hideRowProcessing(row) {
+  const select = row.querySelector('.statusSelect');
+  if (select) {
+    select.disabled = false;
+    select.classList.remove('hidden');
+  }
+  const p = row.querySelector('.row-processing');
+  if (p) p.remove();
+}
+
 // category filter buttons (client-side)
 const catButtons = document.querySelectorAll('#categoryFilters .cat-btn');
 function setActiveCatButton(activeBtn) {
@@ -189,20 +224,37 @@ document.querySelectorAll('#techTickets tbody tr').forEach(row => {
 
   // submit immediately when dropdown changes
   select?.addEventListener('change', () => {
-    const status = select.value;
+    const newStatus = select.value;
+    const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
+
+    const started = Date.now();
+    showRowProcessing(row);
+
     fetch(apiUrl, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {'Accept':'application/json'},
-      body: new URLSearchParams({ticket_id: ticketId, status})
+      body: new URLSearchParams({ticket_id: ticketId, status: newStatus})
     }).then(r => r.json()).then(j => {
-      if (j.success) {
-        updateRowStatus(row, j.status);
-        showToast('Status updated');
-      } else {
-        showToast(j.message || 'Failed to update status', false);
-      }
-    }).catch(() => showToast('Request failed', false));
+      const elapsed = Date.now() - started;
+      const wait = Math.max(0, ROW_MIN_MS - elapsed);
+      setTimeout(() => {
+        hideRowProcessing(row);
+        if (j.success) {
+          updateRowStatus(row, j.status);
+          showToast('Status updated');
+        } else {
+          // revert select to previous value
+          if (select) select.value = prevStatus;
+          showToast(j.message || 'Failed to update status', false);
+        }
+      }, wait);
+    }).catch((err) => {
+      console.error(err);
+      hideRowProcessing(row);
+      if (select) select.value = prevStatus;
+      showToast('Request failed', false);
+    });
   });
 });
 

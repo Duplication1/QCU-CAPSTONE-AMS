@@ -44,7 +44,8 @@ try {
         'success' => true,
         'ticket_id' => $ticketId,
         'assigned_group' => $technician,
-        'message' => $affected > 0 ? 'Technician assigned' : 'No change'
+        // user-visible message
+        'message' => $affected > 0 ? 'Successfully Technician Assigned!' : 'No change'
     ]);
     exit;
 } catch (Exception $e) {
