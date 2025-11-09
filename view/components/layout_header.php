@@ -15,6 +15,12 @@
  * 3. Include 'components/layout_footer.php' at the end
  */
 
+// Prevent page caching to avoid back button access after logout
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
 // Ensure session is started and user is authenticated
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
     header("Location: ../login.php");
@@ -280,6 +286,32 @@ $page_title = "AMS - " . $current_role . " Dashboard";
         /* Small helpers: ensure modal icons are visible */
         body.dark-mode .fa-spinner, body.dark-mode .fa-exclamation-triangle, body.dark-mode .fa-info-circle { color: #ffd580 !important; }
     </style>
+    
+    <!-- Prevent back button after logout -->
+    <script>
+        // Disable back button by manipulating browser history
+        (function() {
+            if (window.history && window.history.pushState) {
+                // Add a dummy state
+                window.history.pushState(null, null, window.location.href);
+                
+                // Listen for back button
+                window.addEventListener('popstate', function() {
+                    // Push state again and redirect to login
+                    window.history.pushState(null, null, window.location.href);
+                    window.location.href = '../login.php';
+                });
+            }
+            
+            // Detect if page was loaded from cache (back/forward button)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    // Page loaded from cache, force reload to trigger session check
+                    window.location.reload();
+                }
+            });
+        })();
+    </script>
 </head>
 <body class="min-h-screen bg-gray-50" data-role="<?php echo htmlspecialchars($current_role); ?>">
     

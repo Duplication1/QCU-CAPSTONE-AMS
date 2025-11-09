@@ -31,26 +31,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['is_logged_in'] = true;
+        $_SESSION['login_success'] = true;
         
-        // Redirect based on role
+        // Store redirect URL based on role
         switch ($user['role']) {
             case 'Administrator':
-                header("Location: ../view/Administrator/index.php");
+                $_SESSION['redirect_url'] = "../view/Administrator/index.php";
                 break;
             case 'Technician':
-                header("Location: ../view/Technician/index.php");
+                $_SESSION['redirect_url'] = "../view/Technician/index.php";
                 break;
             case 'Laboratory Staff':
-                header("Location: ../view/LaboratoryStaff/index.php");
+                $_SESSION['redirect_url'] = "../view/LaboratoryStaff/index.php";
                 break;
             case 'Student':
             case 'Faculty':
-                header("Location: ../view/StudentFaculty/index.php");
+                $_SESSION['redirect_url'] = "../view/StudentFaculty/index.php";
                 break;
             default:
                 $_SESSION['error'] = "Invalid user role.";
                 header("Location: ../view/login.php");
+                exit();
         }
+        
+        // Redirect back to login page to show success modal
+        header("Location: ../view/login.php");
         exit();
     } else {
         $_SESSION['error'] = "Invalid ID number or password.";
