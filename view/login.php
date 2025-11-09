@@ -15,8 +15,7 @@
                 <div class="flex justify-center mb-4">
                     <img src="../assets/images/qcu-logo.png" alt="QCU Logo" class="w-20 h-20">
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Sign Up</h1>
-                <p class="text-gray-600 text-sm">Enter your student number to continue</p>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Login</h1>
             </div>
             
             <?php
@@ -75,16 +74,10 @@
         <!-- Divider -->
             <div class="mt-8 border-t border-gray-200"></div>
 
-         <!-- Link to Login -->
-            <div class="text-center mt-6">
-                <p class="text-sm text-gray-600">Already have an account? 
-                    <a href="login.php" class="text-blue-600 hover:text-blue-700 font-semibold">Login</a>
-                </p>
-            </div>
      
         <!-- Footer -->
         <div class="text-center mt-6">
-            <p class="text-white text-sm opacity-90">© 2025 Asset Management System. All rights reserved.</p>
+            <p class="text-gray-700 text-sm opacity-90">© 2025 Asset Management System. All rights reserved.</p>
         </div>
 
     </div>
