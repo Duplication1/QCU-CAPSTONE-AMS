@@ -153,5 +153,15 @@ class User {
         
         return $stmt->execute();
     }
+
+    /**
+     * Update the user's last_login timestamp to now
+     */
+    public function updateLastLogin($id) {
+        $query = "UPDATE " . $this->table_name . " SET last_login = NOW() WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
 }
 ?>

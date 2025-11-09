@@ -32,6 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['role'] = $user['role'];
         $_SESSION['is_logged_in'] = true;
         $_SESSION['login_success'] = true;
+        // update last_login time so admins can see last active
+        try {
+            $userModel->updateLastLogin($user['id']);
+        } catch (Exception $e) {
+            // non-fatal; proceed with login even if last_login couldn't be updated
+            error_log('Failed to update last_login for user ' . intval($user['id']) . ': ' . $e->getMessage());
+        }
         
         // Store redirect URL based on role
         switch ($user['role']) {

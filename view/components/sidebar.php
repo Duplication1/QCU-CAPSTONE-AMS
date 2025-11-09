@@ -168,9 +168,7 @@ $current_role = $_SESSION['role'] ?? 'Student';
 
 // Handle role mapping for different role formats
 $role_key = $current_role;
-if ($current_role === 'StudentFaculty') {
-    $role_key = 'Student'; // Default to Student navigation for StudentFaculty
-} elseif ($current_role === 'Laboratory Staff') {
+if ($current_role === 'Laboratory Staff') {
     $role_key = 'LaboratoryStaff'; // Map "Laboratory Staff" to "LaboratoryStaff"
 }
 
@@ -187,7 +185,6 @@ $panel_titles = [
     'Laboratory Staff' => 'Laboratory Staff Panel', // Handle both formats
     'Student' => 'Student Portal',
     'Faculty' => 'Faculty Portal',
-    'StudentFaculty' => 'Student/Faculty Portal',
     'Technician' => 'Technician Panel'
 ];
 

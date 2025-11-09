@@ -31,10 +31,10 @@
             try {
                 const saved = localStorage.getItem(storageKey);
                 const enabled = saved === '1';
-                // Read role from body; if we're on StudentFaculty pages, do NOT auto-apply dark mode.
+                // Read role from body; if we're on Student pages, do not auto-apply dark mode.
                 const role = document.body ? document.body.dataset.role : null;
-                if (role && role === 'StudentFaculty') {
-                    // Intentionally do not auto-apply dark mode on Student/Faculty landing pages.
+                if (role && role === 'Student') {
+                    // Intentionally do not auto-apply dark mode on Student landing pages.
                     // Dark mode will only be activated there via the Ctrl+M,E,L sequence.
                 } else {
                     applyDarkMode(enabled);
@@ -49,7 +49,7 @@
                     try {
                         const role = document.body ? document.body.dataset.role : null;
                         // Do not persist preference when toggled from Student/Faculty pages
-                        if (role !== 'StudentFaculty') {
+                        if (role !== 'Student') {
                             localStorage.setItem(storageKey, enabled ? '1' : '0');
                         }
                     } catch(e) {}
@@ -72,7 +72,7 @@
                         try {
                             const role = document.body ? document.body.dataset.role : null;
                             // Do not persist preference when toggled from Student/Faculty pages
-                            if (role !== 'StudentFaculty') {
+                            if (role !== 'Student') {
                                 localStorage.setItem(storageKey, enabled ? '1' : '0');
                             }
                         } catch(e) {}
