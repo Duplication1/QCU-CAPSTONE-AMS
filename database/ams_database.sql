@@ -220,6 +220,76 @@ INSERT INTO `rooms` (`id`, `name`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pc_units`
+--
+
+CREATE TABLE `pc_units` (
+  `id` int(11) NOT NULL,
+  `room_id` int(11) NOT NULL COMMENT 'Foreign key to rooms table',
+  `terminal_number` varchar(50) NOT NULL COMMENT 'Terminal number (e.g., th-1, th-2)',
+  `pc_name` varchar(100) DEFAULT NULL COMMENT 'Custom name for the PC',
+  `asset_tag` varchar(50) DEFAULT NULL COMMENT 'Main PC asset tag reference',
+  `status` enum('Active','Inactive','Under Maintenance','Disposed') NOT NULL DEFAULT 'Active',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Individual PC units in rooms';
+
+--
+-- Dumping data for table `pc_units`
+--
+
+INSERT INTO `pc_units` (`id`, `room_id`, `terminal_number`, `pc_name`, `asset_tag`, `status`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 1, 'th-1', 'IK501-PC01', 'COMP-IK501-001', 'Active', 'Main instructor station', '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(2, 1, 'th-2', 'IK501-PC02', 'COMP-IK501-002', 'Active', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(3, 2, 'th-1', 'IK502-PC01', 'COMP-IK502-001', 'Active', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pc_components`
+--
+
+CREATE TABLE `pc_components` (
+  `id` int(11) NOT NULL,
+  `pc_unit_id` int(11) NOT NULL COMMENT 'Foreign key to pc_units table',
+  `component_type` enum('CPU','RAM','Motherboard','Storage','GPU','PSU','Case','Monitor','Keyboard','Mouse','Other') NOT NULL,
+  `component_name` varchar(255) NOT NULL COMMENT 'Name/model of component',
+  `brand` varchar(100) DEFAULT NULL,
+  `model` varchar(100) DEFAULT NULL,
+  `serial_number` varchar(100) DEFAULT NULL,
+  `specifications` text DEFAULT NULL COMMENT 'Detailed specs',
+  `purchase_date` date DEFAULT NULL,
+  `purchase_cost` decimal(10,2) DEFAULT NULL,
+  `warranty_expiry` date DEFAULT NULL,
+  `status` enum('Working','Faulty','Replaced','Disposed') NOT NULL DEFAULT 'Working',
+  `condition` enum('Excellent','Good','Fair','Poor') NOT NULL DEFAULT 'Good',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Components within each PC unit';
+
+--
+-- Dumping data for table `pc_components`
+--
+
+INSERT INTO `pc_components` (`id`, `pc_unit_id`, `component_type`, `component_name`, `brand`, `model`, `serial_number`, `specifications`, `purchase_date`, `purchase_cost`, `warranty_expiry`, `status`, `condition`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 1, 'CPU', 'Intel Core i7-11700', 'Intel', 'i7-11700', 'CPU-SN-001', '8 Cores, 16 Threads, 2.5GHz Base, 4.9GHz Boost', '2024-01-15', 18000.00, '2027-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(2, 1, 'RAM', 'Corsair Vengeance 16GB', 'Corsair', 'CMK16GX4M2B3200C16', 'RAM-SN-001', 'DDR4 3200MHz, 2x8GB', '2024-01-15', 4500.00, '2026-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(3, 1, 'Motherboard', 'Dell Motherboard', 'Dell', 'OptiPlex 7090 MB', 'MB-SN-001', 'Intel B560 Chipset, LGA1200 Socket', '2024-01-15', 8000.00, '2027-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(4, 1, 'Storage', 'Samsung 970 EVO Plus 512GB', 'Samsung', '970 EVO Plus', 'SSD-SN-001', 'NVMe M.2 SSD, 3500MB/s Read, 3300MB/s Write', '2024-01-15', 5500.00, '2029-01-15', 'Working', 'Excellent', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(5, 1, 'GPU', 'Intel UHD Graphics 750', 'Intel', 'UHD 750', NULL, 'Integrated Graphics', '2024-01-15', 0.00, NULL, 'Working', 'Good', 'Integrated with CPU', '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(6, 1, 'PSU', 'Dell 260W PSU', 'Dell', '260W', 'PSU-SN-001', '260W 80+ Bronze', '2024-01-15', 2500.00, '2027-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(7, 1, 'Monitor', 'Dell P2422H', 'Dell', 'P2422H', 'MON-SN-001', '24 inch, 1920x1080, IPS, 60Hz', '2024-01-15', 8500.00, '2027-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(8, 1, 'Keyboard', 'Dell KB216', 'Dell', 'KB216', 'KB-SN-001', 'USB Wired Keyboard', '2024-01-15', 800.00, NULL, 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(9, 1, 'Mouse', 'Dell MS116', 'Dell', 'MS116', 'MS-SN-001', 'USB Wired Optical Mouse', '2024-01-15', 500.00, NULL, 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(10, 2, 'CPU', 'Intel Core i7-11700', 'Intel', 'i7-11700', 'CPU-SN-002', '8 Cores, 16 Threads, 2.5GHz Base, 4.9GHz Boost', '2024-01-15', 18000.00, '2027-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(11, 2, 'RAM', 'Corsair Vengeance 16GB', 'Corsair', 'CMK16GX4M2B3200C16', 'RAM-SN-002', 'DDR4 3200MHz, 2x8GB', '2024-01-15', 4500.00, '2026-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00'),
+(12, 2, 'Storage', 'Samsung 970 EVO Plus 512GB', 'Samsung', '970 EVO Plus', 'SSD-SN-002', 'NVMe M.2 SSD', '2024-01-15', 5500.00, '2029-01-15', 'Working', 'Good', NULL, '2025-11-11 08:00:00', '2025-11-11 08:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -300,6 +370,25 @@ ALTER TABLE `issues`
   ADD KEY `assigned_group` (`assigned_group`);
 
 --
+-- Indexes for table `pc_units`
+--
+ALTER TABLE `pc_units`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_room_terminal` (`room_id`,`terminal_number`),
+  ADD KEY `idx_room_id` (`room_id`),
+  ADD KEY `idx_terminal_number` (`terminal_number`),
+  ADD KEY `idx_asset_tag` (`asset_tag`);
+
+--
+-- Indexes for table `pc_components`
+--
+ALTER TABLE `pc_components`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pc_unit_id` (`pc_unit_id`),
+  ADD KEY `idx_component_type` (`component_type`),
+  ADD KEY `idx_status` (`status`);
+
+--
 -- Indexes for table `items`
 --
 ALTER TABLE `items`
@@ -352,6 +441,18 @@ ALTER TABLE `issues`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `pc_units`
+--
+ALTER TABLE `pc_units`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `pc_components`
+--
+ALTER TABLE `pc_components`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
@@ -397,6 +498,19 @@ ALTER TABLE `asset_borrowing`
 ALTER TABLE `asset_maintenance`
   ADD CONSTRAINT `fk_maintenance_asset` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_maintenance_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `pc_units`
+--
+ALTER TABLE `pc_units`
+  ADD CONSTRAINT `fk_pc_units_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `pc_components`
+--
+ALTER TABLE `pc_components`
+  ADD CONSTRAINT `fk_pc_components_pc_unit` FOREIGN KEY (`pc_unit_id`) REFERENCES `pc_units` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

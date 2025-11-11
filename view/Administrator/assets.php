@@ -84,6 +84,16 @@ include '../components/layout_header.php';
     .status-retired { background-color: #f3f4f6; color: #374151; }
     .status-damaged { background-color: #fee2e2; color: #991b1b; }
     
+    .pc-terminal-card {
+        transition: all 0.3s ease;
+    }
+    .pc-terminal-card:hover {
+        transform: translateY(-3px);
+    }
+    .pc-terminal-card:active {
+        transform: translateY(0);
+    }
+    
     .tab-button {
         padding: 0.75rem 1.5rem;
         border: none;
@@ -446,18 +456,36 @@ include '../components/layout_header.php';
         
         // Fetch room assets
         fetch(`../../controller/get_room_assets.php?room_id=${roomId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('API Response:', data); // Debug log
                 if (data.success) {
+                    // Store assets globally for navigation
+                    window.currentRoomAssets = data.assets;
                     displayLabAssets(data.assets);
                 } else {
                     document.getElementById('labAssetsContent').innerHTML = 
-                        '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-4xl mb-4"></i><p>' + data.message + '</p></div>';
+                        `<div class="text-center py-8 text-red-600">
+                            <i class="fas fa-exclamation-circle text-4xl mb-4"></i>
+                            <p class="font-semibold mb-2">Error Loading Assets</p>
+                            <p class="text-sm">${data.message || 'Unknown error'}</p>
+                        </div>`;
                 }
             })
             .catch(error => {
+                console.error('Fetch error:', error); // Debug log
                 document.getElementById('labAssetsContent').innerHTML = 
-                    '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-4xl mb-4"></i><p>Error loading assets</p></div>';
+                    `<div class="text-center py-8 text-red-600">
+                        <i class="fas fa-exclamation-circle text-4xl mb-4"></i>
+                        <p class="font-semibold mb-2">Error Loading Assets</p>
+                        <p class="text-sm">${error.message}</p>
+                        <p class="text-xs text-gray-500 mt-2">Check browser console for details</p>
+                    </div>`;
             });
     }
 
@@ -472,11 +500,114 @@ include '../components/layout_header.php';
             return;
         }
 
-        let html = '<table class="min-w-full bg-white border border-gray-300"><thead class="bg-gray-100"><tr>';
+        // Separate PC assets (with terminal numbers) from other assets
+        const pcAssets = {};
+        const otherAssets = [];
+        
+        assets.forEach(asset => {
+            if (asset.terminal_number && asset.terminal_number.trim() !== '') {
+                const terminal = asset.terminal_number.trim();
+                if (!pcAssets[terminal]) {
+                    pcAssets[terminal] = [];
+                }
+                pcAssets[terminal].push(asset);
+            } else {
+                otherAssets.push(asset);
+            }
+        });
+
+        let html = '<div class="space-y-6">';
+        
+        // PC Units Section
+        if (Object.keys(pcAssets).length > 0) {
+            html += '<div>';
+            html += '<h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">';
+            html += '<i class="fas fa-desktop text-blue-600 mr-2"></i>PC Units';
+            html += '</h4>';
+            html += '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">';
+            
+            // Sort terminal numbers naturally (th-1, th-2, th-10, etc.)
+            const sortedTerminals = Object.keys(pcAssets).sort((a, b) => {
+                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+            
+            sortedTerminals.forEach(terminal => {
+                const terminalAssets = pcAssets[terminal];
+                const componentCount = terminalAssets.length;
+                html += `
+                    <div class="pc-terminal-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 cursor-pointer hover:shadow-lg transition border-2 border-blue-200 hover:border-blue-400"
+                         onclick="viewTerminalAssets('${terminal}', ${JSON.stringify(terminalAssets).replace(/"/g, '&quot;')})">
+                        <div class="text-center">
+                            <div class="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-computer text-xl"></i>
+                            </div>
+                            <div class="font-bold text-gray-800 text-sm">${terminal}</div>
+                            <div class="text-xs text-gray-600 mt-1">${componentCount} asset${componentCount !== 1 ? 's' : ''}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+        }
+        
+        // Other Assets Section
+        if (otherAssets.length > 0) {
+            html += '<div>';
+            html += '<h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">';
+            html += '<i class="fas fa-boxes text-green-600 mr-2"></i>Other Assets';
+            html += '</h4>';
+            html += '<div class="overflow-x-auto">';
+            html += '<table class="min-w-full bg-white border border-gray-300"><thead class="bg-gray-100"><tr>';
+            html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Asset Tag</th>';
+            html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Name</th>';
+            html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Type</th>';
+            html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Status</th>';
+            html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>';
+            html += '</tr></thead><tbody class="divide-y divide-gray-200">';
+
+            otherAssets.forEach(asset => {
+                const statusClass = 'status-' + asset.status.toLowerCase().replace(' ', '-');
+                html += `<tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm font-medium">${asset.asset_tag}</td>
+                    <td class="px-4 py-3 text-sm">${asset.asset_name}</td>
+                    <td class="px-4 py-3 text-sm">${asset.asset_type}</td>
+                    <td class="px-4 py-3 text-sm"><span class="status-badge ${statusClass}">${asset.status}</span></td>
+                    <td class="px-4 py-3 text-sm">
+                        <button onclick="viewAssetDetails(${asset.id})" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-eye"></i></button>
+                        <button onclick="editAsset(${asset.id})" class="text-yellow-600 hover:text-yellow-800 mr-2"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div></div>';
+        }
+        
+        html += '</div>';
+        document.getElementById('labAssetsContent').innerHTML = html;
+    }
+
+    // View Terminal Assets (when clicking on a PC terminal number)
+    function viewTerminalAssets(terminal, assets) {
+        // Prevent event propagation
+        event.stopPropagation();
+        
+        let html = '<div class="mb-4">';
+        html += `<button onclick="displayLabAssets(window.currentRoomAssets)" class="text-blue-600 hover:text-blue-800 flex items-center mb-3">`;
+        html += '<i class="fas fa-arrow-left mr-2"></i>Back to Room View';
+        html += '</button>';
+        html += `<h4 class="text-xl font-bold text-gray-800 mb-2">${terminal} - Components</h4>`;
+        html += '</div>';
+        
+        html += '<div class="overflow-x-auto">';
+        html += '<table class="min-w-full bg-white border border-gray-300"><thead class="bg-gray-100"><tr>';
         html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Asset Tag</th>';
         html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Name</th>';
         html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Type</th>';
-        html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Terminal</th>';
+        html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Category</th>';
+        html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Brand</th>';
         html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Status</th>';
         html += '<th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>';
         html += '</tr></thead><tbody class="divide-y divide-gray-200">';
@@ -487,7 +618,8 @@ include '../components/layout_header.php';
                 <td class="px-4 py-3 text-sm font-medium">${asset.asset_tag}</td>
                 <td class="px-4 py-3 text-sm">${asset.asset_name}</td>
                 <td class="px-4 py-3 text-sm">${asset.asset_type}</td>
-                <td class="px-4 py-3 text-sm">${asset.terminal_number || '-'}</td>
+                <td class="px-4 py-3 text-sm">${asset.category || '-'}</td>
+                <td class="px-4 py-3 text-sm">${asset.brand || '-'}</td>
                 <td class="px-4 py-3 text-sm"><span class="status-badge ${statusClass}">${asset.status}</span></td>
                 <td class="px-4 py-3 text-sm">
                     <button onclick="viewAssetDetails(${asset.id})" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-eye"></i></button>
@@ -496,7 +628,7 @@ include '../components/layout_header.php';
             </tr>`;
         });
 
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         document.getElementById('labAssetsContent').innerHTML = html;
     }
 
