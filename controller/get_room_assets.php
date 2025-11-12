@@ -2,8 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 
-// Check if user is logged in and has administrator role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Administrator') {
+// Check if user is logged in and has laboratory staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit();
 }

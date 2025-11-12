@@ -27,13 +27,6 @@ $navigation_items = [
             'href' => 'users.php'
         ],
         [
-            'id' => 'assets',
-            'label' => 'Asset Management',
-            'icon' => 'fa-solid fa-box',
-            'color' => 'yellow',
-            'href' => 'assets.php'
-        ],
-        [
             'id' => 'analytics',
             'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',

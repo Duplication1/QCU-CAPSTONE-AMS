@@ -3,8 +3,8 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/Asset.php';
 
-// Check if user is logged in and has administrator role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Administrator') {
+// Check if user is logged in and has laboratory staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     header("Location: ../view/login.php");
     exit();
 }
@@ -69,7 +69,7 @@ try {
     
 } catch (Exception $e) {
     $_SESSION['error_message'] = 'Export error: ' . $e->getMessage();
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 ?>

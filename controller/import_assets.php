@@ -3,22 +3,22 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/Asset.php';
 
-// Check if user is logged in and has administrator role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Administrator') {
+// Check if user is logged in and has laboratory staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     $_SESSION['error_message'] = 'Unauthorized access';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error_message'] = 'Invalid request method';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
 if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
     $_SESSION['error_message'] = 'No file uploaded or upload error occurred';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
@@ -27,7 +27,7 @@ $file = $_FILES['csv_file'];
 // Validate file type
 if (pathinfo($file['name'], PATHINFO_EXTENSION) !== 'csv') {
     $_SESSION['error_message'] = 'Invalid file type. Please upload a CSV file';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
@@ -35,7 +35,7 @@ if (pathinfo($file['name'], PATHINFO_EXTENSION) !== 'csv') {
 $maxSize = 5 * 1024 * 1024;
 if ($file['size'] > $maxSize) {
     $_SESSION['error_message'] = 'File size exceeds 5MB limit';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
@@ -146,6 +146,6 @@ try {
     $_SESSION['error_message'] = 'Import error: ' . $e->getMessage();
 }
 
-header("Location: ../view/Administrator/assets.php");
+header("Location: ../view/LaboratoryStaff/registry.php");
 exit();
 ?>

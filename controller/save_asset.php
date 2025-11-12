@@ -3,15 +3,15 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/Asset.php';
 
-// Check if user is logged in and has administrator role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Administrator') {
+// Check if user is logged in and has laboratory staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
         exit();
     }
     $_SESSION['error_message'] = 'Unauthorized access';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         exit();
     }
     $_SESSION['error_message'] = 'Invalid request method';
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 
@@ -123,7 +123,7 @@ try {
 }
 
 if (!$isAjax) {
-    header("Location: ../view/Administrator/assets.php");
+    header("Location: ../view/LaboratoryStaff/registry.php");
     exit();
 }
 ?>
