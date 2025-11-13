@@ -76,6 +76,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         if ($ok) echo json_encode(['success'=>true]); else echo json_encode(['success'=>false,'message'=>'Delete failed']);
         exit;
     }
+
+    // Create user
+    if ($action === 'create_user') {
+        $id_number = trim($_POST['id_number'] ?? '');
+        $full = trim($_POST['full_name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $role = trim($_POST['role'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+
+        // require password now
+        if ($full === '' || $email === '' || $role === '' || $password === '') {
+            echo json_encode(['success'=>false,'message'=>'Missing required fields (password is required)']); exit;
+        }
+
+        // check duplicates
+        $chk = $conn->prepare("SELECT id FROM users WHERE email = ? OR id_number = ? LIMIT 1");
+        $chk->bind_param('ss', $email, $id_number);
+        $chk->execute();
+        $rchk = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        if ($rchk) {
+            echo json_encode(['success'=>false,'message'=>'A user with this email or ID number already exists']); exit;
+        }
+
+        // password required - hash it
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $conn->prepare("INSERT INTO users (id_number, full_name, email, role, password, status, created_at) VALUES (?, ?, ?, ?, ?, 'Active', NOW())");
+        $stmt->bind_param('sssss', $id_number, $full, $email, $role, $hash);
+        $ok = $stmt->execute();
+        if (!$ok) {
+            $err = $stmt->error;
+            $stmt->close();
+            echo json_encode(['success'=>false,'message'=>'Insert failed: '.$err]); exit;
+        }
+        $newId = $stmt->insert_id;
+        $stmt->close();
+
+        // return created user object (do not return password)
+        $userObj = [
+            'id' => $newId,
+            'id_number' => $id_number,
+            'full_name' => $full,
+            'email' => $email,
+            'role' => $role,
+            'status' => 'Active',
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        echo json_encode(['success'=>true,'user'=>$userObj,'message'=>'User created']);
+        exit;
+    }
 }
 
 // Fetch all users for display
@@ -96,6 +148,9 @@ if ($q && $q->num_rows > 0) {
                     <div class="flex items-center gap-2">
                         <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search users by name, email or role" class="border rounded px-3 py-2 text-sm w-72" />
                         <button onclick="filterUsers()" class="bg-blue-600 text-white px-3 py-2 rounded text-sm">Search</button>
+                    </div>
+                    <div>
+                        <button id="addUserBtn" onclick="openAddUserModal()" class="bg-blue-600 text-white px-3 py-2 rounded text-sm">Add User</button>
                     </div>
                 </div>
 
@@ -206,6 +261,47 @@ if ($q && $q->num_rows > 0) {
                 </div>
             </div>
         </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+  <div class="absolute inset-0 bg-black bg-opacity-40 z-40" onclick="closeAddUserModal()"></div>
+  <div class="relative bg-white rounded-lg shadow-2xl w-11/12 max-w-2xl p-6 z-50">
+    <h3 class="text-xl font-semibold mb-4">Create New User</h3>
+    <form id="addUserForm" onsubmit="return submitAddUser(event)">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-700">ID Number</label>
+          <input id="add_id_number" name="id_number" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700">Full name</label>
+          <input id="add_full_name" name="full_name" class="w-full border rounded px-3 py-2" required />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700">Email</label>
+          <input id="add_email" name="email" type="email" class="w-full border rounded px-3 py-2" required />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700">Role</label>
+          <select id="add_role" name="role" class="w-full border rounded px-3 py-2" required>
+            <option value="Administrator">Administrator</option>
+            <option value="Technician">Technician</option>
+            <option value="Laboratory Staff">Laboratory Staff</option>
+            <option value="Student">Student</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm text-gray-700">Password (required)</label>
+          <input id="add_password" name="password" type="password" class="w-full border rounded px-3 py-2" required />
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 rounded bg-gray-100">Cancel</button>
+        <button type="submit" id="addUserSaveBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Create</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <?php include '../components/layout_footer.php'; ?>
@@ -500,5 +596,75 @@ async function toggleStatus(btn, userId) {
         }
     } catch (err) { console.error(err); alert('Request failed'); }
     btn.disabled = false;
+}
+
+// Add User modal handlers
+function openAddUserModal() {
+    const m = document.getElementById('addUserModal');
+    if (!m) return;
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+}
+
+function closeAddUserModal() {
+    const m = document.getElementById('addUserModal');
+    if (!m) return;
+    m.classList.add('hidden');
+    m.classList.remove('flex');
+    // reset form
+    const f = document.getElementById('addUserForm');
+    if (f) f.reset();
+}
+
+async function submitAddUser(e) {
+    e && e.preventDefault();
+    const btn = document.getElementById('addUserSaveBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = document.getElementById('addUserForm');
+        const pwd = (form.querySelector('input[name="password"]')||{}).value || '';
+        if (!pwd.trim()) {
+            showTopAlert('error', 'Password is required');
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        const data = new URLSearchParams(new FormData(form));
+        data.append('ajax','1'); data.append('action','create_user');
+
+        const res = await fetch(location.href, { method: 'POST', body: data });
+        const raw = await res.text();
+        console.log('create_user raw response:', raw);
+        let j;
+        try {
+            j = JSON.parse(raw);
+        } catch (err) {
+            console.warn('create_user: server returned non-JSON:', raw);
+            showTopAlert('error', 'Server returned unexpected response. Check console Network/Response.');
+            // fallback: reload to reflect DB state
+            location.reload();
+            return false;
+        }
+
+        console.log('create_user parsed JSON:', j);
+        if (j && j.success) {
+            // if server returned user object, add to table; otherwise reload to reflect DB state
+            if (j.user) {
+                addUserRow(j.user);
+                closeAddUserModal();
+                showTopAlert('success', j.message || 'User created');
+            } else {
+                // server success but no user object — reload to sync
+                showTopAlert('success', j.message || 'User created — reloading list');
+                setTimeout(()=> location.reload(), 600);
+            }
+        } else {
+            showTopAlert('error', j.message || 'Create failed');
+        }
+    } catch (err) {
+        console.error('create user error', err);
+        showTopAlert('error', 'Request failed. See console.');
+    }
+    if (btn) btn.disabled = false;
+    return false;
 }
 </script>
