@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Health Monitoring - System Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 36px;
+        }
+        .diagram {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .layer-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .components {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .component {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .component.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .component.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .component.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .component-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .component-desc {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 40px;
+            color: #667eea;
+            line-height: 1;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .feature-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-card li {
+            padding: 8px 0;
+            color: #2c3e50;
+        }
+        .feature-card li:before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status-demo {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .status-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 250px;
+            text-align: center;
+        }
+        .status-indicator {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        .status-healthy {
+            background: #48bb78;
+        }
+        .status-warning {
+            background: #f6ad55;
+        }
+        .status-critical {
+            background: #fc8181;
+        }
+        .status-offline {
+            background: #a0aec0;
+        }
+        .metrics {
+            margin-top: 15px;
+            text-align: left;
+        }
+        .metric-bar {
+            margin: 10px 0;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+        .bar-bg {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .bar-healthy {
+            background: #48bb78;
+        }
+        .bar-warning {
+            background: #f6ad55;
+        }
+        .bar-critical {
+            background: #fc8181;
+        }
+        .data-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .data-box {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 300px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .data-arrow {
+            font-size: 40px;
+            color: #667eea;
+        }
+        @media (max-width: 768px) {
+            .data-arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ PC Health Monitoring System Overview</h1>
+
+        <!-- System Architecture -->
+        <div class="diagram">
+            <h2 class="section-title">System Architecture</h2>
+            <div class="architecture">
+                <div class="layer">
+                    <div class="layer-title">📍 Layer 1: Data Collection</div>
+                    <div class="components">
+                        <div class="component">
+                            <div class="component-title">PC Agent (HTML)</div>
+                            <div class="component-desc">Browser-based monitoring</div>
+                        </div>
+                        <div class="component">
+                            <div class="component-title">PC Agent (PowerShell)</div>
+                            <div class="component-desc">Background service</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">☁️ Layer 2: Data Storage</div>
+                    <div class="components">
+                        <div class="component green">
+                            <div class="component-title">Firebase Realtime Database</div>
+                            <div class="component-desc">Cloud storage with WebSocket sync</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">📊 Layer 3: Visualization</div>
+                    <div class="components">
+                        <div class="component orange">
+                            <div class="component-title">Laboratory Staff Dashboard</div>
+                            <div class="component-desc">Real-time monitoring interface</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="layer">
+                    <div class="layer-title">💾 Layer 4: Local Database</div>
+                    <div class="components">
+                        <div class="component blue">
+                            <div class="component-title">MySQL Database</div>
+                            <div class="component-desc">PC units, rooms, users</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Status Examples -->
+        <div class="diagram">
+            <h2 class="section-title">Health Status Indicators</h2>
+            <div class="status-demo">
+                <div class="status-card">
+                    <div class="status-indicator status-healthy">
+                        ✓
+                    </div>
+                    <h3>Healthy</h3>
+                    <p style="color: #718096; font-size: 14px;">All metrics &lt; 70%</p>
+                    <div class="metrics">
+                        <div class="metric-bar">
+                            <div class="metric-label">CPU: 45%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-healthy" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">RAM: 60%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-healthy" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">Disk: 55%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-healthy" style="width: 55%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-indicator status-warning">
+                        ⚠
+                    </div>
+                    <h3>Warning</h3>
+                    <p style="color: #718096; font-size: 14px;">Any metric 70-90%</p>
+                    <div class="metrics">
+                        <div class="metric-bar">
+                            <div class="metric-label">CPU: 78%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-warning" style="width: 78%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">RAM: 65%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-healthy" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">Disk: 70%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-warning" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-indicator status-critical">
+                        ✕
+                    </div>
+                    <h3>Critical</h3>
+                    <p style="color: #718096; font-size: 14px;">Any metric &gt; 90%</p>
+                    <div class="metrics">
+                        <div class="metric-bar">
+                            <div class="metric-label">CPU: 95%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-critical" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">RAM: 88%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-warning" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <div class="metric-label">Disk: 75%</div>
+                            <div class="bar-bg">
+                                <div class="bar-fill bar-warning" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-indicator status-offline">
+                        —
+                    </div>
+                    <h3>Offline</h3>
+                    <p style="color: #718096; font-size: 14px;">No data received</p>
+                    <div class="metrics" style="text-align: center; padding: 20px 0;">
+                        <p style="color: #a0aec0;">Agent not running or<br>connection lost</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="diagram">
+            <h2 class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>📊 Real-time Monitoring</h3>
+                    <ul>
+                        <li>Updates every 5 seconds</li>
+                        <li>No page refresh needed</li>
+                        <li>WebSocket connectivity</li>
+                        <li>Instant status changes</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🎨 Visual Dashboard</h3>
+                    <ul>
+                        <li>Color-coded indicators</li>
+                        <li>Progress bars for metrics</li>
+                        <li>Overview statistics</li>
+                        <li>Detailed PC modals</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🔍 Filtering & Search</h3>
+                    <ul>
+                        <li>Filter by room</li>
+                        <li>View all or specific labs</li>
+                        <li>Sort by status</li>
+                        <li>Quick navigation</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>⚡ Performance</h3>
+                    <ul>
+                        <li>Lightweight agents</li>
+                        <li>Minimal bandwidth usage</li>
+                        <li>Cloud-based storage</li>
+                        <li>Scalable architecture</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🛠️ Easy Deployment</h3>
+                    <ul>
+                        <li>Multiple agent options</li>
+                        <li>Simple configuration</li>
+                        <li>Auto-start capability</li>
+                        <li>Setup wizard included</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>📈 Health Tracking</h3>
+                    <ul>
+                        <li>CPU usage monitoring</li>
+                        <li>RAM usage tracking</li>
+                        <li>Disk space monitoring</li>
+                        <li>Network information</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow -->
+        <div class="diagram">
+            <h2 class="section-title">Data Flow Example</h2>
+            <div class="data-flow">
+                <div class="data-box">
+                    <strong>1. PC Agent Collects:</strong><br><br>
+                    CPU: 65%<br>
+                    RAM: 12GB / 16GB (75%)<br>
+                    Disk C: 380GB / 500GB (76%)<br>
+                    Status: Warning<br>
+                    Timestamp: 1700000000000
+                </div>
+                <div class="data-arrow">→</div>
+                <div class="data-box">
+                    <strong>2. Sends to Firebase:</strong><br><br>
+                    {<br>
+                    &nbsp;&nbsp;"pcUnitId": "1",<br>
+                    &nbsp;&nbsp;"status": "online",<br>
+                    &nbsp;&nbsp;"cpu": {"usage": 65},<br>
+                    &nbsp;&nbsp;"memory": {"usage": 75},<br>
+                    &nbsp;&nbsp;"healthStatus": "warning"<br>
+                    }
+                </div>
+                <div class="data-arrow">→</div>
+                <div class="data-box">
+                    <strong>3. Dashboard Displays:</strong><br><br>
+                    🟡 TH-01 - Computer Lab 1<br>
+                    Status: WARNING<br>
+                    CPU: 65% ████████░<br>
+                    RAM: 75% █████████░<br>
+                    Disk: 76% █████████░
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="diagram">
+            <h2 class="section-title">📚 Documentation & Resources</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🚀 Setup Wizard</h3>
+                    <p style="margin: 10px 0; color: #718096;">
+                        Interactive step-by-step setup guide
+                    </p>
+                    <a href="setup_wizard.html" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        Open Setup Wizard →
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <h3>⚡ Quick Start Guide</h3>
+                    <p style="margin: 10px 0; color: #718096;">
+                        Fast deployment instructions
+                    </p>
+                    <a href="QUICKSTART.md" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        View Quick Start →
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <h3>📖 Full Documentation</h3>
+                    <p style="margin: 10px 0; color: #718096;">
+                        Complete technical documentation
+                    </p>
+                    <a href="../PC_HEALTH_REALTIME_SETUP.md" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        Read Documentation →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
