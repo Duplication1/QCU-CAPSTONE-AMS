@@ -16,111 +16,132 @@ require_once '../../config/config.php';
 include '../components/layout_header.php';
 ?>
 
-        <!-- Main Content -->
-        <main class="p-6">
-        
-        <?php if (isset($_SESSION['error_message'])): ?>
-<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    <strong>Error:</strong> <?php echo htmlspecialchars($_SESSION['error_message']); ?>
-</div>
-<?php unset($_SESSION['error_message']); ?>
-<?php endif; ?>
+<!-- Main Content -->
+<div class="p-8">   
+    <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+    Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
+    </h2>
 
-<?php if (isset($_SESSION['success_message'])): ?>
-<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-    <strong>Success:</strong> <?php echo htmlspecialchars($_SESSION['success_message']); ?>
-</div>
-<?php unset($_SESSION['success_message']); ?>
-<?php endif; ?>
-        <!-- Welcome Section -->
-        <div class=" p-6 mb-8">
-            <h2 class="text-2xl text-center font-bold text-gray-800 mb-2">Hi <?php echo htmlspecialchars($_SESSION['full_name']); ?>, what do you need help with?</h2>
+  <p class="text-gray-500 mb-8">Choose from the available options below.</p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+
+    <!-- Hardware Issue -->
+    <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-blue-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+    <div class="flex items-start gap-4">
+    <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
+    <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
-
-        <!-- Help Options -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Hardware Issue -->
-            <div onclick="handleIssueClick('hardware')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-blue-300 group transform hover:scale-105">
-                <div class="flex gap-6">
-                    <div class="bg-blue-100 p-4 rounded-xl group-hover:bg-blue-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-desktop text-blue-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Hardware Issue</h3>
-                        <p class="text-gray-600">Computer, printer, or equipment problems that need technical assistance</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Software Issue -->
-            <div onclick="handleIssueClick('software')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-green-300 group transform hover:scale-105">
-                <div class="flex gap-6">
-                    <div class="bg-green-100 p-4 rounded-xl group-hover:bg-green-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-mobile-screen-button text-green-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Software Issue</h3>
-                        <p class="text-gray-600">Application crashes, system errors, or software installation problems</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Network Issue -->
-            <div onclick="handleIssueClick('network')" class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-purple-300 group transform hover:scale-105">
-                <div class="flex gap-6">
-                    <div class="bg-purple-100 p-4 rounded-xl group-hover:bg-purple-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-wifi text-purple-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Network Issue</h3>
-                        <p class="text-gray-600">Internet connectivity problems, Wi-Fi issues, or network access troubles</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Borrow Equipment -->
-            <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-yellow-300 group transform hover:scale-105" onclick="handleIssueClick('borrow')">
-                <div class="flex gap-6">
-                    <div class="bg-yellow-100 p-4 rounded-xl group-hover:bg-yellow-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-box text-yellow-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Borrow Equipment</h3>
-                        <p class="text-gray-600">Request laboratory equipment, tools, or devices for academic projects</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Laboratory Concern -->
-            <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-indigo-300 group transform hover:scale-105" onclick="handleIssueClick('laboratory')">
-                <div class="flex gap-6">
-                    <div class="bg-indigo-100 p-4 rounded-xl group-hover:bg-indigo-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-building text-indigo-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Laboratory Concern</h3>
-                        <p class="text-gray-600">Lab facility access, safety issues, or equipment availability concerns</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Other -->
-            <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition duration-200 cursor-pointer border border-gray-100 hover:border-gray-300 group transform hover:scale-105" onclick="handleIssueClick('other')">
-                <div class="flex gap-6">
-                    <div class="bg-gray-100 p-4 rounded-xl group-hover:bg-gray-200 transition-colors flex items-center justify-center w-16 h-16 flex-shrink-0">
-                        <i class="fa-solid fa-circle-question text-gray-600 text-3xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Other</h3>
-                        <p class="text-gray-600">General questions, account issues, or assistance with university services</p>
-                    </div>
-                </div>
-            </div>
+    <div>
+      <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
+      <p class="text-sm text-gray-500">
+        Computer, printer, or equipment problems that need technical assistance.
+      </p>
         </div>
+      </div>
+    </div>
 
-     
-       
-        </main>
+    <!-- Software Issue -->
+    <div onclick="handleIssueClick('software')" 
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-green-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-green-100 text-green-600 rounded-full">
+          <i class="fa-solid fa-microchip text-3xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800">Software Issue</h3>
+          <p class="text-sm text-gray-500">
+            Application crashes, system errors, or software installation problems.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Network Issue -->
+    <div onclick="handleIssueClick('network')" 
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-violet-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
+          <i class="fa-solid fa-globe text-3xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800">Network Issue</h3>
+          <p class="text-sm text-gray-500">
+            Internet connectivity problems, Wi-Fi issues, or network access troubles.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Borrow Equipment -->
+    <div onclick="openBorrowingModal()" 
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-yellow-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
+          <i class="fa-solid fa-box text-3xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800">Borrow Equipment</h3>
+          <p class="text-sm text-gray-500">
+            Request laboratory equipment, tools, or devices for academic projects.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Laboratory Concern -->
+    <div onclick="handleIssueClick('laboratory')" 
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-blue-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-blue-200 text-blue-700 rounded-full">
+          <i class="fa-solid fa-building text-3xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800">Laboratory Concern</h3>
+          <p class="text-sm text-gray-500">
+            Lab facility access, safety issues, or equipment availability concerns.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Other -->
+    <div onclick="handleIssueClick('hardware')" 
+     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+            border border-transparent hover:border-blue-500 hover:shadow-lg 
+            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+
+      <div class="flex items-start gap-4">
+        <div class="p-3 bg-gray-100 text-gray-600 rounded-full">
+          <i class="fa-solid fa-flag text-3xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-800">Other</h3>
+          <p class="text-sm text-gray-500">
+            General questions, account issues, or assistance with university services.
+          </p>
+        </div>
+      </div>
+    </div>
+
+      </div>
+</div>
 
 <!-- Single Dynamic Issue Modal -->
 <div id="issueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
@@ -948,106 +969,7 @@ document.addEventListener('click', function(e) {
     </div>
 </div>
 
-<style>
-/* DataTables Custom Styling */
-#assetsTable {
-    font-size: 0.875rem;
-    width: 100% !important;
-    border-collapse: collapse !important;
-}
 
-#assetsTable thead th {
-    background-color: #fef3c7;
-    font-weight: 600;
-    padding: 12px 16px !important;
-    border-bottom: 2px solid #fcd34d;
-    text-align: left;
-    white-space: nowrap;
-}
-
-#assetsTable tbody td {
-    padding: 12px 16px !important;
-    border-bottom: 1px solid #e5e7eb;
-    vertical-align: middle;
-}
-
-#assetsTable tbody tr {
-    transition: all 0.2s ease;
-}
-
-#assetsTable tbody tr:hover {
-    background-color: #fef9e7 !important;
-}
-
-#assetsTable tbody tr.bg-yellow-100 {
-    background-color: #fef3c7 !important;
-    border-left: 4px solid #f59e0b !important;
-}
-
-#assetsTable tbody tr.border-l-4 {
-    border-left: 4px solid #d97706 !important;
-}
-
-/* DataTables Wrapper Styling */
-.dataTables_wrapper {
-    width: 100%;
-}
-
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter {
-    margin-bottom: 1rem;
-}
-
-.dataTables_wrapper .dataTables_length select {
-    padding: 0.375rem 2rem 0.375rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    margin: 0 0.5rem;
-}
-
-.dataTables_wrapper .dataTables_filter input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    margin-left: 0.5rem;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 0.375rem 0.75rem;
-    margin: 0 0.125rem;
-    border-radius: 0.375rem;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #d97706 !important;
-    color: white !important;
-    border: 1px solid #d97706 !important;
-}
-
-/* Fix table header/body alignment */
-.dataTables_scrollHead {
-    overflow: visible !important;
-}
-
-.dataTables_scrollBody {
-    overflow: visible !important;
-}
-
-/* Ensure buttons are always visible */
-.step-content {
-    min-height: 400px;
-}
-
-/* Row selection styling */
-#assetsTable tbody tr.cursor-pointer {
-    cursor: pointer;
-}
-
-#assetsTable tbody tr.selected {
-    background-color: #fef3c7 !important;
-    border-left: 4px solid #d97706;
-}
-</style>
 
 <script>
 let currentStep = 1;

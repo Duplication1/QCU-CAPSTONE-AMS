@@ -21,29 +21,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const navTexts = document.querySelectorAll('.nav-text');
     const sidebarBrand = document.getElementById('sidebar-brand');
     const toggleIcon = document.getElementById('toggle-icon');
-    
-    let isCollapsed = false;
+
+    let isCollapsed = sidebar.classList.contains('w-20');
 
     // Update desktop sidebar state
     function updateDesktopSidebar() {
-        if (isCollapsed) {
-            sidebar.classList.remove('w-64');
-            sidebar.style.width = '80px'; // Adjusted to 80px (75px + 5px)
-            mainWrapper.classList.remove('lg:ml-64');
-            mainWrapper.style.marginLeft = '80px';
-            hideTexts();
-            // Change icon to chevron-right when collapsed
-            toggleIcon.className = 'fa-solid fa-chevron-right';
-        } else {
-            sidebar.style.width = '256px'; // w-64 equivalent
-            sidebar.classList.add('w-64');
-            mainWrapper.classList.remove('lg:ml-20');
-            mainWrapper.style.marginLeft = '256px';
-            showAllTexts();
-            // Change icon to chevron-left when expanded
-            toggleIcon.className = 'fa-solid fa-chevron-left';
-        }
-    }
+    if (isCollapsed) {
+    sidebar.classList.remove('w-[220px]');
+    sidebar.classList.add('w-20');
+
+    mainWrapper.classList.remove('ml-64');
+    mainWrapper.classList.add('ml-[220px]');
+
+    hideTexts();
+    toggleIcon.className = 'fa-solid fa-chevron-right';
+  } else {
+
+    // don’t re-add w-64 if it’s already there
+    sidebar.classList.remove('w-20');
+    sidebar.classList.add('w-[220px]');
+
+    mainWrapper.classList.remove('ml-20');
+    mainWrapper.classList.add('ml-[220px]');
+
+    showAllTexts();
+    toggleIcon.className = 'fa-solid fa-chevron-left';
+  }
+}
 
     // Hide navigation texts when collapsed
     function hideTexts() {
@@ -75,12 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Desktop toggle functionality
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            isCollapsed = !isCollapsed;
-            updateDesktopSidebar();
-        });
-    }
-
+    sidebarToggle.addEventListener('click', function() {
+        isCollapsed = !isCollapsed;
+        updateDesktopSidebar();
+    });
+}
     // Mobile menu toggle
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', function() {

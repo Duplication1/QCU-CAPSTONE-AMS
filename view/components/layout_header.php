@@ -40,9 +40,13 @@ $page_title = "AMS - " . $current_role . " Dashboard";
     <link rel="stylesheet" href="../../assets/css/output.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Include Poppins font in your <head> if not already included -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwind.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Dark mode overrides for Student/Faculty (applies when body has .dark-mode) -->
     <style>
         /* Ensure main background and text colors flip to dark/white */
@@ -313,12 +317,12 @@ $page_title = "AMS - " . $current_role . " Dashboard";
         })();
     </script>
 </head>
-<body class="min-h-screen bg-gray-50" data-role="<?php echo htmlspecialchars($current_role); ?>">
+<body class="min-h-screen bg-gray-100" data-role="<?php echo htmlspecialchars($current_role); ?>">
     
     <?php include __DIR__ . '/sidebar.php'; ?>
     
     <!-- Main Content Wrapper -->
-    <div id="main-wrapper" class="lg:ml-64 transition-all duration-300 ease-in-out">
+<div id="main-wrapper" class="ml-[220px] pt-[138px] transition-all duration-300 ease-in-out">
         
         <?php include __DIR__ . '/header.php'; ?>
         

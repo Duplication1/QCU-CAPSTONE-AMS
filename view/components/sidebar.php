@@ -16,21 +16,21 @@ $navigation_items = [
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'fa-solid fa-gauge',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'index.php'
         ],
         [
             'id' => 'users',
             'label' => 'User Management',
             'icon' => 'fa-solid fa-users',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'users.php'
         ],
         [
             'id' => 'analytics',
             'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'analytics.php'
         ]
     ],
@@ -39,42 +39,42 @@ $navigation_items = [
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'fa-solid fa-gauge',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'index.php'
         ],
         [
             'id' => 'borrowing',
             'label' => 'Borrowing Management',
             'icon' => 'fa-solid fa-right-left',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'borrowing.php'
         ],
         [
             'id' => 'tickets',
             'label' => 'Ticket Coordination',
             'icon' => 'fa-solid fa-ticket',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'tickets.php'
         ],
         [
             'id' => 'operations',
             'label' => 'Lab Operations',
             'icon' => 'fa-solid fa-flask',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'operations.php'
         ],
         [
             'id' => 'registry',
             'label' => 'Asset Registry',
             'icon' => 'fa-solid fa-clipboard-list',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'registry.php'
         ],
         [
             'id' => 'e-signature',
             'label' => 'My E-Signature',
             'icon' => 'fa-solid fa-signature',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'e-signature.php'
         ]
     ],
@@ -83,21 +83,21 @@ $navigation_items = [
             'id' => 'dashboard',
             'label' => 'Home',
             'icon' => 'fa-solid fa-house',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'index.php'
         ],
         [
             'id' => 'requests',
             'label' => 'My Requests',
             'icon' => 'fa-solid fa-clipboard-check',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'requests.php'
         ],
         [
             'id' => 'e-signature',
             'label' => 'My E-Signature',
             'icon' => 'fa-solid fa-signature',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'e-signature.php'
         ]
     ],
@@ -106,21 +106,21 @@ $navigation_items = [
             'id' => 'dashboard',
             'label' => 'Home',
             'icon' => 'fa-solid fa-house',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'index.php'
         ],
         [
             'id' => 'requests',
             'label' => 'My Requests',
             'icon' => 'fa-solid fa-clipboard-check',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'requests.php'
         ],
         [
             'id' => 'e-signature',
             'label' => 'My E-Signature',
             'icon' => 'fa-solid fa-signature',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'e-signature.php'
         ]
     ],
@@ -129,28 +129,28 @@ $navigation_items = [
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'fa-solid fa-gauge',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'index.php'
         ],
         [
             'id' => 'tickets',
             'label' => 'Ticket Management',
             'icon' => 'fa-solid fa-ticket',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'tickets.php'
         ],
         [
             'id' => 'maintenance',
             'label' => 'Maintenance Tasks',
             'icon' => 'fa-solid fa-wrench',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'maintenance.php'
         ],
         [
             'id' => 'registry',
             'label' => 'Asset Registry',
             'icon' => 'fa-solid fa-clipboard-list',
-            'color' => 'yellow',
+            'color' => 'blue',
             'href' => 'registry.php'
         ]
     ]
@@ -188,20 +188,26 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
 <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
 
 <!-- Sidebar -->
-<aside id="sidebar" class="fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ease-in-out bg-white shadow-xl border-r border-gray-200 w-64 lg:translate-x-0 -translate-x-full flex flex-col">
-    <!-- Sidebar Header -->
-    <div id="sidebar-header" class="relative flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300 flex-shrink-0">
-        <!-- Logo/Toggle Button Container -->
-        <div class="flex items-center space-x-3">
-            <!-- Desktop Toggle Button - positioned where logo was -->
-            <button id="sidebar-toggle" class="hidden lg:flex p-2 rounded-lg text-white hover:bg-blue-500 transition-all duration-300">
-                <i id="toggle-icon" class="fa-solid fa-chevron-left"></i>
-            </button>
-            
+<aside id="sidebar"
+    class="fixed left-0 top-[97px] h-[calc(100vh-97px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 z-50">
+
+
+<!-- Sidebar Header -->
+<div id="sidebar-header"
+     class="relative flex items-center justify-between flex-shrink-0 border-b bg-[#6176C9] text-white"
+     style="height: 70px; border-color: #D6D6D6; padding-left: 16px; padding-right: 16px;">
+
+    <!-- Logo/Toggle Button Container -->
+    <div class="flex items-center space-x-3 h-full">
+        <!-- Desktop Toggle Button -->
+        <button id="sidebar-toggle" class="hidden lg:flex p-2 rounded-lg bg-white text-[#6176C9] hover:bg-[#eef2ff] transition-all duration-300 self-center">
+            <i id="toggle-icon" class="fa-solid fa-chevron-left"></i>
+        </button>         
             <div id="sidebar-brand" class="text-white overflow-hidden transition-all duration-300">
                 <h2 class="text-lg font-bold whitespace-nowrap">QCU AMS</h2>
                 <p class="text-xs text-blue-100 whitespace-nowrap"><?php echo htmlspecialchars($panel_title); ?></p>
             </div>
+            
         </div>
         
         <!-- Mobile Close Button -->
@@ -214,17 +220,20 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto overflow-x-hidden">
         <?php foreach ($nav_items as $item): 
             $is_active = ($item['href'] === $current_page);
-            $active_classes = $is_active ? "bg-{$item['color']}-50 text-{$item['color']}-700 border-r-4 border-{$item['color']}-600" : "text-gray-700";
+                $active_classes = $is_active ? "bg-{$item['color']}-50 text-{$item['color']}-700 border-r-4 border-{$item['color']}-600" : "text-gray-700";
         ?>
-        <!-- <?php echo htmlspecialchars($item['label']); ?> -->
-        <a href="<?php echo htmlspecialchars($item['href']); ?>" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-<?php echo $item['color']; ?>-50 hover:text-<?php echo $item['color']; ?>-700 transition-all duration-200 <?php echo $active_classes; ?>">
+    <!-- <?php echo htmlspecialchars($item['label']); ?> -->
+        <a href="<?php echo htmlspecialchars($item['href']); ?>"
+            class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg 
+            hover:bg-[#eef2ff] hover:text-[#6176C9] transition-all duration-200 
+          <?php echo $is_active ? 'bg-[#eef2ff] text-[#6176C9] border-r-4 border-[#6176C9]' : 'text-gray-700'; ?>">
             <div class="flex-shrink-0">
-                <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center <?php echo $is_active ? 'text-'.$item['color'].'-600' : ''; ?>"></i>
+            <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
+           <?php echo $is_active ? 'text-[#6176C9]' : ''; ?>"></i>
             </div>
             <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0 <?php echo $is_active ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($item['label']); ?></span>
             <div class="ml-auto <?php echo $is_active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'; ?> transition-opacity duration-200 flex-shrink-0">
-                <div class="w-1 h-6 bg-<?php echo $item['color']; ?>-600 rounded-full"></div>
-            </div>
+            <div class="w-1 h-6 bg-[#6176C9] rounded-full"></div>            </div>
         </a>
         <?php endforeach; ?>
     </nav>

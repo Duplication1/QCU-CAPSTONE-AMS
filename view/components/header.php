@@ -24,41 +24,31 @@ $role_title = $role_titles[$current_role] ?? 'Student Portal';
 $user_name = $_SESSION['full_name'] ?? 'User';
 $user_initial = strtoupper(substr($user_name, 0, 1));
 ?>
+            
+<!-- ========== HEADER ========== -->
+<header class="fixed top-0 left-0 w-full z-30 border-b bg-white/20 backdrop-blur-lg"
+        style="border-color:#D6D6D6; height:100px;">
 
-<!-- Top Navigation Bar -->
-<header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-    <div class="px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <!-- Mobile Menu Button & Logo -->
-            <div class="flex items-center space-x-4">
-                <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200">
-                    <i class="fa-solid fa-bars text-xl"></i>
-                </button>
-                <div class="flex items-center space-x-3">
-                    <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-8 h-8">
-                    <div class="hidden sm:block">
-                        <h1 class="text-xl font-semibold text-gray-900">Quezon City University</h1>
-                        <p class="text-sm text-gray-500">Asset Management System - <?php echo htmlspecialchars($role_title); ?></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Info -->
-            <div class="flex items-center space-x-4">
-                <?php if (in_array($current_role, ['Student', 'Faculty'])): ?>
-                <!-- Dark Mode Toggle (Student/Faculty only) - hidden, toggled via keyboard shortcut -->
-                <button id="dark-mode-toggle" title="Toggle dark mode" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 hidden">
-                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
-                </button>
-                <?php endif; ?>
-                <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-900"><?php echo htmlspecialchars($user_name); ?></p>
-                    <p class="text-xs text-gray-500"><?php echo htmlspecialchars($current_role); ?></p>
-                </div>
-                <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
-                    <span class="text-white text-sm font-semibold"><?php echo $user_initial; ?></span>
-                </div>
-            </div>
-        </div>
+    <!-- Gradient + Blur Layer -->
+    <div class="absolute inset-0"
+         style="
+            background: linear-gradient(90deg, rgba(13,53,255,0.6) 28%, rgba(255,249,87,0.4) 52%, rgba(255,0,0,0.5) 100%);
+            filter: blur(2px);
+            box-shadow: inset 0 4px 4px rgba(0,0,0,0.25);
+         ">
     </div>
+
+    <!-- Content Layer -->
+    <div class="relative h-full">
+
+        <!-- QCU Logo Absolute Positioned -->
+        <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" style="position: absolute; left: 699px; top: 15px; width: 43px; height: 43px;">
+
+        <!-- oneQCU Text Absolute Positioned -->
+        <div style="position: absolute; left: 665px; top: 60px; /* moved 5px lower for spacing */ width: 132px; height: 40px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; letter-spacing: 0; white-space: nowrap;">
+        <span style="color: #504848;">one</span><span style="color: #E21414;">Q</span><span style="color: #0A39D2;">C</span><span style="color: #F0CB36;">U</span>
+        </div>
+
 </header>
+
+
