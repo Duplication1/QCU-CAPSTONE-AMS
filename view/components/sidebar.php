@@ -43,6 +43,13 @@ $navigation_items = [
             'href' => 'index.php'
         ],
         [
+            'id' => 'pc-health',
+            'label' => 'PC Health Monitor',
+            'icon' => 'fa-solid fa-heart-pulse',
+            'color' => 'yellow',
+            'href' => 'pc_health_dashboard.php'
+        ],
+        [
             'id' => 'borrowing',
             'label' => 'Borrowing Management',
             'icon' => 'fa-solid fa-right-left',

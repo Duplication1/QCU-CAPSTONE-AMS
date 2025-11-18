@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Health Monitoring - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        .card-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .card p {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .card-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .card-badge.green {
+            background: #48bb78;
+        }
+        .card-badge.orange {
+            background: #f6ad55;
+        }
+        .card-badge.blue {
+            background: #4299e1;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ PC Health Monitoring</h1>
+            <p>Real-time laboratory computer monitoring system</p>
+        </div>
+
+        <div class="cards">
+            <!-- Dashboard -->
+            <a href="../view/LaboratoryStaff/pc_health_dashboard.php" class="card">
+                <div class="card-icon">📊</div>
+                <h2>Live Dashboard</h2>
+                <p>Access the real-time monitoring dashboard to view the status of all laboratory computers.</p>
+                <span class="card-badge green">For Laboratory Staff</span>
+            </a>
+
+            <!-- Setup Wizard -->
+            <a href="setup_wizard.html" class="card">
+                <div class="card-icon">🚀</div>
+                <h2>Setup Wizard</h2>
+                <p>Interactive step-by-step guide to set up the PC health monitoring system.</p>
+                <span class="card-badge orange">First-Time Setup</span>
+            </a>
+
+            <!-- System Overview -->
+            <a href="system_overview.html" class="card">
+                <div class="card-icon">📖</div>
+                <h2>System Overview</h2>
+                <p>Visual documentation showing system architecture, features, and data flow.</p>
+                <span class="card-badge blue">Documentation</span>
+            </a>
+
+            <!-- PC Agent (HTML) -->
+            <a href="client/pc_health_agent.html" class="card">
+                <div class="card-icon">💻</div>
+                <h2>PC Agent (Browser)</h2>
+                <p>Browser-based monitoring agent to install on laboratory computers.</p>
+                <span class="card-badge">For PCs</span>
+            </a>
+
+            <!-- Quick Start -->
+            <a href="QUICKSTART.md" class="card">
+                <div class="card-icon">⚡</div>
+                <h2>Quick Start Guide</h2>
+                <p>Fast deployment instructions and common troubleshooting tips.</p>
+                <span class="card-badge blue">Quick Reference</span>
+            </a>
+
+            <!-- Full Documentation -->
+            <a href="../PC_HEALTH_REALTIME_SETUP.md" class="card">
+                <div class="card-icon">📚</div>
+                <h2>Full Documentation</h2>
+                <p>Complete technical documentation, setup instructions, and security guidelines.</p>
+                <span class="card-badge blue">Technical Docs</span>
+            </a>
+
+            <!-- Original Monitor -->
+            <a href="index.php" class="card">
+                <div class="card-icon">🔍</div>
+                <h2>Standalone Monitor</h2>
+                <p>Original single-PC monitoring interface for local health checks.</p>
+                <span class="card-badge">Legacy</span>
+            </a>
+
+            <!-- System Summary -->
+            <a href="../PC_HEALTH_SYSTEM_SUMMARY.md" class="card">
+                <div class="card-icon">📄</div>
+                <h2>Implementation Summary</h2>
+                <p>Overview of all created files, features, and deployment options.</p>
+                <span class="card-badge blue">Summary</span>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>PC Health Monitoring System v1.0 | CAPSTONE-AMS</p>
+            <p style="margin-top: 10px; font-size: 14px;">
+                <strong>Quick Links:</strong>
+                <a href="https://console.firebase.google.com/" target="_blank" style="color: white; margin: 0 10px;">Firebase Console</a> |
+                <a href="../config/firebase_config.php" style="color: white; margin: 0 10px;">Config File</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

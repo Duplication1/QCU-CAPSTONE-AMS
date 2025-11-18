@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Health Agent</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .agent-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .status-indicator.active {
+            background: #10b981;
+        }
+        .status-indicator.error {
+            background: #ef4444;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .info-grid {
+            display: grid;
+            gap: 15px;
+        }
+        .info-item {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .metric {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .setup-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="agent-container">
+        <h1>🖥️ PC Health Agent</h1>
+        <div class="status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Initializing...</span>
+        </div>
+
+        <div id="setupSection" class="setup-section">
+            <div class="input-group">
+                <label>PC Unit ID</label>
+                <input type="text" id="pcUnitId" placeholder="Enter PC Unit ID from system">
+            </div>
+            <div class="input-group">
+                <label>Terminal Name</label>
+                <input type="text" id="terminalName" placeholder="e.g., TH-01, PC-01">
+            </div>
+            <div class="input-group">
+                <label>Room</label>
+                <input type="text" id="roomName" placeholder="e.g., Computer Lab 1">
+            </div>
+            <button class="btn" id="startBtn" onclick="startMonitoring()">Start Monitoring</button>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+
+        <div id="metricsSection" style="display: none;">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">PC Unit ID</div>
+                    <div class="info-value" id="displayPcId">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Terminal</div>
+                    <div class="info-value" id="displayTerminal">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Room</div>
+                    <div class="info-value" id="displayRoom">-</div>
+                </div>
+            </div>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">CPU</div>
+                    <div class="metric-value" id="cpuValue">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">RAM</div>
+                    <div class="metric-value" id="ramValue">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">DISK</div>
+                    <div class="metric-value" id="diskValue">-</div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="stopMonitoring()" style="margin-top: 20px;">Stop Monitoring</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration - Replace with your config
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let app, database, monitoringInterval;
+        let isMonitoring = false;
+        let pcConfig = null;
+
+        function initFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                console.log('Firebase initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                showError('Failed to connect to Firebase: ' + error.message);
+                return false;
+            }
+        }
+
+        async function startMonitoring() {
+            const pcUnitId = document.getElementById('pcUnitId').value.trim();
+            const terminalName = document.getElementById('terminalName').value.trim();
+            const roomName = document.getElementById('roomName').value.trim();
+
+            if (!pcUnitId || !terminalName || !roomName) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (!initFirebase()) {
+                return;
+            }
+
+            pcConfig = {
+                pcUnitId: pcUnitId,
+                terminalName: terminalName,
+                roomName: roomName
+            };
+
+            // Save to localStorage for persistence
+            localStorage.setItem('pcConfig', JSON.stringify(pcConfig));
+
+            // Show metrics section
+            document.getElementById('setupSection').style.display = 'none';
+            document.getElementById('metricsSection').style.display = 'block';
+            document.getElementById('displayPcId').textContent = pcUnitId;
+            document.getElementById('displayTerminal').textContent = terminalName;
+            document.getElementById('displayRoom').textContent = roomName;
+
+            isMonitoring = true;
+            updateStatus('active', 'Monitoring Active');
+
+            // Start collecting health data
+            collectHealthData();
+            monitoringInterval = setInterval(collectHealthData, 5000); // Every 5 seconds
+        }
+
+        function stopMonitoring() {
+            isMonitoring = false;
+            clearInterval(monitoringInterval);
+            updateStatus('', 'Monitoring Stopped');
+            
+            // Send offline status
+            if (database && pcConfig) {
+                database.ref('pc_health/' + pcConfig.pcUnitId).update({
+                    status: 'offline',
+                    lastSeen: Date.now()
+                });
+            }
+
+            // Show setup section again
+            document.getElementById('setupSection').style.display = 'block';
+            document.getElementById('metricsSection').style.display = 'none';
+        }
+
+        async function collectHealthData() {
+            if (!isMonitoring || !database || !pcConfig) return;
+
+            try {
+                // Fetch health data from local API
+                const response = await fetch('http://localhost/CAPSTONE-AMS/pc-health/api.php');
+                const data = await response.json();
+
+                // Update UI
+                document.getElementById('cpuValue').textContent = Math.round(data.cpu) + '%';
+                document.getElementById('ramValue').textContent = Math.round(data.memory.percent) + '%';
+                document.getElementById('diskValue').textContent = Math.round(data.disks[0]?.percent || 0) + '%';
+
+                // Prepare health data for Firebase
+                const healthData = {
+                    pcUnitId: pcConfig.pcUnitId,
+                    terminalName: pcConfig.terminalName,
+                    roomName: pcConfig.roomName,
+                    status: 'online',
+                    lastUpdate: Date.now(),
+                    cpu: {
+                        usage: Math.round(data.cpu),
+                        name: data.cpuDetails?.name || 'Unknown',
+                        cores: data.cpuDetails?.cores || 0,
+                        threads: data.cpuDetails?.threads || 0
+                    },
+                    memory: {
+                        usage: Math.round(data.memory.percent),
+                        total: data.memory.total,
+                        used: data.memory.used,
+                        free: data.memory.free
+                    },
+                    disks: data.disks.map(disk => ({
+                        drive: disk.drive,
+                        usage: Math.round(disk.percent),
+                        total: disk.total,
+                        used: disk.used,
+                        free: disk.free
+                    })),
+                    network: data.network || [],
+                    systemInfo: data.systemInfo || {},
+                    // Health status calculation
+                    healthStatus: calculateHealthStatus(data)
+                };
+
+                // Send to Firebase
+                await database.ref('pc_health/' + pcConfig.pcUnitId).set(healthData);
+                updateStatus('active', 'Monitoring Active - Last sync: ' + new Date().toLocaleTimeString());
+
+            } catch (error) {
+                console.error('Error collecting health data:', error);
+                updateStatus('error', 'Error: ' + error.message);
+            }
+        }
+
+        function calculateHealthStatus(data) {
+            const cpuUsage = data.cpu || 0;
+            const memUsage = data.memory?.percent || 0;
+            const diskUsage = data.disks?.[0]?.percent || 0;
+
+            // Critical if any metric > 90%
+            if (cpuUsage > 90 || memUsage > 90 || diskUsage > 90) {
+                return 'critical';
+            }
+            // Warning if any metric > 70%
+            if (cpuUsage > 70 || memUsage > 70 || diskUsage > 70) {
+                return 'warning';
+            }
+            return 'healthy';
+        }
+
+        function updateStatus(state, text) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            indicator.className = 'status-indicator';
+            if (state) indicator.classList.add(state);
+            statusText.textContent = text;
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load saved config on startup
+        window.addEventListener('load', () => {
+            const savedConfig = localStorage.getItem('pcConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('pcUnitId').value = config.pcUnitId;
+                document.getElementById('terminalName').value = config.terminalName;
+                document.getElementById('roomName').value = config.roomName;
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (isMonitoring && database && pcConfig) {
+                database.ref('pc_health/' + pcConfig.pcUnitId).update({
+                    status: 'offline',
+                    lastSeen: Date.now()
+                });
+            }
+        });
+    </script>
+</body>
+</html>

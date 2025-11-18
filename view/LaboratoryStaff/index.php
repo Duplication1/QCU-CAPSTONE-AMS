@@ -95,6 +95,29 @@ include '../components/layout_header.php';
                     </div>
                 </div>
 
+                <!-- PC Health Monitor -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-cyan-200 group">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 group-hover:text-cyan-700 transition-colors">PC Health Monitor</h3>
+                            <p class="text-sm text-gray-600 mt-1">Real-time PC monitoring</p>
+                        </div>
+                        <div class="bg-cyan-50 group-hover:bg-cyan-100 p-3 rounded-lg transition-colors">
+                            <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <a href="pc_health_dashboard.php" class="text-cyan-600 hover:text-cyan-800 font-semibold text-sm flex items-center space-x-2 group-hover:translate-x-1 transition-transform">
+                            <span>View Dashboard</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Maintenance -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-purple-200 group">
                     <div class="flex items-start justify-between">
