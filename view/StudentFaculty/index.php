@@ -572,7 +572,7 @@ document.addEventListener('click', function(e) {
     <div class="flex items-center justify-center min-h-screen px-4 py-6">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
             <!-- Modal Header -->
-            <div class="bg-yellow-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
+            <div class="bg-[#1E3A8A] text-white px-6 py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
                 <h3 class="text-xl font-bold">
                     <i class="fa-solid fa-box mr-2"></i>
                     <span id="borrowingModalTitle">Borrow Equipment</span>
@@ -583,18 +583,18 @@ document.addEventListener('click', function(e) {
             </div>
 
             <!-- Progress Steps -->
-            <div class="px-6 py-4 border-b flex-shrink-0 bg-yellow-50">
+            <div class="px-6 py-4 border-b flex-shrink-0 bg-blue-50">
                 <div class="flex justify-between items-center">
                     <div class="flex-1 flex items-center">
-                        <div id="step1Indicator" class="w-8 h-8 rounded-full bg-yellow-600 text-white flex items-center justify-center font-bold">1</div>
+                        <div id="step1Indicator" class="w-8 h-8 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center font-bold">1</div>
                         <div class="flex-1 h-1 bg-gray-300 mx-2">
-                            <div id="progress1" class="h-full bg-yellow-600" style="width: 0%"></div>
+                            <div id="progress1" class="h-full bg-[#1E3A8A]" style="width: 0%"></div>
                         </div>
                     </div>
                     <div class="flex-1 flex items-center">
                         <div id="step2Indicator" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
                         <div class="flex-1 h-1 bg-gray-300 mx-2">
-                            <div id="progress2" class="h-full bg-yellow-600" style="width: 0%"></div>
+                            <div id="progress2" class="h-full bg-[#1E3A8A]" style="width: 0%"></div>
                         </div>
                     </div>
                     <div class="flex-1 flex items-center">
@@ -609,16 +609,16 @@ document.addEventListener('click', function(e) {
             </div>
 
             <!-- Modal Body -->
-            <div class="flex-1 overflow-y-auto px-6 py-4 bg-yellow-50/30" style="max-height: calc(90vh - 200px);">
+            <div class="flex-1 overflow-y-auto px-6 py-4 bg-blue-50/30" style="max-height: calc(90vh - 200px);">
                 <!-- Step 1: Asset Selection -->
                 <div id="step1" class="step-content">
                     <h4 class="text-lg font-semibold mb-4">Select Equipment to Borrow</h4>
                     <div id="assetsLoading" class="text-center py-8">
-                        <i class="fa-solid fa-spinner fa-spin text-4xl text-yellow-600"></i>
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-[#1E3A8A]"></i>
                         <p class="mt-2 text-gray-600">Loading available assets...</p>
                     </div>
                     <div id="assetsTableContainer" class="hidden">
-                        <div class="mb-3 p-2 bg-yellow-50 rounded text-sm text-yellow-800 border border-yellow-200">
+                        <div class="mb-3 p-2 bg-blue-50 rounded text-sm text-blue-800 border border-blue-200">
                             <i class="fa-solid fa-info-circle mr-2"></i>
                             Click on any row to select an asset
                         </div>
@@ -642,7 +642,7 @@ document.addEventListener('click', function(e) {
                     
                     <!-- Next Button for Step 1 -->
                     <div class="mt-6 flex justify-end pb-4">
-                        <button type="button" id="step1NextBtn" onclick="proceedToDetails()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg hidden">
+                        <button type="button" id="step1NextBtn" onclick="proceedToDetails()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-6 py-2 rounded-lg font-medium shadow-lg hidden">
                             Next: Fill Details<i class="fa-solid fa-arrow-right ml-2"></i>
                         </button>
                     </div>
@@ -652,9 +652,9 @@ document.addEventListener('click', function(e) {
                 <div id="step1b" class="step-content hidden">
                     <h4 class="text-lg font-semibold mb-4">Borrowing Details</h4>
                     
-                    <div class="p-4 bg-yellow-50 rounded-lg mb-4 border border-yellow-200">
-                        <h5 class="font-semibold mb-2 text-yellow-900">Selected Asset:</h5>
-                        <div id="selectedAssetInfo" class="text-sm text-yellow-800"></div>
+                    <div class="p-4 bg-blue-50 rounded-lg mb-4 border border-blue-200">
+                        <h5 class="font-semibold mb-2 text-blue-900">Selected Asset:</h5>
+                        <div id="selectedAssetInfo" class="text-sm text-blue-800"></div>
                     </div>
                     
                     <div class="space-y-4">
@@ -686,7 +686,7 @@ document.addEventListener('click', function(e) {
                         <button type="button" onclick="backToAssetSelection()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium shadow-lg">
                             <i class="fa-solid fa-arrow-left mr-2"></i>Back to Selection
                         </button>
-                        <button type="button" onclick="proceedToTerms()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg">
+                        <button type="button" onclick="proceedToTerms()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-6 py-2 rounded-lg font-medium shadow-lg">
                             Next: Terms & Conditions<i class="fa-solid fa-arrow-right ml-2"></i>
                         </button>
                     </div>
@@ -757,8 +757,8 @@ document.addEventListener('click', function(e) {
                             <h6 class="font-semibold text-gray-800 mt-4 mb-2">8. Acknowledgment</h6>
                             <p class="text-gray-700 text-sm">By signing this agreement, I acknowledge that I have read, understood, and agree to comply with all the terms and conditions stated above. I understand that violation of these terms may result in penalties, financial liability, and/or disciplinary action.</p>
                             
-                            <div class="mt-6 p-3 bg-yellow-50 border border-yellow-300 rounded">
-                                <p class="text-sm text-yellow-800 font-medium">
+                            <div class="mt-6 p-3 bg-blue-50 border border-blue-300 rounded">
+                                <p class="text-sm text-blue-800 font-medium">
                                     <i class="fa-solid fa-exclamation-triangle mr-2"></i>
                                     Important: Please scroll through and read all terms before proceeding.
                                 </p>
@@ -787,7 +787,7 @@ document.addEventListener('click', function(e) {
                         <button type="button" onclick="backToDetails()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium shadow-lg">
                             <i class="fa-solid fa-arrow-left mr-2"></i>Back to Details
                         </button>
-                        <button type="button" id="termsNextBtn" onclick="proceedToPreview()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg opacity-50 cursor-not-allowed" disabled>
+                        <button type="button" id="termsNextBtn" onclick="proceedToPreview()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-6 py-2 rounded-lg font-medium shadow-lg opacity-50 cursor-not-allowed" disabled>
                             Next: Preview & Submit<i class="fa-solid fa-arrow-right ml-2"></i>
                         </button>
                     </div>
@@ -944,8 +944,8 @@ document.addEventListener('click', function(e) {
                         </div>
                     </div>
                     
-                    <div class="mt-6 p-4 bg-yellow-50 rounded border border-yellow-300 mb-4">
-                        <p class="text-sm text-yellow-800">
+                    <div class="mt-6 p-4 bg-blue-50 rounded border border-blue-300 mb-4">
+                        <p class="text-sm text-blue-800">
                             <i class="fa-solid fa-info-circle mr-2"></i>
                             This is a preview of your borrowing agreement. You can print this document after submission for your records.
                         </p>
@@ -954,13 +954,13 @@ document.addEventListener('click', function(e) {
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 bg-yellow-50 rounded-b-lg flex justify-between items-center flex-shrink-0 border-t border-yellow-200">
+            <div class="px-6 py-4 bg-blue-50 rounded-b-lg flex justify-between items-center flex-shrink-0 border-t border-blue-200">
                 <div class="text-sm text-gray-600 font-medium" id="stepIndicatorText">Step 1 of 4</div>
                 <div class="flex gap-3">
-                    <button type="button" id="submitBorrowBtn" onclick="submitBorrowing()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
+                    <button type="button" id="submitBorrowBtn" onclick="submitBorrowing()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
                         <i class="fa-solid fa-check mr-2"></i>Submit Request
                     </button>
-                    <button type="button" id="printBtn" onclick="printDocument()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
+                    <button type="button" id="printBtn" onclick="printDocument()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
                         <i class="fa-solid fa-print mr-2"></i>Print
                     </button>
                 </div>
@@ -1021,7 +1021,7 @@ function resetBorrowingModal() {
     document.getElementById('step1').classList.remove('hidden');
     
     // Reset table selection
-    $('#assetsTable tbody tr').removeClass('bg-yellow-100 border-l-4 border-yellow-600');
+    $('#assetsTable tbody tr').removeClass('bg-blue-100 border-l-4 border-blue-600');
     
     // Reset loading/error states
     document.getElementById('assetsLoading').classList.remove('hidden');
@@ -1113,7 +1113,7 @@ function displayAssetsTable(assets) {
             // Store asset ID in row
             $(row).attr('data-asset-id', tableData[dataIndex].id);
             // Make row clickable
-            $(row).addClass('cursor-pointer hover:bg-yellow-50 transition-colors');
+            $(row).addClass('cursor-pointer hover:bg-blue-50 transition-colors');
         }
     });
     
@@ -1134,8 +1134,8 @@ function selectAssetFromTable(assetId) {
     document.getElementById('step1NextBtn').classList.remove('hidden');
     
     // Highlight selected row
-    $('#assetsTable tbody tr').removeClass('bg-yellow-100 border-l-4 border-yellow-600');
-    $('#assetsTable tbody tr[data-asset-id="' + assetId + '"]').addClass('bg-yellow-100 border-l-4 border-yellow-600');
+    $('#assetsTable tbody tr').removeClass('bg-blue-100 border-l-4 border-blue-600');
+    $('#assetsTable tbody tr[data-asset-id="' + assetId + '"]').addClass('bg-blue-100 border-l-4 border-blue-600');
 }
 
 // Proceed to Details Form
@@ -1284,7 +1284,7 @@ function updateStepDisplay() {
             indicator.innerHTML = '<i class="fa-solid fa-check"></i>';
             if (i < 3) document.getElementById(`progress${i}`).style.width = '100%';
         } else if (i === displayStep) {
-            indicator.className = 'w-8 h-8 rounded-full bg-yellow-600 text-white flex items-center justify-center font-bold';
+            indicator.className = 'w-8 h-8 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center font-bold';
             indicator.textContent = i;
             if (i > 1) document.getElementById(`progress${i-1}`).style.width = '100%';
         } else {
