@@ -27,12 +27,16 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
             
 <!-- ========== HEADER ========== -->
 <header class="fixed top-0 left-0 w-full z-30 bg-[#1E3A8A] text-white shadow-md h-[85px]">
-  <div class="flex items-center justify-between h-full px-6">
+  <div class="flex items-center justify-between h-full px-4 md:px-6">
 
-    <!-- Left: Logo + oneQCU -->
-    <div class="flex items-center space-x-4">
-      <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-12 h-12">
-      <div class="text-2xl font-bold font-[Poppins] leading-none whitespace-nowrap">
+    <!-- Left: Burger Menu + Logo + oneQCU -->
+    <div class="flex items-center space-x-2 md:space-x-4">
+      <!-- Burger Menu Button -->
+      <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-white/10 transition-all duration-300">
+        <i id="toggle-icon" class="fa-solid fa-bars text-lg md:text-xl"></i>
+      </button>
+      <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-10 h-10 md:w-12 md:h-12">
+      <div class="text-xl md:text-2xl font-bold font-[Poppins] leading-none whitespace-nowrap">
         <span class="text-white">one</span>
         <span class="text-[#F87171]">Q</span>
         <span class="text-[#60A5FA]">C</span>
@@ -41,10 +45,10 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     </div>
 
     <!-- Right: Search Bar + User Info -->
-    <div class="flex items-center space-x-6">
+    <div class="flex items-center space-x-2 md:space-x-6">
 
-      <!-- Search Bar -->
-      <form action="search.php" method="GET" class="relative w-64">
+      <!-- Search Bar - Hidden on mobile -->
+      <form action="search.php" method="GET" class="relative w-64 hidden md:block">
         <input type="text" name="query" placeholder="Search..." 
                class="w-full px-4 py-2 rounded-full border border-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-300 bg-white/80 text-gray-800 text-sm placeholder-gray-500">
         <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0A39D2]">
@@ -53,7 +57,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       </form>
 
     <!-- User Initial Avatar -->
-    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+    <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
         <span class="text-white text-sm font-semibold">
             <?php echo $user_initial; ?>
         </span>

@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebar.classList.remove('w-[220px]');
     sidebar.classList.add('w-20');
 
-    mainWrapper.classList.remove('ml-64');
-    mainWrapper.classList.add('ml-[220px]');
+    mainWrapper.classList.remove('ml-[220px]');
+    mainWrapper.classList.add('ml-20');
 
     hideTexts();
-    toggleIcon.className = 'fa-solid fa-chevron-right';
+    // Keep burger icon - don't change it
   } else {
 
-    // don’t re-add w-64 if it’s already there
+    // don't re-add w-64 if it's already there
     sidebar.classList.remove('w-20');
     sidebar.classList.add('w-[220px]');
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
     mainWrapper.classList.add('ml-[220px]');
 
     showAllTexts();
-    toggleIcon.className = 'fa-solid fa-chevron-left';
+    // Keep burger icon - don't change it
   }
 }
 
@@ -80,8 +80,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Desktop toggle functionality
     if (sidebarToggle) {
     sidebarToggle.addEventListener('click', function() {
-        isCollapsed = !isCollapsed;
-        updateDesktopSidebar();
+        // Check if mobile view
+        if (window.innerWidth < 1024) {
+            // Mobile: toggle sidebar visibility
+            sidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                document.body.style.overflow = 'auto';
+            } else {
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            // Desktop: toggle collapse/expand
+            isCollapsed = !isCollapsed;
+            updateDesktopSidebar();
+        }
     });
 }
     // Mobile menu toggle
@@ -114,32 +127,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle window resize for responsive behavior
     window.addEventListener('resize', function() {
         if (window.innerWidth >= 1024) {
-            // Desktop view - ensure sidebar is positioned correctly
-            sidebar.classList.add('-translate-x-full', 'lg:translate-x-0');
+            // Desktop view - ensure sidebar is visible and positioned correctly
+            sidebar.classList.remove('-translate-x-full');
             mobileOverlay.classList.add('hidden');
             document.body.style.overflow = 'auto';
             // Reset main wrapper margin for desktop based on collapsed state
             if (!isCollapsed) {
-                mainWrapper.style.marginLeft = '256px';
+                mainWrapper.classList.remove('ml-20');
+                mainWrapper.classList.add('ml-[220px]');
             } else {
-                mainWrapper.style.marginLeft = '80px';
+                mainWrapper.classList.remove('ml-[220px]');
+                mainWrapper.classList.add('ml-20');
             }
         } else {
             // Mobile view - hide sidebar by default
             sidebar.classList.add('-translate-x-full');
             mobileOverlay.classList.add('hidden');
             document.body.style.overflow = 'auto';
-            mainWrapper.style.marginLeft = '0';
+            mainWrapper.classList.remove('ml-20', 'ml-[220px]');
         }
     });
 
     // Initialize sidebar state based on screen size
     if (window.innerWidth < 1024) {
         sidebar.classList.add('-translate-x-full');
-        mainWrapper.style.marginLeft = '0';
+        mainWrapper.classList.remove('ml-20', 'ml-[220px]');
     } else {
-        // Desktop - ensure proper initial margin
-        mainWrapper.style.marginLeft = '256px';
+        // Desktop - ensure sidebar is visible and proper initial margin
+        sidebar.classList.remove('-translate-x-full');
+        mainWrapper.classList.remove('ml-20');
+        mainWrapper.classList.add('ml-[220px]');
     }
 
     // Add keyboard support for accessibility
