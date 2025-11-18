@@ -158,6 +158,11 @@ document.addEventListener('DOMContentLoaded', function() {
         mainWrapper.classList.remove('ml-20');
         mainWrapper.classList.add('ml-[220px]');
     }
+    
+    // Add transition class after initial load to prevent animation on page load
+    setTimeout(() => {
+        sidebar.classList.add('transition-transform', 'duration-300', 'ease-in-out');
+    }, 100);
 
     // Add keyboard support for accessibility
     document.addEventListener('keydown', function(e) {
