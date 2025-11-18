@@ -10,11 +10,14 @@ ini_set('session.gc_maxlifetime', Config::sessionLifetime());
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_number = trim($_POST['id_number']);
     $password = trim($_POST['password']);
+    $login_type = isset($_POST['login_type']) ? $_POST['login_type'] : '';
     
     // Validate inputs
     if (empty($id_number) || empty($password)) {
         $_SESSION['error'] = "Please enter both ID number and password.";
-        header("Location: ../view/login.php");
+        $redirect = $login_type === 'student' ? "../view/student_login.php" : 
+                   ($login_type === 'employee' ? "../view/employee_login.php" : "../view/login.php");
+        header("Location: $redirect");
         exit();
     }
     
@@ -25,6 +28,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $userModel->authenticate($id_number, $password);
     
     if ($user) {
+        // Validate login type matches user role
+        if ($login_type === 'student' && $user['role'] !== 'Student') {
+            $_SESSION['error'] = "Invalid credentials for student login.";
+            header("Location: ../view/student_login.php");
+            exit();
+        }
+        
+        $employeeRoles = ['Administrator', 'Technician', 'Laboratory Staff', 'Faculty'];
+        if ($login_type === 'employee' && !in_array($user['role'], $employeeRoles)) {
+            $_SESSION['error'] = "Invalid credentials for employee login.";
+            header("Location: ../view/employee_login.php");
+            exit();
+        }
+        
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['id_number'] = $user['id_number'];
@@ -32,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['role'] = $user['role'];
         $_SESSION['is_logged_in'] = true;
         $_SESSION['login_success'] = true;
+        
         // update last_login time so admins can see last active
         try {
             $userModel->updateLastLogin($user['id']);
@@ -40,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Failed to update last_login for user ' . intval($user['id']) . ': ' . $e->getMessage());
         }
         
-        // Store redirect URL based on role
+        // Store redirect URL and redirect back to login page to show success modal
         switch ($user['role']) {
             case 'Administrator':
                 $_SESSION['redirect_url'] = "../view/Administrator/index.php";
@@ -57,16 +75,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
             default:
                 $_SESSION['error'] = "Invalid user role.";
-                header("Location: ../view/login.php");
+                $redirect = $login_type === 'student' ? "../view/student_login.php" : 
+                           ($login_type === 'employee' ? "../view/employee_login.php" : "../view/student_login.php");
+                header("Location: $redirect");
                 exit();
         }
         
-        // Redirect back to login page to show success modal
-        header("Location: ../view/login.php");
+        // Redirect back to appropriate login page to show success modal
+        $redirect = $login_type === 'student' ? "../view/student_login.php" : "../view/employee_login.php";
+        header("Location: $redirect");
         exit();
     } else {
         $_SESSION['error'] = "Invalid ID number or password.";
-        header("Location: ../view/login.php");
+        $redirect = $login_type === 'student' ? "../view/student_login.php" : 
+                   ($login_type === 'employee' ? "../view/employee_login.php" : "../view/login.php");
+        header("Location: $redirect");
         exit();
     }
 } else {

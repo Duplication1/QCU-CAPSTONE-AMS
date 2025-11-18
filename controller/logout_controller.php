@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Store user role before destroying session
+$userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+
 // Destroy all session data
 session_unset();
 session_destroy();
@@ -14,7 +17,15 @@ header("Pragma: no-cache");
 session_start();
 $_SESSION['success'] = "You have been successfully logged out.";
 
-// Redirect to login page
-header("Location: ../view/login.php");
+// Redirect based on user role
+$employeeRoles = ['Administrator', 'Technician', 'Laboratory Staff', 'Faculty'];
+if ($userRole === 'Student') {
+    header("Location: ../view/student_login.php");
+} elseif (in_array($userRole, $employeeRoles)) {
+    header("Location: ../view/employee_login.php");
+} else {
+    // Default to student login if role is unknown
+    header("Location: ../view/student_login.php");
+}
 exit();
 ?>
