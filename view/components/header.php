@@ -26,29 +26,43 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 ?>
             
 <!-- ========== HEADER ========== -->
-<header class="fixed top-0 left-0 w-full z-30 border-b bg-white/20 backdrop-blur-lg"
-        style="border-color:#D6D6D6; height:100px;">
+<header class="fixed top-0 left-0 w-full z-30 bg-[#1E3A8A] text-white shadow-md h-[85px]">
+  <div class="flex items-center justify-between h-full px-6">
 
-    <!-- Gradient + Blur Layer -->
-    <div class="absolute inset-0"
-         style="
-            background: linear-gradient(90deg, rgba(13,53,255,0.6) 28%, rgba(255,249,87,0.4) 52%, rgba(255,0,0,0.5) 100%);
-            filter: blur(2px);
-            box-shadow: inset 0 4px 4px rgba(0,0,0,0.25);
-         ">
+    <!-- Left: Logo + oneQCU -->
+    <div class="flex items-center space-x-4">
+      <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-12 h-12">
+      <div class="text-2xl font-bold font-[Poppins] leading-none whitespace-nowrap">
+        <span class="text-white">one</span>
+        <span class="text-[#F87171]">Q</span>
+        <span class="text-[#60A5FA]">C</span>
+        <span class="text-[#FACC15]">U</span>
+      </div>
     </div>
 
-    <!-- Content Layer -->
-    <div class="relative h-full">
+    <!-- Right: Search Bar + User Info -->
+    <div class="flex items-center space-x-6">
 
-        <!-- QCU Logo Absolute Positioned -->
-        <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" style="position: absolute; left: 699px; top: 15px; width: 43px; height: 43px;">
+      <!-- Search Bar -->
+      <form action="search.php" method="GET" class="relative w-64">
+        <input type="text" name="query" placeholder="Search..." 
+               class="w-full px-4 py-2 rounded-full border border-white/30 focus:outline-none focus:ring-2 focus:ring-yellow-300 bg-white/80 text-gray-800 text-sm placeholder-gray-500">
+        <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0A39D2]">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
 
-        <!-- oneQCU Text Absolute Positioned -->
-        <div style="position: absolute; left: 665px; top: 60px; /* moved 5px lower for spacing */ width: 132px; height: 40px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 28px; line-height: 1; letter-spacing: 0; white-space: nowrap;">
-        <span style="color: #504848;">one</span><span style="color: #E21414;">Q</span><span style="color: #0A39D2;">C</span><span style="color: #F0CB36;">U</span>
-        </div>
+    <!-- User Initial Avatar -->
+    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+        <span class="text-white text-sm font-semibold">
+            <?php echo $user_initial; ?>
+        </span>
+    </div>
 
+    </div>
+  </div>
 </header>
+
+
 
 

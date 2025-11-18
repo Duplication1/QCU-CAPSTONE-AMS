@@ -196,7 +196,7 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
 
 <!-- Sidebar -->
 <aside id="sidebar"
-    class="fixed left-0 top-[97px] h-[calc(100vh-97px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 z-50">
+    class="fixed left-0 top-[85px] h-[calc(100vh-85px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 z-50">
 
 
 <!-- Sidebar Header -->
