@@ -52,16 +52,44 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
         </button>
       </form>
 
-    <!-- User Initial Avatar -->
-    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
-        <span class="text-white text-sm font-semibold">
-            <?php echo $user_initial; ?>
-        </span>
+    <!-- User Info -->
+    <div class="flex items-center space-x-4">
+
+    <?php if (in_array($current_role, ['Student', 'Faculty'])): ?>
+    <!-- Dark Mode Toggle (Student/Faculty only) -->
+    <button id="dark-mode-toggle" title="Toggle dark mode"
+          class="p-2 rounded-lg text-white hover:bg-white/20 transition-colors duration-200 hidden">
+    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
+    </button>
+    <?php endif; ?>
+
+    <!-- Avatar + Role Tooltip -->
+    <div class="relative group">
+        <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center cursor-pointer">
+            <span class="text-white text-sm font-semibold"><?php echo $user_initial; ?></span>
+        </div>
+    <div class="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 text-xs px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+      Hi! <?php echo htmlspecialchars($current_role); ?>
     </div>
+  </div>
+
+</div>
 
     </div>
   </div>
+
+  <script>
+  const toggle = document.getElementById('dark-mode-toggle');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+  }
+</script>
+
 </header>
+
+
 
 
 
