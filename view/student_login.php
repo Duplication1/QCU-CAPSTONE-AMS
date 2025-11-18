@@ -8,15 +8,18 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-5" style="background: radial-gradient(circle at top left, #dbeafe, #fef9c3 50%, #fecaca);">
     <div class="w-full max-w-md">
-        <div class="bg-white rounded-xl shadow-2xl p-8 md:p-10">
+        <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-10 md:p-12">
             
             <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="flex justify-center mb-4">
-                    <img src="../assets/images/qcu-logo.png" alt="QCU Logo" class="w-20 h-20">
+            <div class="text-center mb-10">
+                <div class="flex justify-center mb-5">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"></div>
+                        <img src="../assets/images/qcu-logo.png" alt="QCU Logo" class="w-24 h-24 relative">
+                    </div>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-1">Student Login</h1>
-                <p class="text-gray-600 text-sm">Access your student portal</p>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">Student Portal</h1>
+                <p class="text-gray-600 text-sm font-medium">Welcome back! Please login to continue</p>
             </div>
             
             <?php
@@ -57,48 +60,53 @@
             ?>
             
             <!-- Login Form -->
-            <form action="../controller/login_controller.php" method="POST" class="space-y-6">
+            <form action="../controller/login_controller.php" method="POST" class="space-y-7">
                 <input type="hidden" name="login_type" value="student">
                 
                 <!-- Student Number -->
-                <div>
-                    <label for="id_number" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Student Number <span class="text-red-500">*</span>
-                    </label>
+                <div class="relative">
                     <input type="text" 
                            id="id_number" 
                            name="id_number" 
-                           placeholder="Enter your student number" 
+                           placeholder="" 
                            required 
                            autocomplete="off"
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                           class="peer w-full px-5 py-4 bg-white/50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white transition-all duration-300 placeholder-transparent">
+                    <label for="id_number" class="absolute left-5 -top-3 bg-white px-2 text-sm font-semibold text-gray-600 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-3 peer-focus:text-sm peer-focus:text-blue-600 peer-focus:bg-white">
+                        Student Number
+                    </label>
                 </div>
 
                 <!-- Password -->
-                <div>
-                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Password <span class="text-red-500">*</span>
-                    </label>
+                <div class="relative">
                     <input type="password" 
                            id="password" 
                            name="password" 
-                           placeholder="Enter your password" 
+                           placeholder="" 
                            required
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                           class="peer w-full px-5 py-4 bg-white/50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white transition-all duration-300 placeholder-transparent">
+                    <label for="password" class="absolute left-5 -top-3 bg-white px-2 text-sm font-semibold text-gray-600 transition-all duration-300 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:bg-transparent peer-focus:-top-3 peer-focus:text-sm peer-focus:text-blue-600 peer-focus:bg-white">
+                        Password
+                    </label>
                 </div>
 
                 <!-- Submit Button -->
-                <div>
+                <div class="pt-2">
                     <button type="submit" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg">
-                        Login
+                            class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <span class="flex items-center justify-center gap-2">
+                            Login
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </span>
                     </button>
                 </div>
             </form>
 
             <!-- Footer -->
-            <div class="text-center mt-8 pt-6 border-t border-gray-200">
-                <p class="text-gray-600 text-xs">© 2025 Asset Management System</p>
+            <div class="text-center mt-10 pt-8 border-t border-gray-200/50">
+                <p class="text-gray-500 text-xs font-medium">© 2025 Asset Management System</p>
             </div>
 
         </div>
