@@ -172,6 +172,20 @@ if ($current_role === 'Laboratory Staff') {
     $role_key = 'LaboratoryStaff'; // Map "Laboratory Staff" to "LaboratoryStaff"
 }
 
+// Count new/unassigned tickets for Laboratory Staff
+$new_tickets_count = 0;
+if ($current_role === 'Laboratory Staff' && isset($conn)) {
+    $ticket_count_query = "SELECT COUNT(*) as count FROM issues 
+                          WHERE (assigned_group IS NULL OR assigned_group = '') 
+                          AND status = 'Open' 
+                          AND category != 'borrow'";
+    $ticket_result = $conn->query($ticket_count_query);
+    if ($ticket_result) {
+        $ticket_row = $ticket_result->fetch_assoc();
+        $new_tickets_count = (int)$ticket_row['count'];
+    }
+}
+
 // Get navigation items for current role
 $nav_items = $navigation_items[$role_key] ?? $navigation_items['Student'];
 
@@ -203,17 +217,25 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
         <?php foreach ($nav_items as $item): 
             $is_active = ($item['href'] === $current_page);
                 $active_classes = $is_active ? "bg-{$item['color']}-50 text-{$item['color']}-700 border-r-4 border-{$item['color']}-600" : "text-gray-700";
+            $show_badge = ($item['id'] === 'tickets' && $new_tickets_count > 0);
         ?>
     <!-- <?php echo htmlspecialchars($item['label']); ?> -->
         <a href="<?php echo htmlspecialchars($item['href']); ?>"
-            class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg 
+            class="group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
             hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
           <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
-            <div class="flex-shrink-0">
-            <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
-           <?php echo $is_active ? 'text-white' : ''; ?>"></i>
+            <div class="flex items-center min-w-0 flex-1">
+                <div class="flex-shrink-0">
+                <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
+               <?php echo $is_active ? 'text-white' : ''; ?>"></i>
+                </div>
+                <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate"><?php echo htmlspecialchars($item['label']); ?></span>
             </div>
-            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0"><?php echo htmlspecialchars($item['label']); ?></span>
+            <?php if ($show_badge): ?>
+            <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse">
+                <?php echo $new_tickets_count; ?>
+            </span>
+            <?php endif; ?>
         </a>
         <?php endforeach; ?>
     </nav>
