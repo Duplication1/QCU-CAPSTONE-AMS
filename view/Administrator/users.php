@@ -14,6 +14,19 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 
 require_once '../../config/config.php';
 
+// Establish mysqli database connection
+$dbConfig = Config::database();
+try {
+    $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
+    $conn->set_charset('utf8mb4');
+} catch (mysqli_sql_exception $e) {
+    if (Config::isDebug()) {
+        die("Database connection failed: " . $e->getMessage());
+    } else {
+        die("Database connection error. Please contact administrator.");
+    }
+}
+
 // Helpers: avatar paths and saving
 function ams_get_avatar_dir_fs() {
     // filesystem path to avatars directory
