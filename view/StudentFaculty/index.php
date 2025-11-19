@@ -18,42 +18,45 @@ include '../components/layout_header.php';
 
 <!-- Main Content -->
 <div class="p-8">   
+    <!-- Success/Error Alert Container -->
+    <div id="alertContainer"></div>
+    
     <h2 class="text-2xl font-semibold text-gray-800 mb-2">
     Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
     </h2>
 
   <p class="text-gray-500 mb-8">Choose from the available options below.</p>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
 
-    <!-- Hardware Issue -->
-    <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+  <!-- Hardware Issue -->
+  <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-[#1E3A8A] hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
     <div class="flex items-start gap-4">
-    <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
-    <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
-        </div>
-    <div>
-      <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
-      <p class="text-sm text-gray-500">
-        Computer, printer, or equipment problems that need technical assistance.
-      </p>
-        </div>
+      <div class="p-3 bg-blue-100 text-[#1E3A8A] rounded-full transition-colors duration-300">
+        <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
+        <p class="text-sm text-gray-500">
+          Computer, printer, or equipment problems that need technical assistance.
+        </p>
       </div>
     </div>
+  </div>
 
     <!-- Software Issue -->
     <div onclick="handleIssueClick('software')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-green-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-green-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-green-100 text-green-600 rounded-full">
-          <i class="fa-solid fa-microchip text-3xl"></i>
+        <div class="p-3 bg-green-100 text-green-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-microchip text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Software Issue</h3>
@@ -66,13 +69,13 @@ include '../components/layout_header.php';
 
     <!-- Network Issue -->
     <div onclick="handleIssueClick('network')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-violet-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-violet-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
-          <i class="fa-solid fa-globe text-3xl"></i>
+        <div class="p-3 bg-violet-100 text-violet-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-globe text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Network Issue</h3>
@@ -85,13 +88,13 @@ include '../components/layout_header.php';
 
     <!-- Borrow Equipment -->
     <div onclick="openBorrowingModal()" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-yellow-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-yellow-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
-          <i class="fa-solid fa-box text-3xl"></i>
+        <div class="p-3 bg-yellow-100 text-yellow-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-box text-xl group-hover:scale-110 transition-transform duration-200""></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Borrow Equipment</h3>
@@ -104,13 +107,13 @@ include '../components/layout_header.php';
 
     <!-- Laboratory Concern -->
     <div onclick="handleIssueClick('laboratory')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-blue-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-blue-200 text-blue-700 rounded-full">
-          <i class="fa-solid fa-building text-3xl"></i>
+        <div class="p-3 bg-blue-100 text-blue-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-building text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Laboratory Concern</h3>
@@ -123,13 +126,13 @@ include '../components/layout_header.php';
 
     <!-- Other -->
     <div onclick="handleIssueClick('hardware')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-gray-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-gray-100 text-gray-600 rounded-full">
-          <i class="fa-solid fa-flag text-3xl"></i>
+        <div class="p-3 bg-gray-100 text-gray-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-flag text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Other</h3>
@@ -299,6 +302,16 @@ include '../components/layout_header.php';
                 <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Submit</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
+    <div class="absolute inset-0 bg-black opacity-50"></div>
+    <div class="bg-white rounded-lg shadow-lg p-8 z-10 flex flex-col items-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-lg font-semibold text-gray-800">Submitting Issue...</p>
+        <p class="text-sm text-gray-500 mt-2">Please wait</p>
     </div>
 </div>
 
@@ -1394,24 +1407,39 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const div = document.createElement('div');
     div.id = 'topAjaxAlert';
+    
     if (type === 'success') {
-      div.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
-      div.innerHTML = '<strong>Success:</strong> ' + msg;
+      div.className = 'bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-6';
+      div.innerHTML = '<strong>Success!</strong> ' + msg;
     } else {
-      div.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
-      div.innerHTML = '<strong>Error:</strong> ' + msg;
+      div.className = 'bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6';
+      div.innerHTML = '<strong>Error!</strong> ' + msg;
     }
-    // insert at top of main content (before <main>)
-    const main = document.querySelector('main');
-    if (main && main.parentNode) main.parentNode.insertBefore(div, main);
-    // auto-remove after 6s
-    setTimeout(() => div.remove(), 6000);
+    
+    // Insert into alert container
+    const alertContainer = document.getElementById('alertContainer');
+    if (alertContainer) {
+      alertContainer.appendChild(div);
+    }
+    
+    // Scroll to top to show the alert
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // auto-remove after 5s
+    setTimeout(() => div.remove(), 3000);
   }
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
     const submitBtn = form.querySelector('#submitBtn');
+    const loadingModal = document.getElementById('loadingModal');
+    
     if (submitBtn) submitBtn.disabled = true;
+    
+    // Show loading modal for at least 2 seconds
+    if (loadingModal) loadingModal.classList.remove('hidden');
+    
+    const startTime = Date.now();
 
     const fd = new FormData(form);
     fetch(form.action, {
@@ -1429,22 +1457,43 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     })
     .then(json => {
-      if (json.success) {
-        showTopAlert('success', json.message || 'Issue is successfuly submitted!');
-        form.reset();
-        // close modal if open
-        const modal = document.getElementById('issueModal');
-        if (modal) modal.classList.add('hidden');
-      } else {
-        showTopAlert('error', json.message || 'Failed to submit. Please try again.');
-      }
+      // Ensure loading modal shows for at least 2 seconds
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 2000 - elapsedTime);
+      
+      setTimeout(() => {
+        // Hide loading modal
+        if (loadingModal) loadingModal.classList.add('hidden');
+        
+        if (json.success) {
+          showTopAlert('success', json.message || 'Issue is successfuly submitted!');
+          form.reset();
+          // close modal if open
+          const modal = document.getElementById('issueModal');
+          if (modal) modal.classList.add('hidden');
+        } else {
+          showTopAlert('error', json.message || 'Failed to submit. Please try again.');
+        }
+      }, remainingTime);
     })
     .catch(err => {
-      console.error('Submit error:', err);
-      showTopAlert('error', 'Failed to submit. Please try again.');
+      // Ensure loading modal shows for at least 2 seconds
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 2000 - elapsedTime);
+      
+      setTimeout(() => {
+        // Hide loading modal
+        if (loadingModal) loadingModal.classList.add('hidden');
+        
+        console.error('Submit error:', err);
+        showTopAlert('error', 'Failed to submit. Please try again.');
+      }, remainingTime);
     })
     .finally(() => {
-      if (submitBtn) submitBtn.disabled = false;
+      // Re-enable button after loading is done
+      setTimeout(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      }, Math.max(0, 2000 - (Date.now() - startTime)));
     });
   });
 });

@@ -13,11 +13,53 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 }
 
 require_once '../../config/config.php';
+
+// Get count of new unassigned tickets
+$new_tickets_query = "SELECT COUNT(*) as count FROM issues 
+                      WHERE (assigned_group IS NULL OR assigned_group = '') 
+                      AND status = 'Open' 
+                      AND category != 'borrow'";
+$new_tickets_result = $conn->query($new_tickets_query);
+$new_tickets_count = 0;
+if ($new_tickets_result) {
+    $new_tickets_row = $new_tickets_result->fetch_assoc();
+    $new_tickets_count = (int)$new_tickets_row['count'];
+}
+
 include '../components/layout_header.php';
 ?>
 
         <!-- Main Content -->
         <main class="p-4 sm:p-6 space-y-6">
+            <!-- New Tickets Alert (if any) -->
+            <?php if ($new_tickets_count > 0): ?>
+            <div class="bg-red-50 border-l-4 border-red-600 rounded-lg shadow-lg p-6 animate-pulse">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-bold text-red-800">
+                            ⚠️ <?php echo $new_tickets_count; ?> New Unassigned Issue<?php echo $new_tickets_count > 1 ? 's' : ''; ?>!
+                        </h3>
+                        <p class="text-sm text-red-700 mt-1">
+                            There <?php echo $new_tickets_count > 1 ? 'are' : 'is'; ?> <?php echo $new_tickets_count; ?> new issue ticket<?php echo $new_tickets_count > 1 ? 's' : ''; ?> waiting for technician assignment.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="tickets.php" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition-colors inline-flex items-center space-x-2">
+                            <span>View Tickets</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
             <!-- Welcome Section -->
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
                 <h2 class="text-2xl sm:text-3xl font-bold mb-2">Welcome, <?php echo htmlspecialchars($_SESSION['full_name']); ?>!</h2>

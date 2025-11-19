@@ -26,10 +26,15 @@ try {
         throw new Exception('Not logged in');
     }
 
+    // Log POST data for debugging
+    error_log('assign_ticket POST data: ' . print_r($_POST, true));
+
     $ticketId = intval($_POST['ticket_id'] ?? 0);
     $technician = trim($_POST['technician_name'] ?? '');
 
-    if ($ticketId <= 0) throw new Exception('Invalid ticket id');
+    error_log("assign_ticket: ticketId=$ticketId, technician=$technician");
+
+    if ($ticketId <= 0) throw new Exception('Invalid ticket id (received: ' . ($ticketId ?? 'null') . ')');
     if ($technician === '') throw new Exception('Please select a technician');
 
     // update
