@@ -37,7 +37,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       </button>
 
       <!-- Logo + Text -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1">
         <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-10 h-10 md:w-12 md:h-12">
         <div class="text-xl md:text-2xl font-bold font-[Poppins] leading-none whitespace-nowrap">
           <span class="text-white">one</span><span class="text-[#F87171]">Q</span><span class="text-[#60A5FA]">C</span><span class="text-[#FACC15]">U</span>

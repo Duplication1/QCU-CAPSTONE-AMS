@@ -45,11 +45,11 @@ include '../components/layout_header.php';
     </div>
   </div>
 
-<!-- Software Issue -->
+    <!-- Software Issue -->
     <div onclick="handleIssueClick('software')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-green-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-green-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
         <div class="p-3 bg-green-100 text-green-500 rounded-full transition-colors duration-300">
@@ -66,9 +66,9 @@ include '../components/layout_header.php';
 
     <!-- Network Issue -->
     <div onclick="handleIssueClick('network')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-violet-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-violet-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
         <div class="p-3 bg-violet-100 text-violet-500 rounded-full transition-colors duration-300">
@@ -85,9 +85,9 @@ include '../components/layout_header.php';
 
     <!-- Borrow Equipment -->
     <div onclick="openBorrowingModal()" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-yellow-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-yellow-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
         <div class="p-3 bg-yellow-100 text-yellow-500 rounded-full transition-colors duration-300">
@@ -104,13 +104,13 @@ include '../components/layout_header.php';
 
     <!-- Laboratory Concern -->
     <div onclick="handleIssueClick('laboratory')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-blue-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
         <div class="p-3 bg-blue-100 text-blue-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-building text-xl group-hover:scale-110 transition-transform duration-200""></i>
+          <i class="fa-solid fa-building text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Laboratory Concern</h3>
@@ -123,13 +123,13 @@ include '../components/layout_header.php';
 
     <!-- Other -->
     <div onclick="handleIssueClick('hardware')" 
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-gray-500 hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-gray-100 text-gray rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-flag text-xl group-hover:scale-110 transition-transform duration-200""></i>
+        <div class="p-3 bg-gray-100 text-gray-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-flag text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Other</h3>
