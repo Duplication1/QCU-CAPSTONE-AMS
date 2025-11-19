@@ -15,6 +15,69 @@ if (!isset($conn) || !$conn) {
     if ($conn->connect_error) die('DB connect error');
 }
 
+// Add is_archived column if it doesn't exist
+$checkCol = $conn->query("SHOW COLUMNS FROM issues LIKE 'is_archived'");
+if ($checkCol->num_rows === 0) {
+    $conn->query("ALTER TABLE issues ADD COLUMN is_archived TINYINT(1) DEFAULT 0");
+}
+
+// Add archived_at column if it doesn't exist
+$checkArchivedAt = $conn->query("SHOW COLUMNS FROM issues LIKE 'archived_at'");
+if ($checkArchivedAt->num_rows === 0) {
+    $conn->query("ALTER TABLE issues ADD COLUMN archived_at TIMESTAMP NULL DEFAULT NULL");
+}
+
+// Auto-delete archived tickets older than 30 days
+$conn->query("DELETE FROM issues WHERE is_archived = 1 AND archived_at IS NOT NULL AND archived_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+
+// AJAX endpoint for archiving tickets
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'archive_ticket') {
+    header('Content-Type: application/json');
+    $ticketId = intval($_POST['ticket_id'] ?? 0);
+    if ($ticketId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid ticket ID']);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("UPDATE issues SET is_archived = 1, archived_at = NOW(), updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param('i', $ticketId);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    echo json_encode(['success' => $success, 'message' => $success ? 'Ticket archived' : 'Archive failed']);
+    exit;
+}
+
+// AJAX endpoint for deleting archived tickets
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_archived_ticket') {
+    header('Content-Type: application/json');
+    $ticketId = intval($_POST['ticket_id'] ?? 0);
+    if ($ticketId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid ticket ID']);
+        exit;
+    }
+    
+    // Verify ticket is archived before allowing deletion
+    $check = $conn->prepare("SELECT is_archived FROM issues WHERE id = ?");
+    $check->bind_param('i', $ticketId);
+    $check->execute();
+    $res = $check->get_result()->fetch_assoc();
+    $check->close();
+    
+    if (!$res || !$res['is_archived']) {
+        echo json_encode(['success' => false, 'message' => 'Only archived tickets can be deleted']);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("DELETE FROM issues WHERE id = ? AND is_archived = 1");
+    $stmt->bind_param('i', $ticketId);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    echo json_encode(['success' => $success, 'message' => $success ? 'Ticket deleted permanently' : 'Delete failed']);
+    exit;
+}
+
 // technician name
 $technicianName = $_SESSION['full_name'] ?? null;
 if (!$technicianName && isset($_SESSION['user_id'])) {
@@ -26,16 +89,21 @@ if (!$technicianName && isset($_SESSION['user_id'])) {
     $s->close();
 }
 
+// Determine view mode: active (default) or archived
+$viewMode = $_GET['view'] ?? 'active';
+$isArchivedFilter = ($viewMode === 'archived') ? 1 : 0;
+
 // fetch tickets assigned to this technician (only show tickets assigned to the logged-in technician)
 $sql = "SELECT i.*, u.full_name AS reporter_name
         FROM issues i
         LEFT JOIN users u ON u.id = i.user_id
         WHERE i.assigned_group = ?
           AND LOWER(COALESCE(i.category,'')) IN ('hardware','software','network')
+          AND COALESCE(i.is_archived, 0) = ?
         ORDER BY CASE WHEN i.priority='High' THEN 1 WHEN i.priority='Medium' THEN 2 ELSE 3 END, i.created_at DESC";
 $stmt = $conn->prepare($sql);
 $param = $technicianName ?? '';
-$stmt->bind_param('s', $param);
+$stmt->bind_param('si', $param, $isArchivedFilter);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -46,7 +114,12 @@ include '../components/layout_header.php';
 
   <div class="bg-white shadow rounded-lg overflow-hidden">
     <div class="p-4 border-b flex items-center justify-between gap-4">
-      <div class="text-sm text-gray-600">Showing tickets assigned to you.</div>
+      <div class="flex items-center gap-3">
+        <div class="flex gap-2">
+          <a href="?view=active" class="px-3 py-1 rounded text-sm <?php echo $viewMode === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?>">Active</a>
+          <a href="?view=archived" class="px-3 py-1 rounded text-sm <?php echo $viewMode === 'archived' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?>">Archived</a>
+        </div>
+      </div>
       <div class="flex items-center gap-2">
         <input id="techSearch" type="search" placeholder="Search title, room..." class="border rounded px-3 py-2"/>
       </div>
@@ -82,7 +155,9 @@ if (!$result || $result->num_rows === 0): ?>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <?php if ($viewMode === 'active'): ?>
             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <?php endif; ?>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-100">
@@ -119,6 +194,7 @@ if (!$result || $result->num_rows === 0): ?>
                 echo $status === 'Open' ? 'bg-blue-100 text-blue-800' : ($status === 'In Progress' ? 'bg-purple-100 text-purple-800' : ($status === 'Resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'));
               ?>"><?php echo htmlspecialchars($status); ?></span>
             </td>
+            <?php if ($viewMode === 'active'): ?>
             <td class="px-4 py-3 text-center text-sm">
               <div class="flex items-center justify-center gap-2">
                 <select class="statusSelect border rounded px-2 py-1 text-sm">
@@ -127,8 +203,14 @@ if (!$result || $result->num_rows === 0): ?>
                   <option value="Resolved" <?php if ($status==='Resolved') echo 'selected'; ?>>Resolved</option>
                   <option value="Closed" <?php if ($status==='Closed') echo 'selected'; ?>>Closed</option>
                 </select>
+                <?php if ($status === 'Resolved'): ?>
+                  <button class="archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700" title="Archive this ticket">
+                    <i class="fa-solid fa-box-archive"></i> Archive
+                  </button>
+                <?php endif; ?>
               </div>
             </td>
+            <?php endif; ?>
           </tr>
           <?php endwhile; ?>
         </tbody>
@@ -226,6 +308,7 @@ catButtons.forEach(btn => {
 document.querySelectorAll('#techTickets tbody tr').forEach(row => {
   const ticketId = row.dataset.ticketId;
   const select = row.querySelector('.statusSelect');
+  const archiveBtn = row.querySelector('.archiveBtn');
 
   // submit immediately when dropdown changes
   select?.addEventListener('change', () => {
@@ -248,6 +331,23 @@ document.querySelectorAll('#techTickets tbody tr').forEach(row => {
         if (j.success) {
           updateRowStatus(row, j.status);
           showToast('Status updated');
+          
+          // Show archive button if status is now Resolved
+          if (j.status === 'Resolved' && !archiveBtn) {
+            const actionsCell = row.querySelector('td:last-child > div');
+            if (actionsCell) {
+              const newArchiveBtn = document.createElement('button');
+              newArchiveBtn.className = 'archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700';
+              newArchiveBtn.title = 'Archive this ticket';
+              newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
+              newArchiveBtn.addEventListener('click', () => archiveTicket(ticketId, row));
+              actionsCell.appendChild(newArchiveBtn);
+            }
+          }
+          // Hide archive button if status changed from Resolved
+          else if (j.status !== 'Resolved' && archiveBtn) {
+            archiveBtn.remove();
+          }
         } else {
           // revert select to previous value
           if (select) select.value = prevStatus;
@@ -261,7 +361,43 @@ document.querySelectorAll('#techTickets tbody tr').forEach(row => {
       showToast('Request failed', false);
     });
   });
+
+  // Archive button click handler
+  archiveBtn?.addEventListener('click', () => archiveTicket(ticketId, row));
 });
+
+function archiveTicket(ticketId, row) {
+  if (!confirm('Archive this ticket? It will be moved to the archived view.')) return;
+  
+  const started = Date.now();
+  showRowProcessing(row);
+  
+  fetch(window.location.href, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {'Accept':'application/json'},
+    body: new URLSearchParams({action: 'archive_ticket', ticket_id: ticketId})
+  }).then(r => r.json()).then(j => {
+    const elapsed = Date.now() - started;
+    const wait = Math.max(0, ROW_MIN_MS - elapsed);
+    setTimeout(() => {
+      hideRowProcessing(row);
+      if (j.success) {
+        showToast('Ticket archived');
+        // Fade out and remove the row
+        row.style.transition = 'opacity 0.3s';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+      } else {
+        showToast(j.message || 'Archive failed', false);
+      }
+    }, wait);
+  }).catch((err) => {
+    console.error(err);
+    hideRowProcessing(row);
+    showToast('Request failed', false);
+  });
+}
 
 // Search (unchanged)
 document.getElementById('techSearch')?.addEventListener('input', function() {

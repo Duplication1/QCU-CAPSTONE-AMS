@@ -81,7 +81,9 @@ if (!in_array($filterKey, $allowed)) $filterKey = 'all';
 
 // Build query based on filter — use unified issues table and join users for reporter name
 if ($filterKey === 'all') {
-    $query = "SELECT i.*, u.full_name AS reporter_name
+    $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
+                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_group,
+                     u.full_name AS reporter_name
               FROM issues i
               LEFT JOIN users u ON u.id = i.user_id
               WHERE COALESCE(i.category,'') <> 'borrow'
@@ -90,7 +92,9 @@ if ($filterKey === 'all') {
                 i.created_at DESC";
     $result = $conn->query($query);
 } else {
-    $query = "SELECT i.*, u.full_name AS reporter_name
+    $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
+                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_group,
+                     u.full_name AS reporter_name
               FROM issues i
               LEFT JOIN users u ON u.id = i.user_id
               WHERE LOWER(COALESCE(i.category,'')) = ?
@@ -126,6 +130,9 @@ include '../components/layout_header.php';
 
         <!-- Main Content -->
         <main class="p-6">
+            <!-- Alert Container for AJAX messages -->
+            <div id="alertContainer"></div>
+            
             <?php if ($successMessage): ?>
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                 <?php echo htmlspecialchars($successMessage); ?>
@@ -223,8 +230,10 @@ include '../components/layout_header.php';
                              </tr>
                          </thead>
                          <tbody class="bg-white divide-y divide-gray-200">
-                             <?php while ($ticket = $result->fetch_assoc()): ?>
-                             <tr class="hover:bg-gray-50" data-ticket-id="<?php echo (int)$ticket['id']; ?>">
+                             <?php while ($ticket = $result->fetch_assoc()): 
+                                 $ticketId = (int)$ticket['id'];
+                             ?>
+                             <tr class="hover:bg-gray-50" data-ticket-id="<?php echo $ticketId; ?>">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                      <?php
                                      $typeColors = [
@@ -292,8 +301,8 @@ include '../components/layout_header.php';
                                      <?php echo !empty($ticket['created_at']) ? date('M d, Y H:i', strtotime($ticket['created_at'])) : '-'; ?>
                                  </td>
                                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                     <button onclick="viewTicket(<?php echo (int)$ticket['id']; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                     <button onclick="assignTechnician(<?php echo (int)$ticket['id']; ?>, '<?php echo htmlspecialchars($ticket['assigned_group'] ?? '', ENT_QUOTES); ?>')" class="text-gray-600 hover:text-gray-900">Assign</button>
+                                     <button onclick="viewTicket(<?php echo $ticketId; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                     <button class="assignBtn text-gray-600 hover:text-gray-900" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_group'] ?? '', ENT_QUOTES); ?>">Assign</button>
                                  </td>
                              </tr>
                              <?php endwhile; ?>
@@ -394,6 +403,35 @@ include '../components/layout_header.php';
 </div>
 
 <script>
+function showAlert(type, msg) {
+    // Remove existing alert
+    const existing = document.getElementById('ajaxAlert');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.id = 'ajaxAlert';
+    
+    if (type === 'success') {
+        div.className = 'bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-4';
+        div.innerHTML = '<strong>Success!</strong> ' + msg;
+    } else {
+        div.className = 'bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-4';
+        div.innerHTML = '<strong>Error!</strong> ' + msg;
+    }
+    
+    // Insert into alert container
+    const alertContainer = document.getElementById('alertContainer');
+    if (alertContainer) {
+        alertContainer.appendChild(div);
+    }
+    
+    // Scroll to top to show the alert
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => div.remove(), 5000);
+}
+
 function viewTicket(ticketId) {
     fetch('../../controller/get_ticket.php?id=' + ticketId)
         .then(response => response.json())
@@ -464,7 +502,17 @@ function closeViewModal() {
 }
 
 function assignTechnician(ticketId, currentTechnician) {
-    document.getElementById('assignTicketId').value = ticketId;
+    console.log('assignTechnician called with:', ticketId, currentTechnician);
+    const inputField = document.getElementById('assignTicketId');
+    console.log('Input field found:', inputField);
+    
+    if (inputField) {
+        inputField.value = ticketId;
+        console.log('Ticket ID set to:', inputField.value);
+    } else {
+        console.error('assignTicketId input field not found!');
+    }
+    
     const techSelect = document.getElementById('technicianName');
     if (currentTechnician) {
         techSelect.value = currentTechnician;
@@ -475,35 +523,64 @@ function assignTechnician(ticketId, currentTechnician) {
     setTimeout(() => techSelect.focus(), 100);
 }
 
-document.getElementById('assignForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    console.log('assignForm data:', Array.from(fd.entries()));
-    fetch('../../controller/assign_ticket.php', { method:'POST', body: fd, credentials:'same-origin' })
-    .then(async r => {
-        const text = await r.text();
-        console.log('HTTP status', r.status, 'response text:', text);
-        try { return JSON.parse(text); } 
-        catch (err) { throw new Error('Invalid JSON response: ' + text); }
-    })
-    .then(json => {
-        console.log('Parsed JSON:', json);
-        if (json.success) {
-            // update UI
-            const row = document.querySelector('tr[data-ticket-id="'+json.ticket_id+'"]');
-            if (row) {
-                const assignedCell = row.querySelector('.assigned-cell');
-                if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_group||'') +'</span>';
-            }
-            closeAssignModal();
-            alert(json.message || 'Assigned');
-        } else {
-            alert('Server error: ' + (json.message||'Unknown'));
+// Add event listeners to all assign buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle assign button clicks
+    document.querySelectorAll('.assignBtn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const ticketId = this.getAttribute('data-ticket-id');
+            const currentTech = this.getAttribute('data-current-tech');
+            console.log('Assign button clicked:', ticketId, currentTech);
+            assignTechnician(ticketId, currentTech);
+        });
+    });
+
+    // Handle assign form submission
+    document.getElementById('assignForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Ensure ticket_id is set - check multiple times
+        const ticketIdField = document.getElementById('assignTicketId');
+        const ticketId = ticketIdField ? ticketIdField.value : null;
+        
+        console.log('Form submit - ticket ID field:', ticketIdField);
+        console.log('Form submit - ticket ID value:', ticketId);
+        console.log('Form submit - all form data before check:');
+        const fd = new FormData(this);
+        console.log(Array.from(fd.entries()));
+        
+        if (!ticketId || ticketId === '' || ticketId === '0') {
+            console.error('Missing ticket ID in form. Field exists:', !!ticketIdField, 'Value:', ticketId);
+            alert('Error: Ticket ID is missing. Please try again.');
+            return;
         }
-    })
-    .catch(err => {
-        console.error('Fetch/parse error:', err);
-        alert('Error: Failed to submit. See console Network / Response for details.');
+        
+        fetch('../../controller/assign_ticket.php', { method:'POST', body: fd, credentials:'same-origin' })
+        .then(async r => {
+            const text = await r.text();
+            console.log('HTTP status', r.status, 'response text:', text);
+            try { return JSON.parse(text); } 
+            catch (err) { throw new Error('Invalid JSON response: ' + text); }
+        })
+        .then(json => {
+            console.log('Parsed JSON:', json);
+            if (json.success) {
+                // update UI
+                const row = document.querySelector('tr[data-ticket-id="'+json.ticket_id+'"]');
+                if (row) {
+                    const assignedCell = row.querySelector('.assigned-cell');
+                    if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_group||'') +'</span>';
+                }
+                closeAssignModal();
+                showAlert('success', json.message || 'Technician assigned successfully!');
+            } else {
+                showAlert('error', json.message || 'Failed to assign technician');
+            }
+        })
+        .catch(err => {
+            console.error('Fetch/parse error:', err);
+            showAlert('error', 'Failed to submit. Please try again.');
+        });
     });
 });
 
