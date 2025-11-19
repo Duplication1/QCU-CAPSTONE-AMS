@@ -192,36 +192,11 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
 ?>
 
 <!-- Mobile Menu Overlay -->
-<div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
+<div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <!-- Sidebar -->
 <aside id="sidebar"
-    class="fixed left-0 top-[85px] h-[calc(100vh-85px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 z-50">
-
-
-<!-- Sidebar Header -->
-<div id="sidebar-header"
-     class="relative flex items-center justify-between flex-shrink-0 border-b bg-[#6176C9] text-white"
-     style="height: 70px; border-color: #D6D6D6; padding-left: 16px; padding-right: 16px;">
-
-    <!-- Logo/Toggle Button Container -->
-    <div class="flex items-center space-x-3 h-full">
-        <!-- Desktop Toggle Button -->
-        <button id="sidebar-toggle" class="hidden lg:flex p-2 rounded-lg bg-white text-[#6176C9] hover:bg-[#eef2ff] transition-all duration-300 self-center">
-            <i id="toggle-icon" class="fa-solid fa-chevron-left"></i>
-        </button>         
-            <div id="sidebar-brand" class="text-white overflow-hidden transition-all duration-300">
-                <h2 class="text-lg font-bold whitespace-nowrap">QCU AMS</h2>
-                <p class="text-xs text-blue-100 whitespace-nowrap"><?php echo htmlspecialchars($panel_title); ?></p>
-            </div>
-            
-        </div>
-        
-        <!-- Mobile Close Button -->
-        <button id="mobile-close" class="lg:hidden p-2 rounded-lg text-white hover:bg-blue-500 transition-colors duration-200">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
+    class="fixed left-0 top-[85px] h-[calc(100vh-85px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col -translate-x-full z-50">
 
     <!-- Navigation Menu -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto overflow-x-hidden">
@@ -232,15 +207,13 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
     <!-- <?php echo htmlspecialchars($item['label']); ?> -->
         <a href="<?php echo htmlspecialchars($item['href']); ?>"
             class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg 
-            hover:bg-[#eef2ff] hover:text-[#6176C9] transition-all duration-200 
-          <?php echo $is_active ? 'bg-[#eef2ff] text-[#6176C9] border-r-4 border-[#6176C9]' : 'text-gray-700'; ?>">
+            hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
+          <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
             <div class="flex-shrink-0">
             <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
-           <?php echo $is_active ? 'text-[#6176C9]' : ''; ?>"></i>
+           <?php echo $is_active ? 'text-white' : ''; ?>"></i>
             </div>
-            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0 <?php echo $is_active ? 'font-bold' : ''; ?>"><?php echo htmlspecialchars($item['label']); ?></span>
-            <div class="ml-auto <?php echo $is_active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'; ?> transition-opacity duration-200 flex-shrink-0">
-            <div class="w-1 h-6 bg-[#6176C9] rounded-full"></div>            </div>
+            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0"><?php echo htmlspecialchars($item['label']); ?></span>
         </a>
         <?php endforeach; ?>
     </nav>
