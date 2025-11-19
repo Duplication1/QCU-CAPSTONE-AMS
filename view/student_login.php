@@ -1,3 +1,20 @@
+<?php
+session_start();
+
+// Check for login success
+$showSuccessModal = false;
+$redirectUrl = '';
+if (isset($_SESSION['login_success']) && $_SESSION['login_success'] === true) {
+    $showSuccessModal = true;
+    $redirectUrl = $_SESSION['redirect_url'] ?? 'StudentFaculty/index.php';
+    unset($_SESSION['login_success']);
+    unset($_SESSION['redirect_url']);
+}
+
+// Get error message if exists
+$error_message = $_SESSION['error_message'] ?? '';
+unset($_SESSION['error_message']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,6 +54,14 @@
       <form action="../controller/login_controller.php" method="POST" class="space-y-5">
         <input type="hidden" name="login_type" value="student">
 
+        <?php if (!empty($error_message)): ?>
+        <!-- Error Message -->
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+          <i class="fa-solid fa-circle-exclamation mr-2"></i>
+          <?php echo htmlspecialchars($error_message); ?>
+        </div>
+        <?php endif; ?>
+
         <!-- Student Number -->
         <div>
           <label for="id_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -74,6 +99,22 @@
     </div>
   </div>
 
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 <?php echo $showSuccessModal ? '' : 'hidden'; ?>">
+    <div class="bg-white dark:bg-[#071127] rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+      <div class="mb-4">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30">
+          <i class="fa-solid fa-check text-3xl text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Login Successful!</h3>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Welcome back, you'll be redirected shortly...</p>
+      <div class="flex justify-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     function togglePassword() {
       const input = document.getElementById('password');
@@ -84,6 +125,13 @@
       icon.classList.toggle('fa-eye');
       icon.classList.toggle('fa-eye-slash');
     }
+
+    // Auto redirect after successful login
+    <?php if ($showSuccessModal): ?>
+    setTimeout(function() {
+      window.location.href = '<?php echo $redirectUrl; ?>';
+    }, 2000);
+    <?php endif; ?>
   </script>
 </body>
 </html>

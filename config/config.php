@@ -119,28 +119,4 @@ class Config {
 
 // Auto-load configuration on include
 Config::load();
-?>
 
-<?php
-// DB settings — update as needed
-$DB_HOST = '127.0.0.1';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'ams_database';
-$DB_PORT = 3306;
-
-// show mysqli exceptions (dev)
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-try {
-    $conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
-    $conn->set_charset('utf8mb4');
-} catch (mysqli_sql_exception $e) {
-    error_log('DB connect error: ' . $e->getMessage());
-    // Friendly message (development)
-    if (php_sapi_name() !== 'cli') {
-        echo '<div style="color:red;padding:10px;">Database connection failed. Check config.php</div>';
-    }
-    $conn = null;
-}
-?>

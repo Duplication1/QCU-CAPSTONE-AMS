@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Validate inputs
     if (empty($id_number) || empty($password)) {
-        $_SESSION['error'] = "Please enter both ID number and password.";
+        $_SESSION['error_message'] = "Please enter both ID number and password.";
         $redirect = $login_type === 'student' ? "../view/student_login.php" : 
                    ($login_type === 'employee' ? "../view/employee_login.php" : "../view/login.php");
         header("Location: $redirect");
@@ -30,14 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user) {
         // Validate login type matches user role
         if ($login_type === 'student' && $user['role'] !== 'Student') {
-            $_SESSION['error'] = "Invalid credentials for student login.";
+            $_SESSION['error_message'] = "Invalid credentials for student login.";
             header("Location: ../view/student_login.php");
             exit();
         }
         
         $employeeRoles = ['Administrator', 'Technician', 'Laboratory Staff', 'Faculty'];
         if ($login_type === 'employee' && !in_array($user['role'], $employeeRoles)) {
-            $_SESSION['error'] = "Invalid credentials for employee login.";
+            $_SESSION['error_message'] = "Invalid credentials for employee login.";
             header("Location: ../view/employee_login.php");
             exit();
         }
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['redirect_url'] = "../view/StudentFaculty/index.php";
                 break;
             default:
-                $_SESSION['error'] = "Invalid user role.";
+                $_SESSION['error_message'] = "Invalid user role.";
                 $redirect = $login_type === 'student' ? "../view/student_login.php" : 
                            ($login_type === 'employee' ? "../view/employee_login.php" : "../view/student_login.php");
                 header("Location: $redirect");
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: $redirect");
         exit();
     } else {
-        $_SESSION['error'] = "Invalid ID number or password.";
+        $_SESSION['error_message'] = "Invalid ID number or password.";
         $redirect = $login_type === 'student' ? "../view/student_login.php" : 
                    ($login_type === 'employee' ? "../view/employee_login.php" : "../view/login.php");
         header("Location: $redirect");
