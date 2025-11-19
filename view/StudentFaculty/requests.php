@@ -44,7 +44,7 @@ include '../components/layout_header.php';
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">
-                        <i class="fa-solid fa-clipboard-list mr-2 text-blue-600"></i>
+                        <i class="fa-solid fa-clipboard-list mr-2 text-[#1E3A8A]"></i>
                         My Borrowing Requests
                     </h2>
                     <div class="text-sm text-gray-600">
@@ -62,99 +62,175 @@ include '../components/layout_header.php';
                         </a>
                     </div>
                 <?php else: ?>
-                    <div class="overflow-x-auto">
-                        <table id="requestsTable" class="display stripe hover w-full text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="text-left px-4 py-3">Request Date</th>
-                                    <th class="text-left px-4 py-3">Asset Tag</th>
-                                    <th class="text-left px-4 py-3">Asset Name</th>
-                                    <th class="text-left px-4 py-3">Type</th>
-                                    <th class="text-left px-4 py-3">Borrow Date</th>
-                                    <th class="text-left px-4 py-3">Return Date</th>
-                                    <th class="text-left px-4 py-3">Status</th>
-                                    <th class="text-center px-4 py-3">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($requests as $request): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
-                                    <td class="px-4 py-3"><span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($request['asset_tag']); ?></span></td>
-                                    <td class="px-4 py-3"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
-                                    <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"><?php echo htmlspecialchars($request['asset_type']); ?></span></td>
-                                    <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
-                                    <td class="px-4 py-3">
-                                        <?php 
-                                        if ($request['actual_return_date']) {
-                                            echo date('M d, Y', strtotime($request['actual_return_date']));
-                                        } else {
-                                            echo date('M d, Y', strtotime($request['expected_return_date']));
-                                        }
-                                        ?>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <?php
-                                        $statusColors = [
-                                            'Pending' => 'bg-yellow-100 text-yellow-800',
-                                            'Approved' => 'bg-green-100 text-green-800',
-                                            'Borrowed' => 'bg-blue-100 text-blue-800',
-                                            'Returned' => 'bg-gray-100 text-gray-800',
-                                            'Overdue' => 'bg-red-100 text-red-800',
-                                            'Cancelled' => 'bg-red-100 text-red-800'
-                                        ];
-                                        $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
-                                        ?>
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
-                                            <?php echo htmlspecialchars($request['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors">
-                                            <i class="fa-solid fa-eye mr-1"></i>View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+
+<div class="p-4 sm:p-6">
+  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+    <table id="requestsTable" class="display stripe hover w-full text-sm">
+      <thead class="bg-blue-100 sticky top-0 z-10">
+        <tr>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Request Date</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Asset Tag</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Asset Name</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Type</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Borrow Date</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Return Date</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Status</th>
+          <th class="text-left px-4 py-3 hidden sm:table-cell">Action</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-100">
+        <?php foreach ($requests as $request): ?>
+        <tr class="hover:bg-blue-50 transition-colors duration-150">
+          <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
+          <td class="px-4 py-3"><span class="font-mono text-xs bg-gray-100 px-2.5 py-1 rounded"><?php echo htmlspecialchars($request['asset_tag']); ?></span></td>
+          <td class="px-4 py-3"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
+          <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded"><?php echo htmlspecialchars($request['asset_type']); ?></span></td>
+          <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
+          <td class="px-4 py-3">
+            <?php 
+              if ($request['actual_return_date']) {
+                echo date('M d, Y', strtotime($request['actual_return_date']));
+              } else {
+                echo date('M d, Y', strtotime($request['expected_return_date']));
+              }
+            ?>
+          </td>
+          <td class="px-4 py-3 text-xs sm:text-sm">
+            <?php
+              $statusColors = [
+                'Pending'   => 'bg-yellow-100 text-yellow-800',
+                'Approved'  => 'bg-green-100 text-green-800',
+                'Borrowed'  => 'bg-blue-100 text-blue-800',
+                'Returned'  => 'bg-gray-100 text-gray-800',
+                'Overdue'   => 'bg-red-100 text-red-800',
+                'Cancelled' => 'bg-red-100 text-red-800'
+              ];
+              $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
+            ?>
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
+              <?php echo htmlspecialchars($request['status']); ?>
+            </span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors">
+              <i class="fa-solid fa-eye mr-1"></i>View
+            </button>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+
                     </div>
                 <?php endif; ?>
             </div>
         </main>
 
 <!-- Request Details Modal -->
-<div id="requestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 py-6">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl">
-            <!-- Modal Header -->
-            <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
-                <h3 class="text-xl font-bold">
-                    <i class="fa-solid fa-file-lines mr-2"></i>
-                    Request Details
-                </h3>
-                <button onclick="closeRequestDetailsModal()" class="text-white hover:text-gray-200">
-                    <i class="fa-solid fa-xmark text-2xl"></i>
-                </button>
-            </div>
+<div id="requestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 flex items-center justify-center px-4 py-6">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
 
-            <!-- Modal Body -->
-            <div class="p-6" id="requestDetailsContent">
-                <div class="text-center py-8">
-                    <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600"></i>
-                    <p class="mt-2 text-gray-600">Loading request details...</p>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end border-t">
-                <button onclick="closeRequestDetailsModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium">
-                    Close
-                </button>
-            </div>
-        </div>
+    <!-- Modal Header -->
+    <div class="bg-[#1E3A8A] text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+      <h3 class="text-xl font-bold flex items-center">
+        <i class="fa-solid fa-file-lines mr-2"></i>
+        Request Details
+      </h3>
+      <button onclick="closeRequestDetailsModal()" aria-label="Close modal" class="text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-white rounded">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
     </div>
+
+    <!-- Scrollable Modal Body -->
+    <div class="overflow-y-auto p-6 flex-1 space-y-6" id="requestDetailsContent">
+      
+      <!-- Request Information -->
+      <div>
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i>
+          Request Information
+        </h4>
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div><strong>Request ID:</strong> #1</div>
+          <div>
+            <strong>Status:</strong>
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset Details -->
+      <div>
+        <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2 sticky top-0 bg-white z-10 py-2 border-b">
+            <i class="fa-solid fa-laptop text-[#1E3A8A]"></i>
+            Asset Details
+        </h5>
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div><strong>Asset Tag:</strong> LAP-001</div>
+          <div><strong>Asset Name:</strong> Laptop</div>
+          <div><strong>Type:</strong> Hardware</div>
+          <div><strong>Brand/Model:</strong> Lenovo ThinkPad E14</div>
+        </div>
+      </div>
+
+      <!-- Borrowing Details -->
+      <div>
+        <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2 sticky top-0 bg-white z-10 py-2 border-b">
+        <i class="fa-solid fa-calendar-days text-[#1E3A8A]"></i>
+        Borrowing Details
+        </h5>
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div><strong>Request Date:</strong> November 2, 2025</div>
+          <div><strong>Borrow Date:</strong> November 4, 2025</div>
+          <div><strong>Expected Return:</strong> November 5, 2025</div>
+        </div>
+      </div>
+
+      <!-- Purpose -->
+      <div>
+        <h5 class="font-semibold text-gray-800 mb-2 flex items-center gap-2 sticky top-0 bg-white z-10 py-2 border-b">
+        <i class="fa-solid fa-pencil text-[#1E3A8A]"></i>
+         Purpose
+        </h5>
+        <p class="text-sm text-gray-600">dasdsa</p>
+      </div>
+
+      <!-- Approval Information -->
+      <div>
+        <h5 class="font-semibold text-gray-800 mb-2 flex items-center gap-2 sticky top-0 bg-white z-10 py-2 border-b">
+        <i class="fa-solid fa-user text-[#1E3A8A]"></i>
+        Approval Information
+        </h5>
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div><strong>Approved By:</strong> Maria Lab Staff</div>
+          <div><strong>Approval Date:</strong> November 2, 2025</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end border-t">
+<button onclick="closeRequestDetailsModal()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium">
+  Close
+</button>
+
+    </div>
+  </div>
 </div>
+
+<!-- Animation -->
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+</style>
+
 
 <script>
 // Initialize DataTable
@@ -183,12 +259,14 @@ $(document).ready(function() {
             { orderable: false, targets: 7 } // Disable sorting on Action column
         ],
         dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
-        drawCallback: function() {
-            // Add custom styling to pagination
-            $('.dataTables_paginate .paginate_button').addClass('px-3 py-1 mx-1 border border-gray-300 rounded hover:bg-blue-600 hover:text-white transition-colors');
-            $('.dataTables_paginate .paginate_button.current').addClass('bg-blue-600 text-white').removeClass('hover:bg-blue-600');
-            $('.dataTables_paginate .paginate_button.disabled').addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-blue-600 hover:text-white');
-        }
+    drawCallback: function() {
+    $('#requestsTable tbody tr').addClass('hover:bg-gray-100 transition'); 
+
+    $('.dataTables_paginate .paginate_button').addClass('px-3 py-1 mx-1 border border-gray-300 rounded hover:bg-blue-600 hover:text-white transition-colors');
+    $('.dataTables_paginate .paginate_button.current').addClass('bg-blue-600 text-white').removeClass('hover:bg-blue-600');
+    $('.dataTables_paginate .paginate_button.disabled').addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-blue-600 hover:text-white');
+}
+
     });
     <?php endif; ?>
 });
@@ -220,9 +298,7 @@ async function viewRequestDetails(requestId) {
         `;
     }
 }
-
-// Display Request Details
-function displayRequestDetails(request) {
+    function displayRequestDetails(request) {
     const statusColors = {
         'Pending': 'bg-yellow-100 text-yellow-800',
         'Approved': 'bg-green-100 text-green-800',
@@ -236,9 +312,13 @@ function displayRequestDetails(request) {
     
     const content = `
         <div class="space-y-4">
+            <!-- Request Information -->
             <div class="flex justify-between items-start">
                 <div>
-                    <h4 class="text-lg font-semibold text-gray-800">Request Information</h4>
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i>
+                        Request Information
+                    </h4>
                     <p class="text-sm text-gray-600">Request ID: #${request.id}</p>
                 </div>
                 <span class="px-4 py-2 rounded-full text-sm font-semibold ${statusClass}">
@@ -246,8 +326,12 @@ function displayRequestDetails(request) {
                 </span>
             </div>
             
+            <!-- Asset Details -->
             <div class="border-t pt-4">
-                <h5 class="font-semibold text-gray-800 mb-3">Asset Details</h5>
+                <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-laptop text-[#1E3A8A]"></i>
+                    Asset Details
+                </h5>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Asset Tag:</p>
@@ -268,8 +352,12 @@ function displayRequestDetails(request) {
                 </div>
             </div>
             
+            <!-- Borrowing Details -->
             <div class="border-t pt-4">
-                <h5 class="font-semibold text-gray-800 mb-3">Borrowing Details</h5>
+                <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-[#1E3A8A]"></i>
+                    Borrowing Details
+                </h5>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Request Date:</p>
@@ -292,14 +380,22 @@ function displayRequestDetails(request) {
                 </div>
             </div>
             
+            <!-- Purpose -->
             <div class="border-t pt-4">
-                <h5 class="font-semibold text-gray-800 mb-2">Purpose:</h5>
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-pencil text-[#1E3A8A]"></i>
+                    Purpose
+                </h5>
                 <p class="text-gray-700 bg-gray-50 p-3 rounded">${request.purpose || 'N/A'}</p>
             </div>
             
+            <!-- Approval Information -->
             ${request.approved_by_name ? `
             <div class="border-t pt-4">
-                <h5 class="font-semibold text-gray-800 mb-2">Approval Information:</h5>
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-user text-[#1E3A8A]"></i>
+                    Approval Information
+                </h5>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Approved By:</p>
@@ -313,9 +409,13 @@ function displayRequestDetails(request) {
             </div>
             ` : ''}
             
+            <!-- Return Notes -->
             ${request.return_notes ? `
             <div class="border-t pt-4">
-                <h5 class="font-semibold text-gray-800 mb-2">Return Notes:</h5>
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard text-[#1E3A8A]"></i>
+                    Return Notes
+                </h5>
                 <p class="text-gray-700 bg-gray-50 p-3 rounded">${request.return_notes}</p>
                 ${request.returned_condition ? `
                 <div class="mt-2">
