@@ -24,36 +24,36 @@ include '../components/layout_header.php';
 
   <p class="text-gray-500 mb-8">Choose from the available options below.</p>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
 
-    <!-- Hardware Issue -->
-    <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
-     class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-            border border-transparent hover:border-blue-500 hover:shadow-lg 
-            transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+  <!-- Hardware Issue -->
+  <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
+    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
+           border border-transparent hover:border-[#1E3A8A] hover:shadow-lg 
+           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
     <div class="flex items-start gap-4">
-    <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
-    <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
-        </div>
-    <div>
-      <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
-      <p class="text-sm text-gray-500">
-        Computer, printer, or equipment problems that need technical assistance.
-      </p>
-        </div>
+      <div class="p-3 bg-blue-100 text-[#1E3A8A] rounded-full transition-colors duration-300">
+        <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
+        <p class="text-sm text-gray-500">
+          Computer, printer, or equipment problems that need technical assistance.
+        </p>
       </div>
     </div>
+  </div>
 
-    <!-- Software Issue -->
+<!-- Software Issue -->
     <div onclick="handleIssueClick('software')" 
      class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
             border border-transparent hover:border-green-500 hover:shadow-lg 
             transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-green-100 text-green-600 rounded-full">
-          <i class="fa-solid fa-microchip text-3xl"></i>
+        <div class="p-3 bg-green-100 text-green-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-microchip text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Software Issue</h3>
@@ -71,8 +71,8 @@ include '../components/layout_header.php';
             transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
-          <i class="fa-solid fa-globe text-3xl"></i>
+        <div class="p-3 bg-violet-100 text-violet-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-globe text-xl group-hover:scale-110 transition-transform duration-200"></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Network Issue</h3>
@@ -90,8 +90,8 @@ include '../components/layout_header.php';
             transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
-          <i class="fa-solid fa-box text-3xl"></i>
+        <div class="p-3 bg-yellow-100 text-yellow-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-box text-xl group-hover:scale-110 transition-transform duration-200""></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Borrow Equipment</h3>
@@ -109,8 +109,8 @@ include '../components/layout_header.php';
             transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-blue-200 text-blue-700 rounded-full">
-          <i class="fa-solid fa-building text-3xl"></i>
+        <div class="p-3 bg-blue-100 text-blue-500 rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-building text-xl group-hover:scale-110 transition-transform duration-200""></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Laboratory Concern</h3>
@@ -128,8 +128,8 @@ include '../components/layout_header.php';
             transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
 
       <div class="flex items-start gap-4">
-        <div class="p-3 bg-gray-100 text-gray-600 rounded-full">
-          <i class="fa-solid fa-flag text-3xl"></i>
+        <div class="p-3 bg-gray-100 text-gray rounded-full transition-colors duration-300">
+          <i class="fa-solid fa-flag text-xl group-hover:scale-110 transition-transform duration-200""></i>
         </div>
         <div>
           <h3 class="font-semibold text-gray-800">Other</h3>

@@ -317,7 +317,7 @@ $page_title = "AMS - " . $current_role . " Dashboard";
         })();
     </script>
 </head>
-<body class="min-h-screen bg-gray-1 00" data-role="<?php echo htmlspecialchars($current_role); ?>">
+<body class="min-h-screen bg-gray-100" data-role="<?php echo htmlspecialchars($current_role); ?>">
     
     <?php include __DIR__ . '/sidebar.php'; ?>
     
