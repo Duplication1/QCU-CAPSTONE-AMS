@@ -15,46 +15,21 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 require_once '../../config/config.php';
 include '../components/layout_header.php';
 ?>
-
-<style>
-    .stat-card {
-        @apply bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg p-6 border border-gray-100;
-        transition: all 0.3s ease;
-    }
-    .stat-card:hover {
-        @apply shadow-xl transform -translate-y-1;
-    }
-    .chart-container {
-        @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100;
-    }
-    .risk-badge {
-        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
-    }
-    .risk-high { @apply bg-red-100 text-red-800; }
-    .risk-medium { @apply bg-yellow-100 text-yellow-800; }
-    .risk-low { @apply bg-green-100 text-green-800; }
-    
-    .urgency-overdue { @apply bg-red-100 text-red-800 border-red-300; }
-    .urgency-week { @apply bg-orange-100 text-orange-800 border-orange-300; }
-    .urgency-month { @apply bg-yellow-100 text-yellow-800 border-yellow-300; }
-    
-    .condition-excellent { @apply text-green-600; }
-    .condition-good { @apply text-blue-600; }
-    .condition-fair { @apply text-yellow-600; }
-    .condition-poor { @apply text-orange-600; }
-    .condition-non-functional { @apply text-red-600; }
-</style>
-
-        <!-- Main Content -->
-        <main class="p-6">
+   
+   <!-- Main Content -->
+        <main class="p-6">  
             <!-- Page Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-6 text-white">
-                <h2 class="text-3xl font-bold mb-2">
-                    <i class="fas fa-chart-line mr-3"></i>Maintenance Analytics Dashboard
+            <div class="sticky top-0 z-20 bg-gradient-to-r from-blue-900 to-blue-700 
+                rounded-lg shadow-md p-4 mb-4 text-white">
+                <h2 class="text-2xl font-bold mb-1 flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Maintenance Analytics Dashboard
                 </h2>
-                <p class="text-blue-100">Monitor asset health, predict maintenance needs, and identify high-risk equipment</p>
+                <p class="text-blue-100 text-sm">
+                Monitor asset health, predict maintenance needs, and identify high-risk equipment
+                </p>
             </div>
-
+            
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-12">
                 <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
@@ -73,182 +48,313 @@ include '../components/layout_header.php';
 
             <!-- Analytics Content -->
             <div id="analyticsContent" class="hidden">
-                <!-- Summary Statistics -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-blue-100 rounded-lg">
-                                <i class="fas fa-tools text-2xl text-blue-600"></i>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm font-medium mb-1">Total Maintenance</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-total-maintenance">0</p>
-                        <p class="text-xs text-gray-500 mt-2">All completed records</p>
-                    </div>
 
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-red-100 rounded-lg">
-                                <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm font-medium mb-1">Overdue Maintenance</p>
-                        <p class="text-3xl font-bold text-red-600" id="stat-overdue">0</p>
-                        <p class="text-xs text-gray-500 mt-2">Requires immediate attention</p>
-                    </div>
+            <!-- Summary Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
 
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-orange-100 rounded-lg">
-                                <i class="fas fa-heartbeat text-2xl text-orange-600"></i>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm font-medium mb-1">Poor Condition</p>
-                        <p class="text-3xl font-bold text-orange-600" id="stat-poor-condition">0</p>
-                        <p class="text-xs text-gray-500 mt-2">Assets needing attention</p>
-                    </div>
+<!-- Total Maintenance -->
+<div class="bg-white shadow-md rounded-lg p-6">
+  <div class="flex items-center justify-between mb-4">
+    <div class="p-3 bg-blue-100 rounded-lg">
+      <i class="fas fa-tools text-md text-[#1E3A8A]"></i>
+    </div>
+  </div>
 
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-green-100 rounded-lg">
-                                <i class="fas fa-peso-sign text-2xl text-green-600"></i>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm font-medium mb-1">Total Cost</p>
-                        <p class="text-3xl font-bold text-gray-800" id="stat-total-cost">₱0</p>
-                        <p class="text-xs text-gray-500 mt-2">Maintenance expenses</p>
+  <p class="text-gray-600 text-sm font-medium mb-1">
+    Total Maintenance
+    <i class="fas fa-info-circle text-gray-400 ml-3" title="Includes completed maintenance logs"></i>
+  </p>
+
+  <!-- Number + Trend Arrow -->
+  <p class="text-3xl font-bold text-gray-800 flex items-center" id="stat-total-maintenance">
+    0
+    <i class="fas fa-arrow-up text-green-500 ml-2"></i>
+    <!-- or <i class="fas fa-arrow-down text-red-500 ml-2"></i> -->
+  </p>
+
+  <p class="text-xs text-gray-500 mt-2">All completed records</p>
+</div>
+
+
+            <!-- Overdue Maintenance -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-red-100 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-md text-red-600"></i>
                     </div>
                 </div>
-
-                <!-- Main Analytics Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <!-- Frequent Maintenance Assets -->
-                    <div class="chart-container">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-bold text-gray-800">
-                                <i class="fas fa-wrench text-blue-600 mr-2"></i>
-                                Assets Requiring Maintenance Most Often
-                            </h3>
-                            <span class="text-sm text-gray-500" id="frequent-count">0 assets</span>
-                        </div>
-                        <div class="overflow-x-auto max-h-96 overflow-y-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Age</th>
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Maint.</th>
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Issues</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="frequent-maintenance-table" class="bg-white divide-y divide-gray-200">
-                                    <!-- Populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- High Risk Assets -->
-                    <div class="chart-container">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-bold text-gray-800">
-                                <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
-                                High Risk Assets
-                            </h3>
-                            <span class="text-sm text-gray-500" id="risk-count">0 assets</span>
-                        </div>
-                        <div class="overflow-x-auto max-h-96 overflow-y-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset</th>
-                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Risk Score</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="high-risk-table" class="bg-white divide-y divide-gray-200">
-                                    <!-- Populated by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charts Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <!-- Maintenance by Type -->
-                    <div class="chart-container">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
-                            Maintenance by Asset Type
-                        </h3>
-                        <div style="position: relative; height: 300px;">
-                            <canvas id="maintenanceByTypeChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Condition Distribution -->
-                    <div class="chart-container">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-chart-bar text-green-600 mr-2"></i>
-                            Asset Condition Distribution
-                        </h3>
-                        <div style="position: relative; height: 300px;">
-                            <canvas id="conditionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Chart -->
-                <div class="chart-container mb-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">
-                        <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
-                        Maintenance Timeline (Last 12 Months)
-                    </h3>
-                    <div style="position: relative; height: 300px;">
-                        <canvas id="timelineChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Upcoming Maintenance -->
-                <div class="chart-container">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">
-                            <i class="fas fa-calendar-alt text-orange-600 mr-2"></i>
-                            Upcoming & Overdue Maintenance
-                        </h3>
-                        <span class="text-sm text-gray-500" id="upcoming-count">0 scheduled</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Days</th>
-                                </tr>
-                            </thead>
-                            <tbody id="upcoming-maintenance-table" class="bg-white divide-y divide-gray-200">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <p class="text-gray-600 text-sm font-medium mb-1">
+                Overdue Maintenance
+                <i class="fas fa-info-circle text-gray-400 ml-2" title="Assets past their scheduled maintenance date"></i>
+                </p>
+                <p class="text-3xl font-bold text-red-600" id="stat-overdue">0</p>
+                <p class="text-xs text-gray-500 mt-2">Requires immediate attention</p>
             </div>
-        </main>
+
+            <!--Poor Condition -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-amber-100 rounded-lg">
+                        <i class="fas fa-heartbeat text-md text-orange-500"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm font-medium mb-1">
+                Poor Condition
+                <i class="fas fa-info-circle text-gray-400 ml-2" title="Assets flagged with poor or non-functional status"></i>
+                </p>
+                <p class="text-3xl font-bold text-orange-500" id="stat-poor-condition">0</p>
+                <p class="text-xs text-gray-500 mt-2">Assets needing attention</p>
+            </div>
+            
+            <!-- Total Cost -->
+             <div class="bg-white shadow-md rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-peso-sign text-md text-green-600"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm font-medium mb-1">
+                Total Cost
+                <i class="fas fa-info-circle text-gray-400 ml-2" title="Sum of all maintenance expenses logged in the system"></i>
+                </p>
+                <p class="text-3xl font-bold text-gray-800" id="stat-total-cost">₱0</p>
+                <p class="text-xs text-gray-500 mt-2">Maintenance expenses</p>
+            </div>
+        </div>
+
+        <!-- Main Analytics Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+<!-- Frequent Maintenance Assets -->
+<div class="bg-white shadow-md rounded-lg p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+      <i class="fas fa-wrench text-[#1E3A8A] mr-2"></i>
+      Assets Requiring Maintenance Most Often
+    </h3>
+    <span class="text-sm text-gray-500" id="frequent-count">0 assets</span>
+  </div>
+
+  <!-- Scrollable container -->
+  <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-lg scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="sticky top-0 z-20 bg-blue-100">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Asset</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Age</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Maint.</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Issues</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Condition</th>
+        </tr>
+      </thead>
+      <tbody id="frequent-maintenance-table" class="bg-white divide-y divide-gray-200">
+        <!-- Populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- High Risk Assets -->
+<div class="bg-white shadow-md rounded-lg p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+      <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
+      High Risk Assets
+    </h3>
+    <span class="text-sm text-gray-500" id="risk-count">0 assets</span>
+  </div>
+
+  <!-- Scrollable container -->
+  <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-lg">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-blue-100 sticky top-0 z-20">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Asset</th>
+          <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Risk Score</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Condition</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">Cost</th>
+        </tr>
+      </thead>
+      <tbody id="high-risk-table" class="bg-white divide-y divide-gray-200">
+        <!-- Populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- Filter Controls -->
+<div class="bg-white shadow-sm rounded-lg p-4 mb-6 flex flex-col gap-4">
+
+  <!-- Section Title -->
+  <h4 class="text-md font-semibold text-gray-800 mb-2 flex items-center">
+    <i class="fas fa-filter text-[#1E3A8A] mr-2"></i>
+    Filter Analytics
+  </h4>
+
+  <!-- Dropdowns Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    
+    <!-- Asset Type -->
+    <div>
+      <label for="filter-asset-type" class="block text-sm font-medium text-gray-700 mb-1">Asset Type</label>
+      <select id="filter-asset-type" class="block w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All Types</option>
+        <option value="equipment">Equipment</option>
+        <option value="furniture">Furniture</option>
+        <option value="software">Software</option>
+        <option value="network-device">Network Device</option>
+        <option value="hardware">Hardware</option>
+        <option value="peripheral">Peripheral</option>
+      </select>
+    </div>
+
+    <!-- Time Range -->
+    <div>
+      <label for="filter-time-range" class="block text-sm font-medium text-gray-700 mb-1">Time Range</label>
+      <select id="filter-time-range" class="block w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+        <option value="3">Last 3 Months</option>
+        <option value="6">Last 6 Months</option>
+        <option value="12" selected>Last 12 Months</option>
+      </select>
+    </div>
+
+    <!-- Department / Location -->
+    <div>
+      <label for="filter-department" class="block text-sm font-medium text-gray-700 mb-1">Department / Location</label>
+      <select id="filter-department" class="block w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+        <option value="">All</option>
+        <option value="admin">Admin</option>
+        <option value="ict">ICT</option>
+        <option value="facilities">Facilities</option>
+        <option value="library">Library</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Reset Button -->
+  <div class="text-right">
+    <button id="reset-filters" class="text-sm text-blue-600 hover:underline">
+      Reset Filters
+    </button>
+  </div>
+
+</div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            
+        <!-- Maintenance by Type -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
+                Maintenance by Asset Type
+            </h3>           
+            <div class="relative h-72">
+                <canvas id="maintenanceByTypeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Condition Distribution -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <i class="fas fa-chart-bar text-green-600 mr-2"></i>
+                Asset Condition Distribution
+            </h3>
+            <div class="relative h-72">
+                <canvas id="conditionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+        <!-- Timeline Chart -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center mb-4">
+                <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
+                Maintenance Timeline (Last 12 Months)
+            </h3>
+            <div class="relative h-72">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+<!-- Upcoming Maintenance -->
+<div class="bg-white shadow-md rounded-lg p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+      <i class="fas fa-calendar-alt text-orange-600 mr-2"></i>
+      Upcoming & Overdue Maintenance
+    </h3>
+    <span class="text-sm text-gray-500" id="upcoming-count">0 scheduled</span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
+      <!-- Table Head -->
+      <thead class="bg-blue-100 sticky top-0 z-10">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Asset</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Type</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Due Date</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">Days</th>
+        </tr>
+      </thead>
+
+      <!-- Table Body -->
+      <tbody id="upcoming-maintenance-table" class="bg-white divide-y divide-gray-200">
+        <!-- Populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+    </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     let analyticsData = null;
     let charts = {};
 
+    document.getElementById('reset-filters').addEventListener('click', () => {
+  // Reset dropdowns to default
+  document.getElementById('filter-asset-type').value = '';
+  document.getElementById('filter-time-range').value = '12';
+  document.getElementById('filter-department').value = '';
+
+  // Optional: trigger chart/table refresh
+  updateCharts();
+  updateTables();
+});
+
     // Load analytics on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadAnalytics();
+
+        document.getElementById('filter-asset-type').addEventListener('change', () => {
+  updateCharts();
+  updateTables();
+});
+
+document.getElementById('filter-time-range').addEventListener('change', () => {
+  updateCharts();
+  updateTables();
+});
+
+document.getElementById('filter-department').addEventListener('change', () => {
+  updateCharts();
+  updateTables();
+});
+
+document.getElementById('reset-filters').addEventListener('click', () => {
+  document.getElementById('filter-asset-type').value = '';
+  document.getElementById('filter-time-range').value = '12';
+  document.getElementById('filter-department').value = '';
+  updateCharts();
+  updateTables();
+});
+
     });
 
     async function loadAnalytics() {
@@ -297,69 +403,85 @@ include '../components/layout_header.php';
             '₱' + parseFloat(summary.total_maintenance_cost || 0).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
-    function updateFrequentMaintenanceTable() {
-        const data = analyticsData.frequent_maintenance.slice(0, 15);
-        const tbody = document.getElementById('frequent-maintenance-table');
-        document.getElementById('frequent-count').textContent = `${data.length} assets`;
-        
-        tbody.innerHTML = data.map(asset => `
-            <tr class="hover:bg-gray-50">
+function updateFrequentMaintenanceTable() {
+    const data = analyticsData.frequent_maintenance.slice(0, 15);
+    const tbody = document.getElementById('frequent-maintenance-table');
+    document.getElementById('frequent-count').textContent = `${data.length} assets`;
+    
+    tbody.innerHTML = data.map(asset => {
+        // Normalize condition string for CSS class
+        const conditionClass = asset.condition.toLowerCase().replace(/\s+/g, '-');
+
+        return `
+            <tr class="hover:bg-blue-50 transition-colors duration-200">
+                <!-- Asset Name + Tag -->
                 <td class="px-4 py-3">
                     <div class="text-sm font-medium text-gray-900">${asset.asset_name}</div>
                     <div class="text-xs text-gray-500">${asset.asset_tag}</div>
                 </td>
+
+                <!-- Age -->
                 <td class="px-4 py-3 text-sm text-gray-600">
                     ${asset.asset_age_years}y ${asset.asset_age_months}m
                 </td>
+
+                <!-- Maintenance Count Badge -->
                 <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         ${asset.maintenance_count}
                     </span>
                 </td>
+
+                <!-- Issues Badge -->
                 <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${asset.issue_count > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}">
                         ${asset.issue_count}
                     </span>
                 </td>
+
+                <!-- Condition Badge -->
                 <td class="px-4 py-3">
-                    <span class="text-sm font-medium condition-${asset.condition.toLowerCase().replace(' ', '-')}">
+                    <span class="condition-${conditionClass} text-sm font-medium">
                         ${asset.condition}
                     </span>
                 </td>
             </tr>
-        `).join('');
-    }
+        `;
+    }).join('');
+}
 
-    function updateHighRiskTable() {
-        const data = analyticsData.high_risk_assets.slice(0, 15);
-        const tbody = document.getElementById('high-risk-table');
-        document.getElementById('risk-count').textContent = `${data.length} assets`;
-        
-        tbody.innerHTML = data.map(asset => {
-            const riskLevel = asset.risk_score > 60 ? 'high' : asset.risk_score > 30 ? 'medium' : 'low';
-            return `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3">
-                        <div class="text-sm font-medium text-gray-900">${asset.asset_name}</div>
-                        <div class="text-xs text-gray-500">${asset.asset_tag}</div>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <span class="risk-badge risk-${riskLevel}">
-                            ${Math.round(asset.risk_score)}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3">
-                        <span class="text-sm font-medium condition-${asset.condition.toLowerCase().replace(' ', '-')}">
-                            ${asset.condition}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-right text-sm text-gray-600">
-                        ₱${parseFloat(asset.purchase_cost || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
+function updateHighRiskTable() {
+    const data = analyticsData.high_risk_assets.slice(0, 15);
+    const tbody = document.getElementById('high-risk-table');
+    document.getElementById('risk-count').textContent = `${data.length} assets`;
+    
+    tbody.innerHTML = data.map(asset => {
+        const riskLevel = asset.risk_score > 60 ? 'high' : asset.risk_score > 30 ? 'medium' : 'low';
+        const conditionClass = asset.condition.toLowerCase().replace(/\s+/g, '-'); 
+
+        return `
+            <tr class="hover:bg-blue-50 transition-colors duration-200">
+                <td class="px-4 py-3">
+                    <div class="text-sm font-medium text-gray-900">${asset.asset_name}</div>
+                    <div class="text-xs text-gray-500">${asset.asset_tag}</div>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <span class="risk-badge risk-${riskLevel}">
+                        ${Math.round(asset.risk_score)} ${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)} Risk
+                    </span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="condition-${conditionClass} text-sm font-medium">
+                        ${asset.condition}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-right text-sm text-gray-600">
+                    ₱${parseFloat(asset.purchase_cost || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 
     function updateUpcomingMaintenanceTable() {
         const data = analyticsData.upcoming_maintenance;
@@ -404,19 +526,19 @@ include '../components/layout_header.php';
         charts = {};
 
         // Maintenance by Type Chart
-        const typeData = analyticsData.maintenance_by_type;
-        charts.typeChart = new Chart(document.getElementById('maintenanceByTypeChart'), {
-            type: 'doughnut',
-            data: {
-                labels: typeData.map(d => d.asset_type),
-                datasets: [{
-                    data: typeData.map(d => d.total_maintenance),
-                    backgroundColor: [
-                        '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
-                        '#8B5CF6', '#EC4899', '#14B8A6'
-                    ]
-                }]
-            },
+  const typeData = analyticsData.maintenance_by_type;
+  charts.typeChart = new Chart(document.getElementById('maintenanceByTypeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: typeData.map(d => d.asset_type),
+      datasets: [{
+        data: typeData.map(d => d.total_maintenance),
+        backgroundColor: [
+          '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
+          '#8B5CF6', '#EC4899', '#14B8A6'
+        ]
+      }]
+    },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -441,9 +563,9 @@ include '../components/layout_header.php';
         });
 
         // Condition Distribution Chart
-        const conditionData = analyticsData.condition_distribution;
-        charts.conditionChart = new Chart(document.getElementById('conditionChart'), {
-            type: 'bar',
+    const conditionData = analyticsData.condition_distribution;
+  charts.conditionChart = new Chart(document.getElementById('conditionChart'), {
+    type: 'bar',
             data: {
                 labels: conditionData.map(d => d.condition),
                 datasets: [{
@@ -465,9 +587,9 @@ include '../components/layout_header.php';
         });
 
         // Timeline Chart
-        const timelineData = analyticsData.maintenance_timeline;
-        charts.timelineChart = new Chart(document.getElementById('timelineChart'), {
-            type: 'line',
+   const timelineData = analyticsData.maintenance_timeline;
+  charts.timelineChart = new Chart(document.getElementById('timelineChart'), {
+    type: 'line',
             data: {
                 labels: timelineData.map(d => {
                     const [year, month] = d.month.split('-');
@@ -503,6 +625,23 @@ include '../components/layout_header.php';
                 }
             }
         });
+function updateCharts() {
+  // Read current filter values
+  const assetType = document.getElementById('filter-asset-type').value;
+  const timeRange = document.getElementById('filter-time-range').value;
+  const department = document.getElementById('filter-department').value;
+
+  console.log('Updating charts with:', { assetType, timeRange, department });
+
+  // Re-render charts with filtered data
+  createCharts();
+}
+
+function updateTables() {
+  console.log('Updating tables with default filters');
+  updateHighRiskTable();
+  updateFrequentMaintenanceTable();
+}
     }
 </script>
 

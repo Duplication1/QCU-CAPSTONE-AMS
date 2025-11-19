@@ -214,64 +214,80 @@ include '../components/layout_header.php';
                         <h3 class="text-lg font-semibold text-gray-800">All users <span id="usersCount" class="text-sm text-gray-500"><?php echo count($users); ?></span></h3>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search" class="border rounded px-3 py-2 text-sm w-64" />
-                        </div>
-                        <button id="addUserBtn" onclick="openAddUserModal()" class="flex items-center justify-center px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">+ Add user</button>
+<div class="relative">
+  <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search users..."
+    class="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition" />
+  <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+</div>
+                        <button id="addUserBtn" onclick="openAddUserModal()"
+  class="flex items-center gap-2 px-4 py-2 bg-[#1E3A8A] text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+  <i class="fas fa-user-plus"></i>
+  Add User
+</button>
+
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table id="usersTable" class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
-                                <!-- actions moved into Last Active cell -->
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            <?php foreach ($users as $u): ?>
-                            <?php $avatarWeb = ams_find_avatar_web($u['id']); $udata = $u; $udata['avatar'] = $avatarWeb; $initial = strtoupper(substr(trim($u['full_name']), 0, 1)); ?>
-                            <tr data-user='<?php echo json_encode($udata, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium text-gray-700">
-                                            <?php if ($avatarWeb): ?>
-                                                <img src="<?php echo htmlspecialchars($avatarWeb); ?>" alt="avatar" class="w-full h-full object-cover" />
-                                            <?php else: ?>
-                                                <span><?php echo htmlspecialchars($initial ?: '?'); ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <span class="font-medium text-gray-800"><?php echo htmlspecialchars($u['full_name']); ?></span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
-                                <td class="px-4 py-3"><?php echo htmlspecialchars($u['role']); ?></td>
-                                <td class="px-4 py-3"><span class="status-badge px-2 py-1 rounded-full text-xs <?php echo $u['status']==='Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'; ?>"><?php echo htmlspecialchars($u['status']); ?></span></td>
-                                <td class="px-4 py-3"><?php echo !empty($u['created_at']) ? date('M d, Y', strtotime($u['created_at'])) : '-'; ?></td>
-                                <td class="px-4 py-3 flex items-center justify-between">
-                                    <span><?php echo !empty($u['last_login']) ? date('M d, Y H:i', strtotime($u['last_login'])) : '-'; ?></span>
-                                    <div class="relative inline-block text-left ml-3">
-                                        <button type="button" onclick="toggleRowMenu(this, <?php echo (int)$u['id']; ?>)" class="p-1 rounded hover:bg-gray-100 text-sm" aria-expanded="false" aria-haspopup="true" title="Actions">
-                                            <i class="fa fa-ellipsis-v text-sm"></i>
-                                        </button>
-                                        <div class="hidden origin-top-right absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-60" role="menu">
-                                            <div class="py-1">
-                                                <button type="button" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editUser(this, <?php echo (int)$u['id']; ?>)"><i class="fa fa-pencil mr-2"></i> Edit details</button>
-                                                <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, <?php echo (int)$u['id']; ?>)"><i class="fa fa-trash mr-2"></i> Delete user</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+ <table id="usersTable" class="min-w-full rounded-lg overflow-hidden divide-y divide-gray-200">
+  <thead class="bg-blue-100 text-[#1E3A8A] sticky top-0 z-10">
+    <tr>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Name</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Email</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Role</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Status</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Joined</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Last Active</th>
+    </tr>
+  </thead>
+  <tbody class="bg-white divide-y divide-gray-100">
+    <?php foreach ($users as $u): ?>
+    <?php $avatarWeb = ams_find_avatar_web($u['id']); $udata = $u; $udata['avatar'] = $avatarWeb; $initial = strtoupper(substr(trim($u['full_name']), 0, 1)); ?>
+    <tr class="hover:bg-blue-50 transition-colors" data-user='<?php echo json_encode($udata, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium text-gray-700">
+            <?php if ($avatarWeb): ?>
+              <img src="<?php echo htmlspecialchars($avatarWeb); ?>" alt="avatar" class="w-full h-full object-cover" />
+            <?php else: ?>
+              <span><?php echo htmlspecialchars($initial ?: '?'); ?></span>
+            <?php endif; ?>
+          </div>
+          <span class="font-medium text-gray-800"><?php echo htmlspecialchars($u['full_name']); ?></span>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
+      <td class="px-4 py-3"><?php echo htmlspecialchars($u['role']); ?></td>
+      <td class="px-4 py-3">
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+          <?php echo $u['status']==='Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'; ?>">
+          <?php echo htmlspecialchars($u['status']); ?>
+        </span>
+      </td>
+      <td class="px-4 py-3"><?php echo !empty($u['created_at']) ? date('M d, Y', strtotime($u['created_at'])) : '-'; ?></td>
+      <td class="px-4 py-3 flex items-center justify-between">
+        <span><?php echo !empty($u['last_login']) ? date('M d, Y H:i', strtotime($u['last_login'])) : '-'; ?></span>
+        <div class="relative inline-block text-left ml-3">
+          <button type="button" onclick="toggleRowMenu(this, <?php echo (int)$u['id']; ?>)" class="p-1 rounded hover:bg-gray-100 text-sm" aria-expanded="false" aria-haspopup="true" title="Actions">
+            <i class="fa fa-ellipsis-v text-sm"></i>
+          </button>
+          <div class="hidden origin-top-right absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-60" role="menu">
+            <div class="py-1">
+              <button type="button" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editUser(this, <?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-pencil mr-2"></i> Edit details
+              </button>
+              <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, <?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-trash mr-2"></i> Delete user
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
+
                 </div>
             </div>
         </main>
