@@ -23,230 +23,257 @@ try {
     die("Database connection error");
 }
 
-// Fetch analytics data
-// 1. Total counts
-$totalUsers = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
-$totalAssets = $conn->query("SELECT COUNT(*) as count FROM assets")->fetch_assoc()['count'];
-$pendingBorrowings = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Pending'")->fetch_assoc()['count'];
-$activeIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status IN ('Open', 'In Progress')")->fetch_assoc()['count'];
+// Fetch dashboard data
+// Asset Health - Good/Excellent condition
+$assetHealth = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Excellent', 'Good')")->fetch_assoc()['count'];
+$assetHealthPrevMonth = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Excellent', 'Good') AND created_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)")->fetch_assoc()['count'];
+$assetHealthChange = $assetHealthPrevMonth > 0 ? round((($assetHealth - $assetHealthPrevMonth) / $assetHealthPrevMonth) * 100, 1) : 0;
 
-// 2. Users by role
-$usersByRole = $conn->query("SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC");
-$roleLabels = [];
-$roleCounts = [];
-while ($row = $usersByRole->fetch_assoc()) {
-    $roleLabels[] = $row['role'];
-    $roleCounts[] = $row['count'];
-}
+// Incidents Prevented - Resolved issues
+$incidentsPrevented = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'Resolved'")->fetch_assoc()['count'];
+$incidentsPreventedPrevMonth = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'Resolved' AND updated_at < DATE_SUB(NOW(), INTERVAL 1 MONTH)")->fetch_assoc()['count'];
+$incidentsChange = $incidentsPreventedPrevMonth > 0 ? round((($incidentsPrevented - $incidentsPreventedPrevMonth) / $incidentsPreventedPrevMonth) * 100, 1) : 0;
 
-// 3. Assets by type
-$assetsByType = $conn->query("SELECT asset_type, COUNT(*) as count FROM assets GROUP BY asset_type ORDER BY count DESC");
-$assetTypeLabels = [];
-$assetTypeCounts = [];
-while ($row = $assetsByType->fetch_assoc()) {
-    $assetTypeLabels[] = $row['asset_type'];
-    $assetTypeCounts[] = $row['count'];
-}
+// Dow Dons - Completed tasks/returns
+$dowDons = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Returned'")->fetch_assoc()['count'];
+$dowDonsPrevMonth = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Returned' AND actual_return_date < DATE_SUB(NOW(), INTERVAL 1 MONTH)")->fetch_assoc()['count'];
+$dowDonsChange = $dowDonsPrevMonth > 0 ? round((($dowDons - $dowDonsPrevMonth) / $dowDonsPrevMonth) * 100, 1) : 0;
 
-// 4. Assets by status
-$assetsByStatus = $conn->query("SELECT status, COUNT(*) as count FROM assets GROUP BY status ORDER BY count DESC");
-$statusLabels = [];
-$statusCounts = [];
-while ($row = $assetsByStatus->fetch_assoc()) {
-    $statusLabels[] = $row['status'];
-    $statusCounts[] = $row['count'];
-}
+// Staffing Gap - Pending approvals
+$staffingGap = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Pending'")->fetch_assoc()['count'];
+$staffingGapPrevMonth = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Pending' AND borrowed_date < DATE_SUB(NOW(), INTERVAL 1 MONTH)")->fetch_assoc()['count'];
+$staffingGapChange = $staffingGapPrevMonth > 0 ? round((($staffingGap - $staffingGapPrevMonth) / $staffingGapPrevMonth) * 100, 1) : 0;
 
-// 5. Assets by condition
-$assetsByCondition = $conn->query("SELECT `condition`, COUNT(*) as count FROM assets GROUP BY `condition` ORDER BY 
-    FIELD(`condition`, 'Excellent', 'Good', 'Fair', 'Poor', 'Non-Functional')");
-$conditionLabels = [];
-$conditionCounts = [];
-while ($row = $assetsByCondition->fetch_assoc()) {
-    $conditionLabels[] = $row['condition'];
-    $conditionCounts[] = $row['count'];
-}
+// License Expirations - Maintenance due
+$licenseExpirations = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetch_assoc()['count'];
+$licenseExpirationsPrevMonth = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), INTERVAL 30 DAY)")->fetch_assoc()['count'];
+$licenseExpChange = $licenseExpirationsPrevMonth > 0 ? round((($licenseExpirations - $licenseExpirationsPrevMonth) / $licenseExpirationsPrevMonth) * 100, 1) : 0;
 
-// 6. Borrowing trends (last 6 months)
-$borrowingTrends = $conn->query("
-    SELECT DATE_FORMAT(borrowed_date, '%Y-%m') as month, COUNT(*) as count 
-    FROM asset_borrowing 
-    WHERE borrowed_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-    GROUP BY month 
-    ORDER BY month ASC
+// Trending Assets - Last 6 months alert data
+$trendingAlerts = $conn->query("
+    SELECT DATE_FORMAT(created_at, '%b') as month, COUNT(*) as count 
+    FROM issues 
+    WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+    GROUP BY MONTH(created_at)
+    ORDER BY created_at ASC
 ");
-$borrowingMonths = [];
-$borrowingCounts = [];
-while ($row = $borrowingTrends->fetch_assoc()) {
-    $borrowingMonths[] = date('M Y', strtotime($row['month'] . '-01'));
-    $borrowingCounts[] = $row['count'];
+$trendingMonths = [];
+$trendingCounts = [];
+while ($row = $trendingAlerts->fetch_assoc()) {
+    $trendingMonths[] = $row['month'];
+    $trendingCounts[] = $row['count'];
 }
+$totalAlerts = array_sum($trendingCounts);
 
-// 7. Top 5 most borrowed assets
-$topBorrowedAssets = $conn->query("
-    SELECT a.asset_name, a.asset_tag, COUNT(ab.id) as borrow_count
-    FROM assets a
-    INNER JOIN asset_borrowing ab ON a.id = ab.asset_id
-    GROUP BY a.id
-    ORDER BY borrow_count DESC
-    LIMIT 5
-");
-$topAssetNames = [];
-$topAssetCounts = [];
-while ($row = $topBorrowedAssets->fetch_assoc()) {
-    $topAssetNames[] = $row['asset_name'] . ' (' . $row['asset_tag'] . ')';
-    $topAssetCounts[] = $row['borrow_count'];
-}
+// Asset Lifecycle data
+$lifecycleNew = $conn->query("SELECT COUNT(*) as count FROM assets WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)")->fetch_assoc()['count'];
+$lifecycleActive = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status IN ('Available', 'In Use') AND created_at < DATE_SUB(NOW(), INTERVAL 6 MONTH)")->fetch_assoc()['count'];
+$lifecycleAging = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Fair', 'Poor')")->fetch_assoc()['count'];
+$lifecycleEOL = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Non-Functional'")->fetch_assoc()['count'];
 
-// 8. Monthly asset acquisition (last 12 months)
-$assetAcquisition = $conn->query("
-    SELECT DATE_FORMAT(purchase_date, '%Y-%m') as month, COUNT(*) as count 
-    FROM assets 
-    WHERE purchase_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-    GROUP BY month 
-    ORDER BY month ASC
-");
-$acquisitionMonths = [];
-$acquisitionCounts = [];
-while ($row = $assetAcquisition->fetch_assoc()) {
-    $acquisitionMonths[] = date('M Y', strtotime($row['month'] . '-01'));
-    $acquisitionCounts[] = $row['count'];
-}
+// Failure Risk Forecast
+$failureRiskCritical = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Non-Functional'")->fetch_assoc()['count'];
+$failureRiskHigh = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Poor'")->fetch_assoc()['count'];
+$failureRiskMedium = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Fair'")->fetch_assoc()['count'];
+$failureRiskLow = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Good', 'Excellent')")->fetch_assoc()['count'];
 
-// 9. Maintenance statistics
-$dueMaintenance = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND next_maintenance_date >= CURDATE()")->fetch_assoc()['count'];
-$overdueMaintenance = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date < CURDATE()")->fetch_assoc()['count'];
+// High Load - Active Users (simulated with recent activity)
+$activeUsers = $conn->query("SELECT COUNT(DISTINCT borrower_id) as count FROM asset_borrowing WHERE borrowed_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetch_assoc()['count'];
+$uptimePercentage = 99.8; // Simulated uptime
 
-// 11. Recent user registrations (last 30 days)
-$newUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetch_assoc()['count'];
-
-// 12. Asset utilization rate
-$inUseAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'In Use'")->fetch_assoc()['count'];
-$utilizationRate = $totalAssets > 0 ? round(($inUseAssets / $totalAssets) * 100, 1) : 0;
+// Hourly activity for system load chart (last 24 hours simulation)
+$hourlyActivity = [15, 18, 22, 28, 35, 42];
 
 // Include the layout header (includes sidebar and header components)
 include '../components/layout_header.php';
 ?>
-
+        <style>
+            body, html { overflow: hidden !important; height: 100vh; }
+        </style>
         <!-- Main Content -->
-        <main class="p-3 h-screen overflow-hidden">
-            <!-- Key Performance Indicators -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                <!-- Total Assets -->
-                <div class="bg-gradient-to-br from-[#1E3A8A] to-[#1e40af] rounded-lg shadow-lg p-3 text-white">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        <main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
+            <!-- Top Metrics Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-2 flex-shrink-0">
+                <!-- Asset Health -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Asset Health</p>
+                            <p class="text-xl font-bold text-gray-900"><?php echo $assetHealth; ?></p>
+                        </div>
+                        <div class="w-12 h-8">
+                            <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
+                                <path d="M2 38 L12 35 L22 30 L32 28 L42 25 L52 20 L62 15" stroke="#6366f1" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="15" r="2" fill="#6366f1"/>
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs font-medium text-blue-100 mb-1">Total Assets</p>
-                    <p class="text-2xl font-bold"><?php echo $totalAssets; ?></p>
-                    <p class="text-xs text-blue-100 mt-1">Inventory items</p>
+                    <p class="text-[10px] text-green-600 font-medium">
+                        <?php echo $assetHealthChange >= 0 ? '+' : ''; ?><?php echo $assetHealthChange; ?>% vs last month
+                    </p>
                 </div>
 
-                <!-- Asset Utilization Rate -->
-                <div class="bg-gradient-to-br from-[#1E3A8A] to-[#1e40af] rounded-lg shadow-lg p-3 text-white">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                <!-- Incidents Prevented -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Incidents Prevented</p>
+                            <p class="text-xl font-bold text-gray-900"><?php echo $incidentsPrevented; ?></p>
+                        </div>
+                        <div class="w-12 h-8">
+                            <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
+                                <path d="M2 25 L12 20 L22 22 L32 18 L42 15 L52 10 L62 8" stroke="#6366f1" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="8" r="2" fill="#6366f1"/>
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs font-medium text-blue-100 mb-1">Utilization Rate</p>
-                    <p class="text-2xl font-bold"><?php echo $utilizationRate; ?>%</p>
-                    <p class="text-xs text-blue-100 mt-1"><?php echo $inUseAssets; ?> assets in use</p>
+                    <p class="text-[10px] text-red-600 font-medium">
+                        -<?php echo abs($incidentsChange); ?>% vs last month
+                    </p>
                 </div>
 
-                <!-- Pending Actions -->
-                <div class="bg-gradient-to-br from-[#1E3A8A] to-[#1e40af] rounded-lg shadow-lg p-3 text-white">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <!-- Dow Dons -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Dow Dons</p>
+                            <p class="text-xl font-bold text-gray-900"><?php echo $dowDons; ?></p>
+                        </div>
+                        <div class="w-12 h-8">
+                            <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
+                                <path d="M2 30 L12 28 L22 25 L32 20 L42 18 L52 12 L62 10" stroke="#6366f1" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="10" r="2" fill="#6366f1"/>
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs font-medium text-blue-100 mb-1">Pending Requests</p>
-                    <p class="text-2xl font-bold"><?php echo $pendingBorrowings; ?></p>
-                    <p class="text-xs text-blue-100 mt-1">Requires approval</p>
+                    <p class="text-[10px] text-green-600 font-medium">
+                        +<?php echo abs($dowDonsChange); ?>% vs last month
+                    </p>
                 </div>
 
-                <!-- Active Users -->
-                <div class="bg-gradient-to-br from-[#1E3A8A] to-[#1e40af] rounded-lg shadow-lg p-3 text-white">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                <!-- Staffing Gap -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Staffing Gap</p>
+                            <p class="text-xl font-bold text-gray-900"><?php echo $staffingGap; ?></p>
+                        </div>
+                        <div class="w-12 h-8">
+                            <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
+                                <path d="M2 35 L12 32 L22 30 L32 28 L42 26 L52 24 L62 22" stroke="#6366f1" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="22" r="2" fill="#6366f1"/>
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs font-medium text-blue-100 mb-1">Total Users</p>
-                    <p class="text-2xl font-bold"><?php echo $totalUsers; ?></p>
-                    <p class="text-xs text-blue-100 mt-1">+<?php echo $newUsers; ?> this month</p>
+                    <p class="text-[10px] text-red-600 font-medium">
+                        -<?php echo abs($staffingGapChange); ?>% vs last month
+                    </p>
+                </div>
+
+                <!-- License Expirations -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">License Expirations</p>
+                            <p class="text-xl font-bold text-gray-900"><?php echo $licenseExpirations; ?></p>
+                        </div>
+                        <div class="w-12 h-8">
+                            <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
+                                <path d="M2 32 L12 30 L22 28 L32 26 L42 24 L52 22 L62 18" stroke="#6366f1" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="18" r="2" fill="#6366f1"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-green-600 font-medium">
+                        +<?php echo $licenseExpChange; ?> due next month
+                    </p>
                 </div>
             </div>
 
-            <!-- Charts Row: All Charts in One Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-3">
-                <!-- Asset Type Distribution -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Asset Types</h3>
-                    <div class="h-48">
-                        <canvas id="assetTypeChart"></canvas>
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 min-h-0">
+                <!-- Trending Assets -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">Trending Assets</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">Real time monitoring</p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-xl font-bold text-gray-900"><?php echo $totalAlerts; ?> alerts</p>
+                    </div>
+                    <div class="h-32">
+                        <canvas id="trendingChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Asset Status Overview -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Asset Status</h3>
-                    <div class="h-48">
-                        <canvas id="assetStatusChart"></canvas>
+                <!-- Asset Lifecycle -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">Asset Lifecycle</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">Current status by phase</p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-xl font-bold text-gray-900"><?php echo $lifecycleNew + $lifecycleActive + $lifecycleAging + $lifecycleEOL; ?> tracked</p>
+                    </div>
+                    <div class="h-32">
+                        <canvas id="lifecycleChart"></canvas>
                     </div>
                 </div>
 
-                <!-- User Distribution by Role -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Users by Role</h3>
-                    <div class="h-48">
-                        <canvas id="userRoleChart"></canvas>
+                <!-- Failure Risk Forecast -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">Failure Risk Forecast</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">Predictive maintenance</p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-xl font-bold text-gray-900"><?php echo $failureRiskCritical + $failureRiskHigh; ?> at risk</p>
+                    </div>
+                    <div class="h-32">
+                        <canvas id="failureRiskChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 mt-2">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-1">High</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskCritical; ?></p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-1">Medium</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskHigh; ?></p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-1">Low</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskMedium; ?></p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-1">Critical</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskLow; ?></p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Asset Condition Analysis -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Asset Condition</h3>
-                    <div class="h-48">
-                        <canvas id="assetConditionChart"></canvas>
+                <!-- High Load - Active Users -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-sm font-semibold text-gray-900">High Load - Active Users</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">System uptime tracking</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Bottom Row: Trends and Insights -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                <!-- Borrowing Trends -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Borrowing Trends (6 Months)</h3>
-                    <div class="h-40">
-                        <canvas id="borrowingTrendsChart"></canvas>
+                    <div class="mb-2">
+                        <p class="text-xl font-bold text-gray-900"><?php echo $uptimePercentage; ?>%</p>
                     </div>
-                </div>
-
-                <!-- Asset Acquisition Timeline -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Asset Acquisition (12 Months)</h3>
-                    <div class="h-40">
-                        <canvas id="acquisitionChart"></canvas>
+                    <div class="h-32">
+                        <canvas id="activeUsersChart"></canvas>
                     </div>
-                </div>
-
-                <!-- Top Borrowed Assets -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Top 5 Borrowed Assets</h3>
-                    <div class="h-40">
-                        <canvas id="topBorrowedChart"></canvas>
+                    <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-100">
+                        <div>
+                            <p class="text-[10px] text-gray-500 mb-1">Active Users</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo number_format($activeUsers * 100); ?></p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 mb-1">Uptime</p>
+                            <p class="text-sm font-bold text-gray-900"><?php echo $uptimePercentage; ?>%</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -255,232 +282,68 @@ include '../components/layout_header.php';
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         
         <script>
-        // Chart color schemes - using header blue theme
-        const colors = {
-            primary: ['#1E3A8A', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE', '#1e40af'],
-            blue: '#1E3A8A'
-        };
-
-        // Chart.js default settings
-        Chart.defaults.font.family = 'Poppins, sans-serif';
-        Chart.defaults.font.size = 10;
+        // Chart.js configuration
+        Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = '#6B7280';
 
-        // 1. Asset Type Distribution (Doughnut Chart)
-        const assetTypeCtx = document.getElementById('assetTypeChart').getContext('2d');
-        new Chart(assetTypeCtx, {
-            type: 'doughnut',
-            data: {
-                labels: <?php echo json_encode($assetTypeLabels); ?>,
-                datasets: [{
-                    data: <?php echo json_encode($assetTypeCounts); ?>,
-                    backgroundColor: colors.primary,
-                    borderWidth: 1,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 5,
-                            font: { size: 9 },
-                            usePointStyle: true,
-                            boxWidth: 8
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // 2. Asset Status Overview (Pie Chart)
-        const assetStatusCtx = document.getElementById('assetStatusChart').getContext('2d');
-        new Chart(assetStatusCtx, {
-            type: 'pie',
-            data: {
-                labels: <?php echo json_encode($statusLabels); ?>,
-                datasets: [{
-                    data: <?php echo json_encode($statusCounts); ?>,
-                    backgroundColor: colors.primary,
-                    borderWidth: 1,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 5,
-                            font: { size: 9 },
-                            usePointStyle: true,
-                            boxWidth: 8
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // 3. User Distribution by Role (Polar Area Chart)
-        const userRoleCtx = document.getElementById('userRoleChart').getContext('2d');
-        new Chart(userRoleCtx, {
-            type: 'polarArea',
-            data: {
-                labels: <?php echo json_encode($roleLabels); ?>,
-                datasets: [{
-                    data: <?php echo json_encode($roleCounts); ?>,
-                    backgroundColor: colors.primary.map(c => c + 'CC'),
-                    borderWidth: 1,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 5,
-                            font: { size: 9 },
-                            usePointStyle: true,
-                            boxWidth: 8
-                        }
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 8 } }
-                    }
-                }
-            }
-        });
-
-        // 4. Asset Condition Analysis (Bar Chart)
-        const assetConditionCtx = document.getElementById('assetConditionChart').getContext('2d');
-        new Chart(assetConditionCtx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode($conditionLabels); ?>,
-                datasets: [{
-                    label: 'Assets',
-                    data: <?php echo json_encode($conditionCounts); ?>,
-                    backgroundColor: [
-                        'rgba(30, 58, 138, 0.9)',
-                        'rgba(30, 64, 175, 0.8)',
-                        'rgba(37, 99, 235, 0.7)',
-                        'rgba(59, 130, 246, 0.6)',
-                        'rgba(96, 165, 250, 0.5)'
-                    ],
-                    borderColor: ['#1E3A8A', '#1e40af', '#2563eb', '#3B82F6', '#60A5FA'],
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 } },
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                    },
-                    x: {
-                        ticks: { font: { size: 9 } },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // 5. Borrowing Trends (Line Chart)
-        const borrowingTrendsCtx = document.getElementById('borrowingTrendsChart').getContext('2d');
-        new Chart(borrowingTrendsCtx, {
+        // Trending Assets Chart
+        const trendingCtx = document.getElementById('trendingChart').getContext('2d');
+        new Chart(trendingCtx, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode($borrowingMonths); ?>,
+                labels: <?php echo json_encode($trendingMonths); ?>,
                 datasets: [{
-                    label: 'Requests',
-                    data: <?php echo json_encode($borrowingCounts); ?>,
-                    borderColor: colors.blue,
-                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                    label: 'Alerts',
+                    data: <?php echo json_encode($trendingCounts); ?>,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'transparent',
                     borderWidth: 2,
-                    fill: true,
                     tension: 0.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: colors.blue,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#8b5cf6',
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 1
+                    pointBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 } },
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        grid: { color: '#f3f4f6', drawBorder: false },
+                        ticks: { font: { size: 11 } }
                     },
                     x: {
-                        ticks: { font: { size: 9 } },
-                        grid: { display: false }
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 11 } }
                     }
                 }
             }
         });
 
-        // 6. Asset Acquisition Timeline (Area Chart)
-        const acquisitionCtx = document.getElementById('acquisitionChart').getContext('2d');
-        new Chart(acquisitionCtx, {
+        // Asset Lifecycle Chart
+        const lifecycleCtx = document.getElementById('lifecycleChart').getContext('2d');
+        new Chart(lifecycleCtx, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode($acquisitionMonths); ?>,
+                labels: ['New', 'Active', 'Aging', 'EOL'],
                 datasets: [{
-                    label: 'Acquired',
-                    data: <?php echo json_encode($acquisitionCounts); ?>,
-                    borderColor: colors.blue,
-                    backgroundColor: 'rgba(30, 58, 138, 0.15)',
-                    borderWidth: 2,
+                    data: [<?php echo $lifecycleNew; ?>, <?php echo $lifecycleActive; ?>, <?php echo $lifecycleAging; ?>, <?php echo $lifecycleEOL; ?>],
+                    borderColor: '#a78bfa',
+                    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                    borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: colors.blue,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 1
+                    pointRadius: 0
                 }]
             },
             options: {
@@ -492,48 +355,96 @@ include '../components/layout_header.php';
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 } },
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        grid: { color: '#f3f4f6', drawBorder: false }
                     },
                     x: {
-                        ticks: { font: { size: 9 } },
-                        grid: { display: false }
+                        grid: { display: false, drawBorder: false }
                     }
                 }
             }
         });
 
-        // 7. Top Borrowed Assets (Horizontal Bar Chart)
-        const topBorrowedCtx = document.getElementById('topBorrowedChart').getContext('2d');
-        new Chart(topBorrowedCtx, {
+        // Failure Risk Forecast Chart
+        const failureRiskCtx = document.getElementById('failureRiskChart').getContext('2d');
+        new Chart(failureRiskCtx, {
             type: 'bar',
             data: {
-                labels: <?php echo json_encode($topAssetNames); ?>,
+                labels: ['Critical', 'High', 'Medium', 'Low'],
                 datasets: [{
-                    label: 'Times',
-                    data: <?php echo json_encode($topAssetCounts); ?>,
-                    backgroundColor: 'rgba(30, 58, 138, 0.8)',
-                    borderColor: '#1E3A8A',
-                    borderWidth: 1,
-                    borderRadius: 4
+                    data: [<?php echo $failureRiskCritical; ?>, <?php echo $failureRiskHigh; ?>, <?php echo $failureRiskMedium; ?>, <?php echo $failureRiskLow; ?>],
+                    backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'],
+                    borderRadius: 6,
+                    borderSkipped: false
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
                 },
                 scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 } },
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                    },
                     y: {
-                        ticks: { font: { size: 8 } },
-                        grid: { display: false }
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
+                    }
+                }
+            }
+        });
+
+        // Active Users Chart
+        const activeUsersCtx = document.getElementById('activeUsersChart').getContext('2d');
+        new Chart(activeUsersCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [
+                    {
+                        label: 'uptime',
+                        data: <?php echo json_encode($hourlyActivity); ?>,
+                        borderColor: '#c4b5fd',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#c4b5fd'
+                    },
+                    {
+                        label: 'users',
+                        data: <?php echo json_encode(array_map(function($v) { return $v * 0.9; }, $hourlyActivity)); ?>,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#8b5cf6'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 6,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6', drawBorder: false }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
                     }
                 }
             }

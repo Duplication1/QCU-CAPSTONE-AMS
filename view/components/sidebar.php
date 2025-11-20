@@ -175,14 +175,30 @@ if ($current_role === 'Laboratory Staff') {
 // Count new/unassigned tickets for Laboratory Staff
 $new_tickets_count = 0;
 if ($current_role === 'Laboratory Staff' && isset($conn)) {
-    $ticket_count_query = "SELECT COUNT(*) as count FROM issues 
-                          WHERE (assigned_group IS NULL OR assigned_group = '') 
-                          AND status = 'Open' 
-                          AND category != 'borrow'";
-    $ticket_result = $conn->query($ticket_count_query);
-    if ($ticket_result) {
-        $ticket_row = $ticket_result->fetch_assoc();
-        $new_tickets_count = (int)$ticket_row['count'];
+    try {
+        $ticket_count_query = "SELECT COUNT(*) as count FROM issues 
+                              WHERE (assigned_group IS NULL OR assigned_group = '') 
+                              AND status = 'Open' 
+                              AND category != 'borrow'";
+        
+        // Check if $conn is PDO or mysqli
+        if ($conn instanceof PDO) {
+            $ticket_result = $conn->query($ticket_count_query);
+            if ($ticket_result) {
+                $ticket_row = $ticket_result->fetch(PDO::FETCH_ASSOC);
+                $new_tickets_count = (int)$ticket_row['count'];
+            }
+        } else {
+            // mysqli connection
+            $ticket_result = $conn->query($ticket_count_query);
+            if ($ticket_result) {
+                $ticket_row = $ticket_result->fetch_assoc();
+                $new_tickets_count = (int)$ticket_row['count'];
+            }
+        }
+    } catch (Exception $e) {
+        // Silently handle error
+        $new_tickets_count = 0;
     }
 }
 
