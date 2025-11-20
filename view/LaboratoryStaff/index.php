@@ -48,8 +48,8 @@ $healthyAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condi
 // Asset number status (just for display variation)
 $totalAssets = $conn->query("SELECT COUNT(*) as count FROM assets")->fetch_assoc()['count'];
 
-// Building A Labs - 5 labs with status and ping
-$buildingALabs = [
+// BELMONTE Building Labs - 5 labs with status and ping
+$belmonteBuilding = [
     ['name' => 'Lab 101', 'status' => 'online', 'ping' => '12ms'],
     ['name' => 'Lab 102', 'status' => 'online', 'ping' => '15ms'],
     ['name' => 'Lab 103', 'status' => 'online', 'ping' => '18ms'],
@@ -57,8 +57,8 @@ $buildingALabs = [
     ['name' => 'Lab 105', 'status' => 'online', 'ping' => '22ms'],
 ];
 
-// Building B Labs - 5 labs with status and ping
-$buildingBLabs = [
+// ACADEMIC Building Labs - 5 labs with status and ping
+$academicBuilding = [
     ['name' => 'Lab 201', 'status' => 'online', 'ping' => '10ms'],
     ['name' => 'Lab 202', 'status' => 'online', 'ping' => '14ms'],
     ['name' => 'Lab 203', 'status' => 'warning', 'ping' => '52ms'],
@@ -66,8 +66,8 @@ $buildingBLabs = [
     ['name' => 'Lab 205', 'status' => 'offline', 'ping' => 'N/A'],
 ];
 
-// Building C Labs - 5 labs with status and ping
-$buildingCLabs = [
+// KORPHIL Building Labs - 5 labs with status and ping
+$korphilBuilding = [
     ['name' => 'Lab 301', 'status' => 'online', 'ping' => '20ms'],
     ['name' => 'Lab 302', 'status' => 'online', 'ping' => '18ms'],
     ['name' => 'Lab 303', 'status' => 'online', 'ping' => '25ms'],
@@ -75,8 +75,8 @@ $buildingCLabs = [
     ['name' => 'Lab 305', 'status' => 'warning', 'ping' => '48ms'],
 ];
 
-// Building D Labs - 5 labs with status and ping
-$buildingDLabs = [
+// LAB BUILDING - 5 labs with status and ping
+$labBuilding = [
     ['name' => 'Lab 401', 'status' => 'online', 'ping' => '12ms'],
     ['name' => 'Lab 402', 'status' => 'online', 'ping' => '19ms'],
     ['name' => 'Lab 403', 'status' => 'online', 'ping' => '21ms'],
@@ -177,115 +177,8 @@ include '../components/layout_header.php';
                 </div>
             </div>
 
-            <!-- Charts Grid -->
-            <div class="grid grid-cols-4 gap-4 flex-1 min-h-0">
-                <!-- Building A Labs -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                    <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">Building A</h3>
-                        <p class="text-xs text-gray-500 mt-1">5 Laboratory Rooms</p>
-                    </div>
-                    <div class="space-y-2 overflow-y-auto" style="max-height: 280px;">
-                        <?php foreach($buildingALabs as $lab): ?>
-                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
-                                <span class="text-xs font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
-                                    <?php echo ucfirst($lab['status']); ?>
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-gray-500">Ping:</span>
-                                <span class="text-[10px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <!-- Building B Labs -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                    <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">Building B</h3>
-                        <p class="text-xs text-gray-500 mt-1">5 Laboratory Rooms</p>
-                    </div>
-                    <div class="space-y-2 overflow-y-auto" style="max-height: 280px;">
-                        <?php foreach($buildingBLabs as $lab): ?>
-                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
-                                <span class="text-xs font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
-                                    <?php echo ucfirst($lab['status']); ?>
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-gray-500">Ping:</span>
-                                <span class="text-[10px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <!-- Building C Labs -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                    <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">Building C</h3>
-                        <p class="text-xs text-gray-500 mt-1">5 Laboratory Rooms</p>
-                    </div>
-                    <div class="space-y-2 overflow-y-auto" style="max-height: 280px;">
-                        <?php foreach($buildingCLabs as $lab): ?>
-                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
-                                <span class="text-xs font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
-                                    <?php echo ucfirst($lab['status']); ?>
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-gray-500">Ping:</span>
-                                <span class="text-[10px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <!-- Building D Labs -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                    <div class="mb-3">
-                        <h3 class="text-sm font-semibold text-gray-900">Building D</h3>
-                        <p class="text-xs text-gray-500 mt-1">5 Laboratory Rooms</p>
-                    </div>
-                    <div class="space-y-2 overflow-y-auto" style="max-height: 280px;">
-                        <?php foreach($buildingDLabs as $lab): ?>
-                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
-                                <span class="text-xs font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
-                                    <?php echo ucfirst($lab['status']); ?>
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-gray-500">Ping:</span>
-                                <span class="text-[10px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Uptime</p>
-                            <p class="text-sm font-bold text-gray-900">99.8%</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Asset Status Metrics Row -->
-            <div class="grid grid-cols-5 gap-4 mt-4 flex-shrink-0">
+            <div class="grid grid-cols-5 gap-4 mb-4 flex-shrink-0">
                 <!-- Assets Borrowed -->
                 <div class="metric-card bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
                     <div class="flex items-start justify-between mb-3">
@@ -364,6 +257,165 @@ include '../components/layout_header.php';
                         </div>
                     </div>
                     <p class="text-xs text-red-600 font-medium">Poor/Non-functional</p>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-4 gap-3 flex-1 min-h-0">
+                <!-- BELMONTE Building -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-xs font-bold text-gray-900">BELMONTE</h3>
+                        <p class="text-[10px] text-gray-500">5 Labs</p>
+                    </div>
+                    
+                    <!-- Network Graph -->
+                    <div class="mb-2 bg-gray-50 rounded p-2">
+                        <p class="text-[9px] text-gray-600 mb-1">Network Activity</p>
+                        <div class="h-16">
+                            <canvas id="belmonteNetworkChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Ping -->
+                    <div class="mb-2 bg-blue-50 rounded p-2 text-center">
+                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Ping</p>
+                        <p class="text-lg font-bold text-blue-600">18ms</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <?php foreach($belmonteBuilding as $lab): ?>
+                        <div class="bg-gray-50 rounded p-1.5 border border-gray-200">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-[10px] font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
+                                <span class="text-[9px] font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
+                                    <?php echo ucfirst($lab['status']); ?>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] text-gray-500">Ping:</span>
+                                <span class="text-[9px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- ACADEMIC Building -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-xs font-bold text-gray-900">ACADEMIC</h3>
+                        <p class="text-[10px] text-gray-500">5 Labs</p>
+                    </div>
+                    
+                    <!-- Network Graph -->
+                    <div class="mb-2 bg-gray-50 rounded p-2">
+                        <p class="text-[9px] text-gray-600 mb-1">Network Activity</p>
+                        <div class="h-16">
+                            <canvas id="academicNetworkChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Ping -->
+                    <div class="mb-2 bg-orange-50 rounded p-2 text-center">
+                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Ping</p>
+                        <p class="text-lg font-bold text-orange-600">29ms</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <?php foreach($academicBuilding as $lab): ?>
+                        <div class="bg-gray-50 rounded p-1.5 border border-gray-200">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-[10px] font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
+                                <span class="text-[9px] font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
+                                    <?php echo ucfirst($lab['status']); ?>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] text-gray-500">Ping:</span>
+                                <span class="text-[9px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- KORPHIL Building -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-xs font-bold text-gray-900">KORPHIL</h3>
+                        <p class="text-[10px] text-gray-500">5 Labs</p>
+                    </div>
+                    
+                    <!-- Network Graph -->
+                    <div class="mb-2 bg-gray-50 rounded p-2">
+                        <p class="text-[9px] text-gray-600 mb-1">Network Activity</p>
+                        <div class="h-16">
+                            <canvas id="korphilNetworkChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Ping -->
+                    <div class="mb-2 bg-green-50 rounded p-2 text-center">
+                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Ping</p>
+                        <p class="text-lg font-bold text-green-600">24ms</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <?php foreach($korphilBuilding as $lab): ?>
+                        <div class="bg-gray-50 rounded p-1.5 border border-gray-200">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-[10px] font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
+                                <span class="text-[9px] font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
+                                    <?php echo ucfirst($lab['status']); ?>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] text-gray-500">Ping:</span>
+                                <span class="text-[9px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- LAB BUILDING -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+                    <div class="mb-2">
+                        <h3 class="text-xs font-bold text-gray-900">LAB BUILDING</h3>
+                        <p class="text-[10px] text-gray-500">5 Labs</p>
+                    </div>
+                    
+                    <!-- Network Graph -->
+                    <div class="mb-2 bg-gray-50 rounded p-2">
+                        <p class="text-[9px] text-gray-600 mb-1">Network Activity</p>
+                        <div class="h-16">
+                            <canvas id="labBuildingNetworkChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Ping -->
+                    <div class="mb-2 bg-blue-50 rounded p-2 text-center">
+                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Ping</p>
+                        <p class="text-lg font-bold text-blue-600">19ms</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <?php foreach($labBuilding as $lab): ?>
+                        <div class="bg-gray-50 rounded p-1.5 border border-gray-200">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-[10px] font-semibold text-gray-900"><?php echo $lab['name']; ?></span>
+                                <span class="text-[9px] font-medium <?php echo $lab['status'] === 'online' ? 'text-green-600' : ($lab['status'] === 'warning' ? 'text-orange-600' : 'text-red-600'); ?>">
+                                    <?php echo ucfirst($lab['status']); ?>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] text-gray-500">Ping:</span>
+                                <span class="text-[9px] font-medium text-gray-700"><?php echo $lab['ping']; ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </main>
@@ -760,6 +812,123 @@ include '../components/layout_header.php';
                             grid: { display: false, drawBorder: false },
                             ticks: { font: { size: 11 }, color: '#9CA3AF' }
                         }
+                    }
+                }
+            });
+        }
+
+        // Building Network Charts
+        // BELMONTE Network Chart
+        const belmonteNetworkCtx = document.getElementById('belmonteNetworkChart');
+        if (belmonteNetworkCtx) {
+            new Chart(belmonteNetworkCtx, {
+                type: 'line',
+                data: {
+                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
+                    datasets: [{
+                        data: [45, 52, 48, 50, 47, 49],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        // ACADEMIC Network Chart
+        const academicNetworkCtx = document.getElementById('academicNetworkChart');
+        if (academicNetworkCtx) {
+            new Chart(academicNetworkCtx, {
+                type: 'line',
+                data: {
+                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
+                    datasets: [{
+                        data: [38, 42, 45, 48, 44, 46],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        // KORPHIL Network Chart
+        const korphilNetworkCtx = document.getElementById('korphilNetworkChart');
+        if (korphilNetworkCtx) {
+            new Chart(korphilNetworkCtx, {
+                type: 'line',
+                data: {
+                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
+                    datasets: [{
+                        data: [50, 48, 52, 49, 51, 53],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        // LAB BUILDING Network Chart
+        const labBuildingNetworkCtx = document.getElementById('labBuildingNetworkChart');
+        if (labBuildingNetworkCtx) {
+            new Chart(labBuildingNetworkCtx, {
+                type: 'line',
+                data: {
+                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
+                    datasets: [{
+                        data: [47, 49, 46, 48, 50, 52],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { display: false }
                     }
                 }
             });
