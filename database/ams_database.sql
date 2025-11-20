@@ -300,7 +300,7 @@ CREATE TABLE `users` (
   `full_name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `role` enum('Student','Faculty','Technician','Laboratory Staff','Administrator') NOT NULL,
-  `status` enum('Active','Inactive','Suspended') DEFAULT 'Active',
+  `status` enum('Active','Inactive','Suspended','Deactivated') DEFAULT 'Active',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
   `last_login` datetime DEFAULT NULL,

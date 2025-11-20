@@ -119,6 +119,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         exit;
     }
 
+    if ($action === 'suspend_user') {
+        $uid = intval($_POST['user_id'] ?? 0);
+        if ($uid <= 0) { echo json_encode(['success'=>false,'message'=>'Invalid user']); exit; }
+        // prevent suspending self
+        if (isset($_SESSION['user_id']) && intval($_SESSION['user_id']) === $uid) { echo json_encode(['success'=>false,'message'=>'Cannot deactivate yourself']); exit; }
+        
+        // Try to update to Deactivated
+        $s = $conn->prepare("UPDATE users SET status = 'Deactivated' WHERE id = ?");
+        $s->bind_param('i', $uid);
+        $ok = $s->execute();
+        
+        if (!$ok) {
+            $error = $s->error;
+            $s->close();
+            echo json_encode(['success'=>false,'message'=>'Deactivate failed: ' . $error]); exit;
+        }
+        
+        // Check if update actually worked by reading back the status
+        $s->close();
+        $check = $conn->prepare("SELECT status FROM users WHERE id = ?");
+        $check->bind_param('i', $uid);
+        $check->execute();
+        $result = $check->get_result()->fetch_assoc();
+        $check->close();
+        
+        $actualStatus = $result['status'] ?? '';
+        
+        error_log("Deactivate attempt - User ID: $uid, Status after UPDATE: '$actualStatus'");
+        
+        // If status is empty or Deactivated, success
+        if ($actualStatus === '' || $actualStatus === 'Deactivated') {
+            echo json_encode(['success'=>true,'status'=>'Deactivated','actualStatus'=>$actualStatus]);
+        } else {
+            // Database rejected the value - ENUM doesn't have 'Deactivated'
+            // It likely reverted to the default 'Active' or another ENUM value
+            echo json_encode([
+                'success'=>false,
+                'message'=>'⚠️ DATABASE ERROR: The status ENUM is missing "Deactivated". Run this SQL in phpMyAdmin: ALTER TABLE users MODIFY status ENUM(\'Active\',\'Inactive\',\'Suspended\',\'Deactivated\') DEFAULT \'Active\';',
+                'actualStatus'=>$actualStatus
+            ]);
+        }
+        exit;
+    }
+
+    if ($action === 'unsuspend_user') {
+        $uid = intval($_POST['user_id'] ?? 0);
+        if ($uid <= 0) { echo json_encode(['success'=>false,'message'=>'Invalid user']); exit; }
+        
+        // Only activate users that are deactivated (empty status or explicitly deactivated)
+        $check = $conn->prepare("SELECT status FROM users WHERE id = ?");
+        $check->bind_param('i', $uid);
+        $check->execute();
+        $result = $check->get_result()->fetch_assoc();
+        $check->close();
+        
+        $currentStatus = $result['status'] ?? '';
+        if ($currentStatus !== '' && $currentStatus !== 'Deactivated') {
+            echo json_encode(['success'=>false,'message'=>'User is not deactivated']); exit;
+        }
+        
+        $s = $conn->prepare("UPDATE users SET status = 'Active' WHERE id = ?");
+        $s->bind_param('i', $uid);
+        $ok = $s->execute();
+        if (!$ok) {
+            $error = $s->error;
+            $s->close();
+            echo json_encode(['success'=>false,'message'=>'Activate failed: ' . $error]); exit;
+        }
+        $s->close();
+        echo json_encode(['success'=>true,'status'=>'Active']);
+        exit;
+    }
+
     if ($action === 'delete_user') {
         $uid = intval($_POST['user_id'] ?? 0);
         if ($uid <= 0) { echo json_encode(['success'=>false,'message'=>'Invalid user']); exit; }
@@ -196,7 +269,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
 $users = [];
 $q = $conn->query("SELECT id, id_number, full_name, email, role, status, created_at, last_login FROM users ORDER BY created_at DESC");
 if ($q && $q->num_rows > 0) {
-    while ($row = $q->fetch_assoc()) $users[] = $row;
+    while ($row = $q->fetch_assoc()) {
+        // Debug: Check if status is empty and log it
+        if (empty($row['status'])) {
+            error_log("User ID {$row['id']} has empty status");
+        }
+        $users[] = $row;
+    }
 }
 // no server-side flash alerts here; client updates DOM in-place
 
@@ -259,9 +338,19 @@ include '../components/layout_header.php';
       <td class="px-4 py-3 text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
       <td class="px-4 py-3"><?php echo htmlspecialchars($u['role']); ?></td>
       <td class="px-4 py-3">
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-          <?php echo $u['status']==='Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'; ?>">
-          <?php echo htmlspecialchars($u['status']); ?>
+        <?php 
+        // Handle empty status (when ENUM value doesn't exist in database)
+        $status = $u['status'] ?: 'Active';
+        $statusClass = 'bg-gray-100 text-gray-600';
+        if ($status === 'Active') {
+          $statusClass = 'bg-green-100 text-green-700';
+        } elseif ($status === 'Deactivated' || $status === '') {
+          $statusClass = 'bg-red-100 text-red-700';
+          if ($status === '') $status = 'Deactivated'; // Fix blank status
+        }
+        ?>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?php echo $statusClass; ?>">
+          <?php echo htmlspecialchars($status); ?>
         </span>
       </td>
       <td class="px-4 py-3"><?php echo !empty($u['created_at']) ? date('M d, Y', strtotime($u['created_at'])) : '-'; ?></td>
@@ -276,6 +365,15 @@ include '../components/layout_header.php';
               <button type="button" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editUser(this, <?php echo (int)$u['id']; ?>)">
                 <i class="fa fa-pencil mr-2"></i> Edit details
               </button>
+              <?php if ($u['status'] === 'Deactivated' || $u['status'] === ''): ?>
+              <button type="button" class="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-green-50" onclick="unsuspendUser(<?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-check-circle mr-2"></i> Activate user
+              </button>
+              <?php else: ?>
+              <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="suspendUser(<?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-ban mr-2"></i> Deactivate user
+              </button>
+              <?php endif; ?>
               <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, <?php echo (int)$u['id']; ?>)">
                 <i class="fa fa-trash mr-2"></i> Delete user
               </button>
@@ -288,6 +386,13 @@ include '../components/layout_header.php';
   </tbody>
 </table>
 
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div class="mt-4 flex items-center justify-center border-t pt-4">
+                    <div id="pageNumbers" class="flex items-center gap-1">
+                        <!-- Page numbers will be inserted here -->
+                    </div>
                 </div>
             </div>
         </main>
@@ -398,6 +503,24 @@ include '../components/layout_header.php';
         </div>
 </div>
 
+<!-- Suspend confirmation modal (Yes / No) -->
+<div id="suspendConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" style="background-color: rgba(0,0,0,0.4);" onclick="closeSuspendModal()"></div>
+        <div class="relative bg-white rounded-lg shadow-lg max-w-md w-11/12 p-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-4">
+                    <img src="../../assets/images/8376179.png" alt="warning" class="w-16 h-16 object-contain mx-auto" />
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Are you sure?</h3>
+                <p class="text-sm text-gray-600 mb-6">Do you really want to deactivate this user? Their status will be set to Deactivated.</p>
+                <div class="flex gap-3 flex-col sm:flex-row w-full justify-center mt-2">
+                    <button id="cancelSuspendBtn" type="button" onclick="closeSuspendModal()" class="px-4 py-2 rounded bg-gray-200 text-gray-800 w-full sm:w-auto inline-block" style="min-width:120px;">No</button>
+                    <button id="confirmSuspendBtn" type="button" onclick="confirmSuspend()" class="px-4 py-2 rounded w-full sm:w-auto inline-block" style="min-width:120px;background-color:#ef4444;color:#ffffff;border:none;box-shadow:0 1px 2px rgba(0,0,0,0.1);">Yes</button>
+                </div>
+            </div>
+        </div>
+</div>
+
 <!-- Add User Modal -->
 <div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-40" style="background-color: rgba(0,0,0,0.4);" onclick="closeAddUserModal()"></div>
@@ -474,6 +597,132 @@ include '../components/layout_header.php';
     <div id="globalToastInner" class="px-4 py-2 rounded shadow text-sm"></div>
 </div>
 <script>
+// Pagination variables
+let currentPage = 1;
+let pageSize = 10;
+let allRows = [];
+
+// Initialize pagination on page load
+document.addEventListener('DOMContentLoaded', function() {
+    allRows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
+    updatePagination();
+});
+
+function changePageSize() {
+    pageSize = parseInt(document.getElementById('pageSize').value) || 10;
+    currentPage = 1;
+    updatePagination();
+}
+
+function changePage(direction) {
+    const visibleRows = getVisibleRows();
+    const totalPages = Math.ceil(visibleRows.length / pageSize);
+    
+    if (direction === 'prev' && currentPage > 1) {
+        currentPage--;
+    } else if (direction === 'next' && currentPage < totalPages) {
+        currentPage++;
+    } else if (typeof direction === 'number') {
+        currentPage = direction;
+    }
+    
+    updatePagination();
+}
+
+function getVisibleRows() {
+    const searchQuery = (document.getElementById('userSearch').value || '').toLowerCase().trim();
+    
+    if (!searchQuery) {
+        return allRows;
+    }
+    
+    return allRows.filter(row => {
+        const user = row.dataset.user ? JSON.parse(row.dataset.user) : null;
+        if (!user) return true;
+        const searchText = (user.full_name + ' ' + user.email + ' ' + (user.role || '')).toLowerCase();
+        return searchText.indexOf(searchQuery) !== -1;
+    });
+}
+
+function updatePagination() {
+    const visibleRows = getVisibleRows();
+    const totalRows = visibleRows.length;
+    const totalPages = Math.ceil(totalRows / pageSize);
+    
+    // Ensure current page is valid
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalRows);
+    
+    // Hide all rows first
+    allRows.forEach(row => row.style.display = 'none');
+    
+    // Show only rows for current page
+    visibleRows.slice(startIndex, endIndex).forEach(row => row.style.display = '');
+    
+    // Update page numbers
+    renderPageNumbers(totalPages);
+}
+
+function renderPageNumbers(totalPages) {
+    const container = document.getElementById('pageNumbers');
+    container.innerHTML = '';
+    
+    if (totalPages <= 1) return;
+    
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    // First page
+    if (startPage > 1) {
+        addPageButton(container, 1);
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'px-2 text-gray-400';
+            ellipsis.textContent = '...';
+            container.appendChild(ellipsis);
+        }
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        addPageButton(container, i);
+    }
+    
+    // Last page
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'px-2 text-gray-400';
+            ellipsis.textContent = '...';
+            container.appendChild(ellipsis);
+        }
+        addPageButton(container, totalPages);
+    }
+}
+
+function addPageButton(container, pageNum) {
+    const btn = document.createElement('button');
+    btn.textContent = pageNum;
+    btn.className = 'px-3 py-1 text-sm border rounded-lg ' + 
+        (pageNum === currentPage 
+            ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' 
+            : 'border-gray-300 hover:bg-gray-50');
+    btn.onclick = () => changePage(pageNum);
+    container.appendChild(btn);
+}
+
 function validateIdNumberInput(input, errorId) {
     const errorEl = document.getElementById(errorId);
     const hasInvalid = /[^0-9\-]/.test(input.value);
@@ -534,14 +783,8 @@ function showTopAlert(type, msg, duration = 5000) {
 }
 
 function filterUsers() {
-    const q = (document.getElementById('userSearch').value || '').toLowerCase().trim();
-    const rows = document.querySelectorAll('#usersTable tbody tr');
-    rows.forEach(r => {
-        const user = r.dataset.user ? JSON.parse(r.dataset.user) : null;
-        if (!user) { r.style.display = ''; return; }
-        const hay = (user.full_name + ' ' + user.email + ' ' + (user.role||'')).toLowerCase();
-        r.style.display = hay.indexOf(q) !== -1 ? '' : 'none';
-    });
+    currentPage = 1; // Reset to first page when searching
+    updatePagination();
 }
 
 function getRowById(id) {
@@ -863,6 +1106,9 @@ function addUserRow(user) {
                 <div class="hidden origin-top-right absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-60" role="menu">
                     <div class="py-1">
                         <button type="button" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editUser(this, ${parseInt(user.id)})"><i class="fa fa-pencil mr-2"></i> Edit details</button>
+                        ${user.status === 'Deactivated' 
+                            ? '<button type="button" class="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-green-50" onclick="unsuspendUser(' + parseInt(user.id) + ')"><i class="fa fa-check-circle mr-2"></i> Activate user</button>'
+                            : '<button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="suspendUser(' + parseInt(user.id) + ')"><i class="fa fa-ban mr-2"></i> Deactivate user</button>'}
                         <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, ${parseInt(user.id)})"><i class="fa fa-trash mr-2"></i> Delete user</button>
                     </div>
                 </div>
@@ -874,10 +1120,107 @@ function addUserRow(user) {
     // update users count
     const countEl = document.getElementById('usersCount');
     if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+    // Update pagination
+    allRows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
+    updatePagination();
 }
 
 function formatDateShort(d){ try { return new Date(d).toLocaleString('en-US', { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch(e){ return '-'; } }
 function formatDateShortDate(d){ try { return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'2-digit' }); } catch(e){ return '-'; } }
+
+async function suspendUser(userId) {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) {
+        // fallback to browser confirm
+        if (!confirm('Are you sure you want to deactivate this user? Their status will be set to Deactivated.')) return;
+        try {
+            const form = new URLSearchParams();
+            form.append('ajax','1'); form.append('action','suspend_user'); form.append('user_id', String(userId));
+            const res = await fetch(location.href, { method: 'POST', body: form });
+            const j = await res.json();
+            if (j.success) {
+                updateUserStatus(userId, 'Deactivated');
+                showTopAlert('success', 'User Deactivated');
+            } else {
+                showTopAlert('error', j.message || 'Deactivate failed');
+            }
+        } catch (err) { console.error(err); alert('Request failed'); }
+        return;
+    }
+
+    // store data on modal and show it
+    modal.dataset.userId = String(userId);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+async function unsuspendUser(userId) {
+    if (!confirm('Are you sure you want to activate this user? Their status will be set to Active.')) return;
+    try {
+        const form = new URLSearchParams();
+        form.append('ajax','1'); form.append('action','unsuspend_user'); form.append('user_id', String(userId));
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const j = await res.json();
+        if (j.success) {
+            updateUserStatus(userId, 'Active');
+            showTopAlert('success', 'User Activated');
+        } else {
+            showTopAlert('error', j.message || 'Activate failed');
+        }
+    } catch (err) { console.error(err); alert('Request failed'); }
+}
+
+function updateUserStatus(userId, newStatus) {
+    const tr = getRowById(userId);
+    if (tr) {
+        // Update status cell
+        const statusCell = tr.querySelector('td:nth-child(4)');
+        if (statusCell) {
+            if (newStatus === 'Active') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded" style="background-color:#d1fae5;color:#065f46;">Active</span>';
+            } else if (newStatus === 'Deactivated') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded" style="background-color:#fee2e2;color:#991b1b;">Deactivated</span>';
+            } else if (newStatus === 'Inactive') {
+                statusCell.innerHTML = '<span class="px-2 py-1 text-xs rounded" style="background-color:#f3f4f6;color:#4b5563;">Inactive</span>';
+            }
+        }
+        
+        // Update user data in dataset
+        try {
+            const userData = JSON.parse(tr.dataset.user);
+            userData.status = newStatus;
+            tr.dataset.user = JSON.stringify(userData);
+        } catch(e) { console.error('Failed to update user data:', e); }
+        
+        // Update the three-dot menu button
+        const menu = tr.querySelector('div[role="menu"]');
+        if (menu) {
+            const menuContent = menu.querySelector('.py-1');
+            if (menuContent) {
+                const buttons = menuContent.querySelectorAll('button');
+                // Find and replace the suspend/unsuspend button (second button)
+                if (buttons.length >= 2) {
+                    const oldBtn = buttons[1];
+                    const newBtn = document.createElement('button');
+                    newBtn.type = 'button';
+                    newBtn.className = 'w-full text-left px-3 py-2 text-sm';
+                    
+                    if (newStatus === 'Deactivated') {
+                        newBtn.className += ' text-green-600 hover:bg-green-50';
+                        newBtn.onclick = () => unsuspendUser(userId);
+                        newBtn.innerHTML = '<i class="fa fa-check-circle mr-2"></i> Activate user';
+                    } else {
+                        newBtn.className += ' text-red-600 hover:bg-red-50';
+                        newBtn.onclick = () => suspendUser(userId);
+                        newBtn.innerHTML = '<i class="fa fa-ban mr-2"></i> Deactivate user';
+                    }
+                    
+                    oldBtn.replaceWith(newBtn);
+                }
+            }
+        }
+    }
+}
 
 async function deleteUser(btn, userId) {
     // open the simple Yes/No confirmation modal
@@ -920,6 +1263,37 @@ function closeDeleteModal() {
     delete modal.dataset.userId;
 }
 
+function closeSuspendModal() {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+}
+
+async function confirmSuspend() {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) return;
+    const userId = modal.dataset.userId;
+    if (!userId) { closeSuspendModal(); return; }
+    const btn = document.getElementById('confirmSuspendBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = new URLSearchParams();
+        form.append('ajax','1'); form.append('action','suspend_user'); form.append('user_id', String(userId));
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const j = await res.json();
+        if (j.success) {
+            updateUserStatus(userId, 'Deactivated');
+            showTopAlert('success', 'User Deactivated');
+        } else {
+            showTopAlert('error', j.message || 'Deactivate failed');
+        }
+    } catch (err) { console.error(err); alert('Request failed'); }
+    if (btn) btn.disabled = false;
+    closeSuspendModal();
+}
+
 async function confirmDelete() {
     const modal = document.getElementById('deleteConfirmModal');
     if (!modal || !modal.dataset.userId) return;
@@ -954,6 +1328,9 @@ async function confirmDelete() {
             if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || '0') - 1);
             closeDeleteModal();
             showTopAlert('success', 'User Deleted!');
+            // Update pagination
+            allRows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
+            updatePagination();
             // Fallback: if row not gone after short delay, force reload to reflect removal
             setTimeout(()=>{ if (!removed) { const still = getRowById(userId); if (still) { location.reload(); } } }, 600);
         } else {
