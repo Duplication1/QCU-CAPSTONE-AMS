@@ -3,6 +3,13 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../config/config.php'; // adjust path
 
+// Database connection
+$conn = new mysqli('localhost', 'root', '', 'ams_database');
+if ($conn->connect_error) {
+    echo json_encode(['success'=>false,'message'=>'Database connection failed']); 
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   echo json_encode(['success'=>false,'message'=>'Only POST allowed']); exit;
 }
@@ -30,6 +37,7 @@ $stmt->bind_param('sssssis', $category, $title, $description, $room, $terminal, 
 $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();
+$conn->close();
 
 echo json_encode(['success'=>true,'ticket_id'=>$id,'message'=>'Issue submitted']);
 exit;
