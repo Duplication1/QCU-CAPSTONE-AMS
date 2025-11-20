@@ -16,110 +16,135 @@ require_once '../../config/config.php';
 include '../components/layout_header.php';
 ?>
 
-<!-- PC Health Dashboard -->
-<main class="p-4 sm:p-6 space-y-6">
+<main class="p-3 sm:p-4 space-y-3">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl shadow-lg p-6 text-white">
-        <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="bg-gradient-to-b from-[#1E3A8A] to-blue-800 rounded-lg shadow-md p-3 text-white mb-6">
+
+        <div class="flex items-center justify-between flex-wrap gap-1">
             <div>
-                <h2 class="text-2xl sm:text-3xl font-bold mb-2">🖥️ PC Health Monitor</h2>
-                <p class="text-blue-100">Real-time monitoring of all laboratory computers</p>
+                <h2 class="text-lg sm:text-xl font-semibold leading-tight">🖥️ PC Health Monitor</h2>
+                <p class="text-blue-100 text-xs leading-snug">Monitoring lab computers in real time</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                    <div class="text-xs text-blue-100">Last Update</div>
-                    <div class="text-sm font-semibold" id="lastUpdateTime">--:--:--</div>
+            <div class="flex items-center gap-1.5">
+                <div class="bg-white/20 backdrop-blur-sm rounded px-2 py-1">
+                    <div class="text-[10px] text-blue-100">Last Update</div>
+                    <div class="text-xs font-medium" id="lastUpdateTime">--:--:--</div>
                 </div>
-                <select id="roomFilter" class="bg-white/20 backdrop-blur-sm border-0 rounded-lg px-4 py-2 text-white font-semibold focus:ring-2 focus:ring-white/50">
+                <select id="roomFilter" class="bg-white/20 backdrop-blur-sm border-0 rounded px-2 py-1 text-white text-xs font-medium focus:ring-1 focus:ring-white/40">
                     <option value="">All Rooms</option>
                 </select>
             </div>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-semibold">Total PCs</p>
-                    <h3 class="text-3xl font-bold text-gray-800 mt-1" id="totalPCs">0</h3>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-semibold">Online</p>
-                    <h3 class="text-3xl font-bold text-green-600 mt-1" id="onlinePCs">0</h3>
-                </div>
-                <div class="bg-green-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+    <!-- Total PCs -->
+    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col justify-between mb-4">
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-semibold">Warning</p>
-                    <h3 class="text-3xl font-bold text-yellow-600 mt-1" id="warningPCs">0</h3>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-base font-semibold">Total PCs</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2" id="totalPCs">0</h3>
             </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm font-semibold">Critical</p>
-                    <h3 class="text-3xl font-bold text-red-600 mt-1" id="criticalPCs">0</h3>
-                </div>
-                <div class="bg-red-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+            <div class="bg-blue-100 p-3 rounded-lg">
+                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
             </div>
         </div>
     </div>
 
-    <!-- PC Grid -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-gray-800">Laboratory Computers</h3>
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-                <span class="text-sm text-gray-600">Healthy</span>
-                <span class="w-3 h-3 bg-yellow-500 rounded-full ml-3"></span>
-                <span class="text-sm text-gray-600">Warning</span>
-                <span class="w-3 h-3 bg-red-500 rounded-full ml-3"></span>
-                <span class="text-sm text-gray-600">Critical</span>
-                <span class="w-3 h-3 bg-gray-400 rounded-full ml-3"></span>
-                <span class="text-sm text-gray-600">Offline</span>
-            </div>
-        </div>
+    <!-- Online -->
+    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col justify-between mb-4">
 
-        <div id="pcGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <!-- PC cards will be inserted here -->
-            <div class="text-center py-12 col-span-full">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
-                <p class="mt-4 text-gray-600">Loading PC health data...</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-base font-semibold">Online</p>
+                <h3 class="text-3xl font-bold text-green-600 mt-2" id="onlinePCs">0</h3>
+            </div>
+            <div class="bg-green-100 p-3 rounded-lg">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
             </div>
         </div>
     </div>
+
+    <!-- Warning -->
+    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col justify-between mb-4">
+
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-base font-semibold">Warning</p>
+                <h3 class="text-3xl font-bold text-yellow-600 mt-2" id="warningPCs">0</h3>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-lg">
+                <svg class="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical -->
+    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col justify-between mb-4">
+
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-base font-semibold">Critical</p>
+                <h3 class="text-3xl font-bold text-red-600 mt-2" id="criticalPCs">0</h3>
+            </div>
+            <div class="bg-red-100 p-3 rounded-lg">
+                <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PC Grid -->
+<div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h3 class="text-lg font-semibold text-gray-800">Laboratory Computers</h3>
+        <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+            <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+                <span>Healthy</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+                <span>Warning</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                <span>Critical</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 bg-gray-400 rounded-full"></span>
+                <span>Offline</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="pcGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- PC cards will be inserted here -->
+        <div class="text-center py-6 col-span-full">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+            <p class="mt-2 text-sm text-gray-600">Loading PC health data...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Status Summary -->
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6 text-sm text-blue-800">
+  All 3 lab computers are currently offline. No warnings or critical issues detected.
+</div>
 </main>
 
 <!-- PC Detail Modal -->
