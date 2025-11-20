@@ -1,7 +1,9 @@
 <?php
 session_start();
-require_once '../config/config.php';
-require_once '../model/Database.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../model/Database.php';
 
 // Check if user is logged in and has appropriate role
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Student', 'Faculty', 'Laboratory Staff'])) {
@@ -42,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Create signatures directory if it doesn't exist
-        $upload_dir = '../uploads/signatures/';
+        $upload_dir = __DIR__ . '/../uploads/signatures/';
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
@@ -87,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (file_exists($upload_path)) {
                     unlink($upload_path);
                 }
-                $_SESSION['error_message'] = "Failed to save e-signature to database.";
+                $_SESSION['error_message'] = "Failed to save e-signature to database: " . $e->getMessage();
                 header("Location: $redirect_url");
                 exit();
             }
