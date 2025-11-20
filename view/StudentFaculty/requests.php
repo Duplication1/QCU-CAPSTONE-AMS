@@ -47,8 +47,49 @@ include '../components/layout_header.php';
                         <i class="fa-solid fa-clipboard-list mr-2 text-[#1E3A8A]"></i>
                         My Borrowing Requests
                     </h2>
-                    <div class="text-sm text-gray-600">
-                        Total Requests: <span class="font-bold text-gray-800"><?php echo count($requests); ?></span>
+                </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="mb-6 flex items-center gap-2">
+                    <div class="relative w-64">
+                        <input 
+                            id="requestSearch" 
+                            type="search" 
+                            placeholder="Search requests..." 
+                            class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition"
+                            oninput="filterRequests()"
+                        />
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
+                    
+                    <!-- Filter Button -->
+                    <div class="relative">
+                        <button id="filterBtn" onclick="toggleFilterMenu()" 
+                            class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition"
+                            title="Filter requests">
+                            <i class="fas fa-filter text-gray-600"></i>
+                        </button>
+                        
+                        <!-- Filter Dropdown Menu -->
+                        <div id="filterMenu" class="hidden absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <div class="p-4">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">Filter by Status</h4>
+                                
+                                <select id="statusFilter" onchange="applyStatusFilter()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Borrowed">Borrowed</option>
+                                    <option value="Returned">Returned</option>
+                                    <option value="Overdue">Overdue</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                
+                                <button onclick="clearStatusFilter()" class="w-full mt-3 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                                    Clear Filter
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -63,67 +104,95 @@ include '../components/layout_header.php';
                     </div>
                 <?php else: ?>
 
-<div class="p-4 sm:p-6">
-  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
-    <table id="requestsTable" class="display stripe hover w-full text-sm">
-      <thead class="bg-blue-100 sticky top-0 z-10">
-        <tr>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Request Date</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Asset Tag</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Asset Name</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Type</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Borrow Date</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Return Date</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Status</th>
-          <th class="text-left px-4 py-3 hidden sm:table-cell">Action</th>
-        </tr>
-      </thead>
+                    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
 
-      <tbody class="divide-y divide-gray-100">
-        <?php foreach ($requests as $request): ?>
-        <tr class="hover:bg-blue-50 transition-colors duration-150">
-          <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
-          <td class="px-4 py-3"><span class="font-mono text-xs bg-gray-100 px-2.5 py-1 rounded"><?php echo htmlspecialchars($request['asset_tag']); ?></span></td>
-          <td class="px-4 py-3"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
-          <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded"><?php echo htmlspecialchars($request['asset_type']); ?></span></td>
-          <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
-          <td class="px-4 py-3">
-            <?php 
-              if ($request['actual_return_date']) {
-                echo date('M d, Y', strtotime($request['actual_return_date']));
-              } else {
-                echo date('M d, Y', strtotime($request['expected_return_date']));
-              }
-            ?>
-          </td>
-          <td class="px-4 py-3 text-xs sm:text-sm">
-            <?php
-              $statusColors = [
-                'Pending'   => 'bg-yellow-100 text-yellow-800',
-                'Approved'  => 'bg-green-100 text-green-800',
-                'Borrowed'  => 'bg-blue-100 text-blue-800',
-                'Returned'  => 'bg-gray-100 text-gray-800',
-                'Overdue'   => 'bg-red-100 text-red-800',
-                'Cancelled' => 'bg-red-100 text-red-800'
-              ];
-              $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
-            ?>
-            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
-              <?php echo htmlspecialchars($request['status']); ?>
-            </span>
-          </td>
-          <td class="px-4 py-3 text-center">
-            <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors">
-              <i class="fa-solid fa-eye mr-1"></i>View
-            </button>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-
+                            <tbody id="requestsTableBody" class="bg-white divide-y divide-gray-200">
+                                <?php foreach ($requests as $request): ?>
+                                <tr class="hover:bg-gray-50 transition request-row" data-request='<?php echo htmlspecialchars(json_encode($request), ENT_QUOTES); ?>'>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <?php echo date('M d, Y', strtotime($request['created_at'])); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-xs bg-gray-100 px-2.5 py-1 rounded">
+                                            <?php echo htmlspecialchars($request['asset_tag']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                        <?php echo htmlspecialchars($request['asset_name']); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full">
+                                            <?php echo htmlspecialchars($request['asset_type']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <?php 
+                                          if ($request['actual_return_date']) {
+                                            echo date('M d, Y', strtotime($request['actual_return_date']));
+                                          } else {
+                                            echo date('M d, Y', strtotime($request['expected_return_date']));
+                                          }
+                                        ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php
+                                          $statusColors = [
+                                            'Pending'   => 'bg-yellow-100 text-yellow-800',
+                                            'Approved'  => 'bg-green-100 text-green-800',
+                                            'Borrowed'  => 'bg-blue-100 text-blue-800',
+                                            'Returned'  => 'bg-gray-100 text-gray-800',
+                                            'Overdue'   => 'bg-red-100 text-red-800',
+                                            'Cancelled' => 'bg-red-100 text-red-800'
+                                          ];
+                                          $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
+                                        ?>
+                                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
+                                          <?php echo htmlspecialchars($request['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors">
+                                              <i class="fa-solid fa-eye mr-1"></i>View
+                                            </button>
+                                            <?php if ($request['status'] === 'Pending'): ?>
+                                            <button onclick="showCancelModal(<?php echo $request['id']; ?>)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition-colors">
+                                              <i class="fa-solid fa-xmark mr-1"></i>Cancel
+                                            </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
+
+                    <!-- Pagination (only shows when more than 10 requests) -->
+                    <div id="paginationContainer" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 mt-4 rounded-b-xl hidden">
+                        <div class="flex justify-center">
+                            <nav id="pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <!-- Pagination buttons will be inserted here by JavaScript -->
+                            </nav>
+                        </div>
+                    </div>
+
                 <?php endif; ?>
             </div>
         </main>
@@ -220,6 +289,31 @@ include '../components/layout_header.php';
   </div>
 </div>
 
+<!-- Cancel Request Confirmation Modal -->
+<div id="cancelRequestModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+  <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3 text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+        <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Cancel Request</h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Are you sure you want to cancel this borrowing request? This action cannot be undone.
+        </p>
+      </div>
+      <div class="flex gap-3 px-4 py-3">
+        <button id="cancelCancelRequest" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition">
+          No, Keep it
+        </button>
+        <button id="confirmCancelRequest" class="flex-1 px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+          Yes, Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Animation -->
 <style>
 @keyframes fadeIn {
@@ -233,43 +327,186 @@ include '../components/layout_header.php';
 
 
 <script>
-// Initialize DataTable
-$(document).ready(function() {
+// Pagination variables
+let currentPage = 1;
+const itemsPerPage = 10; // Fixed at 10 items per page
+let allRows = [];
+let filteredRows = [];
+let pendingCancelRequestId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
     <?php if (!empty($requests)): ?>
-    $('#requestsTable').DataTable({
-        pageLength: 10,
-        order: [[0, 'desc']], // Sort by request date descending
-        responsive: true,
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search requests...",
-            lengthMenu: "Show _MENU_ requests per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ requests",
-            infoEmpty: "No requests available",
-            infoFiltered: "(filtered from _MAX_ total requests)",
-            zeroRecords: "No matching requests found",
-            paginate: {
-                first: '<i class="fa-solid fa-angles-left"></i>',
-                last: '<i class="fa-solid fa-angles-right"></i>',
-                next: '<i class="fa-solid fa-angle-right"></i>',
-                previous: '<i class="fa-solid fa-angle-left"></i>'
-            }
-        },
-        columnDefs: [
-            { orderable: false, targets: 7 } // Disable sorting on Action column
-        ],
-        dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
-    drawCallback: function() {
-    $('#requestsTable tbody tr').addClass('hover:bg-gray-100 transition'); 
-
-    $('.dataTables_paginate .paginate_button').addClass('px-3 py-1 mx-1 border border-gray-300 rounded hover:bg-blue-600 hover:text-white transition-colors');
-    $('.dataTables_paginate .paginate_button.current').addClass('bg-blue-600 text-white').removeClass('hover:bg-blue-600');
-    $('.dataTables_paginate .paginate_button.disabled').addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-blue-600 hover:text-white');
-}
-
-    });
+    allRows = Array.from(document.querySelectorAll('.request-row'));
+    filteredRows = [...allRows];
+    updatePagination();
     <?php endif; ?>
 });
+
+// Filter menu toggle
+function toggleFilterMenu() {
+    const menu = document.getElementById('filterMenu');
+    if (!menu) return;
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        // Close menu when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', closeFilterMenuOutside);
+        }, 0);
+    } else {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeFilterMenuOutside);
+    }
+}
+
+function closeFilterMenuOutside(e) {
+    const menu = document.getElementById('filterMenu');
+    const btn = document.getElementById('filterBtn');
+    
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeFilterMenuOutside);
+    }
+}
+
+// Apply status filter
+function applyStatusFilter() {
+    filterRequests();
+    
+    // Update filter button to show active state
+    const statusFilter = document.getElementById('statusFilter').value;
+    const filterBtn = document.getElementById('filterBtn');
+    
+    if (statusFilter) {
+        filterBtn.classList.add('bg-blue-100', 'border-blue-300');
+        filterBtn.classList.remove('bg-gray-100', 'border-gray-300');
+    } else {
+        filterBtn.classList.remove('bg-blue-100', 'border-blue-300');
+        filterBtn.classList.add('bg-gray-100', 'border-gray-300');
+    }
+}
+
+// Clear status filter
+function clearStatusFilter() {
+    document.getElementById('statusFilter').value = '';
+    const filterBtn = document.getElementById('filterBtn');
+    filterBtn.classList.remove('bg-blue-100', 'border-blue-300');
+    filterBtn.classList.add('bg-gray-100', 'border-gray-300');
+    filterRequests();
+}
+
+function filterRequests() {
+    const searchQuery = document.getElementById('requestSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+    
+    filteredRows = allRows.filter(row => {
+        const data = JSON.parse(row.dataset.request);
+        const searchText = (
+            (data.asset_name || '') + ' ' +
+            (data.asset_tag || '') + ' ' +
+            (data.status || '') + ' ' +
+            (data.asset_type || '') + ' ' +
+            (data.purpose || '')
+        ).toLowerCase();
+        
+        const matchesSearch = !searchQuery || searchText.includes(searchQuery);
+        const matchesStatus = !statusFilter || (data.status || '').toLowerCase() === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+    });
+    
+    currentPage = 1;
+    updatePagination();
+}
+
+function updatePagination() {
+    const totalItems = filteredRows.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = Math.min(start + itemsPerPage, totalItems);
+    
+    // Hide all rows
+    allRows.forEach(row => row.style.display = 'none');
+    
+    // Show only current page rows
+    filteredRows.slice(start, end).forEach(row => row.style.display = '');
+    
+    // Update pagination buttons
+    renderPaginationButtons(totalPages);
+}
+
+function renderPaginationButtons(totalPages) {
+    const pagination = document.getElementById('pagination');
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (!pagination) return;
+    
+    pagination.innerHTML = '';
+    
+    // Only show pagination if there are more than 10 items (more than 1 page)
+    if (totalPages <= 1) {
+        paginationContainer.classList.add('hidden');
+        return;
+    }
+    paginationContainer.classList.remove('hidden');
+    
+    // Calculate which page numbers to show
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    // Adjust if we're near the end
+    if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    // Add ellipsis and first page if needed
+    if (startPage > 1) {
+        pagination.appendChild(createPageButton('1', true, () => goToPage(1)));
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+            dots.textContent = '...';
+            pagination.appendChild(dots);
+        }
+    }
+    
+    // Page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = createPageButton(i.toString(), true, () => goToPage(i));
+        if (i === currentPage) {
+            btn.className = 'relative inline-flex items-center px-4 py-2 border border-[#1E3A8A] bg-[#1E3A8A] text-sm font-medium text-white';
+        }
+        pagination.appendChild(btn);
+    }
+    
+    // Add ellipsis and last page if needed
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+            dots.textContent = '...';
+            pagination.appendChild(dots);
+        }
+        pagination.appendChild(createPageButton(totalPages.toString(), true, () => goToPage(totalPages)));
+    }
+}
+
+function createPageButton(text, enabled, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = enabled 
+        ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition-colors duration-150'
+        : 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed';
+    btn.textContent = text;
+    btn.disabled = !enabled;
+    if (enabled) btn.onclick = onClick;
+    return btn;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    updatePagination();
+}
 
 // View Request Details
 async function viewRequestDetails(requestId) {
@@ -434,6 +671,108 @@ async function viewRequestDetails(requestId) {
 // Close Request Details Modal
 function closeRequestDetailsModal() {
     document.getElementById('requestDetailsModal').classList.add('hidden');
+}
+
+// Cancel Request Modal Functions
+function showCancelModal(requestId) {
+    pendingCancelRequestId = requestId;
+    document.getElementById('cancelRequestModal').classList.remove('hidden');
+}
+
+function hideCancelModal() {
+    document.getElementById('cancelRequestModal').classList.add('hidden');
+    pendingCancelRequestId = null;
+}
+
+// Cancel Request Modal Event Listeners
+document.getElementById('cancelCancelRequest')?.addEventListener('click', hideCancelModal);
+
+document.getElementById('confirmCancelRequest')?.addEventListener('click', async function() {
+    if (!pendingCancelRequestId) return;
+    
+    const requestId = pendingCancelRequestId;
+    hideCancelModal();
+    
+    try {
+        const response = await fetch('../../controller/cancel_request.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `request_id=${requestId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show success message
+            showToast('Request cancelled successfully', 'success');
+            
+            // Find and remove the row from the table
+            const row = document.querySelector(`tr[data-request*='"id":${requestId}']`);
+            if (row) {
+                // Fade out animation
+                row.style.transition = 'opacity 0.3s';
+                row.style.opacity = '0';
+                
+                setTimeout(() => {
+                    row.remove();
+                    
+                    // Update pagination arrays
+                    allRows = allRows.filter(r => r !== row);
+                    filterRequests();
+                    
+                    // If no requests left, reload page to show empty state
+                    if (allRows.length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+            }
+        } else {
+            showToast(data.message || 'Failed to cancel request', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred. Please try again.', 'error');
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('cancelRequestModal')?.addEventListener('click', function(e) {
+    if (e.target.id === 'cancelRequestModal') {
+        hideCancelModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('cancelRequestModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            hideCancelModal();
+        }
+    }
+});
+
+// Toast notification function
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed top-6 right-6 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+    }`;
+    toast.innerHTML = `
+        <div class="flex items-center gap-2">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 </script>
 

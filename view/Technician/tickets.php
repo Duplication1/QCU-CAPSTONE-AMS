@@ -147,7 +147,7 @@ if (!$result || $result->num_rows === 0): ?>
     </div>
 <?php else: ?>
     <div class="overflow-x-auto">
-      <table id="techTickets" class="min-w-full divide-y divide-gray-200">
+      <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -160,7 +160,7 @@ if (!$result || $result->num_rows === 0): ?>
             <?php endif; ?>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody id="ticketsTableBody" class="bg-white divide-y divide-gray-100">
           <?php while ($ticket = $result->fetch_assoc()): 
             $status = $ticket['status'] ?? 'Open';
             $category = htmlspecialchars(strtolower($ticket['category'] ?? 'other'));
@@ -169,7 +169,7 @@ if (!$result || $result->num_rows === 0): ?>
             $desc = htmlspecialchars($ticket['description'] ?? '');
             $loc = htmlspecialchars(($ticket['room'] ?? '-') . ' / ' . ($ticket['terminal'] ?? '-'));
           ?>
-          <tr data-ticket-id="<?php echo (int)$ticket['id']; ?>" data-category="<?php echo $category; ?>" data-ticket='<?php echo json_encode($ticket, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
+          <tr class="ticket-row" data-ticket-id="<?php echo (int)$ticket['id']; ?>" data-category="<?php echo $category; ?>" data-ticket='<?php echo json_encode($ticket, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
             <td class="px-4 py-3 text-sm text-gray-700"><?php echo $categoryLabel; ?></td>
             <td class="px-4 py-3">
               <div class="font-medium text-gray-900"><?php echo $title; ?></div>
@@ -216,18 +216,62 @@ if (!$result || $result->num_rows === 0): ?>
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination (only shows when more than 10 tickets) -->
+    <div id="paginationContainer" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 rounded-b-lg hidden">
+      <div class="flex justify-center">
+        <nav id="pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <!-- Pagination buttons will be inserted here by JavaScript -->
+        </nav>
+      </div>
+    </div>
+
 <?php endif; ?>
 
+  </div>
+</div>
+
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3 text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+        <i class="fa-solid fa-box-archive text-yellow-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Archive Ticket</h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Are you sure you want to archive this ticket? It will be moved to the archived view and can be accessed later.
+        </p>
+      </div>
+      <div class="flex gap-3 px-4 py-3">
+        <button id="cancelArchive" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition">
+          Cancel
+        </button>
+        <button id="confirmArchive" class="flex-1 px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          Archive
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 const apiUrl = '../../controller/technician_update_status.php';
 
+// Pagination variables
+let currentPage = 1;
+const itemsPerPage = 10; // Fixed at 10 items per page
+let allTicketRows = [];
+let filteredTicketRows = [];
+let currentCategory = 'all';
+let pendingArchiveTicketId = null;
+let pendingArchiveRow = null;
+
 function showToast(msg, ok = true) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.className = 'fixed top-6 right-6 px-4 py-2 rounded shadow ' + (ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white');
+  t.className = 'fixed top-6 right-6 px-4 py-2 rounded shadow z-50 ' + (ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white');
   document.body.appendChild(t);
   setTimeout(()=> t.remove(), 2500);
 }
@@ -275,6 +319,168 @@ function hideRowProcessing(row) {
   if (p) p.remove();
 }
 
+// Initialize pagination
+function initPagination() {
+  allTicketRows = Array.from(document.querySelectorAll('#ticketsTableBody .ticket-row'));
+  filteredTicketRows = [...allTicketRows];
+  currentPage = 1;
+  updatePagination();
+  attachTicketHandlers();
+}
+
+// Filter tickets by search and category
+function filterTickets() {
+  const searchQuery = (document.getElementById('techSearch')?.value || '').toLowerCase();
+  
+  filteredTicketRows = allTicketRows.filter(row => {
+    const category = row.dataset.category || 'other';
+    const text = (row.textContent || '').toLowerCase();
+    
+    const matchesCategory = currentCategory === 'all' || category.toLowerCase() === currentCategory.toLowerCase();
+    const matchesSearch = !searchQuery || text.includes(searchQuery);
+    
+    return matchesCategory && matchesSearch;
+  });
+  
+  currentPage = 1;
+  updatePagination();
+}
+
+// Update pagination display
+function updatePagination() {
+  const totalItems = filteredTicketRows.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = Math.min(start + itemsPerPage, totalItems);
+  
+  // Hide all rows
+  allTicketRows.forEach(row => row.style.display = 'none');
+  
+  // Show only current page rows
+  filteredTicketRows.slice(start, end).forEach(row => row.style.display = '');
+  
+  // Update pagination buttons
+  renderPaginationButtons(totalPages);
+}
+
+// Render pagination buttons
+function renderPaginationButtons(totalPages) {
+  const pagination = document.getElementById('pagination');
+  const paginationContainer = document.getElementById('paginationContainer');
+  if (!pagination) return;
+  
+  pagination.innerHTML = '';
+  
+  // Only show pagination if there are more than 10 items (more than 1 page)
+  if (totalPages <= 1) {
+    paginationContainer.classList.add('hidden');
+    return;
+  }
+  paginationContainer.classList.remove('hidden');
+  
+  // Calculate which page numbers to show
+  const maxButtons = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  
+  // Adjust if we're near the end
+  if (endPage - startPage < maxButtons - 1) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+  
+  // Add ellipsis and first page if needed
+  if (startPage > 1) {
+    pagination.appendChild(createPageButton('1', true, () => goToPage(1)));
+    if (startPage > 2) {
+      const dots = document.createElement('span');
+      dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+      dots.textContent = '...';
+      pagination.appendChild(dots);
+    }
+  }
+  
+  // Page number buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = createPageButton(i.toString(), true, () => goToPage(i));
+    if (i === currentPage) {
+      btn.className = 'relative inline-flex items-center px-4 py-2 border border-blue-600 bg-blue-600 text-sm font-medium text-white';
+    }
+    pagination.appendChild(btn);
+  }
+  
+  // Add ellipsis and last page if needed
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dots = document.createElement('span');
+      dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+      dots.textContent = '...';
+      pagination.appendChild(dots);
+    }
+    pagination.appendChild(createPageButton(totalPages.toString(), true, () => goToPage(totalPages)));
+  }
+}
+
+// Create page button
+function createPageButton(text, enabled, onClick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = enabled 
+    ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors duration-150'
+    : 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed';
+  btn.textContent = text;
+  btn.disabled = !enabled;
+  if (enabled) btn.onclick = onClick;
+  return btn;
+}
+
+// Go to specific page
+function goToPage(page) {
+  currentPage = page;
+  updatePagination();
+  // Re-attach handlers after pagination update
+  attachTicketHandlers();
+}
+
+// Archive Modal Functions
+function showArchiveModal(ticketId, row) {
+  pendingArchiveTicketId = ticketId;
+  pendingArchiveRow = row;
+  document.getElementById('archiveModal').classList.remove('hidden');
+}
+
+function hideArchiveModal() {
+  document.getElementById('archiveModal').classList.add('hidden');
+  pendingArchiveTicketId = null;
+  pendingArchiveRow = null;
+}
+
+// Archive Modal Event Listeners
+document.getElementById('cancelArchive')?.addEventListener('click', hideArchiveModal);
+
+document.getElementById('confirmArchive')?.addEventListener('click', function() {
+  if (pendingArchiveTicketId && pendingArchiveRow) {
+    hideArchiveModal();
+    performArchive(pendingArchiveTicketId, pendingArchiveRow);
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById('archiveModal')?.addEventListener('click', function(e) {
+  if (e.target.id === 'archiveModal') {
+    hideArchiveModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('archiveModal');
+    if (modal && !modal.classList.contains('hidden')) {
+      hideArchiveModal();
+    }
+  }
+});
+
 // category filter buttons (client-side)
 const catButtons = document.querySelectorAll('#categoryFilters .cat-btn');
 function setActiveCatButton(activeBtn) {
@@ -291,84 +497,94 @@ function setActiveCatButton(activeBtn) {
 
 catButtons.forEach(btn => {
   btn.addEventListener('click', () => {
-    const cat = btn.dataset.cat; // 'hardware','software',...
+    currentCategory = btn.dataset.cat;
     setActiveCatButton(btn);
-    document.querySelectorAll('#techTickets tbody tr').forEach(row => {
-      const rcat = row.dataset.category || 'other';
-      if (cat === 'all' || rcat.toLowerCase() === cat.toLowerCase()) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
+    filterTickets();
+    attachTicketHandlers();
   });
 });
 
-// Attach handlers: listen for dropdown change (auto-submit)
-document.querySelectorAll('#techTickets tbody tr').forEach(row => {
-  const ticketId = row.dataset.ticketId;
-  const select = row.querySelector('.statusSelect');
-  const archiveBtn = row.querySelector('.archiveBtn');
+// Attach handlers to visible rows
+function attachTicketHandlers() {
+  document.querySelectorAll('#ticketsTableBody .ticket-row').forEach(row => {
+    if (row.style.display === 'none') return; // Skip hidden rows
+    
+    const ticketId = row.dataset.ticketId;
+    const select = row.querySelector('.statusSelect');
+    const archiveBtn = row.querySelector('.archiveBtn');
 
-  // submit immediately when dropdown changes
-  select?.addEventListener('change', () => {
-    const newStatus = select.value;
-    const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
+    // Remove old listeners by cloning
+    if (select) {
+      const newSelect = select.cloneNode(true);
+      select.parentNode.replaceChild(newSelect, select);
+    }
+    if (archiveBtn) {
+      const newArchiveBtn = archiveBtn.cloneNode(true);
+      archiveBtn.parentNode.replaceChild(newArchiveBtn, archiveBtn);
+    }
 
-    const started = Date.now();
-    showRowProcessing(row);
+    const currentSelect = row.querySelector('.statusSelect');
+    const currentArchiveBtn = row.querySelector('.archiveBtn');
 
-    fetch(apiUrl, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {'Accept':'application/json'},
-      body: new URLSearchParams({ticket_id: ticketId, status: newStatus})
-    }).then(r => r.json()).then(j => {
-      const elapsed = Date.now() - started;
-      const wait = Math.max(0, ROW_MIN_MS - elapsed);
-      setTimeout(() => {
-        hideRowProcessing(row);
-        if (j.success) {
-          updateRowStatus(row, j.status);
-          showToast('Status updated');
-          
-          // Show archive button if status is now Resolved
-          if (j.status === 'Resolved' && !archiveBtn) {
-            const actionsCell = row.querySelector('td:last-child > div');
-            if (actionsCell) {
-              const newArchiveBtn = document.createElement('button');
-              newArchiveBtn.className = 'archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700';
-              newArchiveBtn.title = 'Archive this ticket';
-              newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
-              newArchiveBtn.addEventListener('click', () => archiveTicket(ticketId, row));
-              actionsCell.appendChild(newArchiveBtn);
+    // submit immediately when dropdown changes
+    currentSelect?.addEventListener('change', () => {
+      const newStatus = currentSelect.value;
+      const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
+
+      const started = Date.now();
+      showRowProcessing(row);
+
+      fetch(apiUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Accept':'application/json'},
+        body: new URLSearchParams({ticket_id: ticketId, status: newStatus})
+      }).then(r => r.json()).then(j => {
+        const elapsed = Date.now() - started;
+        const wait = Math.max(0, ROW_MIN_MS - elapsed);
+        setTimeout(() => {
+          hideRowProcessing(row);
+          if (j.success) {
+            updateRowStatus(row, j.status);
+            showToast('Status updated');
+            
+            // Show archive button if status is now Resolved
+            if (j.status === 'Resolved' && !currentArchiveBtn) {
+              const actionsCell = row.querySelector('td:last-child > div');
+              if (actionsCell) {
+                const newArchiveBtn = document.createElement('button');
+                newArchiveBtn.className = 'archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700';
+                newArchiveBtn.title = 'Archive this ticket';
+                newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
+                newArchiveBtn.addEventListener('click', () => showArchiveModal(ticketId, row));
+                actionsCell.appendChild(newArchiveBtn);
+              }
             }
+            // Hide archive button if status changed from Resolved
+            else if (j.status !== 'Resolved' && currentArchiveBtn) {
+              currentArchiveBtn.remove();
+            }
+          } else {
+            // revert select to previous value
+            if (currentSelect) currentSelect.value = prevStatus;
+            showToast(j.message || 'Failed to update status', false);
           }
-          // Hide archive button if status changed from Resolved
-          else if (j.status !== 'Resolved' && archiveBtn) {
-            archiveBtn.remove();
-          }
-        } else {
-          // revert select to previous value
-          if (select) select.value = prevStatus;
-          showToast(j.message || 'Failed to update status', false);
-        }
-      }, wait);
-    }).catch((err) => {
-      console.error(err);
-      hideRowProcessing(row);
-      if (select) select.value = prevStatus;
-      showToast('Request failed', false);
+        }, wait);
+      }).catch((err) => {
+        console.error(err);
+        hideRowProcessing(row);
+        if (currentSelect) currentSelect.value = prevStatus;
+        showToast('Request failed', false);
+      });
     });
+
+    // Archive button click handler
+    currentArchiveBtn?.addEventListener('click', () => showArchiveModal(ticketId, row));
   });
+}
 
-  // Archive button click handler
-  archiveBtn?.addEventListener('click', () => archiveTicket(ticketId, row));
-});
-
-function archiveTicket(ticketId, row) {
-  if (!confirm('Archive this ticket? It will be moved to the archived view.')) return;
-  
+// Perform archive action
+function performArchive(ticketId, row) {
   const started = Date.now();
   showRowProcessing(row);
   
@@ -387,7 +603,12 @@ function archiveTicket(ticketId, row) {
         // Fade out and remove the row
         row.style.transition = 'opacity 0.3s';
         row.style.opacity = '0';
-        setTimeout(() => row.remove(), 300);
+          setTimeout(() => {
+            row.remove();
+            // Update arrays and pagination after removal
+            allTicketRows = allTicketRows.filter(r => r !== row);
+            filterTickets();
+          }, 300);
       } else {
         showToast(j.message || 'Archive failed', false);
       }
@@ -399,17 +620,21 @@ function archiveTicket(ticketId, row) {
   });
 }
 
-// Search (unchanged)
+// Search with pagination
 document.getElementById('techSearch')?.addEventListener('input', function() {
-  const q = this.value.toLowerCase();
-  document.querySelectorAll('#techTickets tbody tr').forEach(r => {
-    const t = (r.textContent||'').toLowerCase();
-    r.style.display = t.includes(q) ? '' : 'none';
-  });
+  filterTickets();
+  attachTicketHandlers();
 });
 
-// initial state: All active
-document.querySelector('#categoryFilters .cat-btn[data-cat="all"]').click();
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const hasTickets = document.querySelectorAll('#ticketsTableBody .ticket-row').length > 0;
+  if (hasTickets) {
+    initPagination();
+    // Set initial category to "All"
+    document.querySelector('#categoryFilters .cat-btn[data-cat="all"]')?.click();
+  }
+});
 </script>
 
 <?php include '../components/layout_footer.php'; ?>

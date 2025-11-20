@@ -293,17 +293,60 @@ include '../components/layout_header.php';
                         <h3 class="text-lg font-semibold text-gray-800">All users <span id="usersCount" class="text-sm text-gray-500"><?php echo count($users); ?></span></h3>
                     </div>
                     <div class="flex items-center gap-3">
-<div class="relative">
+<div class="relative flex items-center gap-2">
   <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search users..."
     class="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition" />
   <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+  
+  <!-- Filter Button -->
+  <div class="relative">
+    <button id="filterBtn" onclick="toggleFilterMenu()" 
+      class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition"
+      title="Filter users">
+      <i class="fas fa-filter text-gray-600"></i>
+    </button>
+    
+    <!-- Filter Dropdown Menu -->
+    <div id="filterMenu" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+      <div class="p-4">
+        <h4 class="text-sm font-semibold text-gray-700 mb-3">Filter Users</h4>
+        
+        <!-- Role Filter -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-600 mb-2">Role</label>
+          <select id="roleFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+            <option value="">All Roles</option>
+            <option value="Administrator">Administrator</option>
+            <option value="Technician">Technician</option>
+            <option value="LaboratoryStaff">Laboratory Staff</option>
+            <option value="Student">Student</option>
+          </select>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-gray-600 mb-2">Status</label>
+          <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Deactivated">Deactivated</option>
+          </select>
+        </div>
+        
+        <!-- Clear Filters Button -->
+        <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
                         <button id="addUserBtn" onclick="openAddUserModal()"
   class="flex items-center gap-2 px-4 py-2 bg-[#1E3A8A] text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
   <i class="fas fa-user-plus"></i>
   Add User
 </button>
-
                     </div>
                 </div>
 
@@ -374,9 +417,6 @@ include '../components/layout_header.php';
                 <i class="fa fa-ban mr-2"></i> Deactivate user
               </button>
               <?php endif; ?>
-              <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, <?php echo (int)$u['id']; ?>)">
-                <i class="fa fa-trash mr-2"></i> Delete user
-              </button>
             </div>
           </div>
         </div>
@@ -631,16 +671,27 @@ function changePage(direction) {
 
 function getVisibleRows() {
     const searchQuery = (document.getElementById('userSearch').value || '').toLowerCase().trim();
-    
-    if (!searchQuery) {
-        return allRows;
-    }
+    const roleFilter = (document.getElementById('roleFilter')?.value || '').toLowerCase();
+    const statusFilter = (document.getElementById('statusFilter')?.value || '').toLowerCase();
     
     return allRows.filter(row => {
         const user = row.dataset.user ? JSON.parse(row.dataset.user) : null;
         if (!user) return true;
+        
+        // Search filter
         const searchText = (user.full_name + ' ' + user.email + ' ' + (user.role || '')).toLowerCase();
-        return searchText.indexOf(searchQuery) !== -1;
+        const matchesSearch = !searchQuery || searchText.indexOf(searchQuery) !== -1;
+        
+        // Role filter
+        const userRole = (user.role || '').toLowerCase();
+        const matchesRole = !roleFilter || userRole === roleFilter || 
+                           (roleFilter === 'laboratorystaff' && userRole === 'laboratory staff');
+        
+        // Status filter
+        const userStatus = (user.status || 'active').toLowerCase();
+        const matchesStatus = !statusFilter || userStatus === statusFilter;
+        
+        return matchesSearch && matchesRole && matchesStatus;
     });
 }
 
@@ -1095,7 +1146,7 @@ function addUserRow(user) {
         <td class="px-4 py-3">${renderNameCell(user)}</td>
         <td class="px-4 py-3 text-gray-500">${escapeHtml(user.email||'')}</td>
         <td class="px-4 py-3">${escapeHtml(user.role||'')}</td>
-        <td class="px-4 py-3"><span class="status-badge px-2 py-1 rounded-full text-xs ${user.status==='Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${escapeHtml(user.status||'')}</span></td>
+        <td class="px-4 py-3"><span class="status-badge px-2 py-1 rounded" style="background-color:#d1fae5;color:#065f46;">${escapeHtml(user.status||'')}</span></td>
         <td class="px-4 py-3">${user.created_at ? formatDateShortDate(user.created_at) : '-'}</td>
         <td class="px-4 py-3 flex items-center justify-between">
             <span>${user.last_login ? formatDateShort(user.last_login) : '-'}</span>
@@ -1109,7 +1160,7 @@ function addUserRow(user) {
                         ${user.status === 'Deactivated' 
                             ? '<button type="button" class="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-green-50" onclick="unsuspendUser(' + parseInt(user.id) + ')"><i class="fa fa-check-circle mr-2"></i> Activate user</button>'
                             : '<button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="suspendUser(' + parseInt(user.id) + ')"><i class="fa fa-ban mr-2"></i> Deactivate user</button>'}
-                        <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, ${parseInt(user.id)})"><i class="fa fa-trash mr-2"></i> Delete user</button>
+-                        <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteUser(null, ${parseInt(user.id)})"><i class="fa fa-trash mr-2"></i> Delete user</button>
                     </div>
                 </div>
             </div>
@@ -1198,7 +1249,7 @@ function updateUserStatus(userId, newStatus) {
             const menuContent = menu.querySelector('.py-1');
             if (menuContent) {
                 const buttons = menuContent.querySelectorAll('button');
-                // Find and replace the suspend/unsuspend button (second button)
+                // Find and replace the suspend/unsuspend button (second button, now becomes last since delete is removed)
                 if (buttons.length >= 2) {
                     const oldBtn = buttons[1];
                     const newBtn = document.createElement('button');
@@ -1551,38 +1602,91 @@ document.addEventListener('click', function(e){
     document.querySelectorAll('.floating-row-menu').forEach(c => c.remove());
 });
 
-function viewProfileFromRow(btn, userId) {
-    const tr = getRowById(userId);
-    const user = tr && tr.dataset.user ? JSON.parse(tr.dataset.user) : null;
-    if (!user) { showToast('User not found', 'error'); return; }
-    // close menu
-    const menu = btn && btn.closest && btn.closest('[role="menu"]'); if (menu) menu.classList.add('hidden');
-    showUserModal(user);
+// Filter menu toggle
+function toggleFilterMenu() {
+    const menu = document.getElementById('filterMenu');
+    if (!menu) return;
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        // Close menu when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', closeFilterMenuOutside);
+        }, 0);
+    } else {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeFilterMenuOutside);
+    }
 }
 
-function changePermission(btn, userId) {
-    // open edit modal and focus role select
-    editUser(btn, userId);
-    // close menu
-    const menu = btn && btn.closest && btn.closest('[role="menu"]'); if (menu) menu.classList.add('hidden');
-    setTimeout(()=>{
-        const sel = document.getElementById('edit_role'); if (sel) sel.focus();
-    }, 200);
+function closeFilterMenuOutside(e) {
+    const menu = document.getElementById('filterMenu');
+    const btn = document.getElementById('filterBtn');
+    
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeFilterMenuOutside);
+    }
 }
 
-function exportDetails(btn, userId) {
-    const tr = getRowById(userId);
-    const user = tr && tr.dataset.user ? JSON.parse(tr.dataset.user) : null;
-    if (!user) { showToast('User not found', 'error'); return; }
-    // build simple CSV
-    const headers = ['id','id_number','full_name','email','role','status','created_at','last_login'];
-    const row = headers.map(h => '"' + (user[h] || '') + '"').join(',');
-    const csv = headers.join(',') + '\n' + row;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'user-' + userId + '.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    // close menu
-    const menu = btn && btn.closest && btn.closest('[role="menu"]'); if (menu) menu.classList.add('hidden');
-    showToast('Export started');
+// Apply filters
+function applyFilters() {
+    currentPage = 1; // Reset to first page when filtering
+    updatePagination();
+    
+    // Update filter button to show active state
+    const roleFilter = document.getElementById('roleFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const filterBtn = document.getElementById('filterBtn');
+    
+    if (roleFilter || statusFilter) {
+        filterBtn.classList.add('bg-blue-100', 'border-blue-300');
+        filterBtn.classList.remove('bg-gray-100', 'border-gray-300');
+    } else {
+        filterBtn.classList.remove('bg-blue-100', 'border-blue-300');
+        filterBtn.classList.add('bg-gray-100', 'border-gray-300');
+    }
 }
+
+// Clear all filters
+function clearFilters() {
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('userSearch').value = '';
+    
+    const filterBtn = document.getElementById('filterBtn');
+    filterBtn.classList.remove('bg-blue-100', 'border-blue-300');
+    filterBtn.classList.add('bg-gray-100', 'border-gray-300');
+    
+    applyFilters();
+}
+
+// Update getVisibleRows to include filter logic
+function getVisibleRows() {
+    const searchQuery = (document.getElementById('userSearch').value || '').toLowerCase().trim();
+    const roleFilter = (document.getElementById('roleFilter')?.value || '').toLowerCase();
+    const statusFilter = (document.getElementById('statusFilter')?.value || '').toLowerCase();
+    
+    return allRows.filter(row => {
+        const user = row.dataset.user ? JSON.parse(row.dataset.user) : null;
+        if (!user) return true;
+        
+        // Search filter
+        const searchText = (user.full_name + ' ' + user.email + ' ' + (user.role || '')).toLowerCase();
+        const matchesSearch = !searchQuery || searchText.indexOf(searchQuery) !== -1;
+        
+        // Role filter
+        const userRole = (user.role || '').toLowerCase();
+        const matchesRole = !roleFilter || userRole === roleFilter || 
+                           (roleFilter === 'laboratorystaff' && userRole === 'laboratory staff');
+        
+        // Status filter
+        const userStatus = (user.status || 'active').toLowerCase();
+        const matchesStatus = !statusFilter || userStatus === statusFilter;
+        
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+}
+
+// ...existing code...
 </script>

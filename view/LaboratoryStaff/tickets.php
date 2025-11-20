@@ -222,7 +222,6 @@ include '../components/layout_header.php';
                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <!-- Reporter hidden in list; shown in modal details -->
                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
@@ -268,19 +267,6 @@ include '../components/layout_header.php';
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <?php echo htmlspecialchars($ticket['title'] ?? '-'); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php
-                                    $priorityColors = [
-                                        'Low' => 'bg-gray-100 text-gray-800',
-                                        'Medium' => 'bg-yellow-100 text-yellow-800',
-                                        'High' => 'bg-red-100 text-red-800'
-                                    ];
-                                    $priorityClass = $priorityColors[$ticket['priority']] ?? 'bg-gray-100 text-gray-800';
-                                    ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $priorityClass; ?>">
-                                        <?php echo htmlspecialchars($ticket['priority'] ?? 'Medium'); ?>
-                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <?php
