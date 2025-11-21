@@ -95,18 +95,19 @@ include '../components/layout_header.php';
     }
     
     .tab-button {
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1rem;
         border: none;
         background: transparent;
         cursor: pointer;
         font-weight: 600;
+        font-size: 0.75rem;
         color: #6b7280;
-        border-bottom: 3px solid transparent;
+        border-bottom: 2px solid transparent;
         transition: all 0.3s;
     }
     .tab-button.active {
-        color: #3b82f6;
-        border-bottom-color: #3b82f6;
+        color: #1E3A8A;
+        border-bottom-color: #1E3A8A;
     }
     .tab-content {
         display: none;
@@ -117,19 +118,12 @@ include '../components/layout_header.php';
 </style>
 
 <!-- Main Content -->
-<main class="p-6">
-    <!-- Header -->
-    <div class="mb-6">
-        <h2 class="text-3xl font-bold text-gray-800 mb-2">Asset Management System</h2>
-        <p class="text-gray-600">Manage and track all assets across computer laboratories</p>
-    </div>
-
-    <!-- Success/Error Messages -->
+<main class="p-3">
     <!-- Session Messages -->
     <?php include '../components/session_messages.php'; ?>
 
     <!-- Tab Navigation -->
-    <div class="bg-white rounded-xl shadow-lg mb-6">
+    <div class="bg-white rounded-lg shadow mb-3">
         <div class="border-b border-gray-200 flex">
             <button class="tab-button active" data-tab="labs">
                 <i class="fas fa-building mr-2"></i>Computer Labs
@@ -143,72 +137,114 @@ include '../components/layout_header.php';
         </div>
 
         <!-- Computer Labs Tab -->
-        <div id="labs-tab" class="tab-content active p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Computer Laboratories</h3>
-                <button onclick="openAddAssetModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                    <i class="fas fa-plus mr-2"></i>Add New Asset
+        <div id="labs-tab" class="tab-content active p-3">
+            <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+                <input type="text" id="searchLabs" placeholder="Search labs..." 
+                       class="px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent"
+                       onkeyup="filterLabs()">
+                <button onclick="openAddAssetModal()" class="bg-[#1E3A8A] hover:bg-blue-900 text-white px-3 py-1.5 rounded text-xs transition">
+                    <i class="fas fa-plus mr-1"></i>Add Asset
                 </button>
             </div>
 
             <!-- Computer Labs Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="labsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                 <?php foreach ($rooms as $room): ?>
-                    <div class="lab-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md p-6 border-2 border-blue-200" 
+                    <div class="lab-card bg-white rounded-lg shadow p-3 border-l-4 border-[#1E3A8A]" 
+                         data-lab-name="<?php echo strtolower(htmlspecialchars($room['name'])); ?>"
                          onclick="openLabModal(<?php echo $room['id']; ?>, '<?php echo htmlspecialchars($room['name']); ?>')">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold text-blue-900"><?php echo htmlspecialchars($room['name']); ?></h3>
-                            <div class="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center">
-                                <i class="fas fa-desktop text-xl"></i>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-[#1E3A8A]"><?php echo htmlspecialchars($room['name']); ?></h3>
+                            <div class="bg-blue-100 text-[#1E3A8A] rounded p-1.5">
+                                <i class="fas fa-desktop text-sm"></i>
                             </div>
                         </div>
                         
-                        <div class="space-y-2">
+                        <div class="space-y-1">
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-700">Total Assets:</span>
-                                <span class="font-bold text-blue-900"><?php echo $room['total_assets']; ?></span>
+                                <span class="text-[10px] text-gray-600">Total:</span>
+                                <span class="text-xs font-bold text-gray-800"><?php echo $room['total_assets']; ?></span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-700">Available:</span>
-                                <span class="font-semibold text-green-600"><?php echo $room['available']; ?></span>
+                                <span class="text-[10px] text-gray-600">Available:</span>
+                                <span class="text-xs font-semibold text-green-600"><?php echo $room['available']; ?></span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-700">In Use:</span>
-                                <span class="font-semibold text-blue-600"><?php echo $room['in_use']; ?></span>
+                                <span class="text-[10px] text-gray-600">In Use:</span>
+                                <span class="text-xs font-semibold text-blue-600"><?php echo $room['in_use']; ?></span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-700">Maintenance:</span>
-                                <span class="font-semibold text-yellow-600"><?php echo $room['maintenance']; ?></span>
+                                <span class="text-[10px] text-gray-600">Maintenance:</span>
+                                <span class="text-xs font-semibold text-yellow-600"><?php echo $room['maintenance']; ?></span>
                             </div>
                         </div>
                         
-                        <button class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">
-                            View Assets <i class="fas fa-arrow-right ml-2"></i>
+                        <button class="mt-2 w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-1.5 rounded text-xs transition">
+                            View <i class="fas fa-arrow-right ml-1"></i>
                         </button>
                     </div>
                 <?php endforeach; ?>
                 
                 <?php if (empty($rooms)): ?>
-                    <div class="col-span-3 text-center py-12 text-gray-500">
-                        <i class="fas fa-inbox text-6xl mb-4"></i>
-                        <p class="text-xl">No computer labs found</p>
+                    <div class="col-span-4 text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-5xl mb-3"></i>
+                        <p class="text-xs">No computer labs found</p>
                     </div>
                 <?php endif; ?>
+            </div>
+            
+            <!-- No Results Message for Filtering -->
+            <div id="noLabsFound" class="hidden text-center py-8">
+                <i class="fas fa-search text-5xl text-gray-300 mb-3"></i>
+                <p class="text-xs text-gray-600">No labs match your search</p>
             </div>
         </div>
 
         <!-- All Assets Tab -->
-        <div id="all-assets-tab" class="tab-content p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">All Assets</h3>
-                <div class="flex space-x-3">
-                    <input type="text" id="searchAssets" placeholder="Search assets..." 
-                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <button onclick="openAddAssetModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas fa-plus mr-2"></i>Add Asset
+        <div id="all-assets-tab" class="tab-content p-3">
+            <div class="flex flex-wrap items-center mb-3 gap-2">
+                <input type="text" id="searchAssets" placeholder="Search assets..." 
+                       class="px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent"
+                       onkeyup="filterAssets()">
+                
+                <select id="filterStatus" class="px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent" onchange="filterAssets()">
+                    <option value="">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="in use">In Use</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="retired">Retired</option>
+                    <option value="damaged">Damaged</option>
+                </select>
+                
+                <select id="filterRoom" class="px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent" onchange="filterAssets()">
+                    <option value="">All Rooms</option>
+                    <?php foreach ($rooms as $room): ?>
+                        <option value="<?php echo htmlspecialchars($room['name']); ?>"><?php echo htmlspecialchars($room['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                
+                <select id="filterType" class="px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent" onchange="filterAssets()">
+                    <option value="">All Types</option>
+                    <option value="Desktop">Desktop</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Printer">Printer</option>
+                    <option value="Projector">Projector</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <button onclick="clearAssetFilters()" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-100 transition">
+                    <i class="fas fa-times mr-1"></i>Clear
+                </button>
+                
+                <div class="flex-1"></div>
+                
+                <div class="flex gap-2">
+                    <button onclick="openAddAssetModal()" class="bg-[#1E3A8A] hover:bg-blue-900 text-white px-3 py-1.5 rounded text-xs transition">
+                        <i class="fas fa-plus mr-1"></i>Add
                     </button>
-                    <button onclick="exportAssets()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas fa-download mr-2"></i>Export CSV
+                    <button onclick="exportAssets()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs transition">
+                        <i class="fas fa-download mr-1"></i>Export
                     </button>
                 </div>
             </div>
@@ -216,40 +252,46 @@ include '../components/layout_header.php';
             <!-- Assets Table -->
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white border border-gray-300 rounded-lg" id="assetsTable">
-                    <thead class="bg-gray-100">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Asset Tag</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Asset Name</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Category</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Room</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Condition</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Asset Tag</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Asset Name</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Type</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Category</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Room</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Condition</th>
+                            <th class="px-3 py-2 text-center text-[10px] font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <?php foreach ($assets as $asset): ?>
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900"><?php echo htmlspecialchars($asset['asset_tag']); ?></td>
-                                <td class="px-4 py-3 text-sm text-gray-700"><?php echo htmlspecialchars($asset['asset_name']); ?></td>
-                                <td class="px-4 py-3 text-sm text-gray-700"><?php echo htmlspecialchars($asset['asset_type']); ?></td>
-                                <td class="px-4 py-3 text-sm text-gray-700"><?php echo htmlspecialchars($asset['category'] ?? '-'); ?></td>
-                                <td class="px-4 py-3 text-sm text-gray-700"><?php echo htmlspecialchars($asset['room_name'] ?? '-'); ?></td>
-                                <td class="px-4 py-3 text-sm">
-                                    <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $asset['status'])); ?>">
+                            <tr class="hover:bg-gray-50 transition asset-row" 
+                                data-asset-tag="<?php echo strtolower(htmlspecialchars($asset['asset_tag'])); ?>"
+                                data-asset-name="<?php echo strtolower(htmlspecialchars($asset['asset_name'])); ?>"
+                                data-asset-type="<?php echo strtolower(htmlspecialchars($asset['asset_type'])); ?>"
+                                data-asset-category="<?php echo strtolower(htmlspecialchars($asset['category'] ?? '')); ?>"
+                                data-asset-room="<?php echo strtolower(htmlspecialchars($asset['room_name'] ?? '')); ?>"
+                                data-asset-status="<?php echo strtolower(htmlspecialchars($asset['status'])); ?>">
+                                <td class="px-3 py-2 text-xs font-medium text-gray-900"><?php echo htmlspecialchars($asset['asset_tag']); ?></td>
+                                <td class="px-3 py-2 text-xs text-gray-700"><?php echo htmlspecialchars($asset['asset_name']); ?></td>
+                                <td class="px-3 py-2 text-xs text-gray-700"><?php echo htmlspecialchars($asset['asset_type']); ?></td>
+                                <td class="px-3 py-2 text-xs text-gray-700"><?php echo htmlspecialchars($asset['category'] ?? '-'); ?></td>
+                                <td class="px-3 py-2 text-xs text-gray-700"><?php echo htmlspecialchars($asset['room_name'] ?? '-'); ?></td>
+                                <td class="px-3 py-2 text-xs">
+                                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded status-<?php echo strtolower(str_replace(' ', '-', $asset['status'])); ?>">
                                         <?php echo htmlspecialchars($asset['status']); ?>
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-700"><?php echo htmlspecialchars($asset['condition']); ?></td>
-                                <td class="px-4 py-3 text-sm">
-                                    <button onclick="viewAssetDetails(<?php echo $asset['id']; ?>)" class="text-blue-600 hover:text-blue-800 mr-3" title="View">
+                                <td class="px-3 py-2 text-xs text-gray-700"><?php echo htmlspecialchars($asset['condition']); ?></td>
+                                <td class="px-3 py-2 text-center">
+                                    <button onclick="viewAssetDetails(<?php echo $asset['id']; ?>)" class="text-[#1E3A8A] hover:text-blue-700 mr-2" title="View">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="editAsset(<?php echo $asset['id']; ?>)" class="text-yellow-600 hover:text-yellow-800 mr-3" title="Edit">
+                                    <button onclick="editAsset(<?php echo $asset['id']; ?>)" class="text-yellow-600 hover:text-yellow-800 mr-2" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button onclick="generateQRCode(<?php echo $asset['id']; ?>)" class="text-purple-600 hover:text-purple-800 mr-3" title="QR Code">
+                                    <button onclick="generateQRCode(<?php echo $asset['id']; ?>)" class="text-purple-600 hover:text-purple-800 mr-2" title="QR Code">
                                         <i class="fas fa-qrcode"></i>
                                     </button>
                                     <button onclick="deleteAsset(<?php echo $asset['id']; ?>)" class="text-red-600 hover:text-red-800" title="Delete">
@@ -273,32 +315,30 @@ include '../components/layout_header.php';
         </div>
 
         <!-- Import Assets Tab -->
-        <div id="import-tab" class="tab-content p-6">
+        <div id="import-tab" class="tab-content p-3">
             <div class="max-w-4xl mx-auto">
-                <h3 class="text-xl font-bold text-gray-800 mb-6">Import Assets</h3>
-                
                 <!-- CSV Import -->
-                <div class="bg-gray-50 rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-blue-100 rounded-full p-3 mr-4">
-                            <i class="fas fa-file-csv text-blue-600 text-2xl"></i>
+                <div class="bg-gray-50 rounded-lg p-3 mb-3 border-2 border-dashed border-gray-300">
+                    <div class="flex items-center mb-3">
+                        <div class="bg-blue-100 rounded p-2 mr-3">
+                            <i class="fas fa-file-csv text-[#1E3A8A] text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="text-lg font-bold text-gray-800">CSV Import</h4>
-                            <p class="text-gray-600 text-sm">Upload a CSV file to import multiple assets at once</p>
+                            <h4 class="text-sm font-bold text-gray-800">CSV Import</h4>
+                            <p class="text-[10px] text-gray-600">Upload a CSV file to import multiple assets</p>
                         </div>
                     </div>
                     
                     <form id="csvImportForm" action="../../controller/import_assets.php" method="POST" enctype="multipart/form-data">
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Select CSV File</label>
+                        <div class="mb-3">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Select CSV File</label>
                             <input type="file" name="csv_file" id="csvFile" accept=".csv" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-2">Maximum file size: 5MB</p>
+                                   class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                            <p class="text-[10px] text-gray-500 mt-1">Maximum file size: 5MB</p>
                         </div>
                         
-                        <div class="flex space-x-3">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                        <div class="flex gap-2">
+                            <button type="submit" class="bg-[#1E3A8A] hover:bg-blue-900 text-white px-3 py-1.5 rounded text-xs transition">
                                 <i class="fas fa-upload mr-2"></i>Upload and Import
                             </button>
                             <a href="../../controller/download_csv_template.php" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition">
@@ -347,12 +387,12 @@ include '../components/layout_header.php';
         <div class="bg-blue-600 text-white p-6 rounded-t-xl">
             <div class="flex justify-between items-center">
                 <h3 class="text-2xl font-bold" id="labModalTitle">Lab Assets</h3>
-                <button onclick="closeLabModal()" class="text-white hover:text-gray-200 text-2xl">
+                <button onclick="closeLabModal()" class="text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
-        <div class="p-6">
+        <div class="p-3">
             <div id="labAssetsContent" class="overflow-x-auto">
                 <div class="text-center py-8">
                     <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
@@ -366,15 +406,15 @@ include '../components/layout_header.php';
 <!-- Asset Details Modal -->
 <div id="assetDetailsModal" class="modal">
     <div class="modal-content max-w-3xl">
-        <div class="bg-gray-800 text-white p-6 rounded-t-xl">
+        <div class="bg-[#1E3A8A] text-white p-3 rounded-t-lg">
             <div class="flex justify-between items-center">
-                <h3 class="text-2xl font-bold">Asset Details</h3>
-                <button onclick="closeAssetDetailsModal()" class="text-white hover:text-gray-200 text-2xl">
+                <h3 class="text-sm font-bold">Asset Details</h3>
+                <button onclick="closeAssetDetailsModal()" class="text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
-        <div class="p-6" id="assetDetailsContent">
+        <div class="p-3" id="assetDetailsContent">
             <div class="text-center py-8">
                 <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
                 <p class="text-gray-600 mt-4">Loading details...</p>
@@ -693,11 +733,11 @@ include '../components/layout_header.php';
                                 <p class="text-gray-600 mb-4">${data.asset.asset_type}</p>
                                 <div class="flex space-x-3 justify-center">
                                     <a href="${data.qr_code_url}" download="qr_${data.asset.asset_tag}.png" 
-                                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                                        <i class="fas fa-download mr-2"></i>Download
+                                       class="bg-[#1E3A8A] hover:bg-blue-900 text-white px-3 py-1.5 rounded text-xs transition">
+                                        <i class="fas fa-download mr-1"></i>Download
                                     </a>
                                     <button onclick="window.print()" 
-                                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition">
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-xs transition">
                                         <i class="fas fa-print mr-2"></i>Print
                                     </button>
                                 </div>
@@ -783,6 +823,83 @@ include '../components/layout_header.php';
 
     function onScanError(errorMessage) {
         // Handle scan error
+    }
+
+    // Filter Labs
+    function filterLabs() {
+        const searchInput = document.getElementById('searchLabs').value.toLowerCase();
+        const labCards = document.querySelectorAll('.lab-card');
+        const labsGrid = document.getElementById('labsGrid');
+        const noResultsMsg = document.getElementById('noLabsFound');
+        let visibleCount = 0;
+
+        labCards.forEach(card => {
+            const labName = card.getAttribute('data-lab-name');
+            
+            if (labName.includes(searchInput)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0 && searchInput !== '') {
+            labsGrid.style.display = 'none';
+            noResultsMsg.classList.remove('hidden');
+        } else {
+            labsGrid.style.display = 'grid';
+            noResultsMsg.classList.add('hidden');
+        }
+    }
+
+    // Filter Assets
+    function filterAssets() {
+        const searchInput = document.getElementById('searchAssets').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
+        const roomFilter = document.getElementById('filterRoom').value.toLowerCase();
+        const typeFilter = document.getElementById('filterType').value.toLowerCase();
+        const assetRows = document.querySelectorAll('.asset-row');
+        let visibleCount = 0;
+
+        assetRows.forEach(row => {
+            const assetTag = row.getAttribute('data-asset-tag');
+            const assetName = row.getAttribute('data-asset-name');
+            const assetType = row.getAttribute('data-asset-type');
+            const assetCategory = row.getAttribute('data-asset-category');
+            const assetRoom = row.getAttribute('data-asset-room');
+            const assetStatus = row.getAttribute('data-asset-status');
+            
+            const matchesSearch = searchInput === '' || 
+                                assetTag.includes(searchInput) || 
+                                assetName.includes(searchInput) ||
+                                assetType.includes(searchInput) ||
+                                assetCategory.includes(searchInput);
+            
+            const matchesStatus = statusFilter === '' || assetStatus === statusFilter;
+            const matchesRoom = roomFilter === '' || assetRoom === roomFilter.toLowerCase();
+            const matchesType = typeFilter === '' || assetType === typeFilter.toLowerCase();
+            
+            if (matchesSearch && matchesStatus && matchesRoom && matchesType) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update visible count or show no results message
+        console.log('Visible assets:', visibleCount);
+    }
+
+    // Clear Asset Filters
+    function clearAssetFilters() {
+        document.getElementById('searchAssets').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterRoom').value = '';
+        document.getElementById('filterType').value = '';
+        filterAssets();
     }
 
     // Close modals when clicking outside

@@ -56,110 +56,110 @@ include '../components/layout_header.php';
 ?>
 
         <!-- Main Content -->
-        <main class="p-6">
+        <main class="p-3">
             
             <!-- Session Messages -->
             <?php include '../components/session_messages.php'; ?>
 
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-[#1E3A8A]">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-yellow-100 text-sm font-medium">Pending Requests</p>
-                            <p class="text-3xl font-bold mt-2"><?php echo $stats['pending'] ?? 0; ?></p>
+                            <p class="text-gray-600 text-[10px]">Pending</p>
+                            <p class="text-xl font-bold text-[#1E3A8A]"><?php echo $stats['pending'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-white bg-opacity-30 rounded-lg p-3">
-                            <i class="fa-solid fa-clock text-3xl"></i>
+                        <div class="bg-blue-100 p-2 rounded">
+                            <i class="fa-solid fa-clock text-[#1E3A8A] text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-blue-100 text-sm font-medium">Currently Borrowed</p>
-                            <p class="text-3xl font-bold mt-2"><?php echo $stats['approved'] ?? 0; ?></p>
+                            <p class="text-gray-600 text-[10px]">Borrowed</p>
+                            <p class="text-xl font-bold text-blue-600"><?php echo $stats['approved'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-white bg-opacity-30 rounded-lg p-3">
-                            <i class="fa-solid fa-hand-holding text-3xl"></i>
+                        <div class="bg-blue-100 p-2 rounded">
+                            <i class="fa-solid fa-hand-holding text-blue-600 text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-green-500">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-green-100 text-sm font-medium">Returned</p>
-                            <p class="text-3xl font-bold mt-2"><?php echo $stats['returned'] ?? 0; ?></p>
+                            <p class="text-gray-600 text-[10px]">Returned</p>
+                            <p class="text-xl font-bold text-green-600"><?php echo $stats['returned'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-white bg-opacity-30 rounded-lg p-3">
-                            <i class="fa-solid fa-check-circle text-3xl"></i>
+                        <div class="bg-green-100 p-2 rounded">
+                            <i class="fa-solid fa-check-circle text-green-600 text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-gray-500">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-red-100 text-sm font-medium">Total Requests</p>
-                            <p class="text-3xl font-bold mt-2"><?php echo $stats['total_borrowings'] ?? 0; ?></p>
+                            <p class="text-gray-600 text-[10px]">Total</p>
+                            <p class="text-xl font-bold text-gray-800"><?php echo $stats['total_borrowings'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-white bg-opacity-30 rounded-lg p-3">
-                            <i class="fa-solid fa-list text-3xl"></i>
+                        <div class="bg-gray-100 p-2 rounded">
+                            <i class="fa-solid fa-list text-gray-600 text-lg"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Borrowing Requests Table -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h2 class="text-2xl font-bold text-gray-800">
-                        <i class="fa-solid fa-clipboard-list mr-2 text-blue-600"></i>
+            <div class="bg-white rounded-lg shadow p-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                    <h2 class="text-sm font-semibold text-gray-800">
+                        <i class="fa-solid fa-clipboard-list mr-1 text-[#1E3A8A]"></i>
                         Borrowing Requests
                     </h2>
                     
                     <!-- Filter Buttons -->
-                    <div class="flex flex-wrap gap-2">
-                        <a href="?status=all" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors <?php echo $filter_status === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                    <div class="flex flex-wrap gap-1">
+                        <a href="?status=all" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'all' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
                             All
                         </a>
-                        <a href="?status=Pending" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors <?php echo $filter_status === 'Pending' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        <a href="?status=Pending" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Pending' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
                             Pending
                         </a>
-                        <a href="?status=Approved" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors <?php echo $filter_status === 'Approved' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        <a href="?status=Approved" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Approved' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
                             Approved
                         </a>
-                        <a href="?status=Returned" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors <?php echo $filter_status === 'Returned' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        <a href="?status=Returned" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Returned' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
                             Returned
                         </a>
                     </div>
                 </div>
 
                 <?php if ($db_error): ?>
-                    <div class="text-center py-12">
-                        <i class="fa-solid fa-database text-6xl text-red-300 mb-4"></i>
-                        <p class="text-red-600 text-lg font-semibold">Database Error</p>
-                        <p class="text-gray-600 text-sm mt-2">The borrowing tables may not exist yet.</p>
-                        <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg max-w-2xl mx-auto text-left">
-                            <p class="text-sm font-semibold text-red-800 mb-2">To fix this:</p>
-                            <ol class="text-sm text-red-700 space-y-1 ml-4">
+                    <div class="text-center py-8">
+                        <i class="fa-solid fa-database text-5xl text-red-300 mb-3"></i>
+                        <p class="text-red-600 text-base font-semibold">Database Error</p>
+                        <p class="text-gray-600 text-xs mt-1">The borrowing tables may not exist yet.</p>
+                        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded max-w-xl mx-auto text-left">
+                            <p class="text-xs font-semibold text-red-800 mb-1">To fix this:</p>
+                            <ol class="text-xs text-red-700 space-y-1 ml-4">
                                 <li>1. Open phpMyAdmin</li>
                                 <li>2. Select your database (ams_database)</li>
                                 <li>3. Go to the SQL tab</li>
                                 <li>4. Copy and run the content from: <code class="bg-red-100 px-2 py-1 rounded">database/create_assets_table.sql</code></li>
                             </ol>
-                            <p class="text-xs text-red-600 mt-3 font-mono"><?php echo htmlspecialchars($db_error); ?></p>
+                            <p class="text-[10px] text-red-600 mt-2 font-mono"><?php echo htmlspecialchars($db_error); ?></p>
                         </div>
                     </div>
                 <?php elseif (empty($requests)): ?>
-                    <div class="text-center py-12">
-                        <i class="fa-solid fa-inbox text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-600 text-lg">No borrowing requests found.</p>
-                        <p class="text-gray-500 text-sm mt-2">Borrowing requests will appear here when students or faculty submit them.</p>
+                    <div class="text-center py-8">
+                        <i class="fa-solid fa-inbox text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-600 text-sm">No borrowing requests found.</p>
+                        <p class="text-gray-500 text-xs mt-1">Borrowing requests will appear here when students or faculty submit them.</p>
                         <?php if ($filter_status !== 'all'): ?>
-                        <p class="text-xs text-gray-400 mt-4">Current filter: <span class="font-semibold"><?php echo htmlspecialchars($filter_status); ?></span></p>
+                        <p class="text-[10px] text-gray-400 mt-3">Current filter: <span class="font-semibold"><?php echo htmlspecialchars($filter_status); ?></span></p>
                         <?php endif; ?>
                     </div>
                 <?php else: ?>
@@ -168,34 +168,34 @@ include '../components/layout_header.php';
                 
                 <?php if (!empty($requests)): ?>
                     <div class="overflow-x-auto">
-                        <table id="borrowingTable" class="display stripe hover w-full text-sm">
+                        <table id="borrowingTable" class="display stripe hover w-full text-xs">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="text-left px-4 py-3">Request Date</th>
-                                    <th class="text-left px-4 py-3">Borrower</th>
-                                    <th class="text-left px-4 py-3">Asset Tag</th>
-                                    <th class="text-left px-4 py-3">Asset Name</th>
-                                    <th class="text-left px-4 py-3">Borrow Date</th>
-                                    <th class="text-left px-4 py-3">Return Date</th>
-                                    <th class="text-left px-4 py-3">Status</th>
-                                    <th class="text-center px-4 py-3">Actions</th>
+                                    <th class="text-left px-3 py-2">Request Date</th>
+                                    <th class="text-left px-3 py-2">Borrower</th>
+                                    <th class="text-left px-3 py-2">Asset Tag</th>
+                                    <th class="text-left px-3 py-2">Asset Name</th>
+                                    <th class="text-left px-3 py-2">Borrow Date</th>
+                                    <th class="text-left px-3 py-2">Return Date</th>
+                                    <th class="text-left px-3 py-2">Status</th>
+                                    <th class="text-center px-3 py-2">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($requests as $request): ?>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-3 py-2"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
+                                    <td class="px-3 py-2">
                                         <strong><?php echo htmlspecialchars($request['borrower_full_name']); ?></strong>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                    <td class="px-3 py-2">
+                                        <span class="font-mono text-[10px] bg-gray-100 px-2 py-0.5 rounded">
                                             <?php echo htmlspecialchars($request['asset_tag']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
-                                    <td class="px-4 py-3"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-3 py-2"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
+                                    <td class="px-3 py-2"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
+                                    <td class="px-3 py-2">
                                         <?php 
                                         if ($request['actual_return_date']) {
                                             echo '<span class="text-green-600 font-medium">' . date('M d, Y', strtotime($request['actual_return_date'])) . '</span>';

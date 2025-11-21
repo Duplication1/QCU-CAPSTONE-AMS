@@ -170,85 +170,32 @@ include '../components/layout_header.php';
 ?>
 
         <!-- Main Content -->
-        <main class="p-6">
+        <main class="p-3">
             <!-- Alert Container for AJAX messages -->
             <div id="alertContainer"></div>
             
             <?php if ($successMessage): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-3 text-xs">
                 <?php echo htmlspecialchars($successMessage); ?>
             </div>
             <?php endif; ?>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <!-- Header with Filters -->
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Issue Tickets</h2>
+            <div class="bg-white rounded-lg shadow p-3">
+                <!-- Compact Filter Bar -->
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <select id="categoryFilter" onchange="window.location.href='tickets.php?type='+this.value" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                        <option value="all" <?php echo $filterKey === 'all' ? 'selected' : ''; ?>>All (<?php echo $counts['all']; ?>)</option>
+                        <option value="hardware" <?php echo $filterKey === 'hardware' ? 'selected' : ''; ?>>Hardware (<?php echo $counts['hardware']; ?>)</option>
+                        <option value="software" <?php echo $filterKey === 'software' ? 'selected' : ''; ?>>Software (<?php echo $counts['software']; ?>)</option>
+                        <option value="network" <?php echo $filterKey === 'network' ? 'selected' : ''; ?>>Network (<?php echo $counts['network']; ?>)</option>
+                        <option value="laboratory" <?php echo $filterKey === 'laboratory' ? 'selected' : ''; ?>>Laboratory (<?php echo $counts['laboratory']; ?>)</option>
+                        <option value="other" <?php echo $filterKey === 'other' ? 'selected' : ''; ?>>Other (<?php echo $counts['other']; ?>)</option>
+                    </select>
                     
-                    <!-- Filter Tabs -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <a href="tickets.php?type=all" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
-                            All Issues
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'all' ? 'bg-gray-700' : 'bg-gray-300'; ?>">
-                                <?php echo $counts['all']; ?>
-                            </span>
-                        </a>
-                        
-                        <a href="tickets.php?type=hardware" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'hardware' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'; ?>">
-                            Hardware
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'hardware' ? 'bg-gray-500' : 'bg-blue-200'; ?>">
-                                <?php echo $counts['hardware']; ?>
-                            </span>
-                        </a>
-                        
-                        <a href="tickets.php?type=software" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'software' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'; ?>">
-                            Software
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'software' ? 'bg-green-500' : 'bg-green-200'; ?>">
-                                <?php echo $counts['software']; ?>
-                            </span>
-                        </a>
-                        
-                        <a href="tickets.php?type=network" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'network' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800 hover:bg-purple-200'; ?>">
-                            Network
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'network' ? 'bg-purple-500' : 'bg-purple-200'; ?>">
-                                <?php echo $counts['network']; ?>
-                            </span>
-                        </a>
-
-                        <a href="tickets.php?type=laboratory" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'laboratory' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'; ?>">
-                            Laboratory
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'laboratory' ? 'bg-indigo-500' : 'bg-indigo-200'; ?>">
-                                <?php echo $counts['laboratory']; ?>
-                            </span>
-                        </a>
-
-                        <a href="tickets.php?type=other" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?php echo $filterKey === 'other' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
-                            Other
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full <?php echo $filterKey === 'other' ? 'bg-gray-700' : 'bg-gray-300'; ?>">
-                                <?php echo $counts['other']; ?>
-                            </span>
-                        </a>
-                    </div>
-
-                    <!-- Active Filter Display -->
-                    <div class="text-sm text-gray-600">
-                        Showing: <span class="font-semibold text-gray-800">
-                            <?php 
-                            if ($filterKey === 'all') {
-                                echo 'All Issues';
-                            } else {
-                                echo ucfirst($filterKey) . ' Issues';
-                            }
-                            ?>
-                        </span>
-                        <span class="mx-2">•</span>
-                        Total: <span class="font-semibold text-gray-800"><?php echo $result ? $result->num_rows : 0; ?></span> ticket(s)
+                    <div class="flex-1"></div>
+                    
+                    <div class="text-[10px] text-gray-600">
+                        <span class="font-semibold"><?php echo $result ? $result->num_rows : 0; ?></span> ticket(s)
                     </div>
                 </div>
 
@@ -257,16 +204,14 @@ include '../components/layout_header.php';
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <!-- ID column hidden for list view (still available in detail modal) -->
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Technician</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <!-- Reporter hidden in list; shown in modal details -->
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Technician</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                 <th class="px-3 py-2 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                              </tr>
                          </thead>
                          <tbody class="bg-white divide-y divide-gray-200">
@@ -274,7 +219,7 @@ include '../components/layout_header.php';
                                  $ticketId = (int)$ticket['id'];
                              ?>
                              <tr class="hover:bg-gray-50" data-ticket-id="<?php echo $ticketId; ?>">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                      <?php
                                      $typeColors = [
                                          'hardware' => 'bg-blue-100 text-blue-800',
@@ -286,11 +231,11 @@ include '../components/layout_header.php';
                                      $issueType = strtolower($ticket['category'] ?? 'hardware');
                                      $typeClass = $typeColors[$issueType] ?? 'bg-gray-100 text-gray-800';
                                      ?>
-                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $typeClass; ?>">
+                                     <span class="px-2 py-0.5 inline-flex text-[10px] leading-tight font-semibold rounded <?php echo $typeClass; ?>">
                                          <?php echo htmlspecialchars(ucfirst($issueType)); ?>
                                      </span>
                                  </td>
-                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 assigned-cell">
+                                 <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900 assigned-cell">
                                     <?php 
                                     $technician = $ticket['assigned_technician'] ?? null;
                                     if ($technician) {
@@ -300,16 +245,16 @@ include '../components/layout_header.php';
                                     }
                                     ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                     <?php echo htmlspecialchars($ticket['room'] ?? '-'); ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                     <?php echo htmlspecialchars($ticket['terminal'] ?? '-'); ?>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                                <td class="px-3 py-2 text-xs text-gray-900">
                                     <?php echo htmlspecialchars($ticket['title'] ?? '-'); ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <?php
                                     $statusColors = [
                                         'Open' => 'bg-blue-100 text-blue-800',
@@ -319,17 +264,20 @@ include '../components/layout_header.php';
                                     ];
                                     $statusClass = $statusColors[$ticket['status']] ?? 'bg-gray-100 text-gray-800';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                    <span class="px-2 py-0.5 inline-flex text-[10px] leading-tight font-semibold rounded <?php echo $statusClass; ?>">
                                         <?php echo htmlspecialchars($ticket['status'] ?? 'Open'); ?>
                                     </span>
                                 </td>
-                                <!-- Reporter column removed from list view -->
-                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                     <?php echo !empty($ticket['created_at']) ? date('M d, Y H:i', strtotime($ticket['created_at'])) : '-'; ?>
+                                 <td class="px-3 py-2 whitespace-nowrap text-[10px] text-gray-500">
+                                     <?php echo !empty($ticket['created_at']) ? date('M d, Y', strtotime($ticket['created_at'])) : '-'; ?>
                                  </td>
-                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                     <button onclick="viewTicket(<?php echo $ticketId; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                     <button class="assignBtn text-gray-600 hover:text-gray-900" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>">Assign</button>
+                                 <td class="px-3 py-2 whitespace-nowrap text-center">
+                                     <button onclick="viewTicket(<?php echo $ticketId; ?>)" class="text-[#1E3A8A] hover:text-blue-700 mr-2" title="View Details">
+                                         <i class="fa-solid fa-eye"></i>
+                                     </button>
+                                     <button class="assignBtn text-gray-600 hover:text-[#1E3A8A]" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>" title="Assign Technician">
+                                         <i class="fa-solid fa-user-plus"></i>
+                                     </button>
                                  </td>
                              </tr>
                              <?php endwhile; ?>
@@ -337,12 +285,10 @@ include '../components/layout_header.php';
                     </table>
                 </div>
                 <?php else: ?>
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No tickets found</h3>
-                    <p class="mt-1 text-sm text-gray-500">
+                <div class="text-center py-8">
+                    <i class="fa-solid fa-inbox text-5xl text-gray-300 mb-3"></i>
+                    <p class="text-xs text-gray-600 font-medium">No tickets found</p>
+                    <p class="mt-1 text-[10px] text-gray-500">
                         <?php 
                         if ($filterKey === 'all') {
                             echo 'No issues have been submitted yet.';

@@ -75,6 +75,55 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
+
+// Notify all Laboratory Staff
+if (isset($ticketId) && $ticketId > 0) {
+    try {
+        // Create notifications table if it doesn't exist
+        $createTableQuery = "
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                related_id INT DEFAULT NULL,
+                is_read TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_id (user_id),
+                INDEX idx_is_read (is_read),
+                INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ";
+        $conn->query($createTableQuery);
+        
+        // Get all Laboratory Staff
+        $labStaffQuery = "SELECT id FROM users WHERE role = 'Laboratory Staff'";
+        $labStaffResult = $conn->query($labStaffQuery);
+        
+        if ($labStaffResult && $labStaffResult->num_rows > 0) {
+            $staffNotifTitle = "New Software Ticket Submitted";
+            $staffNotifMessage = "{$requesterName} submitted a software ticket: {$titleWithSoftware}";
+            $staffNotifType = 'info';
+            
+            $staffNotifStmt = $conn->prepare("
+                INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                VALUES (?, ?, ?, ?, 'issue', ?)
+            ");
+            
+            while ($staff = $labStaffResult->fetch_assoc()) {
+                $staffId = $staff['id'];
+                $staffNotifStmt->bind_param('isssi', $staffId, $staffNotifTitle, $staffNotifMessage, $staffNotifType, $ticketId);
+                $staffNotifStmt->execute();
+            }
+            $staffNotifStmt->close();
+        }
+    } catch (Exception $notifError) {
+        error_log("Failed to create notification: " . $notifError->getMessage());
+    }
+}
+
 $conn->close();
 
 header('Location: ../view/StudentFaculty/tickets.php');

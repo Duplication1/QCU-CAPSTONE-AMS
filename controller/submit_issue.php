@@ -60,6 +60,7 @@ if ($id > 0) {
         ";
         $conn->query($createTableQuery);
         
+        // Notify the submitter
         $notifTitle = "Ticket #{$id} Submitted";
         $notifMessage = "Your ticket has been submitted successfully and is pending assignment.";
         $notifType = 'success';
@@ -71,6 +72,31 @@ if ($id > 0) {
         $notifStmt->bind_param('isssi', $user_id, $notifTitle, $notifMessage, $notifType, $id);
         $notifStmt->execute();
         $notifStmt->close();
+        
+        // Get submitter name
+        $submitterName = $_SESSION['full_name'] ?? 'A user';
+        
+        // Notify all Laboratory Staff
+        $labStaffQuery = "SELECT id FROM users WHERE role = 'Laboratory Staff'";
+        $labStaffResult = $conn->query($labStaffQuery);
+        
+        if ($labStaffResult && $labStaffResult->num_rows > 0) {
+            $staffNotifTitle = "New Ticket Submitted";
+            $staffNotifMessage = "{$submitterName} submitted a new {$category} ticket: {$title}";
+            $staffNotifType = 'info';
+            
+            $staffNotifStmt = $conn->prepare("
+                INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                VALUES (?, ?, ?, ?, 'issue', ?)
+            ");
+            
+            while ($staff = $labStaffResult->fetch_assoc()) {
+                $staffId = $staff['id'];
+                $staffNotifStmt->bind_param('isssi', $staffId, $staffNotifTitle, $staffNotifMessage, $staffNotifType, $id);
+                $staffNotifStmt->execute();
+            }
+            $staffNotifStmt->close();
+        }
     } catch (Exception $notifError) {
         error_log("Failed to create notification: " . $notifError->getMessage());
     }
