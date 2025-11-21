@@ -30,12 +30,12 @@ try {
     error_log('assign_ticket POST data: ' . print_r($_POST, true));
 
     $ticketId = intval($_POST['ticket_id'] ?? 0);
-    $technician = trim($_POST['technician_name'] ?? '');
+    $technicianId = intval($_POST['technician_id'] ?? 0);
 
-    error_log("assign_ticket: ticketId=$ticketId, technician='$technician'");
+    error_log("assign_ticket: ticketId=$ticketId, technicianId=$technicianId");
 
     if ($ticketId <= 0) throw new Exception('Invalid ticket id (received: ' . ($ticketId ?? 'null') . ')');
-    if ($technician === '') throw new Exception('Please select a technician');
+    if ($technicianId <= 0) throw new Exception('Please select a technician');
 
     // Get ticket details for notification
     $ticketStmt = $conn->prepare("SELECT user_id, title, category FROM issues WHERE id = ?");
@@ -49,21 +49,26 @@ try {
         throw new Exception('Ticket not found');
     }
 
-    // Get technician's user_id by full_name
-    $techStmt = $conn->prepare("SELECT id FROM users WHERE full_name = ? AND role = 'Technician'");
-    $techStmt->bind_param('s', $technician);
+    // Get technician's full_name and verify they exist
+    $techStmt = $conn->prepare("SELECT id, full_name FROM users WHERE id = ? AND role = 'Technician'");
+    $techStmt->bind_param('i', $technicianId);
     $techStmt->execute();
     $techResult = $techStmt->get_result();
     $techData = $techResult->fetch_assoc();
     $techStmt->close();
     
-    $technicianUserId = $techData['id'] ?? null;
-    error_log("Technician lookup - Name: $technician, User ID: " . ($technicianUserId ?? 'NULL'));
+    if (!$techData) {
+        throw new Exception('Technician not found');
+    }
+    
+    $technicianUserId = $techData['id'];
+    $technicianName = $techData['full_name'];
+    error_log("Technician lookup - ID: $technicianId, Name: $technicianName");
 
-    // update assigned_technician only
+    // update assigned_technician with the technician's full name
     $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, updated_at = NOW() WHERE id = ?");
     if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
-    $stmt->bind_param('si', $technician, $ticketId);
+    $stmt->bind_param('si', $technicianName, $ticketId);
     $stmt->execute();
     $affected = $stmt->affected_rows;
     $stmt->close();
@@ -89,7 +94,7 @@ try {
             // Notification for the student who submitted the ticket
             $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'issue', ?)");
             $notifTitle = "Ticket #{$ticketId} Assigned";
-            $notifMessage = "Your ticket has been assigned to {$technician}. They will be working on your issue soon.";
+            $notifMessage = "Your ticket has been assigned to {$technicianName}. They will be working on your issue soon.";
             $notifStmt->bind_param('issi', $ticketData['user_id'], $notifTitle, $notifMessage, $ticketId);
             $notifStmt->execute();
             $notifStmt->close();
@@ -106,7 +111,7 @@ try {
                 $techNotifStmt->close();
                 error_log("Technician notification created for user_id: $technicianUserId, ticket: $ticketId");
             } else {
-                error_log("WARNING: Could not create technician notification - technician user_id not found for name: $technician");
+                error_log("WARNING: Could not create technician notification - technician user_id not found for ID: $technicianId");
             }
         } catch (Exception $notifError) {
             error_log('Failed to create notification: ' . $notifError->getMessage());
@@ -116,7 +121,7 @@ try {
     echo json_encode([
         'success' => true,
         'ticket_id' => $ticketId,
-        'assigned_technician' => $technician,
+        'assigned_technician' => $technicianName,
         // user-visible message
         'message' => $affected > 0 ? 'Successfully Technician Assigned!' : 'No change'
     ]);

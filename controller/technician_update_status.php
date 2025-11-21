@@ -43,7 +43,7 @@ try {
     }
 
     // verify ticket exists and assignment — require exact match to assigned technician
-    $s = $conn->prepare("SELECT assigned_group, user_id, title FROM issues WHERE id = ?");
+    $s = $conn->prepare("SELECT assigned_technician, user_id, title FROM issues WHERE id = ?");
     $s->bind_param('i', $ticketId);
     $s->execute();
     $res = $s->get_result()->fetch_assoc();
@@ -51,7 +51,7 @@ try {
 
     if (!$res) throw new Exception('Ticket not found');
 
-    $assigned = $res['assigned_group'] ?? '';
+    $assigned = $res['assigned_technician'] ?? '';
     $issueUserId = $res['user_id'] ?? null;
     $issueTitle = $res['title'] ?? 'Your ticket';
 

@@ -356,7 +356,6 @@ let currentCategory = 'all';
 let currentPriority = '';
 let currentStatus = '';
 let pendingArchiveTicketId = null;
-let pendingArchiveRow = null;
 
 function showToast(msg, ok = true) {
   const t = document.createElement('div');
@@ -415,6 +414,11 @@ function updateRowStatus(row, newStatus) {
 const ROW_MIN_MS = 1500;
 
 function showRowProcessing(row) {
+  if (!row || !row.parentNode) {
+    console.error('Cannot show processing indicator - row is null or removed');
+    return null;
+  }
+  
   // disable the select control while processing
   const select = row.querySelector('.statusSelect');
   if (select) select.disabled = true;
@@ -435,6 +439,10 @@ function showRowProcessing(row) {
 }
 
 function hideRowProcessing(row) {
+  if (!row || !row.parentNode) {
+    return;
+  }
+  
   const select = row.querySelector('.statusSelect');
   if (select) {
     select.disabled = false;
@@ -572,24 +580,76 @@ function goToPage(page) {
 
 // Archive Modal Functions
 function showArchiveModal(ticketId, row) {
+  console.log('showArchiveModal called with ticket ID:', ticketId);
   pendingArchiveTicketId = ticketId;
-  pendingArchiveRow = row;
+  console.log('pendingArchiveTicketId set to:', pendingArchiveTicketId);
   document.getElementById('archiveModal').classList.remove('hidden');
 }
 
 function hideArchiveModal() {
   document.getElementById('archiveModal').classList.add('hidden');
   pendingArchiveTicketId = null;
-  pendingArchiveRow = null;
 }
 
 // Archive Modal Event Listeners
 document.getElementById('cancelArchive')?.addEventListener('click', hideArchiveModal);
 
 document.getElementById('confirmArchive')?.addEventListener('click', function() {
-  if (pendingArchiveTicketId && pendingArchiveRow) {
+  console.log('Confirm archive clicked, pendingArchiveTicketId:', pendingArchiveTicketId);
+  
+  if (!pendingArchiveTicketId) {
+    console.error('FAILED: Row not found for ticket ID: null - pendingArchiveTicketId is not set');
+    showToast('Error: No ticket selected for archiving', false);
     hideArchiveModal();
-    performArchive(pendingArchiveTicketId, pendingArchiveRow);
+    return;
+  }
+  
+  console.log('Confirming archive for ticket ID:', pendingArchiveTicketId);
+  console.log('allTicketRows length:', allTicketRows.length);
+  
+  // Store the ticket ID before hiding modal (in case modal close clears it)
+  const ticketIdToArchive = pendingArchiveTicketId;
+  hideArchiveModal();
+  
+  // Try multiple methods to find the row
+  let freshRow = null;
+  
+  // Method 1: Search in allTicketRows array
+  if (allTicketRows && allTicketRows.length > 0) {
+    freshRow = allTicketRows.find(row => {
+      const rowTicketId = row.getAttribute('data-ticket-id');
+      console.log('Checking row with ticket ID:', rowTicketId, 'against', ticketIdToArchive);
+      return rowTicketId == ticketIdToArchive;
+    });
+  }
+  
+  // Method 2: Direct DOM query
+  if (!freshRow) {
+    console.log('Not found in array, trying DOM query...');
+    freshRow = document.querySelector(`tr.ticket-row[data-ticket-id="${ticketIdToArchive}"]`);
+  }
+  
+  // Method 3: Query all rows and find match
+  if (!freshRow) {
+    console.log('Not found in DOM, trying querySelectorAll...');
+    const allRows = document.querySelectorAll('tr.ticket-row');
+    for (let row of allRows) {
+      if (row.getAttribute('data-ticket-id') == ticketIdToArchive) {
+        freshRow = row;
+        break;
+      }
+    }
+  }
+  
+  if (freshRow) {
+    console.log('Found row for archive:', freshRow);
+    performArchive(ticketIdToArchive, freshRow);
+  } else {
+    console.error('FAILED: Row not found for ticket ID:', ticketIdToArchive);
+    console.log('All rows in table:', document.querySelectorAll('tr.ticket-row'));
+    showToast('Error: Could not locate ticket row. Reloading page...', false);
+    // Reload page to ensure data is fresh
+    setTimeout(() => window.location.reload(), 2000);
   }
 });
 
@@ -619,78 +679,116 @@ function attachTicketHandlers() {
     const select = row.querySelector('.statusSelect');
     const archiveBtn = row.querySelector('.archiveBtn');
 
-    // Remove old listeners by cloning
+    // Remove old listeners by cloning select
     if (select) {
       const newSelect = select.cloneNode(true);
       select.parentNode.replaceChild(newSelect, select);
+      
+      // Add change listener to new select
+      newSelect.addEventListener('change', () => handleStatusChange(ticketId, row, newSelect));
     }
+    
+    // Add archive button listener (don't clone it, just add listener)
     if (archiveBtn) {
+      // Remove old listener by replacing
       const newArchiveBtn = archiveBtn.cloneNode(true);
       archiveBtn.parentNode.replaceChild(newArchiveBtn, archiveBtn);
-    }
-
-    const currentSelect = row.querySelector('.statusSelect');
-    const currentArchiveBtn = row.querySelector('.archiveBtn');
-
-    // submit immediately when dropdown changes
-    currentSelect?.addEventListener('change', () => {
-      const newStatus = currentSelect.value;
-      const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
-
-      const started = Date.now();
-      showRowProcessing(row);
-
-      fetch(apiUrl, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {'Accept':'application/json'},
-        body: new URLSearchParams({ticket_id: ticketId, status: newStatus})
-      }).then(r => r.json()).then(j => {
-        const elapsed = Date.now() - started;
-        const wait = Math.max(0, ROW_MIN_MS - elapsed);
-        setTimeout(() => {
-          hideRowProcessing(row);
-          if (j.success) {
-            updateRowStatus(row, j.status);
-            showToast('Status updated');
-            
-            // Show archive button if status is now Resolved
-            if (j.status === 'Resolved' && !currentArchiveBtn) {
-              const actionsCell = row.querySelector('td:last-child > div');
-              if (actionsCell) {
-                const newArchiveBtn = document.createElement('button');
-                newArchiveBtn.className = 'archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700';
-                newArchiveBtn.title = 'Archive this ticket';
-                newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i>';
-                newArchiveBtn.addEventListener('click', () => showArchiveModal(ticketId, row));
-                actionsCell.appendChild(newArchiveBtn);
-              }
-            }
-            // Hide archive button if status changed from Resolved
-            else if (j.status !== 'Resolved' && currentArchiveBtn) {
-              currentArchiveBtn.remove();
-            }
+      
+      // Add click handler - get ticket ID fresh from the row when clicked
+      newArchiveBtn.addEventListener('click', function() {
+        // Find the parent row
+        const clickedRow = this.closest('tr.ticket-row');
+        if (clickedRow) {
+          const clickedTicketId = clickedRow.getAttribute('data-ticket-id');
+          console.log('Archive button clicked, found row:', clickedRow, 'ticket ID:', clickedTicketId);
+          if (clickedTicketId) {
+            showArchiveModal(clickedTicketId, clickedRow);
           } else {
-            // revert select to previous value
-            if (currentSelect) currentSelect.value = prevStatus;
-            showToast(j.message || 'Failed to update status', false);
+            console.error('No ticket ID found on row');
+            showToast('Error: Ticket ID not found', false);
           }
-        }, wait);
-      }).catch((err) => {
-        console.error(err);
-        hideRowProcessing(row);
-        if (currentSelect) currentSelect.value = prevStatus;
-        showToast('Request failed', false);
+        } else {
+          console.error('Could not find parent row');
+          showToast('Could not find ticket row', false);
+        }
       });
-    });
+    }
+  });
+}
 
-    // Archive button click handler
-    currentArchiveBtn?.addEventListener('click', () => showArchiveModal(ticketId, row));
+// Handle status change
+function handleStatusChange(ticketId, row, selectElement) {
+  const newStatus = selectElement.value;
+  const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
+
+  const started = Date.now();
+  showRowProcessing(row);
+
+  fetch(apiUrl, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {'Accept':'application/json'},
+    body: new URLSearchParams({ticket_id: ticketId, status: newStatus})
+  }).then(r => r.json()).then(j => {
+    const elapsed = Date.now() - started;
+    const wait = Math.max(0, ROW_MIN_MS - elapsed);
+    setTimeout(() => {
+      hideRowProcessing(row);
+      if (j.success) {
+        updateRowStatus(row, j.status);
+        showToast('Status updated');
+        
+        // Show archive button if status is now Resolved
+        if (j.status === 'Resolved') {
+          const existingArchiveBtn = row.querySelector('.archiveBtn');
+          if (!existingArchiveBtn) {
+            const actionsCell = row.querySelector('td:last-child > div');
+            if (actionsCell) {
+              const newArchiveBtn = document.createElement('button');
+              newArchiveBtn.className = 'archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700';
+              newArchiveBtn.title = 'Archive this ticket';
+              newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i>';
+              newArchiveBtn.addEventListener('click', function() {
+                // Find the parent row
+                const clickedRow = this.closest('tr.ticket-row');
+                if (clickedRow) {
+                  const clickedTicketId = clickedRow.getAttribute('data-ticket-id');
+                  showArchiveModal(clickedTicketId, clickedRow);
+                }
+              });
+              actionsCell.appendChild(newArchiveBtn);
+            }
+          }
+        }
+        // Hide archive button if status changed from Resolved
+        else if (j.status !== 'Resolved') {
+          const archiveBtn = row.querySelector('.archiveBtn');
+          if (archiveBtn) {
+            archiveBtn.remove();
+          }
+        }
+      } else {
+        // revert select to previous value
+        if (selectElement) selectElement.value = prevStatus;
+        showToast(j.message || 'Failed to update status', false);
+      }
+    }, wait);
+  }).catch((err) => {
+    console.error(err);
+    hideRowProcessing(row);
+    if (selectElement) selectElement.value = prevStatus;
+    showToast('Request failed', false);
   });
 }
 
 // Perform archive action
 function performArchive(ticketId, row) {
+  if (!row || !row.parentNode) {
+    console.error('Row is null or has been removed from DOM');
+    showToast('Archive failed - row not found', false);
+    return;
+  }
+  
   const started = Date.now();
   showRowProcessing(row);
   

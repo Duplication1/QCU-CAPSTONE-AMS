@@ -99,13 +99,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician']))
     }
 }
 
-// Fetch all technicians from users table
-$techniciansQuery = "SELECT full_name FROM users WHERE role = 'Technician' ORDER BY full_name";
+// Fetch all technicians from users table with ID and name
+$techniciansQuery = "SELECT id, full_name FROM users WHERE role = 'Technician' ORDER BY full_name";
 $techniciansResult = $conn->query($techniciansQuery);
 $technicians = [];
 if ($techniciansResult && $techniciansResult->num_rows > 0) {
     while ($tech = $techniciansResult->fetch_assoc()) {
-        $technicians[] = $tech['full_name'];
+        $technicians[] = [
+            'id' => $tech['id'],
+            'name' => $tech['full_name']
+        ];
     }
 }
 
@@ -383,10 +386,10 @@ include '../components/layout_header.php';
             <input type="hidden" name="assign_technician" value="1">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Select Technician:</label>
-                <select name="technician_name" id="technicianName" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                <select name="technician_id" id="technicianId" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     <option value="">-- Select a Technician --</option>
                     <?php foreach ($technicians as $tech): ?>
-                        <option value="<?php echo htmlspecialchars($tech); ?>"><?php echo htmlspecialchars($tech); ?></option>
+                        <option value="<?php echo htmlspecialchars($tech['id']); ?>"><?php echo htmlspecialchars($tech['name']); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -514,7 +517,7 @@ function assignTechnician(ticketId, currentTechnician) {
         console.error('assignTicketId input field not found!');
     }
     
-    const techSelect = document.getElementById('technicianName');
+    const techSelect = document.getElementById('technicianId');
     if (currentTechnician) {
         techSelect.value = currentTechnician;
     } else {
@@ -551,10 +554,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(Array.from(fd.entries()));
         
         if (!ticketId || ticketId === '' || ticketId === '0') {
-            console.error('Missing ticket ID in form. Field exists:', !!ticketIdField, 'Value:', ticketId);
+            console.error('FAILED: Missing ticket ID in form. Field exists:', !!ticketIdField, 'Value:', ticketId);
             showNotification('Error: Ticket ID is missing. Please try again.', 'error');
             return;
         }
+        
+        // Store ticketId for use in then() callback
+        const submittedTicketId = ticketId;
         
         fetch('../../controller/assign_ticket.php', { method:'POST', body: fd, credentials:'same-origin' })
         .then(async r => {
@@ -566,14 +572,36 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(json => {
             console.log('Parsed JSON:', json);
             if (json.success) {
-                // update UI
-                const row = document.querySelector('tr[data-ticket-id="'+json.ticket_id+'"]');
-                if (row) {
-                    const assignedCell = row.querySelector('.assigned-cell');
-                    if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_technician||'') +'</span>';
+                try {
+                    // update UI - use submittedTicketId as fallback
+                    const ticketIdForUpdate = json.ticket_id || submittedTicketId;
+                    if (!ticketIdForUpdate) {
+                        console.error('FAILED: Row not found for ticket ID:', ticketIdForUpdate);
+                        showAlert('error', 'Failed to update UI: Ticket ID is null');
+                        closeAssignModal();
+                        return;
+                    }
+                    const row = document.querySelector('tr[data-ticket-id="'+ticketIdForUpdate+'"]');
+                    if (row) {
+                        const assignedCell = row.querySelector('.assigned-cell');
+                        if (assignedCell) {
+                            assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_technician||'') +'</span>';
+                        }
+                    } else {
+                        console.error('FAILED: Row not found for ticket ID:', ticketIdForUpdate);
+                        // Row not found but assignment succeeded - just reload the page
+                        console.log('Reloading page to show updated data...');
+                        window.location.reload();
+                        return;
+                    }
+                    closeAssignModal();
+                    showAlert('success', json.message || 'Technician assigned successfully!');
+                } catch (uiError) {
+                    console.error('Error updating UI:', uiError);
+                    // Assignment succeeded but UI update failed - reload page
+                    closeAssignModal();
+                    window.location.reload();
                 }
-                closeAssignModal();
-                showAlert('success', json.message || 'Technician assigned successfully!');
             } else {
                 showAlert('error', json.message || 'Failed to assign technician');
             }

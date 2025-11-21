@@ -46,13 +46,6 @@ $navigation_items = [
             'icon' => 'fa-solid fa-chart-column',
             'color' => 'blue',
             'href' => 'analytics.php'
-        ],
-        [
-            'id' => 'profile',
-            'label' => 'Profile',
-            'icon' => 'fa-solid fa-user-circle',
-            'color' => 'blue',
-            'href' => 'profile.php'
         ]
     ],
     'LaboratoryStaff' => [
