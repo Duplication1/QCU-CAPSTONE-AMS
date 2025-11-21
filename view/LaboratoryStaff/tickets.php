@@ -44,16 +44,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// Handle assign technician (stored in assigned_group column)
+// Handle assign technician (stored in assigned_technician column)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician'])) {
     $ticketId = intval($_POST['ticket_id']);
     $technicianName = trim($_POST['technician_name']);
 
     if (!empty($technicianName)) {
-        $assignStmt = $conn->prepare("UPDATE issues SET assigned_group = ? WHERE id = ?");
+        // Get ticket details for notification
+        $ticketStmt = $conn->prepare("SELECT user_id, title FROM issues WHERE id = ?");
+        $ticketStmt->bind_param('i', $ticketId);
+        $ticketStmt->execute();
+        $ticketResult = $ticketStmt->get_result();
+        $ticketData = $ticketResult->fetch_assoc();
+        $ticketStmt->close();
+
+        $assignStmt = $conn->prepare("UPDATE issues SET assigned_technician = ? WHERE id = ?");
         $assignStmt->bind_param('si', $technicianName, $ticketId);
         $assignStmt->execute();
+        $affected = $assignStmt->affected_rows;
         $assignStmt->close();
+
+        // Create notification for the student
+        if ($affected > 0 && $ticketData) {
+            try {
+                // Create notifications table if it doesn't exist
+                $conn->query("CREATE TABLE IF NOT EXISTS notifications (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                    related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'issue',
+                    related_id INT NULL,
+                    is_read TINYINT(1) DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_user_id (user_id),
+                    INDEX idx_is_read (is_read)
+                )");
+
+                $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'issue', ?)");
+                $notifTitle = "Ticket #{$ticketId} Assigned";
+                $notifMessage = "Your ticket has been assigned to {$technicianName}. They will be working on your issue soon.";
+                $notifStmt->bind_param('issi', $ticketData['user_id'], $notifTitle, $notifMessage, $ticketId);
+                $notifStmt->execute();
+                $notifStmt->close();
+            } catch (Exception $notifError) {
+                error_log('Failed to create notification: ' . $notifError->getMessage());
+            }
+        }
 
         $_SESSION['success_message'] = 'Successfully Technician Assigned!';
         header("Location: tickets.php");
@@ -82,7 +120,7 @@ if (!in_array($filterKey, $allowed)) $filterKey = 'all';
 // Build query based on filter — use unified issues table and join users for reporter name
 if ($filterKey === 'all') {
     $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
-                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_group,
+                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
                      u.full_name AS reporter_name
               FROM issues i
               LEFT JOIN users u ON u.id = i.user_id
@@ -93,7 +131,7 @@ if ($filterKey === 'all') {
     $result = $conn->query($query);
 } else {
     $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
-                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_group,
+                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
                      u.full_name AS reporter_name
               FROM issues i
               LEFT JOIN users u ON u.id = i.user_id
@@ -251,7 +289,7 @@ include '../components/layout_header.php';
                                  </td>
                                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 assigned-cell">
                                     <?php 
-                                    $technician = $ticket['assigned_group'] ?? null;
+                                    $technician = $ticket['assigned_technician'] ?? null;
                                     if ($technician) {
                                         echo '<span class="text-green-700 font-medium">' . htmlspecialchars($technician) . '</span>';
                                     } else {
@@ -288,7 +326,7 @@ include '../components/layout_header.php';
                                  </td>
                                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                      <button onclick="viewTicket(<?php echo $ticketId; ?>)" class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                     <button class="assignBtn text-gray-600 hover:text-gray-900" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_group'] ?? '', ENT_QUOTES); ?>">Assign</button>
+                                     <button class="assignBtn text-gray-600 hover:text-gray-900" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>">Assign</button>
                                  </td>
                              </tr>
                              <?php endwhile; ?>
@@ -414,7 +452,7 @@ function viewTicket(ticketId) {
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Assigned Technician</p>
-                            <p class="text-base text-gray-900">${ticket.assigned_group || 'Not assigned'}</p>
+                            <p class="text-base text-gray-900">${ticket.assigned_technician || 'Not assigned'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Submitted By</p>
@@ -532,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = document.querySelector('tr[data-ticket-id="'+json.ticket_id+'"]');
                 if (row) {
                     const assignedCell = row.querySelector('.assigned-cell');
-                    if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_group||'') +'</span>';
+                    if (assignedCell) assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_technician||'') +'</span>';
                 }
                 closeAssignModal();
                 showAlert('success', json.message || 'Technician assigned successfully!');

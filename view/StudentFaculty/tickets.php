@@ -1508,6 +1508,20 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 });
+
+// Check URL parameters to auto-open modals
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const action = urlParams.get('action');
+  
+  if (action === 'issue') {
+    // Show issue selection modal or open hardware issue by default
+    handleIssueClick('hardware');
+  } else if (action === 'borrow') {
+    // Open borrowing modal
+    openBorrowingModal();
+  }
+});
 </script>
 
 <?php include '../components/layout_footer.php'; ?>

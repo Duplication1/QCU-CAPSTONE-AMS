@@ -254,7 +254,7 @@ include '../components/layout_header.php';
             </div>
 
             <div class="grid grid-cols-2 gap-2 flex-1">
-                <a href="tickets.php" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
+                <a href="tickets.php?action=issue" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
                     <div class="w-10 h-10 bg-[#1E3A8A] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fas fa-ticket text-white"></i>
                     </div>
@@ -262,7 +262,7 @@ include '../components/layout_header.php';
                     <p class="text-[10px] text-gray-600 mt-1">Report problem</p>
                 </a>
 
-                <a href="tickets.php#borrow" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
+                <a href="tickets.php?action=borrow" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
                     <div class="w-10 h-10 bg-[#1E3A8A] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fas fa-box text-white"></i>
                     </div>
@@ -278,7 +278,7 @@ include '../components/layout_header.php';
                     <p class="text-[10px] text-gray-600 mt-1">View status</p>
                 </a>
 
-                <a href="e-signature.php" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
+                <a href="profile.php" class="group bg-gradient-to-br from-blue-50 to-[#E8EDF5] rounded p-4 hover:shadow-md transition-all flex flex-col items-center justify-center text-center">
                     <div class="w-10 h-10 bg-[#1E3A8A] rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                         <i class="fas fa-signature text-white"></i>
                     </div>

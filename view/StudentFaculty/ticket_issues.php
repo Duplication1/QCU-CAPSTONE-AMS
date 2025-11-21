@@ -63,13 +63,6 @@ include '../components/layout_header.php';
     <?php include '../components/session_messages.php'; ?>
 
     <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mb-2 flex-shrink-0">
-        <div class="flex justify-between items-center">
-            <h2 class="text-lg font-bold text-gray-800">
-                <i class="fa-solid fa-list-check mr-2 text-[#1E3A8A]"></i>
-                My Ticket Issues
-            </h2>
-        </div>
-
         <!-- Search and Filter Bar -->
         <div class="mt-2 flex items-center gap-2">
             <div class="relative flex-1">
