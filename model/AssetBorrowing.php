@@ -113,7 +113,7 @@ class AssetBorrowing {
         
         $stmt = $this->conn->prepare($query);
         
-        return $stmt->execute([
+        $result = $stmt->execute([
             $this->asset_id,
             $this->borrower_id,
             $this->borrower_name,
@@ -122,12 +122,57 @@ class AssetBorrowing {
             $this->purpose,
             $this->status
         ]);
+        
+        // Create notification for successful submission
+        if ($result && $this->borrower_id) {
+            try {
+                $insertId = $this->conn->lastInsertId();
+                
+                $createTableQuery = "
+                    CREATE TABLE IF NOT EXISTS notifications (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        title VARCHAR(255) NOT NULL,
+                        message TEXT NOT NULL,
+                        type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                        related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                        related_id INT DEFAULT NULL,
+                        is_read TINYINT(1) DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_user_id (user_id),
+                        INDEX idx_is_read (is_read),
+                        INDEX idx_created_at (created_at)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ";
+                $this->conn->exec($createTableQuery);
+                
+                $notifTitle = "Borrowing Request #{$insertId} Submitted";
+                $notifMessage = "Your borrowing request has been submitted successfully and is pending approval.";
+                $notifType = 'success';
+                
+                $notifStmt = $this->conn->prepare("
+                    INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                    VALUES (?, ?, ?, ?, 'borrowing', ?)
+                ");
+                $notifStmt->execute([$this->borrower_id, $notifTitle, $notifMessage, $notifType, $insertId]);
+            } catch (Exception $e) {
+                error_log("Failed to create notification: " . $e->getMessage());
+            }
+        }
+        
+        return $result;
     }
     
     /**
      * Approve borrowing request
      */
     public function approve($id, $approved_by) {
+        // Get borrowing details before update
+        $getBorrowing = "SELECT borrower_id, asset_id FROM " . $this->table . " WHERE id = ?";
+        $getStmt = $this->conn->prepare($getBorrowing);
+        $getStmt->execute([$id]);
+        $borrowingData = $getStmt->fetch(PDO::FETCH_ASSOC);
+        
         $query = "UPDATE " . $this->table . "
                   SET status = 'Approved',
                       approved_by = ?,
@@ -145,6 +190,41 @@ class AssetBorrowing {
             $stmt2 = $this->conn->prepare($query2);
             $stmt2->execute([$id]);
             
+            // Create notification
+            if ($borrowingData && isset($borrowingData['borrower_id'])) {
+                try {
+                    $createTableQuery = "
+                        CREATE TABLE IF NOT EXISTS notifications (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            user_id INT NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            message TEXT NOT NULL,
+                            type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                            related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                            related_id INT DEFAULT NULL,
+                            is_read TINYINT(1) DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            INDEX idx_user_id (user_id),
+                            INDEX idx_is_read (is_read),
+                            INDEX idx_created_at (created_at)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                    ";
+                    $this->conn->exec($createTableQuery);
+                    
+                    $notifTitle = "Borrowing Request #{$id} Approved";
+                    $notifMessage = "Your borrowing request has been approved. You can now pick up the asset.";
+                    $notifType = 'success';
+                    
+                    $notifStmt = $this->conn->prepare("
+                        INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                        VALUES (?, ?, ?, ?, 'borrowing', ?)
+                    ");
+                    $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                } catch (Exception $e) {
+                    error_log("Failed to create notification: " . $e->getMessage());
+                }
+            }
+            
             return true;
         }
         
@@ -155,6 +235,12 @@ class AssetBorrowing {
      * Return borrowed asset
      */
     public function returnAsset($id, $returned_condition, $return_notes = null) {
+        // Get borrowing details before update
+        $getBorrowing = "SELECT borrower_id FROM " . $this->table . " WHERE id = ?";
+        $getStmt = $this->conn->prepare($getBorrowing);
+        $getStmt->execute([$id]);
+        $borrowingData = $getStmt->fetch(PDO::FETCH_ASSOC);
+        
         $query = "UPDATE " . $this->table . "
                   SET status = 'Returned',
                       actual_return_date = NOW(),
@@ -173,6 +259,41 @@ class AssetBorrowing {
             $stmt2 = $this->conn->prepare($query2);
             $stmt2->execute([$id]);
             
+            // Create notification
+            if ($borrowingData && isset($borrowingData['borrower_id'])) {
+                try {
+                    $createTableQuery = "
+                        CREATE TABLE IF NOT EXISTS notifications (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            user_id INT NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            message TEXT NOT NULL,
+                            type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                            related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                            related_id INT DEFAULT NULL,
+                            is_read TINYINT(1) DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            INDEX idx_user_id (user_id),
+                            INDEX idx_is_read (is_read),
+                            INDEX idx_created_at (created_at)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                    ";
+                    $this->conn->exec($createTableQuery);
+                    
+                    $notifTitle = "Asset Returned - Request #{$id}";
+                    $notifMessage = "Your borrowed asset has been returned and marked as '{$returned_condition}'. Thank you!";
+                    $notifType = 'success';
+                    
+                    $notifStmt = $this->conn->prepare("
+                        INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                        VALUES (?, ?, ?, ?, 'borrowing', ?)
+                    ");
+                    $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                } catch (Exception $e) {
+                    error_log("Failed to create notification: " . $e->getMessage());
+                }
+            }
+            
             return true;
         }
         
@@ -183,12 +304,58 @@ class AssetBorrowing {
      * Cancel borrowing request
      */
     public function cancel($id) {
+        // Get borrowing details before update
+        $getBorrowing = "SELECT borrower_id FROM " . $this->table . " WHERE id = ?";
+        $getStmt = $this->conn->prepare($getBorrowing);
+        $getStmt->execute([$id]);
+        $borrowingData = $getStmt->fetch(PDO::FETCH_ASSOC);
+        
         $query = "UPDATE " . $this->table . "
                   SET status = 'Cancelled'
                   WHERE id = ?";
         
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$id]);
+        
+        if ($stmt->execute([$id])) {
+            // Create notification
+            if ($borrowingData && isset($borrowingData['borrower_id'])) {
+                try {
+                    $createTableQuery = "
+                        CREATE TABLE IF NOT EXISTS notifications (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            user_id INT NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            message TEXT NOT NULL,
+                            type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                            related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                            related_id INT DEFAULT NULL,
+                            is_read TINYINT(1) DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            INDEX idx_user_id (user_id),
+                            INDEX idx_is_read (is_read),
+                            INDEX idx_created_at (created_at)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                    ";
+                    $this->conn->exec($createTableQuery);
+                    
+                    $notifTitle = "Borrowing Request #{$id} Cancelled";
+                    $notifMessage = "Your borrowing request has been cancelled.";
+                    $notifType = 'warning';
+                    
+                    $notifStmt = $this->conn->prepare("
+                        INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                        VALUES (?, ?, ?, ?, 'borrowing', ?)
+                    ");
+                    $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                } catch (Exception $e) {
+                    error_log("Failed to create notification: " . $e->getMessage());
+                }
+            }
+            
+            return true;
+        }
+        
+        return false;
     }
     
     /**

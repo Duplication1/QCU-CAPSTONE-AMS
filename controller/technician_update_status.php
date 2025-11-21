@@ -43,7 +43,7 @@ try {
     }
 
     // verify ticket exists and assignment — require exact match to assigned technician
-    $s = $conn->prepare("SELECT assigned_group FROM issues WHERE id = ?");
+    $s = $conn->prepare("SELECT assigned_group, user_id, title FROM issues WHERE id = ?");
     $s->bind_param('i', $ticketId);
     $s->execute();
     $res = $s->get_result()->fetch_assoc();
@@ -52,6 +52,8 @@ try {
     if (!$res) throw new Exception('Ticket not found');
 
     $assigned = $res['assigned_group'] ?? '';
+    $issueUserId = $res['user_id'] ?? null;
+    $issueTitle = $res['title'] ?? 'Your ticket';
 
     // require that the ticket is assigned to this technician
     if ($assigned !== $technicianName) {
@@ -64,6 +66,66 @@ try {
     $u->execute();
     $affected = $u->affected_rows;
     $u->close();
+
+    // Create notification for the user who submitted the ticket
+    if ($affected > 0 && $issueUserId) {
+        try {
+            // Create notifications table if it doesn't exist
+            $createTableQuery = "
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+                    related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+                    related_id INT DEFAULT NULL,
+                    is_read TINYINT(1) DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_user_id (user_id),
+                    INDEX idx_is_read (is_read),
+                    INDEX idx_created_at (created_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ";
+            $conn->query($createTableQuery);
+            
+            // Determine notification type and message based on status
+            $notifType = 'info';
+            $notifMessage = '';
+            
+            switch ($newStatus) {
+                case 'In Progress':
+                    $notifType = 'info';
+                    $notifMessage = "Your ticket is now being worked on by {$technicianName}.";
+                    break;
+                case 'Resolved':
+                    $notifType = 'success';
+                    $notifMessage = "Your ticket has been resolved by {$technicianName}.";
+                    break;
+                case 'Closed':
+                    $notifType = 'info';
+                    $notifMessage = "Your ticket has been closed.";
+                    break;
+                case 'Open':
+                    $notifType = 'warning';
+                    $notifMessage = "Your ticket status has been changed to Open.";
+                    break;
+            }
+            
+            $notifTitle = "Ticket #{$ticketId} - Status Updated";
+            
+            $notifStmt = $conn->prepare("
+                INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                VALUES (?, ?, ?, ?, 'issue', ?)
+            ");
+            $notifStmt->bind_param('isssi', $issueUserId, $notifTitle, $notifMessage, $notifType, $ticketId);
+            $notifStmt->execute();
+            $notifStmt->close();
+        } catch (Exception $notifError) {
+            // Log but don't fail the main operation
+            error_log("Failed to create notification: " . $notifError->getMessage());
+        }
+    }
 
     echo json_encode(['success' => true, 'ticket_id' => $ticketId, 'status' => $newStatus, 'message' => $affected ? 'Status updated' : 'No change']);
     exit;

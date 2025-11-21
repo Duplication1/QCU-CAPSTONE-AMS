@@ -12,14 +12,14 @@ if ($conn->connect_error) {
 // Check if user is logged in
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
     $_SESSION['error_message'] = 'You must be logged in.';
-    header('Location: ../view/StudentFaculty/index.php');
+    header('Location: ../view/StudentFaculty/tickets.php');
     exit;
 }
 
 // Check POST method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error_message'] = 'Invalid request method.';
-    header('Location: ../view/StudentFaculty/index.php');
+    header('Location: ../view/StudentFaculty/tickets.php');
     exit;
 }
 
@@ -44,7 +44,7 @@ if ($hardwareComponent === 'Others' && !empty($hardwareComponentOther)) {
 // Validate
 if (empty($room) || empty($terminal) || empty($hardwareComponent) || empty($title)) {
     $_SESSION['error_message'] = 'Please fill in all required fields.';
-    header('Location: ../view/StudentFaculty/index.php');
+    header('Location: ../view/StudentFaculty/tickets.php');
     exit;
 }
 
@@ -68,7 +68,7 @@ $stmt = $conn->prepare($sql);
 if (!$stmt) {
     error_log('Prepare failed: ' . $conn->error);
     $_SESSION['error_message'] = 'Database error: ' . $conn->error;
-    header('Location: ../view/StudentFaculty/index.php');
+    header('Location: ../view/StudentFaculty/tickets.php');
     exit;
 }
 
@@ -85,6 +85,6 @@ if ($stmt->execute()) {
 $stmt->close();
 $conn->close();
 
-header('Location: ../view/StudentFaculty/index.php');
+header('Location: ../view/StudentFaculty/tickets.php');
 exit;
 ?>

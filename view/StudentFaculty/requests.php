@@ -24,47 +24,51 @@ $requests = $borrowing->getUserHistory($user_id);
 include '../components/layout_header.php';
 ?>
 
+<style>
+    body, html { overflow: hidden !important; height: 100vh; }
+</style>
+
         <!-- Main Content -->
-        <main class="p-6">
+        <main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
             
             <!-- Session Messages -->
             <?php include '../components/session_messages.php'; ?>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">
+            <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mb-2 flex-shrink-0">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">
                         <i class="fa-solid fa-clipboard-list mr-2 text-[#1E3A8A]"></i>
                         My Borrowing Requests
                     </h2>
                 </div>
 
                 <!-- Search and Filter Bar -->
-                <div class="mb-6 flex items-center gap-2">
-                    <div class="relative w-64">
+                <div class="mt-2 flex items-center gap-2">
+                    <div class="relative flex-1">
                         <input 
                             id="requestSearch" 
                             type="search" 
                             placeholder="Search requests..." 
-                            class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition"
+                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A]"
                             oninput="filterRequests()"
                         />
-                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                        <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
                     </div>
                     
                     <!-- Filter Button -->
                     <div class="relative">
                         <button id="filterBtn" onclick="toggleFilterMenu()" 
-                            class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition"
+                            class="px-2 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]"
                             title="Filter requests">
-                            <i class="fas fa-filter text-gray-600"></i>
+                            <i class="fas fa-filter text-gray-600 text-xs"></i>
                         </button>
                         
                         <!-- Filter Dropdown Menu -->
-                        <div id="filterMenu" class="hidden absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                            <div class="p-4">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3">Filter by Status</h4>
+                        <div id="filterMenu" class="hidden absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+                            <div class="p-2">
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2">Filter by Status</h4>
                                 
-                                <select id="statusFilter" onchange="applyStatusFilter()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+                                <select id="statusFilter" onchange="applyStatusFilter()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
                                     <option value="">All Status</option>
                                     <option value="Pending">Pending</option>
                                     <option value="Approved">Approved</option>
@@ -74,63 +78,65 @@ include '../components/layout_header.php';
                                     <option value="Cancelled">Cancelled</option>
                                 </select>
                                 
-                                <button onclick="clearStatusFilter()" class="w-full mt-3 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                                <button onclick="clearStatusFilter()" class="w-full mt-2 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
                                     Clear Filter
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <div class="flex-1 overflow-y-auto">
                 <?php if (empty($requests)): ?>
-                    <div class="text-center py-12">
-                        <i class="fa-solid fa-inbox text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-600 text-lg">No borrowing requests found.</p>
-                        <p class="text-gray-500 text-sm mt-2">Start by borrowing equipment from the home page.</p>
-                        <a href="index.php" class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
-                            <i class="fa-solid fa-plus mr-2"></i>Create Request
+                    <div class="text-center py-8 bg-white rounded shadow-sm border border-gray-200">
+                        <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-600 text-sm">No borrowing requests found.</p>
+                        <p class="text-gray-500 text-[10px] mt-1">Start by borrowing equipment from the home page.</p>
+                        <a href="index.php" class="mt-3 inline-block bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white px-4 py-1.5 rounded text-xs">
+                            <i class="fa-solid fa-plus mr-1"></i>Create Request
                         </a>
                     </div>
                 <?php else: ?>
 
-                    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+                    <div class="overflow-x-auto rounded border border-gray-200 shadow-sm bg-white">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Request Date</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Asset Tag</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Asset Name</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Borrow Date</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Return Date</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Action</th>
                                 </tr>
                             </thead>
 
                             <tbody id="requestsTableBody" class="bg-white divide-y divide-gray-200">
                                 <?php foreach ($requests as $request): ?>
                                 <tr class="hover:bg-gray-50 transition request-row" data-request='<?php echo htmlspecialchars(json_encode($request), ENT_QUOTES); ?>'>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                         <?php echo date('M d, Y', strtotime($request['created_at'])); ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="font-mono text-xs bg-gray-100 px-2.5 py-1 rounded">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <span class="font-mono text-[10px] bg-gray-100 px-1.5 py-0.5 rounded">
                                             <?php echo htmlspecialchars($request['asset_tag']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                    <td class="px-3 py-2 text-xs font-medium text-gray-900">
                                         <?php echo htmlspecialchars($request['asset_name']); ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full">
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        <span class="text-[10px] bg-[#1E3A8A] bg-opacity-10 text-[#1E3A8A] px-1.5 py-0.5 rounded-full">
                                             <?php echo htmlspecialchars($request['asset_type']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                         <?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                         <?php 
                                           if ($request['actual_return_date']) {
                                             echo date('M d, Y', strtotime($request['actual_return_date']));
@@ -139,7 +145,7 @@ include '../components/layout_header.php';
                                           }
                                         ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-2 whitespace-nowrap">
                                         <?php
                                           $statusColors = [
                                             'Pending'   => 'bg-yellow-100 text-yellow-800',
@@ -151,18 +157,18 @@ include '../components/layout_header.php';
                                           ];
                                           $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
                                         ?>
-                                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
+                                        <span class="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold <?php echo $statusClass; ?>">
                                           <?php echo htmlspecialchars($request['status']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors">
-                                              <i class="fa-solid fa-eye mr-1"></i>View
+                                    <td class="px-3 py-2 whitespace-nowrap text-xs text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] transition-colors">
+                                              <i class="fa-solid fa-eye mr-0.5"></i>View
                                             </button>
                                             <?php if ($request['status'] === 'Pending'): ?>
-                                            <button onclick="showCancelModal(<?php echo $request['id']; ?>)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition-colors">
-                                              <i class="fa-solid fa-xmark mr-1"></i>Cancel
+                                            <button onclick="showCancelModal(<?php echo $request['id']; ?>)" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] transition-colors">
+                                              <i class="fa-solid fa-xmark mr-0.5"></i>Cancel
                                             </button>
                                             <?php endif; ?>
                                         </div>
@@ -174,7 +180,7 @@ include '../components/layout_header.php';
                     </div>
 
                     <!-- Pagination (only shows when more than 10 requests) -->
-                    <div id="paginationContainer" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 mt-4 rounded-b-xl hidden">
+                    <div id="paginationContainer" class="bg-gray-50 px-3 py-2 border-t border-gray-200 mt-2 rounded-b hidden">
                         <div class="flex justify-center">
                             <nav id="pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                                 <!-- Pagination buttons will be inserted here by JavaScript -->

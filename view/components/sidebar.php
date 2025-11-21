@@ -101,6 +101,13 @@ $navigation_items = [
             'href' => 'tickets.php'
         ],
         [
+            'id' => 'ticket-issues',
+            'label' => 'Ticket Issues',
+            'icon' => 'fa-solid fa-list-check',
+            'color' => 'blue',
+            'href' => 'ticket_issues.php'
+        ],
+        [
             'id' => 'requests',
             'label' => 'My Requests',
             'icon' => 'fa-solid fa-clipboard-check',
@@ -122,6 +129,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-ticket',
             'color' => 'blue',
             'href' => 'tickets.php'
+        ],
+        [
+            'id' => 'ticket-issues',
+            'label' => 'Ticket Issues',
+            'icon' => 'fa-solid fa-list-check',
+            'color' => 'blue',
+            'href' => 'ticket_issues.php'
         ],
         [
             'id' => 'requests',

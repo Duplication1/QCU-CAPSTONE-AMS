@@ -16,151 +16,150 @@ require_once '../../config/config.php';
 include '../components/layout_header.php';
 ?>
 
-<!-- Main Content -->
-<div class="p-8">   
-    <!-- Success/Error Alert Container -->
-    <div id="alertContainer"></div>
+<style>
+    body, html { overflow: hidden !important; height: 100vh; }
     
-    <h2 class="text-2xl font-semibold text-gray-800 mb-2">
-    Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
-    </h2>
+    /* Force DataTable wrapper and header to be full width */
+    #assetsTable_wrapper,
+    #assetsTable_wrapper .dataTables_scroll,
+    #assetsTable_wrapper .dataTables_scrollHead,
+    #assetsTable_wrapper .dataTables_scrollHeadInner,
+    #assetsTable_wrapper .dataTables_scrollHeadInner table {
+        width: 100% !important;
+    }
+</style>
 
-  <p class="text-gray-500 mb-8">Choose from the available options below.</p>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-
-  <!-- Hardware Issue -->
-  <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-[#1E3A8A] hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
-
-    <div class="flex items-start gap-4">
-      <div class="p-3 bg-blue-100 text-[#1E3A8A] rounded-full transition-colors duration-300">
-        <i class="fa-solid fa-computer text-xl group-hover:scale-110 transition-transform duration-200"></i>
-      </div>
-      <div>
-        <h3 class="font-semibold text-gray-800">Hardware Issue</h3>
-        <p class="text-sm text-gray-500">
-          Computer, printer, or equipment problems that need technical assistance.
-        </p>
-      </div>
-    </div>
-  </div>
-
-    <!-- Software Issue -->
-    <div onclick="handleIssueClick('software')" 
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-green-500 hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
-
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-green-100 text-green-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-microchip text-xl group-hover:scale-110 transition-transform duration-200"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-800">Software Issue</h3>
-          <p class="text-sm text-gray-500">
-            Application crashes, system errors, or software installation problems.
-          </p>
-        </div>
-      </div>
+<!-- Main Content -->
+<main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
+    <!-- Session Messages -->
+    <?php include '../components/session_messages.php'; ?>
+    
+    <!-- Header Section -->
+    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mb-2 flex-shrink-0">
+        <h2 class="text-lg font-bold text-gray-800">
+            Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
+        </h2>
+        <p class="text-[10px] text-gray-500 mt-1">Choose from the available options below.</p>
     </div>
 
-    <!-- Network Issue -->
-    <div onclick="handleIssueClick('network')" 
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-violet-500 hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
+    <!-- Options Grid -->
+    <div class="flex-1 overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
 
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-violet-100 text-violet-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-globe text-xl group-hover:scale-110 transition-transform duration-200"></i>
+            <!-- Hardware Issue -->
+            <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-computer text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Hardware Issue</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            Computer, printer, or equipment problems.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Software Issue -->
+            <div onclick="handleIssueClick('software')" 
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-microchip text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Software Issue</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            Application crashes, system errors.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Issue -->
+            <div onclick="handleIssueClick('network')" 
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-globe text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Network Issue</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            Internet connectivity, Wi-Fi issues.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Borrow Equipment -->
+            <div onclick="openBorrowingModal()" 
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-box text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Borrow Equipment</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            Request to borrow laboratory equipment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laboratory Concern -->
+            <div onclick="handleIssueClick('laboratory')" 
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-building text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Laboratory Concern</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            Lab facility access, safety issues.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other -->
+            <div onclick="handleIssueClick('hardware')" 
+                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-flag text-[#1E3A8A] text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-800">Other</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">
+                            General questions, account issues.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-          <h3 class="font-semibold text-gray-800">Network Issue</h3>
-          <p class="text-sm text-gray-500">
-            Internet connectivity problems, Wi-Fi issues, or network access troubles.
-          </p>
-        </div>
-      </div>
     </div>
-
-    <!-- Borrow Equipment -->
-    <div onclick="openBorrowingModal()" 
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-yellow-500 hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
-
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-yellow-100 text-yellow-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-box text-xl group-hover:scale-110 transition-transform duration-200""></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-800">Borrow Equipment</h3>
-          <p class="text-sm text-gray-500">
-            Request laboratory equipment, tools, or devices for academic projects.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Laboratory Concern -->
-    <div onclick="handleIssueClick('laboratory')" 
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-blue-500 hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
-
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-blue-100 text-blue-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-building text-xl group-hover:scale-110 transition-transform duration-200"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-800">Laboratory Concern</h3>
-          <p class="text-sm text-gray-500">
-            Lab facility access, safety issues, or equipment availability concerns.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Other -->
-    <div onclick="handleIssueClick('hardware')" 
-    class="bg-white rounded-xl p-6 shadow-md cursor-pointer transition 
-           border border-transparent hover:border-gray-500 hover:shadow-lg 
-           transform hover:scale-[1.05] transition-all duration-300 ease-in-out">
-
-      <div class="flex items-start gap-4">
-        <div class="p-3 bg-gray-100 text-gray-500 rounded-full transition-colors duration-300">
-          <i class="fa-solid fa-flag text-xl group-hover:scale-110 transition-transform duration-200"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-800">Other</h3>
-          <p class="text-sm text-gray-500">
-            General questions, account issues, or assistance with university services.
-          </p>
-        </div>
-      </div>
-    </div>
-
-      </div>
-</div>
+</main>
 
 <!-- Single Dynamic Issue Modal -->
-<div id="issueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+<div id="issueModal" class="hidden fixed inset-0 z-50">
     <div class="absolute inset-0 bg-black opacity-50" onclick="closeIssueModal()"></div>
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl z-10 p-6 mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="modalTitle" class="text-lg font-semibold">Submit Issue</h3>
-            <button type="button" onclick="closeIssueModal()" class="text-gray-600 hover:text-gray-800 text-2xl" aria-label="Close">&times;</button>
+    <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow-lg w-full max-w-xl z-10 p-4 mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3">
+            <h3 id="modalTitle" class="text-sm font-semibold text-gray-800">Submit Issue</h3>
+            <button type="button" onclick="closeIssueModal()" class="text-gray-600 hover:text-gray-800 text-xl" aria-label="Close">&times;</button>
         </div>
 
-        <form id="issueForm" class="space-y-4" method="post">
+        <form id="issueForm" class="space-y-3" method="post">
             <input type="hidden" name="category" id="issueCategory" value="">
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Room: *</label>
-                <select id="room" name="room" class="mt-1 block w-full border rounded px-3 py-2" required>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Room: *</label>
+                <select id="room" name="room" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
                     <option value="" disabled selected>Select room</option>
                     <option value="IK501">IK501</option>
                     <option value="IK502">IK502</option>
@@ -636,7 +635,7 @@ document.addEventListener('click', function(e) {
                             Click on any row to select an asset
                         </div>
                         <div class="overflow-x-auto border rounded-lg">
-                            <table id="assetsTable" class="display w-full text-sm">
+                            <table id="assetsTable" class="display text-sm" style="width: 100%;">
                                 <thead>
                                     <tr>
                                         <th>Asset Tag</th>
@@ -1120,8 +1119,8 @@ function displayAssetsTable(assets) {
         },
         order: [[0, 'asc']], // Sort by asset tag by default
         dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
-        scrollX: false,
-        autoWidth: true,
+        scrollX: true,
+        autoWidth: false,
         createdRow: function(row, data, dataIndex) {
             // Store asset ID in row
             $(row).attr('data-asset-id', tableData[dataIndex].id);
@@ -1478,13 +1477,13 @@ document.addEventListener('DOMContentLoaded', function(){
         if (loadingModal) loadingModal.classList.add('hidden');
         
         if (json.success) {
-          showTopAlert('success', json.message || 'Issue is successfuly submitted!');
+          showChip(json.message || 'Issue successfully submitted!', 'success');
           form.reset();
           // close modal if open
           const modal = document.getElementById('issueModal');
           if (modal) modal.classList.add('hidden');
         } else {
-          showTopAlert('error', json.message || 'Failed to submit. Please try again.');
+          showChip(json.message || 'Failed to submit. Please try again.', 'error');
         }
       }, remainingTime);
     })
@@ -1498,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (loadingModal) loadingModal.classList.add('hidden');
         
         console.error('Submit error:', err);
-        showTopAlert('error', 'Failed to submit. Please try again.');
+        showChip('Failed to submit. Please try again.', 'error');
       }, remainingTime);
     })
     .finally(() => {
