@@ -58,6 +58,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Failed to update last_login for user ' . intval($user['id']) . ': ' . $e->getMessage());
         }
         
+        // Record login history
+        try {
+            $dbConfig = Config::database();
+            $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
+            $conn->set_charset('utf8mb4');
+            
+            // Get user's IP address
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+            if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            }
+            
+            // Get user agent
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            
+            // Determine device type
+            $device_type = 'desktop';
+            if ($user_agent) {
+                if (preg_match('/mobile|android|iphone|ipad|phone/i', $user_agent)) {
+                    $device_type = 'mobile';
+                }
+            }
+            
+            // Check if login_history table exists, create if not
+            $tableCheck = $conn->query("SHOW TABLES LIKE 'login_history'");
+            if ($tableCheck->num_rows === 0) {
+                $createTable = "
+                CREATE TABLE `login_history` (
+                    `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    `user_id` int(10) UNSIGNED NOT NULL,
+                    `login_time` timestamp NOT NULL DEFAULT current_timestamp(),
+                    `ip_address` varchar(45) DEFAULT NULL,
+                    `user_agent` text DEFAULT NULL,
+                    `device_type` varchar(20) DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    KEY `user_id` (`user_id`),
+                    KEY `login_time` (`login_time`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                ";
+                $conn->query($createTable);
+            }
+            
+            // Insert login record
+            $stmt = $conn->prepare("INSERT INTO login_history (user_id, ip_address, user_agent, device_type) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param('isss', $user['id'], $ip_address, $user_agent, $device_type);
+            $stmt->execute();
+            $stmt->close();
+            $conn->close();
+        } catch (Exception $e) {
+            // non-fatal; proceed with login even if login history couldn't be recorded
+            error_log('Failed to record login history for user ' . intval($user['id']) . ': ' . $e->getMessage());
+        }
+        
         // Store redirect URL and redirect back to login page to show success modal
         switch ($user['role']) {
             case 'Administrator':

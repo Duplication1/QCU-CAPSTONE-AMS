@@ -110,17 +110,23 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 <!-- Profile Settings Dropdown -->
 <div id="profile-dropdown" class="absolute right-0 top-12 w-50 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 hidden z-50">
   <ul class="text-sm">
-      <li class="px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <i class="fa-solid fa-user text-[#1E3A8A]"></i>
-      <a href="profile.php" class="text-gray-800 hover:text-[#1E3A8A]">View Profile</a>
+      <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
+      <a href="profile.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
+        <i class="fa-solid fa-user text-[#1E3A8A]"></i>
+        View Profile
+      </a>
     </li>
-    <li class="px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <i class="fa-solid fa-gear text-[#1E3A8A]"></i>
-      <a href="../../view/settings.php" class="text-gray-800 hover:text-[#1E3A8A]">Settings</a>
+    <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
+      <a href="../../view/settings.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
+        <i class="fa-solid fa-gear text-[#1E3A8A]"></i>
+        Settings
+      </a>
     </li>
-    <!--<li class="px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <i class="fa-solid fa-right-from-bracket text-[#1E3A8A]"></i>
-      <a href="../../logout.php" class="text-gray-800 hover:text-[#1E3A8A]">Logout</a>
+    <!--<li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
+      <a href="../../logout.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
+        <i class="fa-solid fa-right-from-bracket text-[#1E3A8A]"></i>
+        Logout
+      </a>
     </li> -->
   </ul>
 </div>

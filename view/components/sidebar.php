@@ -88,10 +88,17 @@ $navigation_items = [
     'Student' => [
         [
             'id' => 'dashboard',
-            'label' => 'Home',
-            'icon' => 'fa-solid fa-house',
+            'label' => 'Dashboard',
+            'icon' => 'fa-solid fa-gauge',
             'color' => 'blue',
             'href' => 'index.php'
+        ],
+        [
+            'id' => 'tickets',
+            'label' => 'Submit Tickets',
+            'icon' => 'fa-solid fa-ticket',
+            'color' => 'blue',
+            'href' => 'tickets.php'
         ],
         [
             'id' => 'requests',
@@ -104,10 +111,17 @@ $navigation_items = [
     'Faculty' => [
         [
             'id' => 'dashboard',
-            'label' => 'Home',
-            'icon' => 'fa-solid fa-house',
+            'label' => 'Dashboard',
+            'icon' => 'fa-solid fa-gauge',
             'color' => 'blue',
             'href' => 'index.php'
+        ],
+        [
+            'id' => 'tickets',
+            'label' => 'Submit Tickets',
+            'icon' => 'fa-solid fa-ticket',
+            'color' => 'blue',
+            'href' => 'tickets.php'
         ],
         [
             'id' => 'requests',
