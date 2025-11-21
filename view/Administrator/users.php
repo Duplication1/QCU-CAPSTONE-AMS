@@ -298,6 +298,8 @@ main {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding: 0.5rem;
+    background-color: #f9fafb;
 }
 </style>
 
@@ -305,33 +307,33 @@ main {
         <main class="flex-1 flex flex-col overflow-hidden">
             <div class="flex-1 flex flex-col overflow-hidden">  
 
-                <div class="flex items-center justify-between px-6 py-4 bg-white border-b gap-3">
+                <div class="flex items-center justify-between px-3 py-2 bg-white rounded shadow-sm border border-gray-200 mb-2 gap-2">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800">All users <span id="usersCount" class="text-sm text-gray-500"><?php echo count($users); ?></span></h3>
+                        <h3 class="text-sm font-semibold text-gray-800">All users <span id="usersCount" class="text-xs text-gray-500">(<?php echo count($users); ?>)</span></h3>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
 <div class="relative flex items-center gap-2">
   <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search users..."
-    class="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition" />
-  <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+    class="w-48 pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition" />
+  <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
   
   <!-- Filter Button -->
   <div class="relative">
     <button id="filterBtn" onclick="toggleFilterMenu()" 
-      class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition"
+      class="px-2 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] transition"
       title="Filter users">
-      <i class="fas fa-filter text-gray-600"></i>
+      <i class="fas fa-filter text-gray-600 text-xs"></i>
     </button>
     
     <!-- Filter Dropdown Menu -->
-    <div id="filterMenu" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-      <div class="p-4">
-        <h4 class="text-sm font-semibold text-gray-700 mb-3">Filter Users</h4>
+    <div id="filterMenu" class="hidden absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-50">
+      <div class="p-2">
+        <h4 class="text-xs font-semibold text-gray-700 mb-2">Filter Users</h4>
         
         <!-- Role Filter -->
-        <div class="mb-4">
-          <label class="block text-xs font-medium text-gray-600 mb-2">Role</label>
-          <select id="roleFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+        <div class="mb-2">
+          <label class="block text-[10px] font-medium text-gray-600 mb-1">Role</label>
+          <select id="roleFilter" onchange="applyFilters()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
             <option value="">All Roles</option>
             <option value="Administrator">Administrator</option>
             <option value="Technician">Technician</option>
@@ -341,9 +343,9 @@ main {
         </div>
         
         <!-- Status Filter -->
-        <div class="mb-4">
-          <label class="block text-xs font-medium text-gray-600 mb-2">Status</label>
-          <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+        <div class="mb-2">
+          <label class="block text-[10px] font-medium text-gray-600 mb-1">Status</label>
+          <select id="statusFilter" onchange="applyFilters()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
             <option value="">All Status</option>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
@@ -352,52 +354,57 @@ main {
         </div>
         
         <!-- Clear Filters Button -->
-        <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+        <button onclick="clearFilters()" class="w-full px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition">
           Clear Filters
         </button>
       </div>
     </div>
   </div>
 </div>
+                        <button id="bulkImportBtn" onclick="openBulkImportModal()"
+  class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded shadow-sm hover:bg-green-700 focus:outline-none focus:ring-1 focus:ring-green-600">
+  <i class="fas fa-file-upload text-xs"></i>
+  Import Users
+</button>
                         <button id="addUserBtn" onclick="openAddUserModal()"
-  class="flex items-center gap-2 px-4 py-2 bg-[#1E3A8A] text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
-  <i class="fas fa-user-plus"></i>
+  class="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E3A8A] text-white text-xs font-semibold rounded shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
+  <i class="fas fa-user-plus text-xs"></i>
   Add User
 </button>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-auto px-6">
+                <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
  <table id="usersTable" class="min-w-full divide-y divide-gray-200">
-  <thead class="bg-blue-100 text-[#1E3A8A] sticky top-0 z-10">
+  <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
     <tr>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Name</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Email</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Role</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Status</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Joined</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Last Active</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Name</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Email</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Role</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Status</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Joined</th>
+      <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Last Active</th>
     </tr>
   </thead>
   <tbody class="bg-white divide-y divide-gray-100">
     <?php foreach ($users as $u): ?>
     <?php $avatarWeb = ams_find_avatar_web($u['id']); $udata = $u; $udata['avatar'] = $avatarWeb; $initial = strtoupper(substr(trim($u['full_name']), 0, 1)); ?>
     <tr class="hover:bg-blue-50 transition-colors" data-user='<?php echo json_encode($udata, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
-      <td class="px-4 py-3">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs font-medium text-gray-700">
+      <td class="px-3 py-2">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-[10px] font-medium text-gray-700">
             <?php if ($avatarWeb): ?>
               <img src="<?php echo htmlspecialchars($avatarWeb); ?>" alt="avatar" class="w-full h-full object-cover" />
             <?php else: ?>
               <span><?php echo htmlspecialchars($initial ?: '?'); ?></span>
             <?php endif; ?>
           </div>
-          <span class="font-medium text-gray-800"><?php echo htmlspecialchars($u['full_name']); ?></span>
+          <span class="font-medium text-xs text-gray-800"><?php echo htmlspecialchars($u['full_name']); ?></span>
         </div>
       </td>
-      <td class="px-4 py-3 text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
-      <td class="px-4 py-3"><?php echo htmlspecialchars($u['role']); ?></td>
-      <td class="px-4 py-3">
+      <td class="px-3 py-2 text-xs text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
+      <td class="px-3 py-2 text-xs"><?php echo htmlspecialchars($u['role']); ?></td>
+      <td class="px-3 py-2">
         <?php 
         // Handle empty status (when ENUM value doesn't exist in database)
         $status = $u['status'] ?: 'Active';
@@ -409,29 +416,29 @@ main {
           if ($status === '') $status = 'Deactivated'; // Fix blank status
         }
         ?>
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <?php echo $statusClass; ?>">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium <?php echo $statusClass; ?>">
           <?php echo htmlspecialchars($status); ?>
         </span>
       </td>
-      <td class="px-4 py-3"><?php echo !empty($u['created_at']) ? date('M d, Y', strtotime($u['created_at'])) : '-'; ?></td>
-      <td class="px-4 py-3 flex items-center justify-between">
-        <span><?php echo !empty($u['last_login']) ? date('M d, Y H:i', strtotime($u['last_login'])) : '-'; ?></span>
-        <div class="relative inline-block text-left ml-3">
-          <button type="button" onclick="toggleRowMenu(this, <?php echo (int)$u['id']; ?>)" class="p-1 rounded hover:bg-gray-100 text-sm" aria-expanded="false" aria-haspopup="true" title="Actions">
-            <i class="fa fa-ellipsis-v text-sm"></i>
+      <td class="px-3 py-2 text-xs"><?php echo !empty($u['created_at']) ? date('M d, Y', strtotime($u['created_at'])) : '-'; ?></td>
+      <td class="px-3 py-2 flex items-center justify-between">
+        <span class="text-xs"><?php echo !empty($u['last_login']) ? date('M d, Y H:i', strtotime($u['last_login'])) : '-'; ?></span>
+        <div class="relative inline-block text-left ml-2">
+          <button type="button" onclick="toggleRowMenu(this, <?php echo (int)$u['id']; ?>)" class="p-1 rounded hover:bg-gray-100 text-xs" aria-expanded="false" aria-haspopup="true" title="Actions">
+            <i class="fa fa-ellipsis-v text-xs"></i>
           </button>
-          <div class="hidden origin-top-right absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-60" role="menu">
+          <div class="hidden origin-top-right absolute right-0 mt-1 w-36 bg-white border rounded shadow-lg z-60" role="menu">
             <div class="py-1">
-              <button type="button" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editUser(this, <?php echo (int)$u['id']; ?>)">
-                <i class="fa fa-pencil mr-2"></i> Edit details
+              <button type="button" class="w-full text-left px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100" onclick="editUser(this, <?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-pencil mr-1 text-xs"></i> Edit details
               </button>
               <?php if ($u['status'] === 'Deactivated' || $u['status'] === ''): ?>
-              <button type="button" class="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-green-50" onclick="unsuspendUser(<?php echo (int)$u['id']; ?>)">
-                <i class="fa fa-check-circle mr-2"></i> Activate user
+              <button type="button" class="w-full text-left px-2 py-1.5 text-xs text-green-600 hover:bg-green-50" onclick="unsuspendUser(<?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-check-circle mr-1 text-xs"></i> Activate user
               </button>
               <?php else: ?>
-              <button type="button" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" onclick="suspendUser(<?php echo (int)$u['id']; ?>)">
-                <i class="fa fa-ban mr-2"></i> Deactivate user
+              <button type="button" class="w-full text-left px-2 py-1.5 text-xs text-red-600 hover:bg-red-50" onclick="suspendUser(<?php echo (int)$u['id']; ?>)">
+                <i class="fa fa-ban mr-1 text-xs"></i> Deactivate user
               </button>
               <?php endif; ?>
             </div>
@@ -445,7 +452,7 @@ main {
                 </div>
                 
                 <!-- Pagination Controls -->
-                <div class="px-6 py-3 flex items-center justify-center border-t bg-white">
+                <div class="px-3 py-2 flex items-center justify-center bg-white rounded shadow-sm border border-gray-200 mt-2">
                     <div id="pageNumbers" class="flex items-center gap-1">
                         <!-- Page numbers will be inserted here -->
                     </div>
@@ -575,6 +582,89 @@ main {
                 </div>
             </div>
         </div>
+</div>
+
+<!-- Bulk Import Modal -->
+<div id="bulkImportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" onclick="closeBulkImportModal()"></div>
+    <div class="relative bg-white rounded-lg shadow-2xl max-w-4xl w-11/12 md:w-3/4 p-6 z-50 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800">Import Users from CSV</h3>
+                <p class="text-sm text-gray-600 mt-1">Upload a CSV file to add multiple users at once</p>
+            </div>
+            <button onclick="closeBulkImportModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- CSV Format Instructions -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <h4 class="text-sm font-semibold text-blue-900 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>CSV Format Requirements
+            </h4>
+            <ul class="text-xs text-blue-800 space-y-1 ml-6 list-disc">
+                <li>First row must contain headers: <code class="bg-blue-100 px-1 rounded">id_number, full_name, email, role, password</code></li>
+                <li>Valid roles: Administrator, Technician, LaboratoryStaff, Student</li>
+                <li>Email addresses must be unique</li>
+                <li>Password is required for each user</li>
+            </ul>
+            <button onclick="downloadTemplate()" class="mt-3 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                <i class="fas fa-download mr-1"></i>Download CSV Template
+            </button>
+        </div>
+
+        <!-- File Upload Area -->
+        <form id="bulkImportForm" onsubmit="return submitBulkImport(event)">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select CSV File</label>
+                <div class="flex items-center gap-3">
+                    <input type="file" id="csvFile" name="csv_file" accept=".csv" required
+                        class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]"
+                        onchange="previewCSV(event)" />
+                </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div id="csvPreview" class="hidden mb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">Preview (First 5 rows)</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                        <thead class="bg-gray-50">
+                            <tr id="csvPreviewHeader"></tr>
+                        </thead>
+                        <tbody id="csvPreviewBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                <p id="csvRowCount" class="text-xs text-gray-600 mt-2"></p>
+            </div>
+
+            <!-- Error Display -->
+            <div id="importErrors" class="hidden mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                <h4 class="text-sm font-semibold text-red-900 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Import Errors
+                </h4>
+                <ul id="importErrorList" class="text-xs text-red-800 space-y-1 ml-6 list-disc"></ul>
+            </div>
+
+            <!-- Success Display -->
+            <div id="importSuccess" class="hidden mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                <h4 class="text-sm font-semibold text-green-900">
+                    <i class="fas fa-check-circle mr-2"></i><span id="importSuccessMessage"></span>
+                </h4>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" onclick="closeBulkImportModal()" class="px-4 py-2 text-sm rounded bg-gray-100 hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button type="submit" id="bulkImportBtn" class="px-4 py-2 text-sm rounded bg-[#1E3A8A] text-white hover:bg-blue-700">
+                    <i class="fas fa-upload mr-2"></i>Import Users
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Add User Modal -->
@@ -1708,6 +1798,282 @@ function getVisibleRows() {
         
         return matchesSearch && matchesRole && matchesStatus;
     });
+}
+
+// Bulk Import Functions
+function openBulkImportModal() {
+    document.getElementById('bulkImportModal').classList.remove('hidden');
+    document.getElementById('csvFile').value = '';
+    document.getElementById('csvPreview').classList.add('hidden');
+    document.getElementById('importErrors').classList.add('hidden');
+    document.getElementById('importSuccess').classList.add('hidden');
+}
+
+function closeBulkImportModal() {
+    document.getElementById('bulkImportModal').classList.add('hidden');
+}
+
+function downloadTemplate() {
+    const csvContent = "id_number,full_name,email,role,password\n" +
+                      "2021-00001,John Doe,john.doe@example.com,Student,password123\n" +
+                      "2021-00002,Jane Smith,jane.smith@example.com,Student,password123\n" +
+                      "EMP-001,Bob Johnson,bob.johnson@example.com,Technician,password123";
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'users_import_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function previewCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+        
+        if (rows.length < 2) {
+            showToast('CSV file must contain at least a header row and one data row', 'error');
+            return;
+        }
+        
+        const headers = rows[0].split(',').map(h => h.trim());
+        const preview = document.getElementById('csvPreview');
+        const headerRow = document.getElementById('csvPreviewHeader');
+        const bodyTable = document.getElementById('csvPreviewBody');
+        const rowCount = document.getElementById('csvRowCount');
+        
+        // Show headers
+        headerRow.innerHTML = headers.map(h => `<th class="px-3 py-2 text-left text-xs font-medium text-gray-700 bg-gray-50">${h}</th>`).join('');
+        
+        // Show first 5 data rows
+        bodyTable.innerHTML = '';
+        const dataRows = rows.slice(1, 6);
+        dataRows.forEach((row, idx) => {
+            const cells = row.split(',').map(c => c.trim());
+            const tr = document.createElement('tr');
+            tr.innerHTML = cells.map(cell => `<td class="px-3 py-2 text-xs text-gray-600">${cell}</td>`).join('');
+            bodyTable.appendChild(tr);
+        });
+        
+        rowCount.textContent = `Total rows: ${rows.length - 1} users`;
+        preview.classList.remove('hidden');
+    };
+    
+    reader.readAsText(file);
+}
+
+async function submitBulkImport(event) {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('Please select a CSV file', 'error');
+        return false;
+    }
+    
+    const importBtn = document.getElementById('bulkImportBtn');
+    const originalText = importBtn.innerHTML;
+    importBtn.disabled = true;
+    importBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+    
+    // Hide previous results
+    document.getElementById('importErrors').classList.add('hidden');
+    document.getElementById('importSuccess').classList.add('hidden');
+    
+    try {
+        const text = await file.text();
+        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+        
+        if (rows.length < 2) {
+            throw new Error('CSV file must contain at least a header row and one data row');
+        }
+        
+        const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+        const requiredHeaders = ['id_number', 'full_name', 'email', 'role', 'password'];
+        
+        // Validate headers
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        if (missingHeaders.length > 0) {
+            throw new Error(`Missing required columns: ${missingHeaders.join(', ')}`);
+        }
+        
+        const users = [];
+        const errors = [];
+        
+        // Parse data rows
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].split(',').map(c => c.trim());
+            const user = {};
+            
+            headers.forEach((header, idx) => {
+                user[header] = cells[idx] || '';
+            });
+            
+            // Validate row
+            if (!user.full_name || !user.email || !user.role || !user.password) {
+                errors.push(`Row ${i + 1}: Missing required fields`);
+                continue;
+            }
+            
+            if (!['Administrator', 'Technician', 'LaboratoryStaff', 'Student'].includes(user.role)) {
+                errors.push(`Row ${i + 1}: Invalid role "${user.role}"`);
+                continue;
+            }
+            
+            users.push(user);
+        }
+        
+        if (errors.length > 0 && users.length === 0) {
+            const errorList = document.getElementById('importErrorList');
+            errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+            document.getElementById('importErrors').classList.remove('hidden');
+            importBtn.disabled = false;
+            importBtn.innerHTML = originalText;
+            return false;
+        }
+        
+        // Import users
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const user of users) {
+            try {
+                const formData = new FormData();
+                formData.append('ajax', '1');
+                formData.append('action', 'create_user');
+                formData.append('id_number', user.id_number);
+                formData.append('full_name', user.full_name);
+                formData.append('email', user.email);
+                formData.append('role', user.role);
+                formData.append('password', user.password);
+                
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successCount++;
+                    // Add user to table
+                    if (result.user) {
+                        addUserToTable(result.user);
+                    }
+                } else {
+                    errors.push(`${user.email}: ${result.message || 'Failed to create'}`);
+                    failCount++;
+                }
+            } catch (err) {
+                errors.push(`${user.email}: ${err.message}`);
+                failCount++;
+            }
+        }
+        
+        // Show results
+        if (successCount > 0) {
+            document.getElementById('importSuccessMessage').textContent = 
+                `Successfully imported ${successCount} user(s)${failCount > 0 ? `. ${failCount} failed.` : '.'}`;
+            document.getElementById('importSuccess').classList.remove('hidden');
+            updateUsersCount();
+            updatePagination();
+        }
+        
+        if (errors.length > 0) {
+            const errorList = document.getElementById('importErrorList');
+            errorList.innerHTML = errors.slice(0, 10).map(e => `<li>${e}</li>`).join('');
+            if (errors.length > 10) {
+                errorList.innerHTML += `<li>...and ${errors.length - 10} more errors</li>`;
+            }
+            document.getElementById('importErrors').classList.remove('hidden');
+        }
+        
+        if (successCount > 0 && errors.length === 0) {
+            showToast(`Successfully imported ${successCount} users!`, 'success');
+            setTimeout(() => {
+                closeBulkImportModal();
+            }, 2000);
+        }
+        
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        importBtn.disabled = false;
+        importBtn.innerHTML = originalText;
+    }
+    
+    return false;
+}
+
+function addUserToTable(user) {
+    const tbody = document.querySelector('#usersTable tbody');
+    const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+    const avatarHtml = user.avatar ? 
+        `<img src="${user.avatar}" alt="avatar" class="w-full h-full object-cover" />` :
+        `<span>${initial}</span>`;
+    
+    const statusClass = user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600';
+    const createdDate = new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-blue-50 transition-colors';
+    row.dataset.user = JSON.stringify(user);
+    row.innerHTML = `
+        <td class="px-3 py-2">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-[10px] font-medium text-gray-700">
+                    ${avatarHtml}
+                </div>
+                <span class="font-medium text-xs text-gray-800">${user.full_name}</span>
+            </div>
+        </td>
+        <td class="px-3 py-2 text-xs text-gray-500">${user.email}</td>
+        <td class="px-3 py-2 text-xs">${user.role}</td>
+        <td class="px-3 py-2">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusClass}">
+                ${user.status}
+            </span>
+        </td>
+        <td class="px-3 py-2 text-xs">${createdDate}</td>
+        <td class="px-3 py-2 flex items-center justify-between">
+            <span class="text-xs">-</span>
+            <div class="relative inline-block text-left ml-2">
+                <button type="button" onclick="toggleRowMenu(this, ${user.id})" class="p-1 rounded hover:bg-gray-100 text-xs">
+                    <i class="fa fa-ellipsis-v text-xs"></i>
+                </button>
+                <div class="hidden origin-top-right absolute right-0 mt-1 w-36 bg-white border rounded shadow-lg z-60" role="menu">
+                    <div class="py-1">
+                        <button type="button" class="w-full text-left px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100" onclick="editUser(this, ${user.id})">
+                            <i class="fa fa-pencil mr-1 text-xs"></i> Edit details
+                        </button>
+                        <button type="button" class="w-full text-left px-2 py-1.5 text-xs text-red-600 hover:bg-red-50" onclick="suspendUser(${user.id})">
+                            <i class="fa fa-ban mr-1 text-xs"></i> Deactivate user
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </td>
+    `;
+    
+    tbody.insertBefore(row, tbody.firstChild);
+    allRows.unshift(row);
+}
+
+function updateUsersCount() {
+    const count = document.getElementById('usersCount');
+    if (count) {
+        count.textContent = `(${allRows.length})`;
+    }
 }
 
 // ...existing code...

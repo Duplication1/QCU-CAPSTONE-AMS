@@ -32,13 +32,13 @@ try {
     $ticketId = intval($_POST['ticket_id'] ?? 0);
     $technician = trim($_POST['technician_name'] ?? '');
 
-    error_log("assign_ticket: ticketId=$ticketId, technician=$technician");
+    error_log("assign_ticket: ticketId=$ticketId, technician='$technician'");
 
     if ($ticketId <= 0) throw new Exception('Invalid ticket id (received: ' . ($ticketId ?? 'null') . ')');
     if ($technician === '') throw new Exception('Please select a technician');
 
     // Get ticket details for notification
-    $ticketStmt = $conn->prepare("SELECT user_id, title FROM issues WHERE id = ?");
+    $ticketStmt = $conn->prepare("SELECT user_id, title, category FROM issues WHERE id = ?");
     $ticketStmt->bind_param('i', $ticketId);
     $ticketStmt->execute();
     $ticketResult = $ticketStmt->get_result();
@@ -49,7 +49,18 @@ try {
         throw new Exception('Ticket not found');
     }
 
-    // update
+    // Get technician's user_id by full_name
+    $techStmt = $conn->prepare("SELECT id FROM users WHERE full_name = ? AND role = 'Technician'");
+    $techStmt->bind_param('s', $technician);
+    $techStmt->execute();
+    $techResult = $techStmt->get_result();
+    $techData = $techResult->fetch_assoc();
+    $techStmt->close();
+    
+    $technicianUserId = $techData['id'] ?? null;
+    error_log("Technician lookup - Name: $technician, User ID: " . ($technicianUserId ?? 'NULL'));
+
+    // update assigned_technician only
     $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, updated_at = NOW() WHERE id = ?");
     if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
     $stmt->bind_param('si', $technician, $ticketId);
@@ -75,12 +86,28 @@ try {
                 INDEX idx_is_read (is_read)
             )");
 
+            // Notification for the student who submitted the ticket
             $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'issue', ?)");
             $notifTitle = "Ticket #{$ticketId} Assigned";
             $notifMessage = "Your ticket has been assigned to {$technician}. They will be working on your issue soon.";
             $notifStmt->bind_param('issi', $ticketData['user_id'], $notifTitle, $notifMessage, $ticketId);
             $notifStmt->execute();
             $notifStmt->close();
+            
+            // Notification for the technician who is assigned to the ticket
+            if ($technicianUserId) {
+                $techNotifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'issue', ?)");
+                $techNotifTitle = "New Ticket Assigned #" . $ticketId;
+                $ticketCategory = $ticketData['category'] ?? 'Technical';
+                $ticketTitle = $ticketData['title'] ?? 'Untitled';
+                $techNotifMessage = "You have been assigned to a {$ticketCategory} ticket: \"{$ticketTitle}\". Please review and take action.";
+                $techNotifStmt->bind_param('issi', $technicianUserId, $techNotifTitle, $techNotifMessage, $ticketId);
+                $techNotifStmt->execute();
+                $techNotifStmt->close();
+                error_log("Technician notification created for user_id: $technicianUserId, ticket: $ticketId");
+            } else {
+                error_log("WARNING: Could not create technician notification - technician user_id not found for name: $technician");
+            }
         } catch (Exception $notifError) {
             error_log('Failed to create notification: ' . $notifError->getMessage());
         }

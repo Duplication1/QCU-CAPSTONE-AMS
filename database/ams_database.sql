@@ -511,6 +511,35 @@ ALTER TABLE `pc_units`
 ALTER TABLE `pc_components`
   ADD CONSTRAINT `fk_pc_components_pc_unit` FOREIGN KEY (`pc_unit_id`) REFERENCES `pc_units` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL COMMENT 'User who performed the action',
+  `action` varchar(50) NOT NULL COMMENT 'Action type: login, logout, create, update, delete, view, etc.',
+  `entity_type` varchar(50) DEFAULT NULL COMMENT 'Type of entity affected: user, asset, ticket, borrowing, etc.',
+  `entity_id` int(11) DEFAULT NULL COMMENT 'ID of the affected entity',
+  `description` text DEFAULT NULL COMMENT 'Detailed description of the action',
+  `ip_address` varchar(45) DEFAULT NULL COMMENT 'IP address of the user',
+  `user_agent` text DEFAULT NULL COMMENT 'Browser/device information',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_action` (`action`),
+  KEY `idx_entity` (`entity_type`, `entity_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `fk_activity_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

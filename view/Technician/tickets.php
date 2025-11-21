@@ -97,7 +97,7 @@ $isArchivedFilter = ($viewMode === 'archived') ? 1 : 0;
 $sql = "SELECT i.*, u.full_name AS reporter_name
         FROM issues i
         LEFT JOIN users u ON u.id = i.user_id
-        WHERE i.assigned_group = ?
+        WHERE i.assigned_technician = ?
           AND LOWER(COALESCE(i.category,'')) IN ('hardware','software','network')
           AND COALESCE(i.is_archived, 0) = ?
         ORDER BY CASE WHEN i.priority='High' THEN 1 WHEN i.priority='Medium' THEN 2 ELSE 3 END, i.created_at DESC";
@@ -109,54 +109,130 @@ $result = $stmt->get_result();
 
 include '../components/layout_header.php';
 ?>
-<div class="p-6 max-w-7xl mx-auto">
-  <h1 class="text-2xl font-semibold mb-4">Technician — My Tickets</h1>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
-    <div class="p-4 border-b flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="flex gap-2">
-          <a href="?view=active" class="px-3 py-1 rounded text-sm <?php echo $viewMode === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?>">Active</a>
-          <a href="?view=archived" class="px-3 py-1 rounded text-sm <?php echo $viewMode === 'archived' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?>">Archived</a>
-        </div>
+<style>
+html, body {
+    height: 100vh;
+    overflow: hidden;
+}
+#app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    background-color: #f9fafb;
+}
+</style>
+
+<main>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between px-3 py-2 bg-white rounded shadow-sm border border-gray-200 mb-2">
+      <div>
+        <h3 class="text-sm font-semibold text-gray-800">My Tickets</h3>
+        <p class="text-[10px] text-gray-500 mt-0.5">Manage assigned technical support tickets</p>
       </div>
+      
       <div class="flex items-center gap-2">
-        <input id="techSearch" type="search" placeholder="Search title, room..." class="border rounded px-3 py-2"/>
-      </div>
-    </div>
-
-    <!-- Category filter buttons -->
-    <div class="px-4 py-3 border-b bg-gray-50">
-      <div id="categoryFilters" class="flex flex-wrap gap-2">
-        <button class="cat-btn px-3 py-1 rounded text-sm bg-blue-600 text-white" data-cat="all">All</button>
-        <button class="cat-btn px-3 py-1 rounded text-sm bg-gray-100 text-gray-800" data-cat="hardware">Hardware</button>
-        <button class="cat-btn px-3 py-1 rounded text-sm bg-gray-100 text-gray-800" data-cat="software">Software</button>
-        <button class="cat-btn px-3 py-1 rounded text-sm bg-gray-100 text-gray-800" data-cat="network">Network</button>
+        <!-- View Mode Tabs -->
+        <div class="flex gap-1">
+          <a href="?view=active" class="px-2 py-1 rounded text-[10px] font-medium <?php echo $viewMode === 'active' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+            <i class="fas fa-list mr-1"></i>Active
+          </a>
+          <a href="?view=archived" class="px-2 py-1 rounded text-[10px] font-medium <?php echo $viewMode === 'archived' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+            <i class="fas fa-archive mr-1"></i>Archived
+          </a>
+        </div>
+        
+        <!-- Search -->
+        <div class="relative">
+          <input id="techSearch" type="search" placeholder="Search tickets..." 
+            class="w-48 pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
+          <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+        </div>
+        
+        <!-- Filter Button -->
+        <div class="relative">
+          <button id="filterBtn" onclick="toggleFilterMenu()" 
+            class="px-2 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
+            <i class="fas fa-filter text-gray-600 text-xs"></i>
+          </button>
+          
+          <!-- Filter Dropdown -->
+          <div id="filterMenu" class="hidden absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-50">
+            <div class="p-2">
+              <h4 class="text-xs font-semibold text-gray-700 mb-2">Filter Tickets</h4>
+              
+              <div class="mb-2">
+                <label class="block text-[10px] text-gray-600 mb-1">Category</label>
+                <select id="categoryFilter" onchange="applyFilters()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded">
+                  <option value="all">All Categories</option>
+                  <option value="hardware">Hardware</option>
+                  <option value="software">Software</option>
+                  <option value="network">Network</option>
+                </select>
+              </div>
+              
+              <div class="mb-2">
+                <label class="block text-[10px] text-gray-600 mb-1">Priority</label>
+                <select id="priorityFilter" onchange="applyFilters()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded">
+                  <option value="">All Priorities</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              
+              <div class="mb-2">
+                <label class="block text-[10px] text-gray-600 mb-1">Status</label>
+                <select id="statusFilter" onchange="applyFilters()" class="w-full px-2 py-1 text-xs border border-gray-300 rounded">
+                  <option value="">All Status</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+              
+              <button onclick="clearFilters()" class="w-full px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
 <?php
 // Show message when there are no tickets
 if (!$result || $result->num_rows === 0): ?>
-    <div class="p-12 text-center">
-      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 20 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-      </svg>
-      <h3 class="mt-4 text-lg font-medium text-gray-900">No tickets found</h3>
-      <p class="mt-2 text-sm text-gray-500">No issues have been submitted yet.</p>
+    <div class="flex-1 flex items-center justify-center bg-white rounded shadow-sm border border-gray-200">
+      <div class="text-center p-8">
+        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+        <h3 class="text-sm font-medium text-gray-900 mb-1">No tickets found</h3>
+        <p class="text-xs text-gray-500">No issues have been assigned to you yet.</p>
+      </div>
     </div>
 <?php else: ?>
-    <div class="overflow-x-auto">
+    <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
       <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+        <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title / Details</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Type</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Title / Details</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Location</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Priority</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Status</th>
             <?php if ($viewMode === 'active'): ?>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+            <th class="px-3 py-2 text-center text-[10px] font-medium uppercase">Actions</th>
             <?php endif; ?>
           </tr>
         </thead>
@@ -168,44 +244,56 @@ if (!$result || $result->num_rows === 0): ?>
             $title = htmlspecialchars($ticket['title'] ?? '-');
             $desc = htmlspecialchars($ticket['description'] ?? '');
             $loc = htmlspecialchars(($ticket['room'] ?? '-') . ' / ' . ($ticket['terminal'] ?? '-'));
+            $rawPriority = $ticket['priority'] ?? '';
+            $priority = trim((string)$rawPriority);
+            if ($priority === '') $priority = 'Medium';
           ?>
-          <tr class="ticket-row" data-ticket-id="<?php echo (int)$ticket['id']; ?>" data-category="<?php echo $category; ?>" data-ticket='<?php echo json_encode($ticket, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
-            <td class="px-4 py-3 text-sm text-gray-700"><?php echo $categoryLabel; ?></td>
-            <td class="px-4 py-3">
-              <div class="font-medium text-gray-900"><?php echo $title; ?></div>
-              <div class="text-xs text-gray-500 mt-1"><?php echo (strlen($desc) > 120 ? substr($desc,0,120).'...' : $desc); ?></div>
+          <tr class="ticket-row hover:bg-blue-50 transition" 
+              data-ticket-id="<?php echo (int)$ticket['id']; ?>" 
+              data-category="<?php echo $category; ?>"
+              data-priority="<?php echo htmlspecialchars($priority); ?>"
+              data-status="<?php echo htmlspecialchars($status); ?>"
+              data-ticket='<?php echo json_encode($ticket, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
+            <td class="px-3 py-2 text-xs text-gray-700">
+              <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium <?php 
+                echo $category === 'hardware' ? 'bg-orange-100 text-orange-700' : 
+                     ($category === 'software' ? 'bg-blue-100 text-blue-700' : 
+                     ($category === 'network' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700')); 
+              ?>">
+                <?php echo $categoryLabel; ?>
+              </span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-700"><?php echo $loc; ?></td>
-            <td class="px-4 py-3 text-sm">
+            <td class="px-3 py-2">
+              <div class="font-medium text-gray-900 text-xs"><?php echo $title; ?></div>
+              <div class="text-[10px] text-gray-500 mt-0.5 line-clamp-1"><?php echo (strlen($desc) > 80 ? substr($desc,0,80).'...' : $desc); ?></div>
+            </td>
+            <td class="px-3 py-2 text-xs text-gray-700"><?php echo $loc; ?></td>
+            <td class="px-3 py-2 text-xs">
               <?php
-                // Normalize priority value: treat empty/null as 'Medium'
-                $rawPriority = $ticket['priority'] ?? '';
-                $priority = trim((string)$rawPriority);
-                if ($priority === '') $priority = 'Medium';
                 $priorityEsc = htmlspecialchars($priority);
                 $priorityClass = ($priority === 'High') ? 'bg-red-100 text-red-800' : (($priority === 'Medium') ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800');
               ?>
-              <span class="px-2 py-1 rounded-full text-xs <?php echo $priorityClass; ?>">
+              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium <?php echo $priorityClass; ?>">
                 <?php echo $priorityEsc; ?>
               </span>
             </td>
-            <td class="px-4 py-3 text-sm">
-              <span class="status-badge inline-block px-2 py-1 rounded-full text-xs font-semibold <?php
+            <td class="px-3 py-2 text-xs">
+              <span class="status-badge inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold <?php
                 echo $status === 'Open' ? 'bg-blue-100 text-blue-800' : ($status === 'In Progress' ? 'bg-purple-100 text-purple-800' : ($status === 'Resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'));
               ?>"><?php echo htmlspecialchars($status); ?></span>
             </td>
             <?php if ($viewMode === 'active'): ?>
-            <td class="px-4 py-3 text-center text-sm">
-              <div class="flex items-center justify-center gap-2">
-                <select class="statusSelect border rounded px-2 py-1 text-sm">
+            <td class="px-3 py-2 text-center text-xs">
+              <div class="flex items-center justify-center gap-1">
+                <select class="statusSelect border rounded px-2 py-1 text-[10px]">
                   <option value="Open" <?php if ($status==='Open') echo 'selected'; ?>>Open</option>
                   <option value="In Progress" <?php if ($status==='In Progress') echo 'selected'; ?>>In Progress</option>
                   <option value="Resolved" <?php if ($status==='Resolved') echo 'selected'; ?>>Resolved</option>
                   <option value="Closed" <?php if ($status==='Closed') echo 'selected'; ?>>Closed</option>
                 </select>
                 <?php if ($status === 'Resolved'): ?>
-                  <button class="archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700" title="Archive this ticket">
-                    <i class="fa-solid fa-box-archive"></i> Archive
+                  <button class="archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700" title="Archive this ticket">
+                    <i class="fa-solid fa-box-archive"></i>
                   </button>
                 <?php endif; ?>
               </div>
@@ -217,8 +305,8 @@ if (!$result || $result->num_rows === 0): ?>
       </table>
     </div>
 
-    <!-- Pagination (only shows when more than 10 tickets) -->
-    <div id="paginationContainer" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 rounded-b-lg hidden">
+    <!-- Pagination -->
+    <div id="paginationContainer" class="hidden px-3 py-2 bg-white rounded shadow-sm border border-gray-200 border-t-0 rounded-t-none">
       <div class="flex justify-center">
         <nav id="pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
           <!-- Pagination buttons will be inserted here by JavaScript -->
@@ -229,7 +317,7 @@ if (!$result || $result->num_rows === 0): ?>
 <?php endif; ?>
 
   </div>
-</div>
+</main>
 
 <!-- Archive Confirmation Modal -->
 <div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -265,23 +353,62 @@ const itemsPerPage = 10; // Fixed at 10 items per page
 let allTicketRows = [];
 let filteredTicketRows = [];
 let currentCategory = 'all';
+let currentPriority = '';
+let currentStatus = '';
 let pendingArchiveTicketId = null;
 let pendingArchiveRow = null;
 
 function showToast(msg, ok = true) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.className = 'fixed top-6 right-6 px-4 py-2 rounded shadow z-50 ' + (ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white');
+  t.className = 'fixed top-6 right-6 px-4 py-2 rounded shadow-lg z-50 text-xs ' + (ok ? 'bg-green-600 text-white' : 'bg-red-600 text-white');
   document.body.appendChild(t);
   setTimeout(()=> t.remove(), 2500);
+}
+
+// Filter menu toggle
+function toggleFilterMenu() {
+  const menu = document.getElementById('filterMenu');
+  menu.classList.toggle('hidden');
+}
+
+// Close filter menu when clicking outside
+document.addEventListener('click', function(e) {
+  const filterBtn = document.getElementById('filterBtn');
+  const filterMenu = document.getElementById('filterMenu');
+  
+  if (filterBtn && filterMenu && !filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+    filterMenu.classList.add('hidden');
+  }
+});
+
+function applyFilters() {
+  currentCategory = document.getElementById('categoryFilter').value;
+  currentPriority = document.getElementById('priorityFilter').value;
+  currentStatus = document.getElementById('statusFilter').value;
+  filterTickets();
+}
+
+function clearFilters() {
+  document.getElementById('categoryFilter').value = 'all';
+  document.getElementById('priorityFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('techSearch').value = '';
+  currentCategory = 'all';
+  currentPriority = '';
+  currentStatus = '';
+  filterTickets();
 }
 
 function updateRowStatus(row, newStatus) {
   const badge = row.querySelector('.status-badge');
   if (!badge) return;
   badge.textContent = newStatus;
-  badge.className = 'status-badge inline-block px-2 py-1 rounded-full text-xs font-semibold ' +
+  badge.className = 'status-badge inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold ' +
     (newStatus === 'Open' ? 'bg-blue-100 text-blue-800' : (newStatus === 'In Progress' ? 'bg-purple-100 text-purple-800' : (newStatus === 'Resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')));
+  
+  // Update data attribute
+  row.dataset.status = newStatus;
 }
 
 // Row-level processing indicator and 1.5s minimum visual delay
@@ -296,10 +423,8 @@ function showRowProcessing(row) {
   let p = row.querySelector('.row-processing');
   if (!p) {
     p = document.createElement('div');
-    // center the indicator inside the actions cell and make it full width
-    p.className = 'row-processing flex items-center justify-center gap-2 text-sm text-gray-600 w-full';
-    p.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm text-blue-600"></i><span>Processing, please wait...</span>';
-    // append to actions cell (last td) and hide the select for cleaner centering
+    p.className = 'row-processing flex items-center justify-center gap-2 text-xs text-gray-600 w-full';
+    p.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs text-blue-600"></i><span>Processing...</span>';
     const actionCell = row.querySelector('td:last-child');
     if (actionCell) {
       actionCell.appendChild(p);
@@ -334,12 +459,16 @@ function filterTickets() {
   
   filteredTicketRows = allTicketRows.filter(row => {
     const category = row.dataset.category || 'other';
+    const priority = row.dataset.priority || '';
+    const status = row.dataset.status || '';
     const text = (row.textContent || '').toLowerCase();
     
     const matchesCategory = currentCategory === 'all' || category.toLowerCase() === currentCategory.toLowerCase();
+    const matchesPriority = !currentPriority || priority === currentPriority;
+    const matchesStatus = !currentStatus || status === currentStatus;
     const matchesSearch = !searchQuery || text.includes(searchQuery);
     
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesPriority && matchesStatus && matchesSearch;
   });
   
   currentPage = 1;
@@ -393,7 +522,7 @@ function renderPaginationButtons(totalPages) {
     pagination.appendChild(createPageButton('1', true, () => goToPage(1)));
     if (startPage > 2) {
       const dots = document.createElement('span');
-      dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+      dots.className = 'relative inline-flex items-center px-3 py-1.5 border border-gray-300 bg-white text-xs font-medium text-gray-700';
       dots.textContent = '...';
       pagination.appendChild(dots);
     }
@@ -403,7 +532,7 @@ function renderPaginationButtons(totalPages) {
   for (let i = startPage; i <= endPage; i++) {
     const btn = createPageButton(i.toString(), true, () => goToPage(i));
     if (i === currentPage) {
-      btn.className = 'relative inline-flex items-center px-4 py-2 border border-blue-600 bg-blue-600 text-sm font-medium text-white';
+      btn.className = 'relative inline-flex items-center px-3 py-1.5 border border-[#1E3A8A] bg-[#1E3A8A] text-xs font-medium text-white';
     }
     pagination.appendChild(btn);
   }
@@ -412,7 +541,7 @@ function renderPaginationButtons(totalPages) {
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
       const dots = document.createElement('span');
-      dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+      dots.className = 'relative inline-flex items-center px-3 py-1.5 border border-gray-300 bg-white text-xs font-medium text-gray-700';
       dots.textContent = '...';
       pagination.appendChild(dots);
     }
@@ -425,8 +554,8 @@ function createPageButton(text, enabled, onClick) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = enabled 
-    ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors duration-150'
-    : 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed';
+    ? 'relative inline-flex items-center px-3 py-1.5 border border-gray-300 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition-colors duration-150'
+    : 'relative inline-flex items-center px-3 py-1.5 border border-gray-300 bg-gray-100 text-xs font-medium text-gray-400 cursor-not-allowed';
   btn.textContent = text;
   btn.disabled = !enabled;
   if (enabled) btn.onclick = onClick;
@@ -481,29 +610,6 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// category filter buttons (client-side)
-const catButtons = document.querySelectorAll('#categoryFilters .cat-btn');
-function setActiveCatButton(activeBtn) {
-  catButtons.forEach(b => {
-    if (b === activeBtn) {
-      b.classList.remove('bg-gray-100', 'text-gray-800');
-      b.classList.add('bg-blue-600', 'text-white');
-    } else {
-      b.classList.remove('bg-blue-600','text-white');
-      b.classList.add('bg-gray-100','text-gray-800');
-    }
-  });
-}
-
-catButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentCategory = btn.dataset.cat;
-    setActiveCatButton(btn);
-    filterTickets();
-    attachTicketHandlers();
-  });
-});
-
 // Attach handlers to visible rows
 function attachTicketHandlers() {
   document.querySelectorAll('#ticketsTableBody .ticket-row').forEach(row => {
@@ -553,9 +659,9 @@ function attachTicketHandlers() {
               const actionsCell = row.querySelector('td:last-child > div');
               if (actionsCell) {
                 const newArchiveBtn = document.createElement('button');
-                newArchiveBtn.className = 'archiveBtn px-3 py-1 rounded text-sm bg-gray-600 text-white hover:bg-gray-700';
+                newArchiveBtn.className = 'archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700';
                 newArchiveBtn.title = 'Archive this ticket';
-                newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
+                newArchiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i>';
                 newArchiveBtn.addEventListener('click', () => showArchiveModal(ticketId, row));
                 actionsCell.appendChild(newArchiveBtn);
               }
@@ -631,8 +737,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const hasTickets = document.querySelectorAll('#ticketsTableBody .ticket-row').length > 0;
   if (hasTickets) {
     initPagination();
-    // Set initial category to "All"
-    document.querySelector('#categoryFilters .cat-btn[data-cat="all"]')?.click();
   }
 });
 </script>

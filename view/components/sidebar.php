@@ -27,11 +27,32 @@ $navigation_items = [
             'href' => 'users.php'
         ],
         [
+            'id' => 'reports',
+            'label' => 'Reports',
+            'icon' => 'fa-solid fa-file-lines',
+            'color' => 'blue',
+            'href' => 'reports.php'
+        ],
+        [
+            'id' => 'logs',
+            'label' => 'Activity Logs',
+            'icon' => 'fa-solid fa-clipboard-list',
+            'color' => 'blue',
+            'href' => 'logs.php'
+        ],
+        [
             'id' => 'analytics',
             'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',
             'color' => 'blue',
             'href' => 'analytics.php'
+        ],
+        [
+            'id' => 'profile',
+            'label' => 'Profile',
+            'icon' => 'fa-solid fa-user-circle',
+            'color' => 'blue',
+            'href' => 'profile.php'
         ]
     ],
     'LaboratoryStaff' => [
@@ -76,13 +97,6 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-list',
             'color' => 'blue',
             'href' => 'registry.php'
-        ],
-        [
-            'id' => 'e-signature',
-            'label' => 'My E-Signature',
-            'icon' => 'fa-solid fa-signature',
-            'color' => 'blue',
-            'href' => 'e-signature.php'
         ]
     ],
     'Student' => [

@@ -139,7 +139,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     let controllerPath = '../../controller/get_notifications.php';
     
     // Adjust path based on current location
-    if (currentPath.includes('/view/StudentFaculty/')) {
+    if (currentPath.includes('/view/StudentFaculty/') || currentPath.includes('/view/Technician/') || currentPath.includes('/view/LaboratoryStaff/') || currentPath.includes('/view/Administrator/')) {
       controllerPath = '../../controller/get_notifications.php';
     } else if (currentPath.includes('/view/')) {
       controllerPath = '../controller/get_notifications.php';
