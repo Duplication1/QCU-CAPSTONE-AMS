@@ -14,10 +14,16 @@ class Config {
         $envFile = __DIR__ . '/../.env';
         
         if (!file_exists($envFile)) {
-            die('Error: .env file not found. Please copy .env.example to .env and configure it.');
+            error_log('Warning: .env file not found. Using default configuration.');
+            return; // Use defaults instead of dying
         }
         
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        
+        if ($lines === false) {
+            error_log('Warning: Could not read .env file. Using default configuration.');
+            return; // Use defaults
+        }
         
         foreach ($lines as $line) {
             // Skip comments

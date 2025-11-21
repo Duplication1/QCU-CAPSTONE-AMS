@@ -282,13 +282,30 @@ if ($q && $q->num_rows > 0) {
 // Now include layout header for normal page rendering
 include '../components/layout_header.php';
 ?>
+<style>
+html, body {
+    height: 100vh;
+    overflow: hidden;
+}
+#app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+</style>
 
         <!-- Main Content -->
-        <main class="p-6">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">User Management</h2>
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <div class="flex-1 flex flex-col overflow-hidden">  
 
-                <div class="flex items-center justify-between mb-4 gap-3">
+                <div class="flex items-center justify-between px-6 py-4 bg-white border-b gap-3">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">All users <span id="usersCount" class="text-sm text-gray-500"><?php echo count($users); ?></span></h3>
                     </div>
@@ -350,8 +367,8 @@ include '../components/layout_header.php';
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
- <table id="usersTable" class="min-w-full rounded-lg overflow-hidden divide-y divide-gray-200">
+                <div class="flex-1 overflow-auto px-6">
+ <table id="usersTable" class="min-w-full divide-y divide-gray-200">
   <thead class="bg-blue-100 text-[#1E3A8A] sticky top-0 z-10">
     <tr>
       <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Name</th>
@@ -425,11 +442,10 @@ include '../components/layout_header.php';
     <?php endforeach; ?>
   </tbody>
 </table>
-
                 </div>
                 
                 <!-- Pagination Controls -->
-                <div class="mt-4 flex items-center justify-center border-t pt-4">
+                <div class="px-6 py-3 flex items-center justify-center border-t bg-white">
                     <div id="pageNumbers" class="flex items-center gap-1">
                         <!-- Page numbers will be inserted here -->
                     </div>
@@ -798,39 +814,15 @@ function showToast(message, type = 'success', duration = 3000) {
     }, duration);
 }
 
-// Show a top-of-page alert (used by Student/Faculty flows). Inserts a temporary alert above <main>
+// Show a top-of-page alert (now uses fixed-position chip notification)
 function showTopAlert(type, msg, duration = 5000) {
     // Sanitize / normalize message (avoid dumping raw JSON)
     if (msg && typeof msg === 'string' && msg.trim().startsWith('{') && msg.indexOf('"success"') !== -1) {
         // Fallback generic text if a JSON blob was passed accidentally
         msg = type === 'success' ? 'Operation completed successfully.' : 'An error occurred.';
     }
-    const existing = document.getElementById('topAjaxAlert');
-    if (existing) { try { existing.remove(); } catch(e){} }
-    const div = document.createElement('div');
-    div.id = 'topAjaxAlert';
-    const base = 'px-4 py-2 rounded mb-4 text-sm flex items-start gap-3 max-w-xl shadow';
-    if (type === 'success') {
-        div.className = 'bg-green-100 border border-green-400 text-green-700 ' + base;
-        div.innerHTML = '<span class="font-semibold">Success:</span><span class="flex-1">' + msg + '</span>';
-    } else {
-        div.className = 'bg-red-100 border border-red-400 text-red-700 ' + base;
-        div.innerHTML = '<span class="font-semibold">Error:</span><span class="flex-1">' + msg + '</span>';
-    }
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'text-xs font-medium opacity-70 hover:opacity-100 transition';
-    closeBtn.textContent = '✕';
-    closeBtn.onclick = () => { try { div.remove(); } catch(e){} };
-    div.appendChild(closeBtn);
-    const main = document.querySelector('main');
-    if (main) {
-        // Insert as first child inside main (matches student side placement)
-        main.insertBefore(div, main.firstChild);
-    } else {
-        document.body.appendChild(div);
-    }
-    setTimeout(() => { try { div.remove(); } catch(e){} }, duration);
+    // Use the fixed-position chip notification system
+    showChip(msg, type, 'admin-alert-chip', duration);
 }
 
 function filterUsers() {
@@ -875,7 +867,7 @@ function editUser(btn, userId) {
     if (!user) { showToast('User not found', 'error'); return; }
 
     const modal = document.getElementById('editUserModal');
-    if (!modal) { alert('Edit modal not found'); return; }
+    if (!modal) { showNotification('Edit modal not found', 'error'); return; }
 
     document.getElementById('edit_user_id').value = userId;
 
@@ -1182,8 +1174,18 @@ function formatDateShortDate(d){ try { return new Date(d).toLocaleDateString('en
 async function suspendUser(userId) {
     const modal = document.getElementById('suspendConfirmModal');
     if (!modal) {
-        // fallback to browser confirm
-        if (!confirm('Are you sure you want to deactivate this user? Their status will be set to Deactivated.')) return;
+        // fallback to async confirm modal
+        const confirmed = await showConfirmModal({
+            title: 'Deactivate User',
+            message: 'Are you sure you want to deactivate this user? Their status will be set to Deactivated.',
+            confirmText: 'Deactivate',
+            cancelText: 'Cancel',
+            confirmColor: 'bg-orange-600 hover:bg-orange-700',
+            type: 'warning'
+        });
+        
+        if (!confirmed) return;
+        
         try {
             const form = new URLSearchParams();
             form.append('ajax','1'); form.append('action','suspend_user'); form.append('user_id', String(userId));
@@ -1195,7 +1197,7 @@ async function suspendUser(userId) {
             } else {
                 showTopAlert('error', j.message || 'Deactivate failed');
             }
-        } catch (err) { console.error(err); alert('Request failed'); }
+        } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
         return;
     }
 
@@ -1206,7 +1208,17 @@ async function suspendUser(userId) {
 }
 
 async function unsuspendUser(userId) {
-    if (!confirm('Are you sure you want to activate this user? Their status will be set to Active.')) return;
+    const confirmed = await showConfirmModal({
+        title: 'Activate User',
+        message: 'Are you sure you want to activate this user? Their status will be set to Active.',
+        confirmText: 'Activate',
+        cancelText: 'Cancel',
+        confirmColor: 'bg-green-600 hover:bg-green-700',
+        type: 'success'
+    });
+    
+    if (!confirmed) return;
+    
     try {
         const form = new URLSearchParams();
         form.append('ajax','1'); form.append('action','unsuspend_user'); form.append('user_id', String(userId));
@@ -1218,7 +1230,7 @@ async function unsuspendUser(userId) {
         } else {
             showTopAlert('error', j.message || 'Activate failed');
         }
-    } catch (err) { console.error(err); alert('Request failed'); }
+    } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
 }
 
 function updateUserStatus(userId, newStatus) {
@@ -1277,8 +1289,18 @@ async function deleteUser(btn, userId) {
     // open the simple Yes/No confirmation modal
     const modal = document.getElementById('deleteConfirmModal');
     if (!modal) {
-        // fallback to browser confirm
-        if (!confirm('Are you sure you want to delete this?')) return;
+        // fallback to async confirm modal
+        const confirmed = await showConfirmModal({
+            title: 'Delete User',
+            message: 'Are you sure you want to delete this user? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            confirmColor: 'bg-red-600 hover:bg-red-700',
+            type: 'danger'
+        });
+        
+        if (!confirmed) return;
+        
         btn.disabled = true;
         try {
             const form = new URLSearchParams();
@@ -1294,7 +1316,7 @@ async function deleteUser(btn, userId) {
             } else {
                 showTopAlert('error', j.message || 'Delete failed');
             }
-        } catch (err) { console.error(err); alert('Request failed'); }
+        } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
         btn.disabled = false;
         return;
     }
@@ -1340,7 +1362,7 @@ async function confirmSuspend() {
         } else {
             showTopAlert('error', j.message || 'Deactivate failed');
         }
-    } catch (err) { console.error(err); alert('Request failed'); }
+    } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
     if (btn) btn.disabled = false;
     closeSuspendModal();
 }
@@ -1425,7 +1447,7 @@ async function toggleStatus(btn, userId) {
         } else {
             showToast(j.message || 'Update failed', 'error');
         }
-    } catch (err) { console.error(err); alert('Request failed'); }
+    } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
     btn.disabled = false;
 }
 

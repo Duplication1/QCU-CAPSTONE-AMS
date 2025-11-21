@@ -125,23 +125,8 @@ include '../components/layout_header.php';
     </div>
 
     <!-- Success/Error Messages -->
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            <?php 
-                echo htmlspecialchars($_SESSION['success_message']); 
-                unset($_SESSION['success_message']);
-            ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <?php 
-                echo htmlspecialchars($_SESSION['error_message']); 
-                unset($_SESSION['error_message']);
-            ?>
-        </div>
-    <?php endif; ?>
+    <!-- Session Messages -->
+    <?php include '../components/session_messages.php'; ?>
 
     <!-- Tab Navigation -->
     <div class="bg-white rounded-xl shadow-lg mb-6">
@@ -721,33 +706,42 @@ include '../components/layout_header.php';
                     `;
                     document.body.appendChild(qrModal);
                 } else {
-                    alert('Error: ' + data.message);
+                    showNotification(data.message, 'error');
                 }
             })
             .catch(error => {
-                alert('Error generating QR code');
+                showNotification('Error generating QR code', 'error');
             });
     }
 
     // Delete Asset
-    function deleteAsset(assetId) {
-        if (confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
-            fetch(`../../controller/delete_asset.php?id=${assetId}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Asset deleted successfully');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                alert('Error deleting asset');
-            });
-        }
+    async function deleteAsset(assetId) {
+        const confirmed = await showConfirmModal({
+            title: 'Delete Asset',
+            message: 'Are you sure you want to delete this asset? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            confirmColor: 'bg-red-600 hover:bg-red-700',
+            type: 'danger'
+        });
+        
+        if (!confirmed) return;
+        
+        fetch(`../../controller/delete_asset.php?id=${assetId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Asset deleted successfully', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error deleting asset', 'error');
+        });
     }
 
     // Note: openAddAssetModal and editAsset functions are in add_edit_asset_modal.php

@@ -35,19 +35,8 @@ include '../components/layout_header.php';
         <!-- Main Content -->
         <main class="p-6">
         
-        <?php if (isset($_SESSION['error_message'])): ?>
-<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    <strong>Error:</strong> <?php echo htmlspecialchars($_SESSION['error_message']); ?>
-</div>
-<?php unset($_SESSION['error_message']); ?>
-<?php endif; ?>
-
-<?php if (isset($_SESSION['success_message'])): ?>
-<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-    <strong>Success:</strong> <?php echo htmlspecialchars($_SESSION['success_message']); ?>
-</div>
-<?php unset($_SESSION['success_message']); ?>
-<?php endif; ?>
+        <!-- Session Messages -->
+        <?php include '../components/session_messages.php'; ?>
 
         <!-- E-Signature Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -117,7 +106,7 @@ include '../components/layout_header.php';
                             </button>
                             <?php if ($current_signature): ?>
                             <button type="button" 
-                                    onclick="if(confirm('Are you sure you want to remove your signature?')) window.location.href='../../controller/delete_signature.php'"
+                                    onclick="removeSignature()"
                                     class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                                 <i class="fa-solid fa-trash mr-2"></i>Remove
                             </button>
@@ -164,6 +153,22 @@ include '../components/layout_header.php';
                 reader.readAsDataURL(file);
             }
         });
+
+        // Remove signature with confirmation
+        async function removeSignature() {
+            const confirmed = await showConfirmModal({
+                title: 'Remove Signature',
+                message: 'Are you sure you want to remove your signature?',
+                confirmText: 'Remove',
+                cancelText: 'Cancel',
+                confirmColor: 'bg-red-600 hover:bg-red-700',
+                type: 'danger'
+            });
+            
+            if (confirmed) {
+                window.location.href = '../../controller/delete_signature.php';
+            }
+        }
         </script>
 
         </main>

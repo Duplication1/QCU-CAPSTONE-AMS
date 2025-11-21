@@ -112,7 +112,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   <ul class="text-sm">
       <li class="px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100 hover:rounded-md transition-all duration-200">
       <i class="fa-solid fa-user text-[#1E3A8A]"></i>
-      <a href="../../view/profile.php" class="text-gray-800 hover:text-[#1E3A8A]">View Profile</a>
+      <a href="profile.php" class="text-gray-800 hover:text-[#1E3A8A]">View Profile</a>
     </li>
     <li class="px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-100 hover:rounded-md transition-all duration-200">
       <i class="fa-solid fa-gear text-[#1E3A8A]"></i>

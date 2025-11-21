@@ -264,12 +264,12 @@ function viewPCDetails(pcId) {
                 // Show modal
                 document.getElementById('pcDetailsModal').classList.remove('hidden');
             } else {
-                alert('Error loading PC details: ' + data.message);
+                showNotification(data.message, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to load PC details');
+            showNotification('Failed to load PC details', 'error');
         });
 }
 
@@ -279,11 +279,11 @@ function closePCDetailsModal() {
 }
 
 function openAddPCModal() {
-    alert('Add PC Modal - To be implemented');
+    showNotification('Add PC functionality - To be implemented', 'info');
 }
 
 function openAddComponentModal() {
-    alert('Add Component Modal - To be implemented');
+    showNotification('Add Component functionality - To be implemented', 'info');
 }
 
 // Close modal when clicking outside

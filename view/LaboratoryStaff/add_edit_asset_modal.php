@@ -262,7 +262,7 @@
                 }
             })
             .catch(error => {
-                alert('Error loading asset data');
+                showNotification('Error loading asset data', 'error');
             });
     }
 
@@ -279,14 +279,14 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                location.reload();
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert('Error: ' + data.message);
+                showNotification(data.message, 'error');
             }
         })
         .catch(error => {
-            alert('Error saving asset');
+            showNotification('Error saving asset', 'error');
         });
     });
 </script>

@@ -389,33 +389,10 @@ include '../components/layout_header.php';
 </div>
 
 <script>
+// showAlert function is now in notifications.js as showNotification
+// Keeping this as wrapper for backward compatibility
 function showAlert(type, msg) {
-    // Remove existing alert
-    const existing = document.getElementById('ajaxAlert');
-    if (existing) existing.remove();
-
-    const div = document.createElement('div');
-    div.id = 'ajaxAlert';
-    
-    if (type === 'success') {
-        div.className = 'bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-4';
-        div.innerHTML = '<strong>Success!</strong> ' + msg;
-    } else {
-        div.className = 'bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-4';
-        div.innerHTML = '<strong>Error!</strong> ' + msg;
-    }
-    
-    // Insert into alert container
-    const alertContainer = document.getElementById('alertContainer');
-    if (alertContainer) {
-        alertContainer.appendChild(div);
-    }
-    
-    // Scroll to top to show the alert
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => div.remove(), 5000);
+    showNotification(msg, type, 5000);
 }
 
 function viewTicket(ticketId) {
@@ -537,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!ticketId || ticketId === '' || ticketId === '0') {
             console.error('Missing ticket ID in form. Field exists:', !!ticketIdField, 'Value:', ticketId);
-            alert('Error: Ticket ID is missing. Please try again.');
+            showNotification('Error: Ticket ID is missing. Please try again.', 'error');
             return;
         }
         

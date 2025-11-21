@@ -58,19 +58,8 @@ include '../components/layout_header.php';
         <!-- Main Content -->
         <main class="p-6">
             
-            <?php if (isset($_SESSION['error_message'])): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                <strong>Error:</strong> <?php echo htmlspecialchars($_SESSION['error_message']); ?>
-            </div>
-            <?php unset($_SESSION['error_message']); ?>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                <strong>Success:</strong> <?php echo htmlspecialchars($_SESSION['success_message']); ?>
-            </div>
-            <?php unset($_SESSION['success_message']); ?>
-            <?php endif; ?>
+            <!-- Session Messages -->
+            <?php include '../components/session_messages.php'; ?>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -565,9 +554,16 @@ function closeViewModal() {
 
 // Approve Request
 async function approveRequest(requestId) {
-    if (!confirm('Are you sure you want to approve this borrowing request?')) {
-        return;
-    }
+    const confirmed = await showConfirmModal({
+        title: 'Approve Borrowing Request',
+        message: 'Are you sure you want to approve this borrowing request?',
+        confirmText: 'Approve',
+        cancelText: 'Cancel',
+        confirmColor: 'bg-green-600 hover:bg-green-700',
+        type: 'success'
+    });
+    
+    if (!confirmed) return;
     
     try {
         const formData = new FormData();
@@ -583,18 +579,25 @@ async function approveRequest(requestId) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Error: ' + (data.error || 'Failed to approve request'));
+            showNotification(data.error || 'Failed to approve request', 'error');
         }
     } catch (error) {
-        alert('Error approving request. Please try again.');
+        showNotification('Error approving request. Please try again.', 'error');
     }
 }
 
 // Cancel Request
 async function cancelRequest(requestId) {
-    if (!confirm('Are you sure you want to cancel this borrowing request?')) {
-        return;
-    }
+    const confirmed = await showConfirmModal({
+        title: 'Cancel Borrowing Request',
+        message: 'Are you sure you want to cancel this borrowing request?',
+        confirmText: 'Cancel Request',
+        cancelText: 'Go Back',
+        confirmColor: 'bg-red-600 hover:bg-red-700',
+        type: 'danger'
+    });
+    
+    if (!confirmed) return;
     
     try {
         const formData = new FormData();
@@ -610,10 +613,10 @@ async function cancelRequest(requestId) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Error: ' + (data.error || 'Failed to cancel request'));
+            showNotification(data.error || 'Failed to cancel request', 'error');
         }
     } catch (error) {
-        alert('Error cancelling request. Please try again.');
+        showNotification('Error cancelling request. Please try again.', 'error');
     }
 }
 
@@ -631,7 +634,7 @@ function closeReturnModal() {
 // Print Borrowing Document
 async function printBorrowingDocument() {
     if (!currentRequest) {
-        alert('No request data available');
+        showNotification('No request data available', 'error');
         return;
     }
     
@@ -641,7 +644,7 @@ async function printBorrowingDocument() {
         const data = await response.json();
         
         if (!data.success) {
-            alert('Error loading signatures: ' + (data.error || 'Unknown error'));
+            showNotification(data.error || 'Unknown error', 'error');
             return;
         }
         
@@ -658,7 +661,7 @@ async function printBorrowingDocument() {
         }, 250);
     } catch (error) {
         console.error('Print error:', error);
-        alert('Error printing document. Please try again.');
+        showNotification('Error printing document. Please try again.', 'error');
     }
 }
 

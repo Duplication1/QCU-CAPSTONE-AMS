@@ -6,6 +6,8 @@
     <!-- DataTables JavaScript -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.tailwind.min.js"></script>
+    <!-- Notification System -->
+    <script src="../js/notifications.js"></script>
     <!-- Include Sidebar JavaScript -->
     <script src="../components/sidebar.js"></script>
     <!-- Dark mode toggle script (persists preference) -->

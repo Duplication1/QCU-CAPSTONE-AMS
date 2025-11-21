@@ -99,13 +99,6 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-check',
             'color' => 'blue',
             'href' => 'requests.php'
-        ],
-        [
-            'id' => 'e-signature',
-            'label' => 'My E-Signature',
-            'icon' => 'fa-solid fa-signature',
-            'color' => 'blue',
-            'href' => 'e-signature.php'
         ]
     ],
     'Faculty' => [
@@ -122,13 +115,6 @@ $navigation_items = [
             'icon' => 'fa-solid fa-clipboard-check',
             'color' => 'blue',
             'href' => 'requests.php'
-        ],
-        [
-            'id' => 'e-signature',
-            'label' => 'My E-Signature',
-            'icon' => 'fa-solid fa-signature',
-            'color' => 'blue',
-            'href' => 'e-signature.php'
         ]
     ],
     'Technician' => [

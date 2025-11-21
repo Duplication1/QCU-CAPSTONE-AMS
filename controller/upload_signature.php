@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Determine redirect URL based on role
         $redirect_url = match($_SESSION['role']) {
             'Laboratory Staff' => '../view/LaboratoryStaff/e-signature.php',
-            default => '../view/StudentFaculty/e-signature.php'
+            default => '../view/StudentFaculty/profile.php'
         };
         
         // Validate file type
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Determine redirect URL based on role
         $redirect_url = match($_SESSION['role']) {
             'Laboratory Staff' => '../view/LaboratoryStaff/e-signature.php',
-            default => '../view/StudentFaculty/e-signature.php'
+            default => '../view/StudentFaculty/profile.php'
         };
         
         header("Location: $redirect_url");
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Determine redirect URL based on role
     $redirect_url = match($_SESSION['role']) {
         'Laboratory Staff' => '../view/LaboratoryStaff/e-signature.php',
-        default => '../view/StudentFaculty/e-signature.php'
+        default => '../view/StudentFaculty/profile.php'
     };
     
     header("Location: $redirect_url");

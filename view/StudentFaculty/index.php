@@ -432,7 +432,7 @@ function handleIssueClick(issueType) {
             break;
             
         default:
-            alert('Please select a valid option.');
+            showNotification('Please select a valid option.', 'warning');
             return;
     }
     
@@ -1154,7 +1154,7 @@ function selectAssetFromTable(assetId) {
 // Proceed to Details Form
 function proceedToDetails() {
     if (!selectedAsset) {
-        alert('Please select an asset first.');
+        showNotification('Please select an asset first.', 'warning');
         return;
     }
     
@@ -1195,12 +1195,12 @@ function proceedToTerms() {
     const purpose = document.getElementById('borrowPurpose').value;
     
     if (!borrowDate || !returnDate || !purpose) {
-        alert('Please fill in all borrowing details.');
+        showNotification('Please fill in all borrowing details.', 'warning');
         return;
     }
     
     if (new Date(returnDate) <= new Date(borrowDate)) {
-        alert('Return date must be after borrow date.');
+        showNotification('Return date must be after borrow date.', 'error');
         return;
     }
     
@@ -1239,7 +1239,7 @@ function proceedToPreview() {
     }
     
     if (!document.getElementById('agreeTerms').checked) {
-        alert('Please agree to the terms and conditions.');
+        showNotification('Please agree to the terms and conditions.', 'warning');
         return;
     }
     
@@ -1340,13 +1340,25 @@ function submitBorrowing() {
     // Check if user has e-signature
     const signatureImg = document.getElementById('borrowerSignature');
     if (!signatureImg) {
-        alert('You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page.');
+        showNotification('You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page.', 'error', 6000);
         return;
     }
     
-    if (!confirm('Are you sure you want to submit this borrowing request?')) {
-        return;
-    }
+    showConfirmModal({
+        title: 'Submit Borrowing Request',
+        message: 'Are you sure you want to submit this borrowing request?',
+        confirmText: 'Submit',
+        cancelText: 'Cancel',
+        confirmColor: 'bg-blue-600 hover:bg-blue-700',
+        type: 'info'
+    }).then((confirmed) => {
+        if (!confirmed) return;
+        
+        submitBorrowingRequest();
+    });
+}
+
+function submitBorrowingRequest() {
     
     // Create form and submit
     const form = document.createElement('form');

@@ -15,7 +15,7 @@ $user_id = $_SESSION['user_id'];
 // Determine redirect URL based on role
 $redirect_url = match($_SESSION['role']) {
     'Laboratory Staff' => '../view/LaboratoryStaff/e-signature.php',
-    default => '../view/StudentFaculty/e-signature.php'
+    default => '../view/StudentFaculty/profile.php'
 };
 
 try {
