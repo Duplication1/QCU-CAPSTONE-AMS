@@ -118,8 +118,8 @@ include '../components/layout_header.php';
                         </div>
                         <div class="w-12 h-8">
                             <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
-                                <path d="M2 38 L12 35 L22 30 L32 28 L42 25 L52 20 L62 15" stroke="#6366f1" stroke-width="2" fill="none"/>
-                                <circle cx="62" cy="15" r="2" fill="#6366f1"/>
+                                <path d="M2 38 L12 35 L22 30 L32 28 L42 25 L52 20 L62 15" stroke="#1E3A8A" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="15" r="2" fill="#1E3A8A"/>
                             </svg>
                         </div>
                     </div>
@@ -137,8 +137,8 @@ include '../components/layout_header.php';
                         </div>
                         <div class="w-12 h-8">
                             <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
-                                <path d="M2 25 L12 20 L22 22 L32 18 L42 15 L52 10 L62 8" stroke="#6366f1" stroke-width="2" fill="none"/>
-                                <circle cx="62" cy="8" r="2" fill="#6366f1"/>
+                                <path d="M2 25 L12 20 L22 22 L32 18 L42 15 L52 10 L62 8" stroke="#1E3A8A" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="8" r="2" fill="#1E3A8A"/>
                             </svg>
                         </div>
                     </div>
@@ -156,8 +156,8 @@ include '../components/layout_header.php';
                         </div>
                         <div class="w-12 h-8">
                             <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
-                                <path d="M2 30 L12 28 L22 25 L32 20 L42 18 L52 12 L62 10" stroke="#6366f1" stroke-width="2" fill="none"/>
-                                <circle cx="62" cy="10" r="2" fill="#6366f1"/>
+                                <path d="M2 30 L12 28 L22 25 L32 20 L42 18 L52 12 L62 10" stroke="#1E3A8A" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="10" r="2" fill="#1E3A8A"/>
                             </svg>
                         </div>
                     </div>
@@ -175,8 +175,8 @@ include '../components/layout_header.php';
                         </div>
                         <div class="w-12 h-8">
                             <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
-                                <path d="M2 35 L12 32 L22 30 L32 28 L42 26 L52 24 L62 22" stroke="#6366f1" stroke-width="2" fill="none"/>
-                                <circle cx="62" cy="22" r="2" fill="#6366f1"/>
+                                <path d="M2 35 L12 32 L22 30 L32 28 L42 26 L52 24 L62 22" stroke="#1E3A8A" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="22" r="2" fill="#1E3A8A"/>
                             </svg>
                         </div>
                     </div>
@@ -194,8 +194,8 @@ include '../components/layout_header.php';
                         </div>
                         <div class="w-12 h-8">
                             <svg class="w-full h-full" viewBox="0 0 64 40" fill="none">
-                                <path d="M2 32 L12 30 L22 28 L32 26 L42 24 L52 22 L62 18" stroke="#6366f1" stroke-width="2" fill="none"/>
-                                <circle cx="62" cy="18" r="2" fill="#6366f1"/>
+                                <path d="M2 32 L12 30 L22 28 L32 26 L42 24 L52 22 L62 18" stroke="#1E3A8A" stroke-width="2" fill="none"/>
+                                <circle cx="62" cy="18" r="2" fill="#1E3A8A"/>
                             </svg>
                         </div>
                     </div>
@@ -208,13 +208,11 @@ include '../components/layout_header.php';
             <!-- Second Metrics Row -->
             <div class="flex flex-wrap gap-2 mb-2 flex-shrink-0">
                 <!-- Ticket Resolution -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-clock-rotate-left text-cyan-600 text-base"></i>
-                        <div>
-                            <h3 class="text-xs font-semibold text-gray-900">Ticket Resolution</h3>
-                            <p class="text-[10px] text-gray-500">Avg resolution time</p>
-                        </div>
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px] relative">
+                    <i class="fas fa-clock-rotate-left text-[#1E3A8A] text-base absolute top-3 right-3"></i>
+                    <div class="mb-2">
+                        <h3 class="text-xs font-semibold text-gray-900">Ticket Resolution</h3>
+                        <p class="text-[10px] text-gray-500">Avg resolution time</p>
                     </div>
                     <div class="mb-2">
                         <p class="text-2xl font-bold text-gray-900"><?php echo $ticketResolution; ?> days</p>
@@ -223,30 +221,26 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Prediction Accuracy -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-bullseye text-indigo-600 text-base"></i>
-                        <div>
-                            <h3 class="text-xs font-semibold text-gray-900">Prediction Accuracy</h3>
-                            <p class="text-[10px] text-gray-500">Model performance</p>
-                        </div>
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px] relative">
+                    <i class="fas fa-bullseye text-[#1E3A8A] text-base absolute top-3 right-3"></i>
+                    <div class="mb-2">
+                        <h3 class="text-xs font-semibold text-gray-900">Prediction Accuracy</h3>
+                        <p class="text-[10px] text-gray-500">Model performance</p>
                     </div>
                     <div class="h-24">
                         <canvas id="predictionAccuracyChart"></canvas>
                     </div>
                     <div class="text-center mt-1">
-                        <p class="text-lg font-bold text-indigo-600"><?php echo $predictionAccuracy; ?>%</p>
+                        <p class="text-lg font-bold text-[#1E3A8A]"><?php echo $predictionAccuracy; ?>%</p>
                     </div>
                 </div>
 
                 <!-- System Health -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-heart-pulse text-teal-600 text-base"></i>
-                        <div>
-                            <h3 class="text-xs font-semibold text-gray-900">System Health</h3>
-                            <p class="text-[10px] text-gray-500">Overall status</p>
-                        </div>
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px] relative">
+                    <i class="fas fa-heart-pulse text-[#1E3A8A] text-base absolute top-3 right-3"></i>
+                    <div class="mb-2">
+                        <h3 class="text-xs font-semibold text-gray-900">System Health</h3>
+                        <p class="text-[10px] text-gray-500">Overall status</p>
                     </div>
                     <div class="mb-2">
                         <p class="text-2xl font-bold text-gray-900"><?php echo $systemHealth; ?>%</p>
@@ -255,13 +249,11 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Maintenance Status -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-wrench text-rose-600 text-base"></i>
-                        <div>
-                            <h3 class="text-xs font-semibold text-gray-900">Maintenance Status</h3>
-                            <p class="text-[10px] text-gray-500">Scheduled tasks</p>
-                        </div>
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px] relative">
+                    <i class="fas fa-wrench text-[#1E3A8A] text-base absolute top-3 right-3"></i>
+                    <div class="mb-2">
+                        <h3 class="text-xs font-semibold text-gray-900">Maintenance Status</h3>
+                        <p class="text-[10px] text-gray-500">Scheduled tasks</p>
                     </div>
                     <div class="mb-2">
                         <p class="text-2xl font-bold text-gray-900"><?php echo $maintenanceScheduled; ?></p>
@@ -283,7 +275,7 @@ include '../components/layout_header.php';
                     </div>
                     <div class="flex justify-center gap-4 mt-2 pt-2 border-t border-gray-100">
                         <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                            <span class="w-2 h-2 rounded-full bg-[#1E3A8A]"></span>
                             <span class="text-[10px] text-gray-600">Created</span>
                         </div>
                         <div class="flex items-center gap-1">
@@ -304,15 +296,15 @@ include '../components/layout_header.php';
                     </div>
                     <div class="flex justify-center gap-3 mt-2 pt-2 border-t border-gray-100">
                         <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                            <span class="w-2 h-2 rounded-full bg-[#1E3A8A]"></span>
                             <span class="text-[10px] text-gray-600">VALUE</span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span class="w-2 h-2 rounded-full bg-[#2563eb]"></span>
                             <span class="text-[10px] text-gray-600">VALUE</span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span class="w-2 h-2 rounded-full bg-[#60a5fa]"></span>
                             <span class="text-[10px] text-gray-600">VALUE</span>
                         </div>
                     </div>
@@ -337,14 +329,14 @@ include '../components/layout_header.php';
                     </div>
                     <div class="flex items-center gap-2 mb-2">
                         <div class="flex items-center gap-1">
-                            <i class="fas fa-users text-blue-600 text-xs"></i>
+                            <i class="fas fa-users text-[#1E3A8A] text-xs"></i>
                             <span class="text-[10px] text-gray-500">Active Users</span>
                         </div>
                         <p class="text-xl font-bold text-gray-900"><?php echo number_format($activeUsers * 100); ?></p>
                     </div>
                     <div class="mb-2">
                         <div class="flex items-center gap-1">
-                            <i class="fas fa-server text-green-600 text-xs"></i>
+                            <i class="fas fa-server text-[#1E3A8A] text-xs"></i>
                             <span class="text-[10px] text-gray-500">System Uptime</span>
                         </div>
                         <p class="text-xl font-bold text-gray-900"><?php echo $uptimePercentage; ?>%</p>
@@ -372,7 +364,7 @@ include '../components/layout_header.php';
                     {
                         label: 'Created',
                         data: <?php echo json_encode($trendingCounts); ?>,
-                        backgroundColor: '#2563eb',
+                        backgroundColor: '#1E3A8A',
                         borderRadius: 4,
                         barThickness: 16
                     },
@@ -418,8 +410,8 @@ include '../components/layout_header.php';
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
                     data: [88, 90, 89, 91, 92, 92],
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderColor: '#1E3A8A',
+                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4,
@@ -455,7 +447,7 @@ include '../components/layout_header.php';
                 labels: ['New', 'Active', 'Aging', 'EOL'],
                 datasets: [{
                     data: [<?php echo $lifecycleNew; ?>, <?php echo $lifecycleActive; ?>, <?php echo $lifecycleAging; ?>, <?php echo $lifecycleEOL; ?>],
-                    backgroundColor: ['#8b5cf6', '#f59e0b', '#6b7280'],
+                    backgroundColor: ['#1E3A8A', '#2563eb', '#60a5fa'],
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
@@ -478,7 +470,7 @@ include '../components/layout_header.php';
                 labels: ['Critical', 'High', 'Medium', 'Low'],
                 datasets: [{
                     data: [<?php echo $failureRiskCritical; ?>, <?php echo $failureRiskHigh; ?>, <?php echo $failureRiskMedium; ?>, <?php echo $failureRiskLow; ?>],
-                    backgroundColor: ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'],
+                    backgroundColor: ['#1E3A8A', '#2563eb', '#60a5fa', '#93c5fd'],
                     borderRadius: 6,
                     borderSkipped: false
                 }]
