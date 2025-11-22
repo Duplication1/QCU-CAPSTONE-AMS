@@ -247,7 +247,9 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
 
 <!-- Sidebar -->
 <aside id="sidebar"
-    class="fixed left-0 top-[85px] h-[calc(100vh-85px)] w-[220px] bg-white shadow-xl border-r border-gray-200 flex flex-col -translate-x-full z-50">
+    class="peer fixed left-0 top-[85px] h-[calc(100vh-85px)] bg-white shadow-xl border-r border-gray-200 flex flex-col z-50 
+           -translate-x-full lg:translate-x-0 lg:w-20 lg:hover:w-[220px] 
+           w-[220px] transition-all duration-300 ease-in-out group">
 
     <!-- Navigation Menu -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto overflow-x-hidden">
@@ -258,7 +260,7 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
         ?>
     <!-- <?php echo htmlspecialchars($item['label']); ?> -->
         <a href="<?php echo htmlspecialchars($item['href']); ?>"
-            class="group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
+            class="group/item flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
             hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
           <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
             <div class="flex items-center min-w-0 flex-1">
@@ -266,10 +268,14 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
                 <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
                <?php echo $is_active ? 'text-white' : ''; ?>"></i>
                 </div>
-                <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate"><?php echo htmlspecialchars($item['label']); ?></span>
+                <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate 
+                             lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">
+                    <?php echo htmlspecialchars($item['label']); ?>
+                </span>
             </div>
             <?php if ($show_badge): ?>
-            <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse">
+            <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse 
+                         lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto transition-all duration-300">
                 <?php echo $new_tickets_count; ?>
             </span>
             <?php endif; ?>
@@ -279,11 +285,12 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
 
     <!-- Logout at Bottom -->
     <div class="border-t border-gray-200 p-4 flex-shrink-0">
-        <a href="../../controller/logout_controller.php" class="group flex items-center px-3 py-2.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
+        <a href="../../controller/logout_controller.php" class="group/item flex items-center px-3 py-2.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
             <div class="flex-shrink-0">
                 <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
             </div>
-            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0">Logout</span>
+            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0 
+                         lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">Logout</span>
         </a>
     </div>
 </aside>

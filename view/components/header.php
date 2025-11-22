@@ -43,14 +43,14 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   <div class="flex items-center justify-between h-full px-4 md:px-6">
 
     <!-- Left: Burger Menu + Logo + oneQCU -->
-    <div class="flex items-center space-x-2 md:space-x-4">
-      <!-- Burger Menu Button -->
-      <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-white/10 transition-all duration-300">
+    <div class="flex items-center space-x-2 md:space-x-2">
+      <!-- Burger Menu Button - Only visible on mobile -->
+      <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-all duration-300">
         <i id="toggle-icon" class="fa-solid fa-bars text-lg md:text-xl"></i>
       </button>
 
       <!-- Logo + Text -->
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 md:pl-1">
         <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-10 h-10 md:w-12 md:h-12">
         <div class="text-xl md:text-2xl font-bold font-[Poppins] leading-none whitespace-nowrap">
           <span class="text-white">one</span><span class="text-[#F87171]">Q</span><span class="text-[#60A5FA]">C</span><span class="text-[#FACC15]">U</span>

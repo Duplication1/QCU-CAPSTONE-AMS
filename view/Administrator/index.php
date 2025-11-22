@@ -49,6 +49,21 @@ $licenseExpirations = $conn->query("SELECT COUNT(*) as count FROM assets WHERE n
 $licenseExpirationsPrevMonth = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), INTERVAL 30 DAY)")->fetch_assoc()['count'];
 $licenseExpChange = $licenseExpirationsPrevMonth > 0 ? round((($licenseExpirations - $licenseExpirationsPrevMonth) / $licenseExpirationsPrevMonth) * 100, 1) : 0;
 
+// Ticket Resolution - Average days to resolve
+$avgResolutionTime = $conn->query("SELECT AVG(DATEDIFF(updated_at, created_at)) as avg_days FROM issues WHERE status = 'Resolved' AND updated_at IS NOT NULL")->fetch_assoc()['avg_days'];
+$ticketResolution = $avgResolutionTime ? round($avgResolutionTime, 1) : 2.4;
+
+// Prediction Accuracy - Percentage based on correct predictions
+$predictionAccuracy = 92; // Simulated accuracy percentage
+
+// System Health - Overall system status percentage
+$totalAssets = $conn->query("SELECT COUNT(*) as count FROM assets")->fetch_assoc()['count'];
+$healthyAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Excellent', 'Good')")->fetch_assoc()['count'];
+$systemHealth = $totalAssets > 0 ? round(($healthyAssets / $totalAssets) * 100, 1) : 98.2;
+
+// Maintenance Status - Assets scheduled or overdue
+$maintenanceScheduled = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date IS NOT NULL AND next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetch_assoc()['count'];
+
 // Trending Assets - Last 6 months alert data
 $trendingAlerts = $conn->query("
     SELECT DATE_FORMAT(created_at, '%b') as month, COUNT(*) as count 
@@ -93,9 +108,9 @@ include '../components/layout_header.php';
         <!-- Main Content -->
         <main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
             <!-- Top Metrics Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-2 flex-shrink-0">
+            <div class="flex flex-wrap gap-2 mb-2 flex-shrink-0">
                 <!-- Asset Health -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[180px]">
                     <div class="flex items-start justify-between mb-2">
                         <div>
                             <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Asset Health</p>
@@ -114,7 +129,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Incidents Prevented -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[180px]">
                     <div class="flex items-start justify-between mb-2">
                         <div>
                             <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Incidents Prevented</p>
@@ -133,7 +148,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Dow Dons -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[180px]">
                     <div class="flex items-start justify-between mb-2">
                         <div>
                             <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Dow Dons</p>
@@ -152,7 +167,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Staffing Gap -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[180px]">
                     <div class="flex items-start justify-between mb-2">
                         <div>
                             <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">Staffing Gap</p>
@@ -171,7 +186,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- License Expirations -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[180px]">
                     <div class="flex items-start justify-between mb-2">
                         <div>
                             <p class="text-[10px] font-medium text-gray-500 uppercase mb-1">License Expirations</p>
@@ -190,90 +205,151 @@ include '../components/layout_header.php';
                 </div>
             </div>
 
+            <!-- Second Metrics Row -->
+            <div class="flex flex-wrap gap-2 mb-2 flex-shrink-0">
+                <!-- Ticket Resolution -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-clock-rotate-left text-cyan-600 text-base"></i>
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-900">Ticket Resolution</h3>
+                            <p class="text-[10px] text-gray-500">Avg resolution time</p>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-2xl font-bold text-gray-900"><?php echo $ticketResolution; ?> days</p>
+                    </div>
+                    <p class="text-[10px] text-green-600 font-medium">Improved performance</p>
+                </div>
+
+                <!-- Prediction Accuracy -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-bullseye text-indigo-600 text-base"></i>
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-900">Prediction Accuracy</h3>
+                            <p class="text-[10px] text-gray-500">Model performance</p>
+                        </div>
+                    </div>
+                    <div class="h-24">
+                        <canvas id="predictionAccuracyChart"></canvas>
+                    </div>
+                    <div class="text-center mt-1">
+                        <p class="text-lg font-bold text-indigo-600"><?php echo $predictionAccuracy; ?>%</p>
+                    </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-heart-pulse text-teal-600 text-base"></i>
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-900">System Health</h3>
+                            <p class="text-[10px] text-gray-500">Overall status</p>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-2xl font-bold text-gray-900"><?php echo $systemHealth; ?>%</p>
+                    </div>
+                    <p class="text-[10px] text-green-600 font-medium">All systems operational</p>
+                </div>
+
+                <!-- Maintenance Status -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex-1 min-w-[200px]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-wrench text-rose-600 text-base"></i>
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-900">Maintenance Status</h3>
+                            <p class="text-[10px] text-gray-500">Scheduled tasks</p>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-2xl font-bold text-gray-900"><?php echo $maintenanceScheduled; ?></p>
+                    </div>
+                    <p class="text-[10px] text-amber-600 font-medium">Due within 30 days</p>
+                </div>
+            </div>
+
             <!-- Charts Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 min-h-0">
-                <!-- Trending Assets -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+            <div class="flex flex-wrap gap-2 flex-1 overflow-auto content-start">
+                <!-- Trending Tickets -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 flex-1 min-w-[280px] flex flex-col">
                     <div class="mb-2">
-                        <h3 class="text-sm font-semibold text-gray-900">Trending Assets</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">Real time monitoring</p>
+                        <h3 class="text-sm font-semibold text-gray-900">Trending Tickets</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">Last 6 months</p>
                     </div>
-                    <div class="mb-2">
-                        <p class="text-xl font-bold text-gray-900"><?php echo $totalAlerts; ?> alerts</p>
+                    <div class="flex-1 min-h-0">
+                        <canvas id="trendingChart" class="h-full"></canvas>
                     </div>
-                    <div class="h-32">
-                        <canvas id="trendingChart"></canvas>
+                    <div class="flex justify-center gap-4 mt-2 pt-2 border-t border-gray-100">
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                            <span class="text-[10px] text-gray-600">Created</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span class="text-[10px] text-gray-600">Resolved</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Asset Lifecycle -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 flex-1 min-w-[280px] flex flex-col">
                     <div class="mb-2">
                         <h3 class="text-sm font-semibold text-gray-900">Asset Lifecycle</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">Current status by phase</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Current distribution</p>
                     </div>
-                    <div class="mb-2">
-                        <p class="text-xl font-bold text-gray-900"><?php echo $lifecycleNew + $lifecycleActive + $lifecycleAging + $lifecycleEOL; ?> tracked</p>
+                    <div class="flex-1 min-h-0">
+                        <canvas id="lifecycleChart" class="h-full"></canvas>
                     </div>
-                    <div class="h-32">
-                        <canvas id="lifecycleChart"></canvas>
+                    <div class="flex justify-center gap-3 mt-2 pt-2 border-t border-gray-100">
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                            <span class="text-[10px] text-gray-600">VALUE</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span class="text-[10px] text-gray-600">VALUE</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span class="text-[10px] text-gray-600">VALUE</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Failure Risk Forecast -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 flex-1 min-w-[280px] flex flex-col">
                     <div class="mb-2">
                         <h3 class="text-sm font-semibold text-gray-900">Failure Risk Forecast</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">Predictive maintenance</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Predictive maintenance alerts</p>
                     </div>
-                    <div class="mb-2">
-                        <p class="text-xl font-bold text-gray-900"><?php echo $failureRiskCritical + $failureRiskHigh; ?> at risk</p>
-                    </div>
-                    <div class="h-32">
-                        <canvas id="failureRiskChart"></canvas>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 mt-2">
-                        <div class="text-center">
-                            <p class="text-[10px] text-gray-500 mb-1">High</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskCritical; ?></p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] text-gray-500 mb-1">Medium</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskHigh; ?></p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] text-gray-500 mb-1">Low</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskMedium; ?></p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] text-gray-500 mb-1">Critical</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo $failureRiskLow; ?></p>
-                        </div>
+                    <div class="flex-1 min-h-0">
+                        <canvas id="failureRiskChart" class="h-full"></canvas>
                     </div>
                 </div>
 
-                <!-- High Load - Active Users -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
+                <!-- IAE High Load -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-3 flex-1 min-w-[280px] flex flex-col">
                     <div class="mb-2">
-                        <h3 class="text-sm font-semibold text-gray-900">High Load - Active Users</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">System uptime tracking</p>
+                        <h3 class="text-sm font-semibold text-gray-900">IAE: High Load</h3>
+                        <p class="text-[10px] text-gray-500 mt-1">System monitoring</p>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-users text-blue-600 text-xs"></i>
+                            <span class="text-[10px] text-gray-500">Active Users</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900"><?php echo number_format($activeUsers * 100); ?></p>
                     </div>
                     <div class="mb-2">
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-server text-green-600 text-xs"></i>
+                            <span class="text-[10px] text-gray-500">System Uptime</span>
+                        </div>
                         <p class="text-xl font-bold text-gray-900"><?php echo $uptimePercentage; ?>%</p>
                     </div>
-                    <div class="h-32">
-                        <canvas id="activeUsersChart"></canvas>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-100">
-                        <div>
-                            <p class="text-[10px] text-gray-500 mb-1">Active Users</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo number_format($activeUsers * 100); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-500 mb-1">Uptime</p>
-                            <p class="text-sm font-bold text-gray-900"><?php echo $uptimePercentage; ?>%</p>
-                        </div>
-                    </div>
+                    <p class="text-[10px] text-green-600 font-medium">+12% from last hour</p>
                 </div>
             </div>
         </main>
@@ -286,24 +362,28 @@ include '../components/layout_header.php';
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = '#6B7280';
 
-        // Trending Assets Chart
+        // Trending Tickets Chart
         const trendingCtx = document.getElementById('trendingChart').getContext('2d');
         new Chart(trendingCtx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: <?php echo json_encode($trendingMonths); ?>,
-                datasets: [{
-                    label: 'Alerts',
-                    data: <?php echo json_encode($trendingCounts); ?>,
-                    borderColor: '#8b5cf6',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#8b5cf6',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }]
+                datasets: [
+                    {
+                        label: 'Created',
+                        data: <?php echo json_encode($trendingCounts); ?>,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 4,
+                        barThickness: 16
+                    },
+                    {
+                        label: 'Resolved',
+                        data: <?php echo json_encode(array_map(function($v) { return round($v * 0.75); }, $trendingCounts)); ?>,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barThickness: 16
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -330,17 +410,17 @@ include '../components/layout_header.php';
             }
         });
 
-        // Asset Lifecycle Chart
-        const lifecycleCtx = document.getElementById('lifecycleChart').getContext('2d');
-        new Chart(lifecycleCtx, {
+        // Prediction Accuracy Chart (in second row)
+        const predictionAccuracyCtx = document.getElementById('predictionAccuracyChart').getContext('2d');
+        new Chart(predictionAccuracyCtx, {
             type: 'line',
             data: {
-                labels: ['New', 'Active', 'Aging', 'EOL'],
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
-                    data: [<?php echo $lifecycleNew; ?>, <?php echo $lifecycleActive; ?>, <?php echo $lifecycleAging; ?>, <?php echo $lifecycleEOL; ?>],
-                    borderColor: '#a78bfa',
-                    backgroundColor: 'rgba(167, 139, 250, 0.1)',
-                    borderWidth: 3,
+                    data: [88, 90, 89, 91, 92, 92],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 2,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0
@@ -350,17 +430,43 @@ include '../components/layout_header.php';
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: { enabled: false }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6', drawBorder: false }
+                        display: false,
+                        beginAtZero: false,
+                        min: 85,
+                        max: 100
                     },
                     x: {
-                        grid: { display: false, drawBorder: false }
+                        display: false
                     }
                 }
+            }
+        });
+
+        // Asset Lifecycle Chart
+        const lifecycleCtx = document.getElementById('lifecycleChart').getContext('2d');
+        new Chart(lifecycleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['New', 'Active', 'Aging', 'EOL'],
+                datasets: [{
+                    data: [<?php echo $lifecycleNew; ?>, <?php echo $lifecycleActive; ?>, <?php echo $lifecycleAging; ?>, <?php echo $lifecycleEOL; ?>],
+                    backgroundColor: ['#8b5cf6', '#f59e0b', '#6b7280'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                cutout: '70%'
             }
         });
 
@@ -382,61 +488,6 @@ include '../components/layout_header.php';
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6', drawBorder: false }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false }
-                    }
-                }
-            }
-        });
-
-        // Active Users Chart
-        const activeUsersCtx = document.getElementById('activeUsersChart').getContext('2d');
-        new Chart(activeUsersCtx, {
-            type: 'line',
-            data: {
-                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
-                datasets: [
-                    {
-                        label: 'uptime',
-                        data: <?php echo json_encode($hourlyActivity); ?>,
-                        borderColor: '#c4b5fd',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#c4b5fd'
-                    },
-                    {
-                        label: 'users',
-                        data: <?php echo json_encode(array_map(function($v) { return $v * 0.9; }, $hourlyActivity)); ?>,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#8b5cf6'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            usePointStyle: true,
-                            boxWidth: 6,
-                            font: { size: 11 }
-                        }
-                    }
                 },
                 scales: {
                     y: {

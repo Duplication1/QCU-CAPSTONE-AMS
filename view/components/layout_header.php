@@ -322,7 +322,7 @@ $page_title = "AMS - " . $current_role . " Dashboard";
     <?php include __DIR__ . '/sidebar.php'; ?>
     
     <!-- Main Content Wrapper -->
-    <div id="main-wrapper" class="ml-[220px] pt-[90px] transition-all duration-300 ease-in-out">
+    <div id="main-wrapper" class="ml-0 lg:ml-20 lg:peer-hover:ml-[220px] pt-[90px] transition-all duration-300 ease-in-out">
         
         <?php include __DIR__ . '/header.php'; ?>
         
