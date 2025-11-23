@@ -14,8 +14,13 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 
 require_once '../../config/config.php';
 
-// Get filter parameter
-$filter = $_GET['filter'] ?? 'all';
+// Create database connection
+if (!isset($conn)) {
+    $conn = new mysqli('localhost', 'root', '', 'ams_database');
+    if ($conn->connect_error) {
+        die('Connection failed: ' . $conn->connect_error);
+    }
+}
 
 // Handle AJAX requests for buildings
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1') {
@@ -102,13 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
 // Fetch buildings data
 $buildings = [];
-if ($filter === 'buildings') {
-    $query = "SELECT * FROM buildings ORDER BY name ASC";
-    $result = $conn->query($query);
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $buildings[] = $row;
-        }
+$query = "SELECT * FROM buildings ORDER BY name ASC";
+$result = $conn->query($query);
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $buildings[] = $row;
     }
 }
 
@@ -149,83 +152,60 @@ main {
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
             <div>
-                <h3 class="text-lg font-semibold text-gray-800">
-                    <?php if ($filter === 'buildings'): ?>
-                        Building Management
-                    <?php elseif ($filter === 'standby'): ?>
-                        Stand By Assets
-                    <?php else: ?>
-                        All Assets
-                    <?php endif; ?>
-                </h3>
-                <p class="text-xs text-gray-500 mt-0.5">
-                    <?php if ($filter === 'buildings'): ?>
-                        Manage building information
-                    <?php elseif ($filter === 'standby'): ?>
-                        View assets on standby
-                    <?php else: ?>
-                        View all registered assets
-                    <?php endif; ?>
-                </p>
+                <h3 class="text-lg font-semibold text-gray-800">Building Management</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Manage building information</p>
             </div>
             
-            <?php if ($filter === 'buildings'): ?>
             <button onclick="openAddBuildingModal()" 
                     class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add Building</span>
             </button>
-            <?php endif; ?>
         </div>
 
         <!-- Content Area -->
         <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200 p-4">
-            <?php if ($filter === 'buildings'): ?>
-                <!-- Buildings Grid -->
-                <div id="buildingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <?php if (empty($buildings)): ?>
-                        <div class="col-span-full text-center py-12 text-gray-500">
-                            <i class="fa-solid fa-building text-6xl mb-4 opacity-30"></i>
-                            <p class="text-lg">No buildings yet</p>
-                            <p class="text-sm">Click "Add Building" to create one</p>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($buildings as $building): ?>
-                            <div class="building-card bg-white border-2 border-gray-200 rounded-xl p-6 text-center" data-id="<?php echo $building['id']; ?>">
-                                <div class="mb-4">
-                                    <i class="fa-solid fa-building text-6xl text-blue-600"></i>
-                                </div>
-                                <h4 class="text-lg font-semibold text-gray-800 mb-2"><?php echo htmlspecialchars($building['name']); ?></h4>
-                                <p class="text-xs text-gray-500 mb-4">Created: <?php echo date('M d, Y', strtotime($building['created_at'])); ?></p>
-                                <div class="flex gap-2 justify-center">
-                                    <button onclick="editBuilding(<?php echo $building['id']; ?>, '<?php echo htmlspecialchars($building['name'], ENT_QUOTES); ?>')" 
-                                            class="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-lg hover:bg-blue-100 transition-colors">
-                                        <i class="fa-solid fa-pencil mr-1"></i> Edit
-                                    </button>
-                                    <button onclick="deleteBuilding(<?php echo $building['id']; ?>, '<?php echo htmlspecialchars($building['name'], ENT_QUOTES); ?>')" 
-                                            class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors">
-                                        <i class="fa-solid fa-trash mr-1"></i> Delete
-                                    </button>
+            <!-- Buildings Grid -->
+            <div id="buildingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <?php if (empty($buildings)): ?>
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <i class="fa-solid fa-building text-6xl mb-4 opacity-30"></i>
+                        <p class="text-lg">No buildings yet</p>
+                        <p class="text-sm">Click "Add Building" to create one</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($buildings as $building): ?>
+                        <div class="building-card bg-white border-2 border-gray-200 rounded-xl p-6 text-center relative" data-id="<?php echo $building['id']; ?>">
+                            <!-- Three-dot menu -->
+                            <div class="absolute top-3 right-3">
+                                <button onclick="toggleMenu(<?php echo $building['id']; ?>)" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
+                                </button>
+                                <div id="menu-<?php echo $building['id']; ?>" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                    <div class="py-1">
+                                        <button onclick="editBuilding(<?php echo $building['id']; ?>, '<?php echo htmlspecialchars($building['name'], ENT_QUOTES); ?>')" 
+                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                            <i class="fa-solid fa-pencil text-blue-600"></i> Edit
+                                        </button>
+                                        <button onclick="deleteBuilding(<?php echo $building['id']; ?>, '<?php echo htmlspecialchars($building['name'], ENT_QUOTES); ?>')" 
+                                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            <?php elseif ($filter === 'standby'): ?>
-                <!-- Stand By Assets -->
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fa-solid fa-clock text-6xl mb-4 opacity-30"></i>
-                    <p class="text-lg">Stand By Assets</p>
-                    <p class="text-sm">This section is under development</p>
-                </div>
-            <?php else: ?>
-                <!-- All Assets -->
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fa-solid fa-box text-6xl mb-4 opacity-30"></i>
-                    <p class="text-lg">All Assets</p>
-                    <p class="text-sm">This section is under development</p>
-                </div>
-            <?php endif; ?>
+                            
+                            <a href="rooms.php?building_id=<?php echo $building['id']; ?>" class="block cursor-pointer">
+                                <div class="mb-4">
+                                    <i class="fa-solid fa-building text-6xl text-blue-600 hover:text-blue-700 transition-colors"></i>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors"><?php echo htmlspecialchars($building['name']); ?></h4>
+                            </a>
+                            <p class="text-xs text-gray-500 mb-4">Created: <?php echo date('M d, Y', strtotime($building['created_at'])); ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </main>
@@ -326,24 +306,34 @@ document.getElementById('addBuildingForm').addEventListener('submit', async func
             if (emptyState) emptyState.remove();
             
             const newCard = document.createElement('div');
-            newCard.className = 'building-card bg-white border-2 border-gray-200 rounded-xl p-6 text-center';
+            newCard.className = 'building-card bg-white border-2 border-gray-200 rounded-xl p-6 text-center relative';
             newCard.dataset.id = result.id;
             newCard.innerHTML = `
-                <div class="mb-4">
-                    <i class="fa-solid fa-building text-6xl text-blue-600"></i>
+                <div class="absolute top-3 right-3">
+                    <button onclick="toggleMenu(${result.id})" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
+                    </button>
+                    <div id="menu-${result.id}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div class="py-1">
+                            <button onclick="editBuilding(${result.id}, '${escapeHtml(result.name)}')" 
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <i class="fa-solid fa-pencil text-blue-600"></i> Edit
+                            </button>
+                            <button onclick="deleteBuilding(${result.id}, '${escapeHtml(result.name)}')" 
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <h4 class="text-lg font-semibold text-gray-800 mb-2">${escapeHtml(result.name)}</h4>
+                
+                <a href="rooms.php?building_id=${result.id}" class="block cursor-pointer">
+                    <div class="mb-4">
+                        <i class="fa-solid fa-building text-6xl text-blue-600 hover:text-blue-700 transition-colors"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors">${escapeHtml(result.name)}</h4>
+                </a>
                 <p class="text-xs text-gray-500 mb-4">Created: ${new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</p>
-                <div class="flex gap-2 justify-center">
-                    <button onclick="editBuilding(${result.id}, '${escapeHtml(result.name)}')" 
-                            class="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-lg hover:bg-blue-100 transition-colors">
-                        <i class="fa-solid fa-pencil mr-1"></i> Edit
-                    </button>
-                    <button onclick="deleteBuilding(${result.id}, '${escapeHtml(result.name)}')" 
-                            class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors">
-                        <i class="fa-solid fa-trash mr-1"></i> Delete
-                    </button>
-                </div>
             `;
             
             grid.appendChild(newCard);
@@ -370,6 +360,8 @@ function editBuilding(id, name) {
     document.getElementById('editBuildingName').value = name;
     document.getElementById('editBuildingModal').classList.remove('hidden');
     document.getElementById('editBuildingName').focus();
+    // Close the menu
+    closeAllMenus();
 }
 
 // Edit Building Form Submit
@@ -418,6 +410,9 @@ document.getElementById('editBuildingForm').addEventListener('submit', async fun
 
 // Delete Building
 async function deleteBuilding(id, name) {
+    // Close the menu first
+    closeAllMenus();
+    
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     
     const formData = new URLSearchParams();
@@ -486,6 +481,35 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Toggle three-dot menu
+function toggleMenu(id) {
+    const menu = document.getElementById('menu-' + id);
+    const allMenus = document.querySelectorAll('[id^="menu-"]');
+    
+    // Close all other menus
+    allMenus.forEach(m => {
+        if (m.id !== 'menu-' + id) {
+            m.classList.add('hidden');
+        }
+    });
+    
+    // Toggle current menu
+    menu.classList.toggle('hidden');
+}
+
+// Close all menus
+function closeAllMenus() {
+    const allMenus = document.querySelectorAll('[id^="menu-"]');
+    allMenus.forEach(m => m.classList.add('hidden'));
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.building-card')) {
+        closeAllMenus();
+    }
+});
 
 // Close modals on Escape key
 document.addEventListener('keydown', function(e) {

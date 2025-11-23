@@ -89,7 +89,24 @@ $navigation_items = [
             'label' => 'Asset Registry',
             'icon' => 'fa-solid fa-clipboard-list',
             'color' => 'blue',
-            'href' => 'registry.php'
+            'href' => 'allassets.php',
+            'submenu' => [
+                [
+                    'id' => 'all-assets',
+                    'label' => 'All Assets',
+                    'href' => 'allassets.php'
+                ],
+                [
+                    'id' => 'buildings',
+                    'label' => 'Buildings',
+                    'href' => 'buildings.php'
+                ],
+                [
+                    'id' => 'standby-assets',
+                    'label' => 'Stand By Assets',
+                    'href' => 'standbyassets.php'
+                ]
+            ]
         ]
     ],
     'Student' => [
@@ -179,7 +196,24 @@ $navigation_items = [
             'label' => 'Asset Registry',
             'icon' => 'fa-solid fa-clipboard-list',
             'color' => 'blue',
-            'href' => 'registry.php'
+            'href' => 'allassets.php',
+            'submenu' => [
+                [
+                    'id' => 'all-assets',
+                    'label' => 'All Assets',
+                    'href' => 'allassets.php'
+                ],
+                [
+                    'id' => 'buildings',
+                    'label' => 'Buildings',
+                    'href' => 'buildings.php'
+                ],
+                [
+                    'id' => 'standby-assets',
+                    'label' => 'Stand By Assets',
+                    'href' => 'standbyassets.php'
+                ]
+            ]
         ]
     ]
 ];
@@ -255,31 +289,71 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto overflow-x-hidden">
         <?php foreach ($nav_items as $item): 
             $is_active = ($item['href'] === $current_page);
-                $active_classes = $is_active ? "bg-{$item['color']}-50 text-{$item['color']}-700 border-r-4 border-{$item['color']}-600" : "text-gray-700";
+            $active_classes = $is_active ? "bg-{$item['color']}-50 text-{$item['color']}-700 border-r-4 border-{$item['color']}-600" : "text-gray-700";
             $show_badge = ($item['id'] === 'tickets' && $new_tickets_count > 0);
+            $has_submenu = isset($item['submenu']) && !empty($item['submenu']);
         ?>
-    <!-- <?php echo htmlspecialchars($item['label']); ?> -->
-        <a href="<?php echo htmlspecialchars($item['href']); ?>"
-            class="group/item flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
-            hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
-          <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
-            <div class="flex items-center min-w-0 flex-1">
-                <div class="flex-shrink-0">
-                <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
-               <?php echo $is_active ? 'text-white' : ''; ?>"></i>
+        <div class="nav-item-wrapper">
+            <!-- <?php echo htmlspecialchars($item['label']); ?> -->
+            <?php if ($has_submenu): ?>
+                <!-- Parent menu with submenu -->
+                <button type="button" onclick="toggleSubmenu('<?php echo $item['id']; ?>')"
+                    class="group/item w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
+                    hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
+                    <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
+                    <div class="flex items-center min-w-0 flex-1">
+                        <div class="flex-shrink-0">
+                            <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
+                            <?php echo $is_active ? 'text-white' : ''; ?>"></i>
+                        </div>
+                        <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate 
+                                     lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">
+                            <?php echo htmlspecialchars($item['label']); ?>
+                        </span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs ml-2 transition-transform duration-200 
+                              lg:opacity-0 lg:group-hover:opacity-100 submenu-arrow" 
+                       id="arrow-<?php echo $item['id']; ?>"></i>
+                </button>
+                
+                <!-- Submenu -->
+                <div id="submenu-<?php echo $item['id']; ?>" class="submenu hidden pl-4 mt-1 space-y-1">
+                    <?php foreach ($item['submenu'] as $subitem): 
+                        $sub_is_active = ($subitem['href'] === $current_page . ($_SERVER['QUERY_STRING'] ?? ''));
+                    ?>
+                        <a href="<?php echo htmlspecialchars($subitem['href']); ?>"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors duration-200
+                                  <?php echo $sub_is_active ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'; ?>
+                                  lg:opacity-0 lg:group-hover:opacity-100">
+                            <?php echo htmlspecialchars($subitem['label']); ?>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
-                <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate 
-                             lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">
-                    <?php echo htmlspecialchars($item['label']); ?>
-                </span>
-            </div>
-            <?php if ($show_badge): ?>
-            <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse 
-                         lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto transition-all duration-300">
-                <?php echo $new_tickets_count; ?>
-            </span>
+            <?php else: ?>
+                <!-- Regular menu item without submenu -->
+                <a href="<?php echo htmlspecialchars($item['href']); ?>"
+                    class="group/item flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg 
+                    hover:bg-[#1E3A8A] hover:text-white transition-all duration-200 
+                    <?php echo $is_active ? 'bg-[#1E3A8A] text-white' : 'text-gray-700'; ?>">
+                    <div class="flex items-center min-w-0 flex-1">
+                        <div class="flex-shrink-0">
+                            <i class="<?php echo htmlspecialchars($item['icon']); ?> w-5 text-center 
+                            <?php echo $is_active ? 'text-white' : ''; ?>"></i>
+                        </div>
+                        <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap truncate 
+                                     lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">
+                            <?php echo htmlspecialchars($item['label']); ?>
+                        </span>
+                    </div>
+                    <?php if ($show_badge): ?>
+                    <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse 
+                                 lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto transition-all duration-300">
+                        <?php echo $new_tickets_count; ?>
+                    </span>
+                    <?php endif; ?>
+                </a>
             <?php endif; ?>
-        </a>
+        </div>
         <?php endforeach; ?>
     </nav>
 
@@ -294,3 +368,31 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
         </a>
     </div>
 </aside>
+
+<script>
+function toggleSubmenu(menuId) {
+    const submenu = document.getElementById('submenu-' + menuId);
+    const arrow = document.getElementById('arrow-' + menuId);
+    
+    if (submenu && arrow) {
+        submenu.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+    }
+}
+
+// Auto-expand submenu if on a submenu page
+document.addEventListener('DOMContentLoaded', function() {
+    const currentUrl = window.location.href;
+    document.querySelectorAll('.submenu a').forEach(link => {
+        if (link.href === currentUrl) {
+            const submenu = link.closest('.submenu');
+            if (submenu) {
+                submenu.classList.remove('hidden');
+                const menuId = submenu.id.replace('submenu-', '');
+                const arrow = document.getElementById('arrow-' + menuId);
+                if (arrow) arrow.classList.add('rotate-180');
+            }
+        }
+    });
+});
+</script>
