@@ -114,39 +114,146 @@ if ($techniciansResult && $techniciansResult->num_rows > 0) {
 
 // Get filter from URL parameter
 $filterType = isset($_GET['type']) ? $_GET['type'] : 'all';
+$filterBuilding = isset($_GET['building']) ? $_GET['building'] : '';
+$filterRoom = isset($_GET['room']) ? $_GET['room'] : '';
+
+// Fetch buildings for filter
+$buildingsQuery = "SELECT id, name FROM buildings ORDER BY name";
+$buildingsResult = $conn->query($buildingsQuery);
+$buildings = [];
+if ($buildingsResult && $buildingsResult->num_rows > 0) {
+    while ($building = $buildingsResult->fetch_assoc()) {
+        $buildings[] = $building;
+    }
+}
+
+// Fetch rooms for filter (optionally filtered by building)
+if (!empty($filterBuilding)) {
+    $roomsQuery = "SELECT id, name FROM rooms WHERE building_id = ? ORDER BY name";
+    $roomsStmt = $conn->prepare($roomsQuery);
+    $roomsStmt->bind_param('i', $filterBuilding);
+    $roomsStmt->execute();
+    $roomsResult = $roomsStmt->get_result();
+} else {
+    $roomsQuery = "SELECT id, name FROM rooms ORDER BY name";
+    $roomsResult = $conn->query($roomsQuery);
+}
+$rooms = [];
+if ($roomsResult && $roomsResult->num_rows > 0) {
+    while ($room = $roomsResult->fetch_assoc()) {
+        $rooms[] = $room;
+    }
+}
+
+// Fetch all rooms for JavaScript
+$allRoomsQuery = "SELECT id, name, building_id FROM rooms ORDER BY name";
+$allRoomsResult = $conn->query($allRoomsQuery);
+$allRooms = [];
+if ($allRoomsResult && $allRoomsResult->num_rows > 0) {
+    while ($room = $allRoomsResult->fetch_assoc()) {
+        $allRooms[] = $room;
+    }
+}
 
 // Normalize filter (categories stored as lowercase or mixed — compare case-insensitively)
 $allowed = ['all','hardware','software','network','laboratory','other'];
 $filterKey = strtolower($filterType);
 if (!in_array($filterKey, $allowed)) $filterKey = 'all';
 
+// Pagination setup
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
 // Build query based on filter — use unified issues table and join users for reporter name
-if ($filterKey === 'all') {
-    $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
-                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
-                     u.full_name AS reporter_name
-              FROM issues i
-              LEFT JOIN users u ON u.id = i.user_id
-              WHERE COALESCE(i.category,'') <> 'borrow'
-              ORDER BY 
-                CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
-                i.created_at DESC";
-    $result = $conn->query($query);
+$whereConditions = ["COALESCE(i.category,'') <> 'borrow'"];
+$params = [];
+$types = '';
+
+if ($filterKey !== 'all') {
+    $whereConditions[] = "LOWER(COALESCE(i.category,'')) = ?";
+    $params[] = $filterKey;
+    $types .= 's';
+}
+
+if (!empty($filterBuilding)) {
+    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci IN (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE building_id = ?)";
+    $params[] = $filterBuilding;
+    $types .= 'i';
+}
+
+if (!empty($filterRoom)) {
+    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci = (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE id = ?)";
+    $params[] = $filterRoom;
+    $types .= 'i';
+}
+
+$whereClause = implode(' AND ', $whereConditions);
+
+// Count total tickets for pagination
+$countQuery = "SELECT COUNT(*) as total FROM issues i WHERE {$whereClause}";
+if (!empty($params)) {
+    $countStmt = $conn->prepare($countQuery);
+    $countStmt->bind_param($types, ...$params);
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $totalTickets = $countResult->fetch_assoc()['total'];
+    $countStmt->close();
 } else {
-    $query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
-                     i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
-                     u.full_name AS reporter_name
-              FROM issues i
-              LEFT JOIN users u ON u.id = i.user_id
-              WHERE LOWER(COALESCE(i.category,'')) = ?
-                AND COALESCE(i.category,'') <> 'borrow'
-              ORDER BY 
-                CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
-                i.created_at DESC";
+    $countResult = $conn->query($countQuery);
+    $totalTickets = $countResult->fetch_assoc()['total'];
+}
+
+$totalPages = ceil($totalTickets / $limit);
+
+// Build main query with pagination
+$whereConditions = ["COALESCE(i.category,'') <> 'borrow'"];
+$params = [];
+$types = '';
+
+if ($filterKey !== 'all') {
+    $whereConditions[] = "LOWER(COALESCE(i.category,'')) = ?";
+    $params[] = $filterKey;
+    $types .= 's';
+}
+
+if (!empty($filterBuilding)) {
+    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci IN (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE building_id = ?)";
+    $params[] = $filterBuilding;
+    $types .= 'i';
+}
+
+if (!empty($filterRoom)) {
+    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci = (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE id = ?)";
+    $params[] = $filterRoom;
+    $types .= 'i';
+}
+
+$whereClause = implode(' AND ', $whereConditions);
+
+$query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
+                 i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
+                 u.full_name AS reporter_name
+          FROM issues i
+          LEFT JOIN users u ON u.id = i.user_id
+          WHERE {$whereClause}
+          ORDER BY 
+            CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
+            i.created_at DESC
+          LIMIT ? OFFSET ?";
+
+// Add pagination params
+$params[] = $limit;
+$params[] = $offset;
+$types .= 'ii';
+
+if (!empty($params)) {
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('s', $filterKey);
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
+} else {
+    $result = $conn->query($query);
 }
 
 // Count tickets by category (exclude borrow)
@@ -183,7 +290,7 @@ include '../components/layout_header.php';
             <div class="bg-white rounded-lg shadow p-3">
                 <!-- Compact Filter Bar -->
                 <div class="flex flex-wrap items-center gap-2 mb-3">
-                    <select id="categoryFilter" onchange="window.location.href='tickets.php?type='+this.value" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                    <select id="categoryFilter" onchange="applyFilters()" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
                         <option value="all" <?php echo $filterKey === 'all' ? 'selected' : ''; ?>>All (<?php echo $counts['all']; ?>)</option>
                         <option value="hardware" <?php echo $filterKey === 'hardware' ? 'selected' : ''; ?>>Hardware (<?php echo $counts['hardware']; ?>)</option>
                         <option value="software" <?php echo $filterKey === 'software' ? 'selected' : ''; ?>>Software (<?php echo $counts['software']; ?>)</option>
@@ -191,6 +298,26 @@ include '../components/layout_header.php';
                         <option value="laboratory" <?php echo $filterKey === 'laboratory' ? 'selected' : ''; ?>>Laboratory (<?php echo $counts['laboratory']; ?>)</option>
                         <option value="other" <?php echo $filterKey === 'other' ? 'selected' : ''; ?>>Other (<?php echo $counts['other']; ?>)</option>
                     </select>
+                    
+                    <select id="buildingFilter" onchange="onBuildingChange()" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                        <option value="">All Buildings</option>
+                        <?php foreach ($buildings as $building): ?>
+                            <option value="<?php echo $building['id']; ?>" <?php echo $filterBuilding == $building['id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($building['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    
+                    <select id="roomFilter" onchange="applyFilters()" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                        <option value="">All Rooms</option>
+                        <?php foreach ($rooms as $room): ?>
+                            <option value="<?php echo $room['id']; ?>" <?php echo $filterRoom == $room['id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($room['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    
+                    <button onclick="clearAllFilters()" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded">Clear</button>
                     
                     <div class="flex-1"></div>
                     
@@ -284,6 +411,90 @@ include '../components/layout_header.php';
                          </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination Controls -->
+                <?php if ($totalPages > 1): ?>
+                <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <?php if ($page > 1): ?>
+                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Previous
+                        </a>
+                        <?php else: ?>
+                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                            Previous
+                        </span>
+                        <?php endif; ?>
+                        
+                        <?php if ($page < $totalPages): ?>
+                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Next
+                        </a>
+                        <?php else: ?>
+                        <span class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                            Next
+                        </span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing <span class="font-medium"><?php echo $offset + 1; ?></span> to <span class="font-medium"><?php echo min($offset + $limit, $totalTickets); ?></span> of <span class="font-medium"><?php echo $totalTickets; ?></span> tickets
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <?php if ($page > 1): ?>
+                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
+                                <?php else: ?>
+                                <span class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-l-md cursor-not-allowed">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                                <?php endif; ?>
+                                
+                                <?php
+                                $startPage = max(1, $page - 2);
+                                $endPage = min($totalPages, $page + 2);
+                                
+                                if ($startPage > 1): ?>
+                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=1" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">1</a>
+                                    <?php if ($startPage > 2): ?>
+                                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300">...</span>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                                
+                                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                    <?php if ($i == $page): ?>
+                                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#1E3A8A] border border-[#1E3A8A]"><?php echo $i; ?></span>
+                                    <?php else: ?>
+                                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $i; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $i; ?></a>
+                                    <?php endif; ?>
+                                <?php endfor; ?>
+                                
+                                <?php if ($endPage < $totalPages): ?>
+                                    <?php if ($endPage < $totalPages - 1): ?>
+                                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300">...</span>
+                                    <?php endif; ?>
+                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $totalPages; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $totalPages; ?></a>
+                                <?php endif; ?>
+                                
+                                <?php if ($page < $totalPages): ?>
+                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                                <?php else: ?>
+                                <span class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-r-md cursor-not-allowed">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                                <?php endif; ?>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
                 <?php else: ?>
                 <div class="text-center py-8">
                     <i class="fa-solid fa-inbox text-5xl text-gray-300 mb-3"></i>
@@ -571,6 +782,50 @@ function updateStatus(ticketId, currentStatus) {
 
 function closeStatusModal() {
     document.getElementById('statusModal').classList.add('hidden');
+}
+
+// Cascading Building/Room Filter
+const allRoomsData = <?php echo json_encode($allRooms); ?>;
+
+function onBuildingChange() {
+    const buildingSelect = document.getElementById('buildingFilter');
+    const roomSelect = document.getElementById('roomFilter');
+    const selectedBuilding = buildingSelect.value;
+    
+    // Clear room dropdown
+    roomSelect.innerHTML = '<option value="">All Rooms</option>';
+    
+    // Filter rooms by building
+    const filteredRooms = selectedBuilding 
+        ? allRoomsData.filter(room => room.building_id == selectedBuilding)
+        : allRoomsData;
+    
+    // Populate room dropdown
+    filteredRooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = room.name;
+        roomSelect.appendChild(option);
+    });
+    
+    // Apply filters after building change
+    applyFilters();
+}
+
+function applyFilters() {
+    const category = document.getElementById('categoryFilter').value;
+    const building = document.getElementById('buildingFilter').value;
+    const room = document.getElementById('roomFilter').value;
+    
+    let url = 'tickets.php?type=' + category;
+    if (building) url += '&building=' + building;
+    if (room) url += '&room=' + room;
+    
+    window.location.href = url;
+}
+
+function clearAllFilters() {
+    window.location.href = 'tickets.php?type=all';
 }
 </script>
 

@@ -203,16 +203,7 @@ $navigation_items = [
                     'label' => 'All Assets',
                     'href' => 'allassets.php'
                 ],
-                [
-                    'id' => 'buildings',
-                    'label' => 'Buildings',
-                    'href' => 'buildings.php'
-                ],
-                [
-                    'id' => 'standby-assets',
-                    'label' => 'Stand By Assets',
-                    'href' => 'standbyassets.php'
-                ]
+                
             ]
         ]
     ]

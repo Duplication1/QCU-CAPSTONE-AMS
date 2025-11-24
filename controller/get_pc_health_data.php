@@ -22,8 +22,12 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 
 require_once '../model/PCUnit.php';
 require_once '../model/Room.php';
+require_once '../model/Database.php';
 
 try {
+    $database = new Database();
+    $conn = $database->getConnection();
+    
     $pcUnit = new PCUnit();
     $room = new Room();
     
@@ -52,6 +56,33 @@ try {
             
         case 'getRooms':
             $rooms = $room->getAll();
+            echo json_encode([
+                'success' => true,
+                'data' => $rooms
+            ]);
+            break;
+            
+        case 'getBuildings':
+            // Get all buildings
+            $query = "SELECT id, name FROM buildings ORDER BY name ASC";
+            $stmt = $conn->prepare($query);
+            $stmt->execute();
+            $buildings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode([
+                'success' => true,
+                'data' => $buildings
+            ]);
+            break;
+            
+        case 'getRoomsByBuilding':
+            $buildingId = $_GET['building_id'] ?? null;
+            if (!$buildingId) {
+                throw new Exception('Building ID is required');
+            }
+            $query = "SELECT id, name, building_id FROM rooms WHERE building_id = ? ORDER BY name ASC";
+            $stmt = $conn->prepare($query);
+            $stmt->execute([$buildingId]);
+            $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode([
                 'success' => true,
                 'data' => $rooms

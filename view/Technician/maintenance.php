@@ -24,6 +24,9 @@ include '../components/layout_header.php';
                 <input type="text" id="searchInput" placeholder="Search PC or Room..." 
                        class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500">
             </div>
+            <select id="buildingFilter" class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-purple-500">
+                <option value="">All Buildings</option>
+            </select>
             <select id="roomFilter" class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-purple-500">
                 <option value="">All Rooms</option>
             </select>
@@ -164,6 +167,9 @@ include '../components/layout_header.php';
                 <p class="mt-2 text-xs text-gray-600">Loading...</p>
             </div>
         </div>
+
+        <!-- Pagination Controls -->
+        <div id="paginationControls" class="flex justify-center items-center gap-2 mt-4 text-xs"></div>
     </div>
 </main>
 
@@ -191,7 +197,14 @@ let firebaseApp, database;
 let pcUnitsData = [];
 let healthDataCache = {};
 let roomsData = [];
+let buildingsData = [];
+let allRoomsData = []; // Store all rooms for cascading filter
 let allAlerts = [];
+
+// Pagination variables
+let currentPage = 1;
+let itemsPerPage = 20;
+let filteredPCs = [];
 
 // Initialize Firebase
 async function initFirebase() {
@@ -218,16 +231,18 @@ async function initFirebase() {
     }
 }
 
-// Load PC units and rooms
+// Load PC units, rooms, and buildings
 async function loadPCUnits() {
     try {
-        const [pcResponse, roomResponse] = await Promise.all([
+        const [pcResponse, roomResponse, buildingResponse] = await Promise.all([
             fetch('../../controller/get_pc_health_data.php?action=getAll'),
-            fetch('../../controller/get_pc_health_data.php?action=getRooms')
+            fetch('../../controller/get_pc_health_data.php?action=getRooms'),
+            fetch('../../controller/get_pc_health_data.php?action=getBuildings')
         ]);
         
         const pcResult = await pcResponse.json();
         const roomResult = await roomResponse.json();
+        const buildingResult = await buildingResponse.json();
         
         if (pcResult.success) {
             pcUnitsData = pcResult.data;
@@ -235,40 +250,93 @@ async function loadPCUnits() {
         
         if (roomResult.success) {
             roomsData = roomResult.data;
-            populateRoomFilter();
+            allRoomsData = roomResult.data; // Store all rooms
         }
         
+        if (buildingResult.success) {
+            buildingsData = buildingResult.data;
+            populateBuildingFilter();
+        }
+        
+        populateRoomFilter();
+        setupEventListeners();
         updateDashboard();
     } catch (error) {
         console.error('Error loading PC units:', error);
     }
 }
 
-// Populate room filter
+// Populate building filter
+function populateBuildingFilter() {
+    const filter = document.getElementById('buildingFilter');
+    buildingsData.forEach(building => {
+        const option = document.createElement('option');
+        option.value = building.id;
+        option.textContent = building.name;
+        filter.appendChild(option);
+    });
+}
+
+// Populate room filter based on selected building
 function populateRoomFilter() {
-    const filter = document.getElementById('roomFilter');
-    roomsData.forEach(room => {
+    const buildingId = document.getElementById('buildingFilter').value;
+    const roomFilter = document.getElementById('roomFilter');
+    
+    // Clear existing options except "All Rooms"
+    roomFilter.innerHTML = '<option value="">All Rooms</option>';
+    
+    // Filter rooms by building if a building is selected
+    const filteredRooms = buildingId 
+        ? allRoomsData.filter(room => room.building_id == buildingId)
+        : allRoomsData;
+    
+    filteredRooms.forEach(room => {
         const option = document.createElement('option');
         option.value = room.id;
         option.textContent = room.name;
-        filter.appendChild(option);
+        roomFilter.appendChild(option);
     });
-    
-    // Add event listeners for all filters
-    document.getElementById('roomFilter').addEventListener('change', updateDashboard);
-    document.getElementById('statusFilter').addEventListener('change', updateDashboard);
-    document.getElementById('tempFilter').addEventListener('change', updateDashboard);
-    document.getElementById('alertFilter').addEventListener('change', updateDashboard);
-    document.getElementById('searchInput').addEventListener('input', updateDashboard);
+}
+
+// Add event listeners after DOM is loaded
+function setupEventListeners() {
+    document.getElementById('buildingFilter').addEventListener('change', () => {
+        populateRoomFilter();
+        currentPage = 1;
+        updateDashboard();
+    });
+    document.getElementById('roomFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateDashboard();
+    });
+    document.getElementById('statusFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateDashboard();
+    });
+    document.getElementById('tempFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateDashboard();
+    });
+    document.getElementById('alertFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateDashboard();
+    });
+    document.getElementById('searchInput').addEventListener('input', () => {
+        currentPage = 1;
+        updateDashboard();
+    });
 }
 
 // Clear all filters
 function clearFilters() {
     document.getElementById('searchInput').value = '';
+    document.getElementById('buildingFilter').value = '';
     document.getElementById('roomFilter').value = '';
     document.getElementById('statusFilter').value = '';
     document.getElementById('tempFilter').value = '';
     document.getElementById('alertFilter').value = '';
+    populateRoomFilter(); // Reset room filter
+    currentPage = 1;
     updateDashboard();
 }
 
@@ -280,10 +348,8 @@ function updateDashboard() {
     const selectedAlert = document.getElementById('alertFilter').value;
     const searchText = document.getElementById('searchInput').value.toLowerCase();
     
-    let filteredPCs = pcUnitsData;
-    
     // Apply filters
-    filteredPCs = filteredPCs.filter(pc => {
+    filteredPCs = pcUnitsData.filter(pc => {
         const healthData = healthDataCache[pc.id];
         const status = getHealthStatus(healthData);
         const pcName = (pc.terminal_number || `TH-${pc.id}`).toLowerCase();
@@ -327,6 +393,7 @@ function updateDashboard() {
         return true;
     });
     
+    // Update statistics for all filtered PCs
     let totalPCs = filteredPCs.length;
     let onlineCount = 0;
     let overheatingCount = 0;
@@ -334,20 +401,7 @@ function updateDashboard() {
     let criticalCount = 0;
     allAlerts = [];
     
-    const grid = document.getElementById('pcGrid');
-    grid.innerHTML = '';
-    
-    if (filteredPCs.length === 0) {
-        grid.innerHTML = `
-            <div class="text-center py-8 col-span-full">
-                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 21a9 9 0 100-18 9 9 0 000 18z"/>
-                </svg>
-                <p class="text-sm text-gray-600">No PCs match the selected filters</p>
-            </div>
-        `;
-    } else {
-        filteredPCs.forEach(pc => {
+    filteredPCs.forEach(pc => {
             const healthData = healthDataCache[pc.id];
             const status = getHealthStatus(healthData);
             
@@ -381,12 +435,9 @@ function updateDashboard() {
                     });
                 });
             }
-            
-            const card = createPCCard(pc, healthData, status);
-            grid.appendChild(card);
-        });
-    }
+    });
     
+    // Update statistics
     document.getElementById('totalPCs').textContent = totalPCs;
     document.getElementById('onlinePCs').textContent = onlineCount;
     document.getElementById('overheatingPCs').textContent = overheatingCount;
@@ -395,6 +446,140 @@ function updateDashboard() {
     document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
     
     updateAlertBanner();
+    renderPCGrid();
+    updatePaginationControls();
+}
+
+// Render PC grid with pagination
+function renderPCGrid() {
+    const grid = document.getElementById('pcGrid');
+    grid.innerHTML = '';
+    
+    if (filteredPCs.length === 0) {
+        grid.innerHTML = `
+            <div class="text-center py-8 col-span-full">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 21a9 9 0 100-18 9 9 0 000 18z"/>
+                </svg>
+                <p class="text-sm text-gray-600">No PCs match the selected filters</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedPCs = filteredPCs.slice(startIndex, endIndex);
+    
+    // Render PC cards
+    paginatedPCs.forEach(pc => {
+        const healthData = healthDataCache[pc.id];
+        const status = getHealthStatus(healthData);
+        const card = createPCCard(pc, healthData, status);
+        grid.appendChild(card);
+    });
+}
+
+// Update pagination controls
+function updatePaginationControls() {
+    const totalPages = Math.ceil(filteredPCs.length / itemsPerPage);
+    const controls = document.getElementById('paginationControls');
+    
+    if (totalPages <= 1) {
+        controls.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    
+    // Previous button
+    html += `
+        <button onclick="changePage(${currentPage - 1})" 
+                ${currentPage === 1 ? 'disabled' : ''}
+                class="px-3 py-1.5 border rounded ${
+                    currentPage === 1 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                }">
+            Previous
+        </button>
+    `;
+    
+    // Page numbers (show max 5 pages)
+    const maxPages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(totalPages, startPage + maxPages - 1);
+    
+    if (endPage - startPage < maxPages - 1) {
+        startPage = Math.max(1, endPage - maxPages + 1);
+    }
+    
+    // First page
+    if (startPage > 1) {
+        html += `
+            <button onclick="changePage(1)" class="px-3 py-1.5 border rounded bg-white text-gray-700 hover:bg-gray-50">
+                1
+            </button>
+        `;
+        if (startPage > 2) {
+            html += '<span class="px-2">...</span>';
+        }
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <button onclick="changePage(${i})" 
+                    class="px-3 py-1.5 border rounded ${
+                        i === currentPage 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }">
+                ${i}
+            </button>
+        `;
+    }
+    
+    // Last page
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += '<span class="px-2">...</span>';
+        }
+        html += `
+            <button onclick="changePage(${totalPages})" class="px-3 py-1.5 border rounded bg-white text-gray-700 hover:bg-gray-50">
+                ${totalPages}
+            </button>
+        `;
+    }
+    
+    // Next button
+    html += `
+        <button onclick="changePage(${currentPage + 1})" 
+                ${currentPage === totalPages ? 'disabled' : ''}
+                class="px-3 py-1.5 border rounded ${
+                    currentPage === totalPages 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                }">
+            Next
+        </button>
+    `;
+    
+    controls.innerHTML = html;
+}
+
+// Change page
+function changePage(page) {
+    const totalPages = Math.ceil(filteredPCs.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderPCGrid();
+    updatePaginationControls();
+    
+    // Scroll to top of grid
+    document.getElementById('pcGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Update alert banner

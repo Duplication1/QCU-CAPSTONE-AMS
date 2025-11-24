@@ -13,7 +13,7 @@ class Room {
      * Get all rooms
      */
     public function getAll() {
-        $query = "SELECT * FROM rooms ORDER BY name ASC";
+        $query = "SELECT r.*, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id ORDER BY r.name ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

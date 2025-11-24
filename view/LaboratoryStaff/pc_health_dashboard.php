@@ -24,6 +24,9 @@ include '../components/layout_header.php';
                 <input type="text" id="searchInput" placeholder="Search PC or Room..." 
                        class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
             </div>
+            <select id="buildingFilter" class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500">
+                <option value="">All Buildings</option>
+            </select>
             <select id="roomFilter" class="border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500">
                 <option value="">All Rooms</option>
             </select>
@@ -127,6 +130,9 @@ include '../components/layout_header.php';
                 <p class="mt-2 text-xs text-gray-600">Loading...</p>
             </div>
         </div>
+        
+        <!-- Pagination Controls -->
+        <div id="paginationControls" class="hidden"></div>
     </div>
 </main>
 
@@ -154,6 +160,13 @@ let firebaseApp, database;
 let pcUnitsData = [];
 let healthDataCache = {};
 let roomsData = [];
+let buildingsData = [];
+let allRoomsData = [];
+
+// Pagination variables
+let currentPage = 1;
+let itemsPerPage = 20;
+let filteredPCs = [];
 
 // Initialize Firebase
 async function initFirebase() {
@@ -185,21 +198,29 @@ async function initFirebase() {
 // Load PC units and rooms
 async function loadPCUnits() {
     try {
-        const [pcResponse, roomResponse] = await Promise.all([
+        const [pcResponse, roomResponse, buildingResponse] = await Promise.all([
             fetch('../../controller/get_pc_health_data.php?action=getAll'),
-            fetch('../../controller/get_pc_health_data.php?action=getRooms')
+            fetch('../../controller/get_pc_health_data.php?action=getRooms'),
+            fetch('../../controller/get_pc_health_data.php?action=getBuildings')
         ]);
         
         const pcResult = await pcResponse.json();
         const roomResult = await roomResponse.json();
+        const buildingResult = await buildingResponse.json();
         
         if (pcResult.success) {
             pcUnitsData = pcResult.data;
         }
         
         if (roomResult.success) {
+            allRoomsData = roomResult.data;
             roomsData = roomResult.data;
             populateRoomFilter();
+        }
+        
+        if (buildingResult.success) {
+            buildingsData = buildingResult.data;
+            populateBuildingFilter();
         }
         
         updateDashboard();
@@ -209,10 +230,47 @@ async function loadPCUnits() {
     }
 }
 
+// Populate building filter
+function populateBuildingFilter() {
+    const filter = document.getElementById('buildingFilter');
+    buildingsData.forEach(building => {
+        const option = document.createElement('option');
+        option.value = building.id;
+        option.textContent = building.name;
+        filter.appendChild(option);
+    });
+    
+    // Add event listener for building filter
+    document.getElementById('buildingFilter').addEventListener('change', onBuildingChange);
+}
+
+// Handle building filter change
+function onBuildingChange() {
+    const selectedBuilding = document.getElementById('buildingFilter').value;
+    const roomFilter = document.getElementById('roomFilter');
+    
+    // Clear and reset room filter
+    roomFilter.innerHTML = '<option value="">All Rooms</option>';
+    
+    // Filter rooms by selected building
+    const filteredRooms = selectedBuilding 
+        ? allRoomsData.filter(room => room.building_id == selectedBuilding)
+        : allRoomsData;
+    
+    filteredRooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = room.name;
+        roomFilter.appendChild(option);
+    });
+    
+    updateDashboard();
+}
+
 // Populate room filter
 function populateRoomFilter() {
     const filter = document.getElementById('roomFilter');
-    roomsData.forEach(room => {
+    allRoomsData.forEach(room => {
         const option = document.createElement('option');
         option.value = room.id;
         option.textContent = room.name;
@@ -228,7 +286,14 @@ function populateRoomFilter() {
 // Clear all filters
 function clearFilters() {
     document.getElementById('searchInput').value = '';
-    document.getElementById('roomFilter').value = '';
+    document.getElementById('buildingFilter').value = '';
+    document.getElementById('roomFilter').innerHTML = '<option value="">All Rooms</option>';
+    allRoomsData.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = room.name;
+        document.getElementById('roomFilter').appendChild(option);
+    });
     document.getElementById('statusFilter').value = '';
     updateDashboard();
 }
@@ -239,7 +304,7 @@ function updateDashboard() {
     const selectedStatus = document.getElementById('statusFilter').value;
     const searchText = document.getElementById('searchInput').value.toLowerCase();
     
-    let filteredPCs = pcUnitsData;
+    filteredPCs = pcUnitsData;
     
     // Apply filters
     filteredPCs = filteredPCs.filter(pc => {
@@ -269,13 +334,15 @@ function updateDashboard() {
         return true;
     });
     
-    // Update statistics
-    let totalPCs = filteredPCs.length;
-    let onlineCount = 0;
-    let warningCount = 0;
-    let criticalCount = 0;
+    // Reset to page 1 when filters change
+    currentPage = 1;
     
-    // Update PC grid
+    renderPCGrid();
+    updateStatistics();
+}
+
+// Render PC grid with pagination
+function renderPCGrid() {
     const grid = document.getElementById('pcGrid');
     grid.innerHTML = '';
     
@@ -288,19 +355,43 @@ function updateDashboard() {
                 <p class="text-sm text-gray-600">No PCs match the selected filters</p>
             </div>
         `;
-    } else {
-        filteredPCs.forEach(pc => {
-            const healthData = healthDataCache[pc.id];
-            const status = getHealthStatus(healthData);
-            
-            if (status === 'online' || status === 'healthy') onlineCount++;
-            if (status === 'warning') warningCount++;
-            if (status === 'critical') criticalCount++;
-            
-            const card = createPCCard(pc, healthData, status);
-            grid.appendChild(card);
-        });
+        document.getElementById('paginationControls').classList.add('hidden');
+        return;
     }
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredPCs.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredPCs.length);
+    const paginatedPCs = filteredPCs.slice(startIndex, endIndex);
+    
+    // Render PC cards
+    paginatedPCs.forEach(pc => {
+        const healthData = healthDataCache[pc.id];
+        const status = getHealthStatus(healthData);
+        const card = createPCCard(pc, healthData, status);
+        grid.appendChild(card);
+    });
+    
+    // Update pagination controls
+    updatePaginationControls(totalPages);
+}
+
+// Update statistics
+function updateStatistics() {
+    let totalPCs = filteredPCs.length;
+    let onlineCount = 0;
+    let warningCount = 0;
+    let criticalCount = 0;
+    
+    filteredPCs.forEach(pc => {
+        const healthData = healthDataCache[pc.id];
+        const status = getHealthStatus(healthData);
+        
+        if (status === 'online' || status === 'healthy') onlineCount++;
+        if (status === 'warning') warningCount++;
+        if (status === 'critical') criticalCount++;
+    });
     
     // Update statistics
     document.getElementById('totalPCs').textContent = totalPCs;
@@ -308,6 +399,92 @@ function updateDashboard() {
     document.getElementById('warningPCs').textContent = warningCount;
     document.getElementById('criticalPCs').textContent = criticalCount;
     document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
+}
+
+// Update pagination controls
+function updatePaginationControls(totalPages) {
+    const paginationDiv = document.getElementById('paginationControls');
+    
+    if (totalPages <= 1) {
+        paginationDiv.classList.add('hidden');
+        return;
+    }
+    
+    paginationDiv.classList.remove('hidden');
+    
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, filteredPCs.length);
+    
+    paginationDiv.innerHTML = `
+        <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-700 bg-white hover:bg-gray-50'} border border-gray-300">
+                    Previous
+                </button>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium rounded-md ${currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-700 bg-white hover:bg-gray-50'} border border-gray-300">
+                    Next
+                </button>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">${startItem}</span> to <span class="font-medium">${endItem}</span> of <span class="font-medium">${filteredPCs.length}</span> PCs
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-500 bg-white hover:bg-gray-50'}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        ${generatePageNumbers(currentPage, totalPages)}
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-500 bg-white hover:bg-gray-50'}">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Generate page number buttons
+function generatePageNumbers(current, total) {
+    let html = '';
+    const startPage = Math.max(1, current - 2);
+    const endPage = Math.min(total, current + 2);
+    
+    if (startPage > 1) {
+        html += `<button onclick="changePage(1)" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">1</button>`;
+        if (startPage > 2) {
+            html += `<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>`;
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === current) {
+            html += `<button class="relative inline-flex items-center px-4 py-2 border border-[#1E3A8A] bg-[#1E3A8A] text-sm font-medium text-white">${i}</button>`;
+        } else {
+            html += `<button onclick="changePage(${i})" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">${i}</button>`;
+        }
+    }
+    
+    if (endPage < total) {
+        if (endPage < total - 1) {
+            html += `<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>`;
+        }
+        html += `<button onclick="changePage(${total})" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">${total}</button>`;
+    }
+    
+    return html;
+}
+
+// Change page
+function changePage(page) {
+    const totalPages = Math.ceil(filteredPCs.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderPCGrid();
 }
 
 // Get health status
