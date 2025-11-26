@@ -337,9 +337,6 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
                         </span>
                     </div>
                     <?php if ($show_badge): ?>
-                    <span class="flex-shrink-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 animate-pulse 
-                                 lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto transition-all duration-300">
-                        <?php echo $new_tickets_count; ?>
                     </span>
                     <?php endif; ?>
                 </a>
