@@ -69,7 +69,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 <!-- Notification Icon with Dropdown -->
 <div class="relative group">
 <button id="notification-button" class="p-2 rounded-full hover:bg-gray-100 text-lg md:text-xl focus:outline-none relative" style="color: #2563eb;" title="Notifications">
-    <i class="fa-solid fa-bell"></i>
+    <img src="../../assets/images/ri_notification-line.png"></img>
     <div id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md">
       0
     </div>
@@ -99,15 +99,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     </span>
   </button>
 
-  <!-- Name + Role -->
-  <div class="hidden md:flex flex-col leading-tight text-gray-800">
-    <span class="text-sm font-medium truncate max-w-[120px]" title="<?php echo htmlspecialchars($user_name); ?>">
-      <?php echo htmlspecialchars($user_name); ?>
-    </span>
-    <span class="text-xs text-gray-900">
-      <?php echo htmlspecialchars($role_title); ?>
-    </span>
-  </div>
+
 
 <!-- Profile Settings Dropdown -->
 <div id="profile-dropdown" class="absolute right-0 top-12 w-50 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 hidden z-50">
