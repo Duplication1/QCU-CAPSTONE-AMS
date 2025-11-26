@@ -594,7 +594,7 @@ main {
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -674,12 +674,12 @@ main {
                                         <?php echo htmlspecialchars($asset['condition']); ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <div class="relative">
-                                        <button onclick="toggleMenu(<?php echo $asset['id']; ?>)" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                    <div class="relative inline-block">
+                                        <button onclick="toggleMenu(<?php echo $asset['id']; ?>)" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full focus:outline-none transition-colors">
                                             <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
                                         </button>
-                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden fixed bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 12rem;">
+                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 12rem;">
                                             <div class="py-1">
                                                 <button onclick='printQRCode(<?php echo json_encode($asset); ?>)' 
                                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
@@ -695,10 +695,7 @@ main {
                                                     <i class="fa-solid fa-archive"></i> Archive
                                                 </button>
                                                 <?php endif; ?>
-                                                <button onclick="deleteAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fa-solid fa-trash"></i> Delete
-                                                </button>
+                                         
                                             </div>
                                         </div>
                                     </div>
