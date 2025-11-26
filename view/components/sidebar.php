@@ -34,13 +34,6 @@ $navigation_items = [
             'href' => 'reports.php'
         ],
         [
-            'id' => 'logs',
-            'label' => 'Activity Logs',
-            'icon' => 'fa-solid fa-clipboard-list',
-            'color' => 'blue',
-            'href' => 'logs.php'
-        ],
-        [
             'id' => 'analytics',
             'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',

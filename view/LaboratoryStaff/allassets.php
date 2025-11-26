@@ -22,6 +22,73 @@ if (!isset($conn)) {
     }
 }
 
+/**
+ * Build filter conditions and parameters for asset queries
+ * @param array $filters Array of filter values (status, type, building, room, search, etc.)
+ * @param bool $show_archived Whether to include archived assets
+ * @param bool $show_standby Whether to show only standby (unassigned) assets
+ * @return array ['where' => SQL WHERE conditions, 'params' => parameter values, 'types' => parameter types]
+ */
+function buildAssetFilters($filters, $show_archived = false, $show_standby = false) {
+    $conditions = [];
+    $params = [];
+    $types = '';
+    
+    // Exclude archived assets by default
+    if (!$show_archived) {
+        $conditions[] = "status != 'Archived'";
+    }
+    
+    // Filter by status
+    if (!empty($filters['status'])) {
+        $conditions[] = "status = ?";
+        $params[] = $filters['status'];
+        $types .= 's';
+    }
+    
+    // Filter by asset type
+    if (!empty($filters['type'])) {
+        $conditions[] = "asset_type = ?";
+        $params[] = $filters['type'];
+        $types .= 's';
+    }
+    
+    // Standby filter - assets not assigned to any room
+    if ($show_standby) {
+        $conditions[] = "(room_id IS NULL OR room_id = 0)";
+    }
+    
+    // Filter by building (through room relationship)
+    if (!empty($filters['building'])) {
+        $conditions[] = "room_id IN (SELECT id FROM rooms WHERE building_id = ?)";
+        $params[] = intval($filters['building']);
+        $types .= 'i';
+    }
+    
+    // Filter by room
+    if (!empty($filters['room'])) {
+        $conditions[] = "room_id = ?";
+        $params[] = intval($filters['room']);
+        $types .= 'i';
+    }
+    
+    // Search across multiple fields
+    if (!empty($filters['search'])) {
+        $conditions[] = "(asset_tag LIKE ? OR asset_name LIKE ? OR brand LIKE ? OR model LIKE ? OR serial_number LIKE ?)";
+        $search_param = "%" . $filters['search'] . "%";
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param]);
+        $types .= 'sssss';
+    }
+    
+    $where = !empty($conditions) ? implode(' AND ', $conditions) : '1=1';
+    
+    return [
+        'where' => $where,
+        'params' => $params,
+        'types' => $types
+    ];
+}
+
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1') {
     header('Content-Type: application/json');
@@ -331,54 +398,27 @@ if ($all_rooms_query) {
     }
 }
 
+// Prepare filter array for the buildAssetFilters function
+$filters = [
+    'status' => $filter_status,
+    'type' => $filter_type,
+    'building' => $filter_building,
+    'room' => $filter_room,
+    'search' => $search
+];
+
+// Build filter conditions using the function
+$filter_result = buildAssetFilters($filters, $show_archived, $show_standby);
+$where_conditions = $filter_result['where'];
+$filter_params = $filter_result['params'];
+$filter_types = $filter_result['types'];
+
 // Count total assets
-$count_query = "SELECT COUNT(*) as total FROM assets WHERE 1=1";
-$params = [];
-$types = '';
+$count_query = "SELECT COUNT(*) as total FROM assets WHERE " . $where_conditions;
 
-if (!$show_archived) {
-    $count_query .= " AND status != 'Archived'";
-}
-
-if (!empty($filter_status)) {
-    $count_query .= " AND status = ?";
-    $params[] = $filter_status;
-    $types .= 's';
-}
-
-if (!empty($filter_type)) {
-    $count_query .= " AND asset_type = ?";
-    $params[] = $filter_type;
-    $types .= 's';
-}
-
-// Standby filter - assets not assigned to any room
-if ($show_standby) {
-    $count_query .= " AND (room_id IS NULL OR room_id = 0)";
-}
-
-if (!empty($filter_building)) {
-    $count_query .= " AND room_id IN (SELECT id FROM rooms WHERE building_id = ?)";
-    $params[] = intval($filter_building);
-    $types .= 'i';
-}
-
-if (!empty($filter_room)) {
-    $count_query .= " AND room_id = ?";
-    $params[] = intval($filter_room);
-    $types .= 'i';
-}
-
-if (!empty($search)) {
-    $count_query .= " AND (asset_tag LIKE ? OR asset_name LIKE ? OR brand LIKE ? OR model LIKE ? OR serial_number LIKE ?)";
-    $search_param = "%$search%";
-    $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param]);
-    $types .= 'sssss';
-}
-
-if (!empty($params)) {
+if (!empty($filter_params)) {
     $count_stmt = $conn->prepare($count_query);
-    $count_stmt->bind_param($types, ...$params);
+    $count_stmt->bind_param($filter_types, ...$filter_params);
     $count_stmt->execute();
     $total_result = $count_stmt->get_result();
     $total_assets = $total_result->fetch_assoc()['total'];
@@ -390,60 +430,18 @@ if (!empty($params)) {
 
 $total_pages = ceil($total_assets / $limit);
 
-// Fetch assets
+// Fetch assets using the same filter function
 $assets = [];
-$query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON a.room_id = r.id WHERE 1=1";
-$params = [];
-$types = '';
-
-if (!$show_archived) {
-    $query_sql .= " AND a.status != 'Archived'";
-}
-
-if (!empty($filter_status)) {
-    $query_sql .= " AND a.status = ?";
-    $params[] = $filter_status;
-    $types .= 's';
-}
-
-if (!empty($filter_type)) {
-    $query_sql .= " AND a.asset_type = ?";
-    $params[] = $filter_type;
-    $types .= 's';
-}
-
-// Standby filter - assets not assigned to any room
-if ($show_standby) {
-    $query_sql .= " AND (a.room_id IS NULL OR a.room_id = 0)";
-}
-
-if (!empty($filter_building)) {
-    $query_sql .= " AND a.room_id IN (SELECT id FROM rooms WHERE building_id = ?)";
-    $params[] = intval($filter_building);
-    $types .= 'i';
-}
-
-if (!empty($filter_room)) {
-    $query_sql .= " AND a.room_id = ?";
-    $params[] = intval($filter_room);
-    $types .= 'i';
-}
-
-if (!empty($search)) {
-    $query_sql .= " AND (a.asset_tag LIKE ? OR a.asset_name LIKE ? OR a.brand LIKE ? OR a.model LIKE ? OR a.serial_number LIKE ?)";
-    $search_param = "%$search%";
-    $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param]);
-    $types .= 'sssss';
-}
-
+$query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON a.room_id = r.id WHERE " . $where_conditions;
 $query_sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
-$params[] = $limit;
-$params[] = $offset;
-$types .= 'ii';
 
-if (!empty($types)) {
+// Add pagination parameters to existing filter parameters
+$query_params = array_merge($filter_params, [$limit, $offset]);
+$query_types = $filter_types . 'ii';
+
+if (!empty($query_types)) {
     $query = $conn->prepare($query_sql);
-    $query->bind_param($types, ...$params);
+    $query->bind_param($query_types, ...$query_params);
     $query->execute();
     $result = $query->get_result();
     if ($result && $result->num_rows > 0) {
@@ -521,13 +519,13 @@ main {
 
         <!-- Search and Filters -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
-            <form method="GET" action="" class="flex flex-wrap gap-3">
+            <form method="GET" action="" id="filterForm" class="flex flex-wrap gap-3">
                 <div class="flex-1 min-w-[250px]">
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" name="search" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
                            placeholder="Search by tag, name, brand, model, serial..." 
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <select name="filter_status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_status" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Status</option>
                     <option value="Active" <?php echo $filter_status === 'Active' ? 'selected' : ''; ?>>Active</option>
                     <option value="Available" <?php echo $filter_status === 'Available' ? 'selected' : ''; ?>>Available</option>
@@ -536,7 +534,7 @@ main {
                     <option value="Damaged" <?php echo $filter_status === 'Damaged' ? 'selected' : ''; ?>>Damaged</option>
                     <option value="Retired" <?php echo $filter_status === 'Retired' ? 'selected' : ''; ?>>Retired</option>
                 </select>
-                <select name="filter_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_type" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Types</option>
                     <option value="Hardware" <?php echo $filter_type === 'Hardware' ? 'selected' : ''; ?>>Hardware</option>
                     <option value="Software" <?php echo $filter_type === 'Software' ? 'selected' : ''; ?>>Software</option>
@@ -545,7 +543,7 @@ main {
                     <option value="Peripheral" <?php echo $filter_type === 'Peripheral' ? 'selected' : ''; ?>>Peripheral</option>
                     <option value="Network Device" <?php echo $filter_type === 'Network Device' ? 'selected' : ''; ?>>Network Device</option>
                 </select>
-                <select name="filter_building" id="filterBuilding" onchange="updateRoomFilter()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_building" id="filterBuilding" onchange="updateRoomFilter(); this.form.submit();" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Buildings</option>
                     <?php foreach ($buildings as $building): ?>
                         <option value="<?php echo $building['id']; ?>" <?php echo $filter_building == $building['id'] ? 'selected' : ''; ?>>
@@ -553,7 +551,7 @@ main {
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <select name="filter_room" id="filterRoom" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_room" id="filterRoom" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Rooms</option>
                     <?php foreach ($rooms as $room): ?>
                         <option value="<?php echo $room['id']; ?>" <?php echo $filter_room == $room['id'] ? 'selected' : ''; ?>>
@@ -562,14 +560,16 @@ main {
                     <?php endforeach; ?>
                 </select>
                 <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" name="show_standby" value="1" <?php echo $show_standby ? 'checked' : ''; ?> class="rounded">
+                    <input type="checkbox" name="show_standby" value="1" <?php echo $show_standby ? 'checked' : ''; ?> onchange="this.form.submit()" class="rounded">
                     <span class="text-sm text-gray-700">Standby Assets</span>
                 </label>
                 <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
+                    <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> onchange="this.form.submit()" class="rounded">
                     <span class="text-sm text-gray-700">Show Archived</span>
                 </label>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-search"></i>
+                </button>
                     <i class="fa-solid fa-search"></i>
                 </button>
                 <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type) || !empty($filter_building) || !empty($filter_room) || $show_standby || $show_archived): ?>
@@ -1150,6 +1150,18 @@ main {
 // All rooms data for filtering
 const allRoomsData = <?php echo json_encode($all_rooms_for_js); ?>;
 const currentFilterRoom = '<?php echo $filter_room; ?>';
+
+// Auto-submit search with debounce
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 800); // Wait 800ms after user stops typing
+    });
+}
 
 // Update room filter based on selected building
 function updateRoomFilter() {
