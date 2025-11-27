@@ -39,7 +39,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 ?>
             
 <!-- ========== HEADER ========== -->
-<header class="fixed top-0 left-0 w-full z-30 bg-white text-gray-800 shadow-md h-[85px] border-b border-gray-200">
+<header class="fixed top-0 left-0 w-full z-30 text-white shadow-md h-[85px] border-b border-gray-200" style="background-color: #1E3A8A;">
   <div class="flex items-center justify-between h-full px-4 md:px-6">
 
     <!-- Left: Burger Menu + Logo + oneQCU -->
@@ -48,18 +48,18 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       <div class="flex items-center gap-2 md:gap-3">
         <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-12 h-12 md:w-14 md:h-14">
         <div class="flex flex-col leading-tight">
-          <h1 class="font-bold font-[Poppins] text-gray-900" style="font-size: 20px;">
+          <h1 class="font-bold font-[Poppins] text-white" style="font-size: 20px;">
             Quezon City University
           </h1>
-          <p class="font-normal font-[] text-gray-700" style="font-size: 12px;">
+          <p class="font-normal font-[] text-white" style="font-size: 12px;">
             Asset Management System
           </p>
         </div>
       </div>
       
       <!-- Burger Menu Button - Only visible on mobile -->
-      <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all duration-300">
-        <i id="toggle-icon" class="fa-solid fa-bars text-lg md:text-xl text-gray-700"></i>
+      <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg hover:bg-blue-800 transition-all duration-300">
+        <i id="toggle-icon" class="fa-solid fa-bars text-lg md:text-xl text-white"></i>
       </button>
     </div>
 
@@ -68,8 +68,8 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 
 <!-- Notification Icon with Dropdown -->
 <div class="relative group">
-<button id="notification-button" class="p-2 rounded-full hover:bg-gray-100 text-lg md:text-xl focus:outline-none relative" style="color: #2563eb;" title="Notifications">
-    <img src="../../assets/images/ri_notification-line.png"></img>
+<button id="notification-button" class="p-2 rounded-full hover:bg-blue-800 text-lg md:text-xl focus:outline-none relative" style="color: white;" title="Notifications">
+    <img src="../../assets/images/ri_notification-line.png" style="filter: brightness(0) invert(1);"></img>
     <div id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md">
       0
     </div>
