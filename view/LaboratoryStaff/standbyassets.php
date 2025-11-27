@@ -328,16 +328,23 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $limit = 9;
 $offset = ($page - 1) * $limit;
 
-// Count total standby assets (not assigned to any room)
+// Count total standby assets (not assigned to any room) - always include archived for client-side filtering
 $count_query = "SELECT COUNT(*) as total FROM assets WHERE (room_id IS NULL OR room_id = 0)";
 $params = [];
 $types = '';
 
+<<<<<<< HEAD
 if ($show_archived) {
     $count_query .= " AND status IN ('Archive', 'Archived')";
 } else {
     $count_query .= " AND status NOT IN ('Archive', 'Archived')";
 }
+=======
+// Don't filter archived on server side anymore - we'll handle it with JavaScript
+// if (!$show_archived) {
+//     $count_query .= " AND status != 'Archived'";
+// }
+>>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 
 if (!empty($filter_status)) {
     $count_query .= " AND status = ?";
@@ -372,17 +379,24 @@ if (!empty($params)) {
 
 $total_pages = ceil($total_assets / $limit);
 
-// Fetch standby assets (not assigned to any room)
+// Fetch standby assets (not assigned to any room) - always include all assets for client-side filtering
 $assets = [];
 $query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON a.room_id = r.id WHERE (a.room_id IS NULL OR a.room_id = 0)";
 $params = [];
 $types = '';
 
+<<<<<<< HEAD
 if ($show_archived) {
     $query_sql .= " AND a.status IN ('Archive', 'Archived')";
 } else {
     $query_sql .= " AND a.status NOT IN ('Archive', 'Archived')";
 }
+=======
+// Don't filter archived on server side anymore - we'll handle it with JavaScript
+// if (!$show_archived) {
+//     $query_sql .= " AND a.status != 'Archived'";
+// }
+>>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 
 if (!empty($filter_status)) {
     $query_sql .= " AND a.status = ?";
@@ -488,13 +502,13 @@ main {
 
         <!-- Search and Filters -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
-            <form method="GET" action="" class="flex flex-wrap gap-3">
+            <form method="GET" action="" class="flex flex-wrap gap-3" id="filterForm">
                 <div class="flex-1 min-w-[250px]">
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" name="search" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
                            placeholder="Search by tag, name, brand, model, serial..." 
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <select name="filter_status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_status" id="filter_status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Status</option>
                     <option value="Active" <?php echo $filter_status === 'Active' ? 'selected' : ''; ?>>Active</option>
                     <option value="Available" <?php echo $filter_status === 'Available' ? 'selected' : ''; ?>>Available</option>
@@ -503,7 +517,7 @@ main {
                     <option value="Damaged" <?php echo $filter_status === 'Damaged' ? 'selected' : ''; ?>>Damaged</option>
                     <option value="Retired" <?php echo $filter_status === 'Retired' ? 'selected' : ''; ?>>Retired</option>
                 </select>
-                <select name="filter_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select name="filter_type" id="filter_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Types</option>
                     <option value="Hardware" <?php echo $filter_type === 'Hardware' ? 'selected' : ''; ?>>Hardware</option>
                     <option value="Software" <?php echo $filter_type === 'Software' ? 'selected' : ''; ?>>Software</option>
@@ -513,8 +527,13 @@ main {
                     <option value="Network Device" <?php echo $filter_type === 'Network Device' ? 'selected' : ''; ?>>Network Device</option>
                 </select>
                 <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+<<<<<<< HEAD
                     <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
                     <span class="text-sm text-gray-700">Show Only Archived Assets</span>
+=======
+                    <input type="checkbox" name="show_archived" id="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
+                    <span class="text-sm text-gray-700">Show Archived</span>
+>>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
                 </label>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
@@ -544,9 +563,9 @@ main {
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200" id="assetsTableBody">
                     <?php if (empty($assets)): ?>
-                        <tr>
+                        <tr id="noResultsRow">
                             <td colspan="10" class="px-6 py-12 text-center text-gray-500">
                                 <i class="fa-solid fa-box text-5xl mb-3 opacity-30"></i>
                                 <p class="text-lg">No standby assets found</p>
@@ -559,7 +578,14 @@ main {
                         </tr>
                     <?php else: ?>
                         <?php foreach ($assets as $index => $asset): ?>
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-gray-50 transition-colors asset-row" 
+                                data-status="<?php echo htmlspecialchars($asset['status']); ?>"
+                                data-type="<?php echo htmlspecialchars($asset['asset_type']); ?>"
+                                data-tag="<?php echo htmlspecialchars($asset['asset_tag']); ?>"
+                                data-name="<?php echo htmlspecialchars($asset['asset_name']); ?>"
+                                data-brand="<?php echo htmlspecialchars($asset['brand'] ?? ''); ?>"
+                                data-model="<?php echo htmlspecialchars($asset['model'] ?? ''); ?>"
+                                data-serial="<?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?>">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo $offset + $index + 1; ?>
                                 </td>
@@ -603,7 +629,7 @@ main {
                                     ];
                                     $status_class = $status_colors[$asset['status']] ?? 'bg-gray-100 text-gray-700';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>" data-status-badge>
                                         <?php echo htmlspecialchars($asset['status']); ?>
                                     </span>
                                 </td>
@@ -1069,6 +1095,68 @@ main {
     </div>
 </div>
 
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Archive Asset</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                    <i class="fa-solid fa-archive text-orange-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to archive this asset?</p>
+                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="archiveAssetTag" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-gray-500 mt-2">Archived assets will be hidden from the default view but can be restored later.</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeArchiveModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmArchiveAsset()" 
+                        class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                    <i class="fa-solid fa-archive mr-2"></i>Archive Asset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Delete Asset</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fa-solid fa-trash text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to delete this asset?</p>
+                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="deleteAssetTag" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-red-600 mt-2 font-medium">This action cannot be undone!</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeDeleteModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDeleteAsset()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-trash mr-2"></i>Delete Asset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -1106,6 +1194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+<<<<<<< HEAD
     // Add listeners for start number update
     const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
     startNumberTriggerFields.forEach(fieldId => {
@@ -1114,7 +1203,116 @@ document.addEventListener('DOMContentLoaded', function() {
             field.addEventListener('input', updateBulkStartNumber);
         }
     });
+=======
+    // Add event listeners for real-time filtering
+    const filterStatus = document.getElementById('filter_status');
+    const filterType = document.getElementById('filter_type');
+    const searchInput = document.getElementById('searchInput');
+    const showArchived = document.getElementById('show_archived');
+    
+    if (filterStatus) {
+        filterStatus.addEventListener('change', applyFilters);
+    }
+    
+    if (filterType) {
+        filterType.addEventListener('change', applyFilters);
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(applyFilters, 300));
+    }
+    
+    if (showArchived) {
+        showArchived.addEventListener('change', applyFilters);
+    }
+    
+    // Apply filters on page load to hide archived assets by default
+    applyFilters();
+>>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 });
+
+// Debounce function for search input
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Apply filters to the table
+function applyFilters() {
+    const filterStatus = document.getElementById('filter_status').value.toLowerCase();
+    const filterType = document.getElementById('filter_type').value.toLowerCase();
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+    const showArchived = document.getElementById('show_archived').checked;
+    
+    const rows = document.querySelectorAll('.asset-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const status = row.getAttribute('data-status').toLowerCase();
+        const type = row.getAttribute('data-type').toLowerCase();
+        const tag = row.getAttribute('data-tag').toLowerCase();
+        const name = row.getAttribute('data-name').toLowerCase();
+        const brand = row.getAttribute('data-brand').toLowerCase();
+        const model = row.getAttribute('data-model').toLowerCase();
+        const serial = row.getAttribute('data-serial').toLowerCase();
+        
+        // Status filter
+        let statusMatch = !filterStatus || status === filterStatus;
+        
+        // Type filter
+        let typeMatch = !filterType || type === filterType;
+        
+        // Search filter
+        let searchMatch = !searchQuery || 
+            tag.includes(searchQuery) || 
+            name.includes(searchQuery) || 
+            brand.includes(searchQuery) || 
+            model.includes(searchQuery) || 
+            serial.includes(searchQuery);
+        
+        // Archived filter - hide archived assets unless "Show Archived" is checked
+        let archivedMatch = showArchived || status !== 'archived';
+        
+        // Show/hide row based on all filters
+        if (statusMatch && typeMatch && searchMatch && archivedMatch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show/hide "no results" message
+    const noResultsRow = document.getElementById('noResultsRow');
+    if (noResultsRow) {
+        if (visibleCount === 0 && rows.length > 0) {
+            noResultsRow.style.display = '';
+        } else {
+            noResultsRow.style.display = 'none';
+        }
+    } else if (visibleCount === 0 && rows.length > 0) {
+        // Create and insert no results row if it doesn't exist
+        const tbody = document.getElementById('assetsTableBody');
+        const newNoResultsRow = document.createElement('tr');
+        newNoResultsRow.id = 'noResultsRow';
+        newNoResultsRow.innerHTML = `
+            <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                <i class="fa-solid fa-box text-5xl mb-3 opacity-30"></i>
+                <p class="text-lg">No assets match your filters</p>
+                <p class="text-sm">Try adjusting your search or filter criteria</p>
+            </td>
+        `;
+        tbody.appendChild(newNoResultsRow);
+    }
+}
+
 
 // Modal functions
 function openAddAssetModal() {
@@ -1344,10 +1542,22 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
 });
 
 // Delete Asset
-async function deleteAsset(id, assetTag) {
+let assetToDelete = { id: null, tag: null };
+
+function deleteAsset(id, assetTag) {
     closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to delete asset "${assetTag}"?`)) return;
+    assetToDelete = { id, tag: assetTag };
+    document.getElementById('deleteAssetTag').textContent = assetTag;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    assetToDelete = { id: null, tag: null };
+}
+
+async function confirmDeleteAsset() {
+    const { id } = assetToDelete;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
@@ -1364,6 +1574,7 @@ async function deleteAsset(id, assetTag) {
         
         if (result.success) {
             showAlert('success', result.message);
+            closeDeleteModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
@@ -1375,10 +1586,22 @@ async function deleteAsset(id, assetTag) {
 }
 
 // Archive Asset
-async function archiveAsset(id, assetTag) {
+let assetToArchive = { id: null, tag: null };
+
+function archiveAsset(id, assetTag) {
     closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to archive asset "${assetTag}"?`)) return;
+    assetToArchive = { id, tag: assetTag };
+    document.getElementById('archiveAssetTag').textContent = assetTag;
+    document.getElementById('archiveModal').classList.remove('hidden');
+}
+
+function closeArchiveModal() {
+    document.getElementById('archiveModal').classList.add('hidden');
+    assetToArchive = { id: null, tag: null };
+}
+
+async function confirmArchiveAsset() {
+    const { id, tag } = assetToArchive;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
@@ -1395,7 +1618,27 @@ async function archiveAsset(id, assetTag) {
         
         if (result.success) {
             showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
+            closeArchiveModal();
+            
+            // Update the row's status instead of reloading the page
+            const row = document.querySelector(`.asset-row[data-tag="${tag}"]`);
+            if (row) {
+                row.setAttribute('data-status', 'Archived');
+                const statusBadge = row.querySelector('[data-status-badge]');
+                if (statusBadge) {
+                    statusBadge.className = 'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-700';
+                    statusBadge.textContent = 'Archived';
+                }
+                
+                // Find and hide the archive button in the menu for this row
+                const menuButton = row.querySelector('button[onclick*="archiveAsset"]');
+                if (menuButton) {
+                    menuButton.remove();
+                }
+                
+                // Apply filters to hide the archived asset if "Show Archived" is not checked
+                setTimeout(() => applyFilters(), 100);
+            }
         } else {
             showAlert('error', result.message);
         }
@@ -1404,6 +1647,7 @@ async function archiveAsset(id, assetTag) {
         showAlert('error', 'An error occurred while archiving the asset');
     }
 }
+
 
 // Print QR Code for single asset
 function printQRCode(asset) {

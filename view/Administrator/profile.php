@@ -46,187 +46,243 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-    body, html { overflow: hidden !important; height: 100vh; }
+    body, html {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#security-settings-content {
+  transition: all 0.3s ease;
+}
+.rotate-180 {
+  transform: rotate(180deg);
+}
 </style>
 
-<!-- Main Content -->
-<main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 overflow-hidden">
+<main class="p-6 bg-gray-50 min-h-screen text-[11px] text-gray-700">
+  <div class="grid grid-cols-1 lg:grid-cols-1 gap-4">
+
+    <!-- Left Column -->
+    <div class="lg:col-span-2 flex flex-col gap-4">
         
-        <!-- Left Column: Profile Info -->
-        <div class="lg:col-span-2 flex flex-col gap-2 h-full overflow-hidden">
-            <!-- Profile Information Card -->
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-id-card text-[#1E3A8A]"></i>
-                    Profile Information
-                </h3>
-                
-                <div class="space-y-3 text-xs">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Full Name</label>
-                            <p class="text-xs text-gray-900 font-medium"><?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?></p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Email Address</label>
-                            <p class="text-xs text-gray-900"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Role</label>
-                            <p>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700">
-                                    <i class="fa-solid fa-shield-halved mr-1"></i>
-                                    <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
-                                </span>
-                            </p>
-                        </div>
-                        
-                        <?php if (isset($user_data['id_number']) && $user_data['id_number']): ?>
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Employee ID</label>
-                            <p class="text-xs text-gray-900 font-mono"><?php echo htmlspecialchars($user_data['id_number']); ?></p>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Member Since</label>
-                            <p class="text-xs text-gray-900">
-                                <i class="fa-solid fa-calendar-check text-green-600 mr-1"></i>
-                                <?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?>
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Last Login</label>
-                            <p class="text-xs text-gray-900">
-                                <i class="fa-solid fa-clock text-blue-600 mr-1"></i>
-                                <?php 
-                                if ($user_data['last_login']) {
-                                    echo date('M j, Y g:i A', strtotime($user_data['last_login']));
-                                } else {
-                                    echo 'Never';
-                                }
-                                ?>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security & Password Section -->
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-[#1E3A8A]"></i>
-                    Security Settings
-                </h3>
-
-                <div class="space-y-2">
-                    <div class="border border-gray-200 rounded p-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <h4 class="text-xs font-semibold text-gray-800">Change Password</h4>
-                                <p class="text-[10px] text-gray-500 mt-0.5">Update your password to keep your account secure</p>
-                            </div>
-                            <button onclick="openChangePasswordModal()" class="px-3 py-1.5 bg-[#1E3A8A] hover:bg-blue-700 text-white text-[10px] font-medium rounded transition-colors">
-                                <i class="fa-solid fa-key mr-1"></i>Change Password
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="border border-gray-200 rounded p-3 bg-blue-50">
-                        <div class="flex items-start gap-2">
-                            <i class="fa-solid fa-circle-info text-blue-600 text-sm mt-0.5"></i>
-                            <div>
-                                <h4 class="text-xs font-semibold text-blue-900">Password Security Tips</h4>
-                                <ul class="text-[10px] text-blue-800 mt-1 space-y-0.5 list-disc list-inside">
-                                    <li>Use at least 8 characters</li>
-                                    <li>Include uppercase and lowercase letters</li>
-                                    <li>Add numbers and special characters</li>
-                                    <li>Avoid common words or personal information</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <!-- User Profile -->
+      <div id="user-profile" class="space-y-3">
+        <div class="flex justify-between items-center">
+          <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">User Profile</h1>
         </div>
+<div class="flex items-center gap-4">
+  <div class="relative">
+    <img src="../../assets/images/admin1.png" alt="Avatar" class="w-24 h-24 rounded-full border border-gray-300 object-cover">
+    <span class="absolute bottom-1 right-1 inline-block w-4 h-4 bg-green-500 rounded-full border border-white"></span>
+  </div>
+  <div>
+    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+      <?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?>
+    </h2>
 
-        <!-- Right Sidebar -->
-        <div class="flex flex-col gap-2 h-full">
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i>
-                    Account Status
-                </h3>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-gray-600">Profile Status</span>
-                        <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[10px] rounded-full font-medium">
-                            <i class="fa-solid fa-circle-check mr-0.5"></i>Active
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-gray-600">Account Type</span>
-                        <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] rounded-full font-medium">
-                            Administrator
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-gray-600">Access Level</span>
-                        <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded-full font-medium">
-                            Full Access
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-medium" 
+      title="Full access to all system modules">
+              <i class="fa-solid fa-shield-halved mr-1"></i>
+              <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
+            </span>
 
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-1">
-                    <i class="fa-solid fa-user-shield text-[#1E3A8A]"></i>
-                    Admin Privileges
-                </h3>
-                <div class="space-y-1.5">
-                    <div class="flex items-center gap-2 text-[10px] text-gray-700">
-                        <i class="fa-solid fa-check text-green-600"></i>
-                        <span>User Management</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] text-gray-700">
-                        <i class="fa-solid fa-check text-green-600"></i>
-                        <span>System Reports</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] text-gray-700">
-                        <i class="fa-solid fa-check text-green-600"></i>
-                        <span>Activity Monitoring</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] text-gray-700">
-                        <i class="fa-solid fa-check text-green-600"></i>
-                        <span>Analytics Dashboard</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] text-gray-700">
-                        <i class="fa-solid fa-check text-green-600"></i>
-                        <span>PC Health Monitoring</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gradient-to-br from-[#1E3A8A] to-blue-700 rounded shadow-sm p-3 text-white">
-                <div class="text-center">
-                    <i class="fa-solid fa-user-tie text-3xl mb-2 opacity-80"></i>
-                    <h4 class="text-xs font-semibold mb-1">Administrator Account</h4>
-                    <p class="text-[10px] opacity-90">You have full system access and control</p>
-                </div>
-            </div>
+            <?php if (!empty($user_data['last_login'])): ?>
+              <p class="mt-2 text-[10px] text-gray-600">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                  <i class="fa-solid fa-clock mr-1"></i>
+                  <?php echo date('M j, Y g:i A', strtotime($user_data['last_login'])); ?>
+                </span>
+              </p>
+            <?php endif; ?>
+          </div>
+          
         </div>
+      </div>
     </div>
 
+    <!-- Right Column -->
+    <div class="flex flex-col gap-4">
+        
+    <!-- Section Heading -->
+    <div class="border-b border-gray-200 pb-1">
+    <h2 class="text-sm font-bold text-gray-700">Account Details</h2>
+    </div>
+
+      <!-- Basic Information -->
+      <div id="basic-info" class="bg-white rounded-lg border p-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-user text-[#1E3A8A]"></i> Basic Information
+          </h3>
+          <button class="text-[10px] text-blue-600 hover:underline">
+            <i class="fa-solid fa-pen mr-1"></i>Edit
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-700">
+          <div>
+            <p class="font-medium text-gray-600 mb-1">Full Name</p>
+            <p class="text-gray-900 font-semibold"><?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?></p>
+          </div>
+          <div>
+            <p class="font-medium text-gray-600 mb-1">Email Address</p>
+            <p class="text-gray-900"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
+          </div>
+          <div>
+            <p class="font-medium text-gray-600 mb-1">Phone</p>
+            <p class="text-gray-900">+63 (9) 972-22-22</p>
+          </div>
+          <div>
+            <p class="font-medium text-gray-600 mb-1">Member Since</p>
+            <p class="text-gray-900"><?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-700">
+  <div>
+    <p class="font-medium text-gray-600 mb-1">Employee ID</p>
+    <p class="text-gray-900"><?php echo htmlspecialchars($user_data['id_number'] ?? 'N/A'); ?></p>
+  </div>
+  <div>
+    <p class="font-medium text-gray-600 mb-1">Department</p>
+    <p class="text-gray-900">Asset Management</p>
+  </div>
+</div>
+
+      </div>
+      
+<!-- Security Settings -->
+<div id="security-settings" class="bg-white rounded-lg border p-4 space-y-3">
+  <div class="flex justify-between items-center">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+      <i class="fa-solid fa-lock text-[#1E3A8A]"></i> Security Settings
+    </h3>
+    <!-- Toggle Button -->
+<button onclick="toggleSection('security-settings-content', this)" 
+  class="text-[10px] text-[#1E3A8A] hover:text-blue-800 flex items-center gap-1">
+  <i class="fa-solid fa-chevron-up transition-transform duration-300"></i>
+</button>
+  </div>
+
+  <!-- Collapsible Content -->
+  <div id="security-settings-content" class="space-y-3">
+    <div class="flex justify-between items-center">
+      <div>
+        <h4 class="text-xs font-semibold text-gray-800">Change Password</h4>
+        <p class="text-[10px] text-gray-500">Update your password to keep your account secure</p>
+      </div>
+      <button onclick="openChangePasswordModal()" 
+        class="px-3 py-1.5 bg-[#1E3A8A] hover:bg-blue-700 text-white text-[10px] font-medium rounded transition-colors">
+        <i class="fa-solid fa-key mr-1"></i>Change Password
+      </button>
+    </div>
+    <div class="bg-blue-50 border border-blue-100 rounded p-3">
+      <h4 class="text-xs font-semibold text-blue-900 mb-1">Password Security Tips</h4>
+      <ul class="list-disc list-inside text-[10px] text-blue-800 space-y-0.5">
+        <li>Use at least 8 characters</li>
+        <li>Include uppercase and lowercase letters</li>
+        <li>Add numbers and special characters</li>
+        <li>Avoid common words or personal information</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- System Settings -->
+<div id="system-settings" class="bg-white rounded-lg border p-4 space-y-4">
+  <!-- Card Header -->
+  <div class="flex justify-between items-center">
+    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+      <i class="fa-solid fa-gear text-[#1E3A8A]"></i> System Settings
+    </h3>
+    <!-- Toggle Button -->
+    <button onclick="toggleSection('system-settings-content', this)" 
+      class="text-[10px] text-[#1E3A8A] hover:text-blue-800 flex items-center gap-1">
+      <i class="fa-solid fa-chevron-up transition-transform duration-300"></i>
+    </button>
+  </div>
+
+  <!-- Collapsible Content -->
+  <div id="system-settings-content" class="space-y-4">
+    
+    <!-- Account Status -->
+    <div class="space-y-2">
+      <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
+        <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i> Account Status
+      </h4>
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] text-gray-600">Profile Status</span>
+        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium" 
+        title="Last login: <?php echo date('M j, Y g:i A', strtotime($user_data['last_login'] ?? 'now')); ?>">
+            <i class="fa-solid fa-circle-check mr-1"></i>Active
+        </span>
+
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] text-gray-600">Account Type</span>
+        <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium">Administrator</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] text-gray-600">Access Level</span>
+        <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">Full Access</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] text-gray-600">Last Login</span>
+        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+          <i class="fa-solid fa-clock mr-0.5"></i>
+          <?php 
+            if ($user_data['last_login']) {
+              echo date('M j, Y g:i A', strtotime($user_data['last_login']));
+            } else {
+              echo 'Never';
+            }
+          ?>
+        </span>
+      </div>
+    </div>
+
+    <!-- Admin Privileges -->
+    <div class="space-y-1.5">
+      <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
+        <i class="fa-solid fa-user-shield text-[#1E3A8A]"></i> Admin Privileges
+      </h4>
+      <?php
+        $privileges = ['User Management', 'System Reports', 'Activity Monitoring', 'Analytics Dashboard', 'PC Health Monitoring'];
+        foreach ($privileges as $priv) {
+          echo '<div class="flex items-center gap-2 text-[10px] text-gray-700">
+            <i class="fa-solid fa-check text-green-600"></i>
+            <span>' . $priv . '</span>
+          </div>';
+        }
+      ?>
+    </div>
+
+  </div>
+</div>
+<hr class="border-t border-gray-200 my-2">
+
+
+<div class="bg-white rounded-lg border p-4 space-y-2">
+  <h3 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
+    <i class="fa-solid fa-clock-rotate-left text-[#1E3A8A]"></i> Login History
+  </h3>
+  <ul class="text-[10px] text-gray-600 space-y-1">
+    <li>Nov 26, 2025 – 11:04 PM</li>
+    <li>Nov 25, 2025 – 9:18 AM</li>
+    <li>Nov 24, 2025 – 3:42 PM</li>
+  </ul>
+</div>
+
+<!-- System Health -->
+<div class="bg-white rounded-lg border p-4 space-y-2">
+  <h3 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
+    <i class="fa-solid fa-server text-[#1E3A8A]"></i> System Health
+  </h3>
+  <p class="text-[10px] text-gray-600">Uptime: 99.98%</p>
+  <p class="text-[10px] text-gray-600">Version: 2.3.1</p>
+</div>
+
+  </div>
 </main>
 
 <!-- Change Password Modal -->
@@ -277,6 +333,15 @@ include '../components/layout_header.php';
 </div>
 
 <script>
+function toggleSection(id, btn) {
+  const section = document.getElementById(id);
+  const icon = btn.querySelector('i');
+  if (section) {
+    section.classList.toggle('hidden');
+    icon.classList.toggle('rotate-180'); // rotate arrow
+  }
+}
+
 function openChangePasswordModal() {
     document.getElementById('changePasswordModal').classList.remove('hidden');
 }
