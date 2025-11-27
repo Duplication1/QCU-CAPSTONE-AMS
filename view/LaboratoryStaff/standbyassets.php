@@ -333,18 +333,11 @@ $count_query = "SELECT COUNT(*) as total FROM assets WHERE (room_id IS NULL OR r
 $params = [];
 $types = '';
 
-<<<<<<< HEAD
 if ($show_archived) {
     $count_query .= " AND status IN ('Archive', 'Archived')";
 } else {
     $count_query .= " AND status NOT IN ('Archive', 'Archived')";
 }
-=======
-// Don't filter archived on server side anymore - we'll handle it with JavaScript
-// if (!$show_archived) {
-//     $count_query .= " AND status != 'Archived'";
-// }
->>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 
 if (!empty($filter_status)) {
     $count_query .= " AND status = ?";
@@ -385,18 +378,11 @@ $query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON
 $params = [];
 $types = '';
 
-<<<<<<< HEAD
 if ($show_archived) {
     $query_sql .= " AND a.status IN ('Archive', 'Archived')";
 } else {
     $query_sql .= " AND a.status NOT IN ('Archive', 'Archived')";
 }
-=======
-// Don't filter archived on server side anymore - we'll handle it with JavaScript
-// if (!$show_archived) {
-//     $query_sql .= " AND a.status != 'Archived'";
-// }
->>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 
 if (!empty($filter_status)) {
     $query_sql .= " AND a.status = ?";
@@ -527,13 +513,8 @@ main {
                     <option value="Network Device" <?php echo $filter_type === 'Network Device' ? 'selected' : ''; ?>>Network Device</option>
                 </select>
                 <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-<<<<<<< HEAD
                     <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
                     <span class="text-sm text-gray-700">Show Only Archived Assets</span>
-=======
-                    <input type="checkbox" name="show_archived" id="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
-                    <span class="text-sm text-gray-700">Show Archived</span>
->>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
                 </label>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
@@ -1194,7 +1175,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-<<<<<<< HEAD
     // Add listeners for start number update
     const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
     startNumberTriggerFields.forEach(fieldId => {
@@ -1203,32 +1183,6 @@ document.addEventListener('DOMContentLoaded', function() {
             field.addEventListener('input', updateBulkStartNumber);
         }
     });
-=======
-    // Add event listeners for real-time filtering
-    const filterStatus = document.getElementById('filter_status');
-    const filterType = document.getElementById('filter_type');
-    const searchInput = document.getElementById('searchInput');
-    const showArchived = document.getElementById('show_archived');
-    
-    if (filterStatus) {
-        filterStatus.addEventListener('change', applyFilters);
-    }
-    
-    if (filterType) {
-        filterType.addEventListener('change', applyFilters);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
-    }
-    
-    if (showArchived) {
-        showArchived.addEventListener('change', applyFilters);
-    }
-    
-    // Apply filters on page load to hide archived assets by default
-    applyFilters();
->>>>>>> c97c609bb2245466d958dc919e7d1bea6f2eeaac
 });
 
 // Debounce function for search input
