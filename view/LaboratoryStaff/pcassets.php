@@ -370,63 +370,123 @@ main {
     </div>
 </main>
 
+<!-- Component Action Confirmation Modal -->
+<div id="componentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white" id="componentModalTitle">Confirm Action</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <i class="fa-solid fa-question-circle text-blue-500 text-2xl mr-3" id="componentModalIcon"></i>
+                <div>
+                    <p class="text-gray-800 font-medium" id="componentModalMessage">Are you sure?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeComponentModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="confirmComponentBtn" onclick="confirmComponentAction()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-check mr-2"></i>Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Modal functions
+function openComponentModal(title, message, iconClass, confirmCallback) {
+    document.getElementById('componentModalTitle').textContent = title;
+    document.getElementById('componentModalMessage').textContent = message;
+    document.getElementById('componentModalIcon').className = `fa-solid ${iconClass} text-2xl mr-3`;
+    document.getElementById('componentModal').classList.remove('hidden');
+    window.confirmComponentCallback = confirmCallback;
+}
+
+function closeComponentModal() {
+    document.getElementById('componentModal').classList.add('hidden');
+    document.getElementById('componentModalTitle').textContent = 'Confirm Action';
+    document.getElementById('componentModalMessage').textContent = 'Are you sure?';
+    window.confirmComponentCallback = null;
+}
+
+function confirmComponentAction() {
+    if (window.confirmComponentCallback) {
+        window.confirmComponentCallback();
+    }
+    closeComponentModal();
+}
+
 // Add component to PC
 async function addComponent(assetId, assetTag) {
-    if (!confirm(`Add "${assetTag}" to this PC unit?`)) return;
-    
-    const formData = new URLSearchParams();
-    formData.append('ajax', '1');
-    formData.append('action', 'add_component');
-    formData.append('asset_id', assetId);
-    
-    try {
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => location.reload(), 800);
-        } else {
-            showAlert('error', result.message);
+    openComponentModal(
+        'Add Component',
+        `Add "${assetTag}" to this PC unit?`,
+        'fa-plus-circle text-green-500',
+        async () => {
+            const formData = new URLSearchParams();
+            formData.append('ajax', '1');
+            formData.append('action', 'add_component');
+            formData.append('asset_id', assetId);
+            
+            try {
+                const response = await fetch(location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('success', result.message);
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while adding the component');
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while adding the component');
-    }
+    );
 }
 
 // Remove component from PC
 async function removeComponent(assetId, assetTag) {
-    if (!confirm(`Remove "${assetTag}" from this PC unit?`)) return;
-    
-    const formData = new URLSearchParams();
-    formData.append('ajax', '1');
-    formData.append('action', 'remove_component');
-    formData.append('asset_id', assetId);
-    
-    try {
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => location.reload(), 800);
-        } else {
-            showAlert('error', result.message);
+    openComponentModal(
+        'Remove Component',
+        `Remove "${assetTag}" from this PC unit?`,
+        'fa-minus-circle text-red-500',
+        async () => {
+            const formData = new URLSearchParams();
+            formData.append('ajax', '1');
+            formData.append('action', 'remove_component');
+            formData.append('asset_id', assetId);
+            
+            try {
+                const response = await fetch(location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('success', result.message);
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while removing the component');
+            }
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while removing the component');
-    }
+    );
 }
 
 // Alert function

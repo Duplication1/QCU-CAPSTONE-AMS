@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 24, 2025 at 03:09 PM
+-- Generation Time: Nov 27, 2025 at 02:26 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,31 @@ SET time_zone = "+00:00";
 --
 -- Database: `ams_database`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `entity_type` varchar(50) DEFAULT NULL,
+  `entity_id` int(10) UNSIGNED DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `description`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-27 to 2025-11-26)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-26 13:33:21');
 
 -- --------------------------------------------------------
 
@@ -45,7 +70,7 @@ CREATE TABLE `assets` (
   `purchase_cost` decimal(10,2) DEFAULT NULL,
   `supplier` varchar(255) DEFAULT NULL,
   `warranty_expiry` date DEFAULT NULL,
-  `status` enum('Active','In Use','Available','Under Maintenance','Retired','Disposed','Lost','Damaged') NOT NULL DEFAULT 'Available',
+  `status` enum('Available','In Use','Available','Under Maintenance','Retired','Disposed','Lost','Broken','Archive') NOT NULL DEFAULT 'Available',
   `condition` enum('Excellent','Good','Fair','Poor','Non-Functional') NOT NULL DEFAULT 'Good',
   `is_borrowable` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 = Can be borrowed, 0 = Cannot be borrowed',
   `assigned_to` int(11) DEFAULT NULL COMMENT 'User ID of person assigned to this asset',
@@ -68,21 +93,21 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`, `brand`, `model`, `serial_number`, `specifications`, `room_id`, `pc_unit_id`, `location`, `terminal_number`, `purchase_date`, `purchase_cost`, `supplier`, `warranty_expiry`, `status`, `condition`, `is_borrowable`, `assigned_to`, `assigned_date`, `assigned_by`, `last_maintenance_date`, `next_maintenance_date`, `maintenance_notes`, `notes`, `qr_code`, `image`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
-(51, '11-23-2025-RAM-IK501-019', 'RAM #19', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-23-2025-RAM-IK501-019%22%2C%22asset_name%22%3A%22RAM+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-23 13:55:21', '2025-11-24 13:39:38'),
-(52, '11-23-2025-RAM-IK501-020', 'RAM #20', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, 1, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-23-2025-RAM-IK501-020%22%2C%22asset_name%22%3A%22RAM+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-23 13:55:21', '2025-11-24 13:39:32'),
-(63, '11-24-2025-RAM-IK501-001', 'RAM #1', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-001%22%2C%22asset_name%22%3A%22RAM+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(64, '11-24-2025-RAM-IK501-002', 'RAM #2', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-002%22%2C%22asset_name%22%3A%22RAM+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(65, '11-24-2025-RAM-IK501-003', 'RAM #3', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-003%22%2C%22asset_name%22%3A%22RAM+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(66, '11-24-2025-RAM-IK501-004', 'RAM #4', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-004%22%2C%22asset_name%22%3A%22RAM+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(67, '11-24-2025-RAM-IK501-005', 'RAM #5', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-005%22%2C%22asset_name%22%3A%22RAM+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(68, '11-24-2025-RAM-IK501-006', 'RAM #6', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-006%22%2C%22asset_name%22%3A%22RAM+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(69, '11-24-2025-RAM-IK501-007', 'RAM #7', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-007%22%2C%22asset_name%22%3A%22RAM+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(70, '11-24-2025-RAM-IK501-008', 'RAM #8', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-008%22%2C%22asset_name%22%3A%22RAM+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(71, '11-24-2025-RAM-IK501-009', 'RAM #9', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-009%22%2C%22asset_name%22%3A%22RAM+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(72, '11-24-2025-RAM-IK501-010', 'RAM #10', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-010%22%2C%22asset_name%22%3A%22RAM+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(73, '11-24-2025-RAM-IK501-011', 'RAM #11', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-011%22%2C%22asset_name%22%3A%22RAM+%2311%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(74, '11-24-2025-RAM-IK501-012', 'RAM #12', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-012%22%2C%22asset_name%22%3A%22RAM+%2312%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
-(75, '11-24-2025-RAM-IK501-013', 'RAM #13', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-013%22%2C%22asset_name%22%3A%22RAM+%2313%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
+(51, '11-23-2025-RAM-IK501-019', 'RAM #19', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-23-2025-RAM-IK501-019%22%2C%22asset_name%22%3A%22RAM+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-23 13:55:21', '2025-11-27 12:06:28'),
+(52, '11-23-2025-RAM-IK501-020', 'RAM #20', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-23-2025-RAM-IK501-020%22%2C%22asset_name%22%3A%22RAM+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-23 13:55:21', '2025-11-27 12:06:26'),
+(63, '11-24-2025-RAM-IK501-001', 'RAM #1', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, 1, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-001%22%2C%22asset_name%22%3A%22RAM+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:30:17'),
+(64, '11-24-2025-RAM-IK501-002', 'RAM #2', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-002%22%2C%22asset_name%22%3A%22RAM+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 09:57:39'),
+(65, '11-24-2025-RAM-IK501-003', 'RAM #3', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-003%22%2C%22asset_name%22%3A%22RAM+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 09:57:39'),
+(66, '11-24-2025-RAM-IK501-004', 'RAM #4', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-004%22%2C%22asset_name%22%3A%22RAM+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 09:57:39'),
+(67, '11-24-2025-RAM-IK501-005', 'RAM #5', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-005%22%2C%22asset_name%22%3A%22RAM+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 09:57:39'),
+(68, '11-24-2025-RAM-IK501-006', 'RAM #6', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-006%22%2C%22asset_name%22%3A%22RAM+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 09:57:39'),
+(69, '11-24-2025-RAM-IK501-007', 'RAM #7', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-007%22%2C%22asset_name%22%3A%22RAM+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:09:52'),
+(70, '11-24-2025-RAM-IK501-008', 'RAM #8', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-008%22%2C%22asset_name%22%3A%22RAM+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:09:52'),
+(71, '11-24-2025-RAM-IK501-009', 'RAM #9', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-009%22%2C%22asset_name%22%3A%22RAM+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:09:52'),
+(72, '11-24-2025-RAM-IK501-010', 'RAM #10', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-010%22%2C%22asset_name%22%3A%22RAM+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:13:55'),
+(73, '11-24-2025-RAM-IK501-011', 'RAM #11', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-011%22%2C%22asset_name%22%3A%22RAM+%2311%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:13:55'),
+(74, '11-24-2025-RAM-IK501-012', 'RAM #12', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-012%22%2C%22asset_name%22%3A%22RAM+%2312%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:13:55'),
+(75, '11-24-2025-RAM-IK501-013', 'RAM #13', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-013%22%2C%22asset_name%22%3A%22RAM+%2313%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, 3, '2025-11-24 13:39:04', '2025-11-27 12:13:55'),
 (76, '11-24-2025-RAM-IK501-014', 'RAM #14', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-014%22%2C%22asset_name%22%3A%22RAM+%2314%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
 (77, '11-24-2025-RAM-IK501-015', 'RAM #15', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-015%22%2C%22asset_name%22%3A%22RAM+%2315%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
 (78, '11-24-2025-RAM-IK501-016', 'RAM #16', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-016%22%2C%22asset_name%22%3A%22RAM+%2316%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
@@ -91,7 +116,7 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (81, '11-24-2025-RAM-IK501-019', 'RAM #19', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-019%22%2C%22asset_name%22%3A%22RAM+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
 (82, '11-24-2025-RAM-IK501-020', 'RAM #20', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-RAM-IK501-020%22%2C%22asset_name%22%3A%22RAM+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-24 13:39:04', '2025-11-24 13:39:04'),
 (83, '11-24-2025-chair-IK501-001', 'chair #1', 'Furniture', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK501-001%22%2C%22asset_name%22%3A%22chair+%231%22%2C%22asset_type%22%3A%22Furniture%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, NULL, '2025-11-24 13:41:53', '2025-11-24 13:41:53'),
-(84, '11-24-2025-chair-IK200-002', 'chair #2', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-002%22%2C%22asset_name%22%3A%22chair+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
+(84, '11-24-2025-chair-IK200-002', 'chair #2', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-002%22%2C%22asset_name%22%3A%22chair+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%3', NULL, 3, 3, '2025-11-24 13:42:49', '2025-11-27 13:15:41'),
 (85, '11-24-2025-chair-IK200-003', 'chair #3', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-003%22%2C%22asset_name%22%3A%22chair+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
 (86, '11-24-2025-chair-IK200-004', 'chair #4', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-004%22%2C%22asset_name%22%3A%22chair+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
 (87, '11-24-2025-chair-IK200-005', 'chair #5', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-005%22%2C%22asset_name%22%3A%22chair+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
@@ -110,7 +135,8 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (100, '11-24-2025-chair-IK200-018', 'chair #18', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-018%22%2C%22asset_name%22%3A%22chair+%2318%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
 (101, '11-24-2025-chair-IK200-019', 'chair #19', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-019%22%2C%22asset_name%22%3A%22chair+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
 (102, '11-24-2025-chair-IK200-020', 'chair #20', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-020%22%2C%22asset_name%22%3A%22chair+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, 3, '2025-11-24 13:42:49', '2025-11-24 13:43:04'),
-(103, '11-24-2025-chair-IK200-021', 'chair #21', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-021%22%2C%22asset_name%22%3A%22chair+%2321%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49');
+(103, '11-24-2025-chair-IK200-021', 'chair #21', 'Hardware', NULL, 'Dell', 'dasdsa', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-24-2025-chair-IK200-021%22%2C%22asset_name%22%3A%22chair+%2321%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22Dell%22%2C%22model%22%', NULL, 3, NULL, '2025-11-24 13:42:49', '2025-11-24 13:42:49'),
+(104, '11-27-2025-LAPTOP-IK501-001', 'LAPTOP #1', 'Hardware', NULL, '', '', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-27-2025-LAPTOP-IK501-001%22%2C%22asset_name%22%3A%22LAPTOP+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A5%2C%22room_name%22%3A%22IK501%22%2C%22brand%', NULL, 3, NULL, '2025-11-27 12:26:54', '2025-11-27 12:26:54');
 
 -- --------------------------------------------------------
 
@@ -297,7 +323,17 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (3, 3, '2025-11-24 12:59:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (4, 2, '2025-11-24 13:08:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (5, 2, '2025-11-24 13:15:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
-(6, 3, '2025-11-24 13:15:37', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
+(6, 3, '2025-11-24 13:15:37', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(7, 3, '2025-11-26 12:40:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(8, 1, '2025-11-26 12:58:43', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(9, 1, '2025-11-26 12:58:51', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(10, 2, '2025-11-26 12:58:59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(11, 3, '2025-11-26 13:11:56', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(12, 2, '2025-11-26 13:14:12', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(13, 1, '2025-11-26 13:28:32', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(14, 3, '2025-11-26 15:01:48', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(15, 5, '2025-11-27 03:50:24', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(16, 3, '2025-11-27 03:51:32', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -339,7 +375,8 @@ CREATE TABLE `pc_units` (
   `room_id` int(11) DEFAULT NULL,
   `building_id` int(11) DEFAULT NULL,
   `terminal_number` varchar(50) DEFAULT NULL,
-  `status` enum('Active','Inactive','Under Maintenance','Retired') NOT NULL DEFAULT 'Active',
+  `status` enum('Active','Inactive','Under Maintenance','Retired','Archive') NOT NULL DEFAULT 'Active',
+  `condition` enum('Excellent','Good','Fair','Poor','Non-Functional') NOT NULL DEFAULT 'Good',
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -349,57 +386,57 @@ CREATE TABLE `pc_units` (
 -- Dumping data for table `pc_units`
 --
 
-INSERT INTO `pc_units` (`id`, `room_id`, `building_id`, `terminal_number`, `status`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 5, 1, 'TH-01', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:52:48'),
-(7, 5, 1, 'TH-02', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(8, 5, 1, 'TH-03', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(9, 5, 1, 'TH-04', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(10, 5, 1, 'TH-05', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(11, 5, 1, 'TH-06', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(12, 5, 1, 'TH-07', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(13, 5, 1, 'TH-08', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(14, 5, 1, 'TH-09', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(15, 5, 1, 'TH-10', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(16, 5, 1, 'TH-11', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(17, 5, 1, 'TH-12', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(18, 5, 1, 'TH-13', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(19, 5, 1, 'TH-14', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(20, 5, 1, 'TH-15', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(21, 5, 1, 'TH-16', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(22, 5, 1, 'TH-17', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(23, 5, 1, 'TH-18', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(24, 5, 1, 'TH-19', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(25, 5, 1, 'TH-20', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(26, 5, 1, 'TH-21', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(27, 5, 1, 'TH-22', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(28, 5, 1, 'TH-23', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(29, 5, 1, 'TH-24', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(30, 5, 1, 'TH-25', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(31, 5, 1, 'TH-26', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(32, 5, 1, 'TH-27', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(33, 5, 1, 'TH-28', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(34, 5, 1, 'TH-29', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(35, 5, 1, 'TH-30', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(36, 5, 1, 'TH-31', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(37, 5, 1, 'TH-32', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(38, 5, 1, 'TH-33', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(39, 5, 1, 'TH-34', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(40, 5, 1, 'TH-35', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(41, 5, 1, 'TH-36', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(42, 5, 1, 'TH-37', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(43, 5, 1, 'TH-38', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(44, 5, 1, 'TH-39', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(45, 5, 1, 'TH-40', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(46, 5, 1, 'TH-41', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(47, 5, 1, 'TH-42', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(48, 5, 1, 'TH-43', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(49, 5, 1, 'TH-44', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(50, 5, 1, 'TH-45', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(51, 5, 1, 'TH-46', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(52, 5, 1, 'TH-47', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(53, 5, 1, 'TH-48', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(54, 5, 1, 'TH-49', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(55, 5, 1, 'TH-50', 'Active', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19');
+INSERT INTO `pc_units` (`id`, `room_id`, `building_id`, `terminal_number`, `status`, `condition`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 5, 1, 'TH-01', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(7, 5, 1, 'TH-02', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(8, 5, 1, 'TH-03', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(9, 5, 1, 'TH-04', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(10, 5, 1, 'TH-05', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(11, 5, 1, 'TH-06', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:26'),
+(12, 5, 1, 'TH-07', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:16'),
+(13, 5, 1, 'TH-08', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:16'),
+(14, 5, 1, 'TH-09', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:16'),
+(15, 5, 1, 'TH-10', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:56:16'),
+(16, 5, 1, 'TH-11', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:03:49'),
+(17, 5, 1, 'TH-12', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:03:49'),
+(18, 5, 1, 'TH-13', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:03:49'),
+(19, 5, 1, 'TH-14', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:03:49'),
+(20, 5, 1, 'TH-15', 'Archive', 'Good', '', '2025-11-23 12:35:19', '2025-11-27 12:03:49'),
+(21, 5, 1, 'TH-16', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(22, 5, 1, 'TH-17', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(23, 5, 1, 'TH-18', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(24, 5, 1, 'TH-19', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(25, 5, 1, 'TH-20', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(26, 5, 1, 'TH-21', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(27, 5, 1, 'TH-22', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(28, 5, 1, 'TH-23', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(29, 5, 1, 'TH-24', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(30, 5, 1, 'TH-25', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(31, 5, 1, 'TH-26', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(32, 5, 1, 'TH-27', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(33, 5, 1, 'TH-28', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(34, 5, 1, 'TH-29', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(35, 5, 1, 'TH-30', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(36, 5, 1, 'TH-31', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(37, 5, 1, 'TH-32', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(38, 5, 1, 'TH-33', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(39, 5, 1, 'TH-34', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(40, 5, 1, 'TH-35', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(41, 5, 1, 'TH-36', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(42, 5, 1, 'TH-37', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(43, 5, 1, 'TH-38', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(44, 5, 1, 'TH-39', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(45, 5, 1, 'TH-40', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(46, 5, 1, 'TH-41', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(47, 5, 1, 'TH-42', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(48, 5, 1, 'TH-43', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(49, 5, 1, 'TH-44', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(50, 5, 1, 'TH-45', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(51, 5, 1, 'TH-46', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(52, 5, 1, 'TH-47', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(53, 5, 1, 'TH-48', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(54, 5, 1, 'TH-49', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
+(55, 5, 1, 'TH-50', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19');
 
 -- --------------------------------------------------------
 
@@ -446,17 +483,27 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:31:58', '2025-11-21 17:31:58'),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-11-24 21:15:16', '2025-11-24 21:15:16'),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-11-24 21:15:37', '2025-11-24 21:15:37'),
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-11-26 21:28:32', '2025-11-26 21:28:32'),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-11-26 21:14:12', '2025-11-26 21:14:12'),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-11-27 11:51:32', '2025-11-27 11:51:32'),
 (4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-19 14:46:25', '2025-11-19 14:46:25'),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-27 11:50:24', '2025-11-27 11:50:24'),
 (6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL),
 (29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `action` (`action`),
+  ADD KEY `created_at` (`created_at`),
+  ADD KEY `entity_type` (`entity_type`,`entity_id`);
 
 --
 -- Indexes for table `assets`
@@ -525,10 +572,16 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `buildings`
@@ -546,7 +599,7 @@ ALTER TABLE `issues`
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `notifications`

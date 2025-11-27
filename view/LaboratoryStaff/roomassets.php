@@ -43,25 +43,54 @@ if (!$room) {
     exit();
 }
 
+// Fetch assets with search, filter, and pagination
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_status = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
+$show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] === '1';
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$limit = 6;
+$offset = ($page - 1) * $limit;
+
 // Fetch PC Units from database with pagination
 $pc_page = isset($_GET['pc_page']) ? max(1, intval($_GET['pc_page'])) : 1;
 $pc_limit = 6;
 $pc_offset = ($pc_page - 1) * $pc_limit;
 
 // Count total PC units
-$pc_count_query = $conn->prepare("SELECT COUNT(*) as total FROM pc_units WHERE room_id = ?");
-$pc_count_query->bind_param('i', $room_id);
-$pc_count_query->execute();
-$pc_count_result = $pc_count_query->get_result();
+$pc_count_query = "SELECT COUNT(*) as total FROM pc_units WHERE room_id = ?";
+$pc_params = [$room_id];
+$pc_types = 'i';
+
+if (!$show_archived) {
+    $pc_count_query .= " AND status != 'Archive'";
+}
+
+$pc_count_stmt = $conn->prepare($pc_count_query);
+$pc_count_stmt->bind_param($pc_types, ...$pc_params);
+$pc_count_stmt->execute();
+$pc_count_result = $pc_count_stmt->get_result();
 $total_pc_units = $pc_count_result->fetch_assoc()['total'];
-$pc_count_query->close();
+$pc_count_stmt->close();
 
 $total_pc_pages = ceil($total_pc_units / $pc_limit);
 
 // Fetch PC units with pagination
 $pc_units = [];
-$pc_query = $conn->prepare("SELECT * FROM pc_units WHERE room_id = ? ORDER BY terminal_number ASC LIMIT ? OFFSET ?");
-$pc_query->bind_param('iii', $room_id, $pc_limit, $pc_offset);
+$pc_query_sql = "SELECT * FROM pc_units WHERE room_id = ?";
+$pc_params = [$room_id];
+$pc_types = 'i';
+
+if (!$show_archived) {
+    $pc_query_sql .= " AND status != 'Archive'";
+}
+
+$pc_query_sql .= " ORDER BY terminal_number ASC LIMIT ? OFFSET ?";
+$pc_params[] = $pc_limit;
+$pc_params[] = $pc_offset;
+$pc_types .= 'ii';
+
+$pc_query = $conn->prepare($pc_query_sql);
+$pc_query->bind_param($pc_types, ...$pc_params);
 $pc_query->execute();
 $pc_result = $pc_query->get_result();
 while ($pc_row = $pc_result->fetch_assoc()) {
@@ -100,6 +129,7 @@ while ($pc_row = $pc_result->fetch_assoc()) {
         'storage' => $storage,
         'last_online' => $pc_row['updated_at'],
         'health_status' => $health_status,
+        'condition' => 'Good',
         'notes' => $notes
     ];
 }
@@ -345,6 +375,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'restore_pc_unit') {
+        $id = intval($_POST['id'] ?? 0);
+        
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid PC unit ID']);
+            exit;
+        }
+        
+        try {
+            $stmt = $conn->prepare("UPDATE pc_units SET status = 'Active' WHERE id = ? AND room_id = ?");
+            $stmt->bind_param('ii', $id, $room_id);
+            $success = $stmt->execute();
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'PC Unit restored successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to restore PC unit']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'restore_asset') {
+        $id = intval($_POST['id'] ?? 0);
+        
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset ID']);
+            exit;
+        }
+        
+        try {
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Active' WHERE id = ? AND room_id = ?");
+            $stmt->bind_param('ii', $id, $room_id);
+            $success = $stmt->execute();
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'Asset restored successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to restore asset']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
     if ($action === 'delete_pc_unit') {
         $id = intval($_POST['id'] ?? 0);
         
@@ -418,6 +498,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+        exit;
+    }
+    
+    if ($action === 'get_next_start_number') {
+        $asset_name_prefix = trim($_POST['asset_name'] ?? '');
+        $room_number = trim($_POST['room_number'] ?? '');
+        
+        if (empty($asset_name_prefix) || empty($room_number)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name and room number are required']);
+            exit;
+        }
+        
+        // Find the highest existing number for this asset prefix and room
+        $pattern = "%-{$asset_name_prefix}-{$room_number}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ? AND room_id = ?");
+        $query->bind_param('si', $pattern, $room_id);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last 3 characters before any extension
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
         exit;
     }
     
@@ -560,7 +678,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            $stmt = $conn->prepare("UPDATE assets SET status = 'Archived', updated_by = ? WHERE id = ? AND room_id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id = ? AND room_id = ?");
             $updated_by = $_SESSION['user_id'];
             $stmt->bind_param('iii', $updated_by, $id, $room_id);
             $success = $stmt->execute();
@@ -631,6 +749,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'bulk_archive_pc_units') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid PC unit IDs']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE pc_units SET status = 'Archive' WHERE id IN ($placeholders) AND room_id = ?");
+            $types = str_repeat('i', count($ids)) . 'i';
+            $params = array_merge($ids, [$room_id]);
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "$affected PC unit(s) archived successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to archive PC units']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_archive_assets') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id IN ($placeholders) AND room_id = ?");
+            $updated_by = $_SESSION['user_id'];
+            $types = 'i' . str_repeat('i', count($ids)) . 'i';
+            $params = array_merge([$updated_by], $ids, [$room_id]);
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "$affected asset(s) archived successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to archive assets']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_restore_pc_units') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid PC unit IDs']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE pc_units SET status = 'Active' WHERE id IN ($placeholders) AND room_id = ?");
+            $types = str_repeat('i', count($ids)) . 'i';
+            $params = array_merge($ids, [$room_id]);
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "$affected PC unit(s) restored successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to restore PC units']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_restore_assets') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Active', updated_by = ? WHERE id IN ($placeholders) AND room_id = ?");
+            $updated_by = $_SESSION['user_id'];
+            $types = 'i' . str_repeat('i', count($ids)) . 'i';
+            $params = array_merge([$updated_by], $ids, [$room_id]);
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "$affected asset(s) restored successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to restore assets']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -647,7 +883,7 @@ $params = [$room_id];
 $types = 'i';
 
 if (!$show_archived) {
-    $count_query .= " AND status != 'Archived'";
+    $count_query .= " AND (status != 'Archive' AND status != 'Archived')";
 }
 
 if (!empty($filter_status)) {
@@ -679,7 +915,7 @@ $params = [$room_id];
 $types = 'i';
 
 if (!$show_archived) {
-    $query_sql .= " AND status != 'Archived'";
+    $query_sql .= " AND (status != 'Archive' AND status != 'Archived')";
 }
 
 if (!empty($filter_status)) {
@@ -711,6 +947,30 @@ if ($result && $result->num_rows > 0) {
 }
 $query->close();
 
+
+
+// Count archived PC units and assets for archives tab
+$archived_pc_count_stmt = $conn->prepare("SELECT COUNT(*) as total FROM pc_units WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')");
+$archived_pc_count_stmt->bind_param('i', $room_id);
+$archived_pc_count_stmt->execute();
+$archived_pc_result = $archived_pc_count_stmt->get_result();
+$total_archived_pc = $archived_pc_result->fetch_assoc()['total'];
+$archived_pc_count_stmt->close();
+
+$archived_assets_count_stmt = $conn->prepare("SELECT COUNT(*) as total FROM assets WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')");
+$archived_assets_count_stmt->bind_param('i', $room_id);
+$archived_assets_count_stmt->execute();
+$archived_assets_result = $archived_assets_count_stmt->get_result();
+$total_archived_assets = $archived_assets_result->fetch_assoc()['total'];
+$archived_assets_count_stmt->close();
+
+$archived_pc_count_stmt = $conn->prepare("SELECT COUNT(*) as total FROM pc_units WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')");
+$archived_pc_count_stmt->bind_param('i', $room_id);
+$archived_pc_count_stmt->execute();
+$archived_pc_result = $archived_pc_count_stmt->get_result();
+$total_archived_pc = $archived_pc_result->fetch_assoc()['total'];
+$archived_pc_count_stmt->close();
+
 include '../components/layout_header.php';
 ?>
 
@@ -738,78 +998,77 @@ main {
 <main>
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
-            <div class="flex items-center gap-3">
-                <!-- Breadcrumb Navigation -->
-                <div class="flex items-center gap-2">
-                    <a href="buildings.php" 
-                       class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                       title="Back to Buildings">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Buildings</span>
-                    </a>
-                    <a href="rooms.php?building_id=<?php echo $room['building_id']; ?>" 
-                       class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                       title="Back to <?php echo htmlspecialchars($room['building_name'] ?? 'Building'); ?> Rooms">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span><?php echo htmlspecialchars($room['building_name'] ?? 'Building'); ?></span>
-                    </a>
-                </div>
-                <div class="h-8 w-px bg-gray-300 mx-2"></div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-800">
-                        <?php echo htmlspecialchars($room['name']); ?> Assets
-                    </h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Total: <?php echo $total_assets; ?> asset(s)</p>
-                </div>
+        <!-- Breadcrumb -->
+        <div class="mb-4">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="buildings.php" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                            <i class="fa-solid fa-building mr-2"></i>
+                            Buildings
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-chevron-right text-gray-400 mx-2"></i>
+                            <a href="rooms.php?building_id=<?php echo $room['building_id']; ?>" class="text-sm font-medium text-gray-700 hover:text-blue-600">
+                                <?php echo htmlspecialchars($room['building_name']); ?>
+                            </a>
+                        </div>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-chevron-right text-gray-400 mx-2"></i>
+                            <span class="text-sm font-medium text-gray-500"><?php echo htmlspecialchars($room['name']); ?></span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
+            <div class="grid grid-cols-4 border-b border-gray-200">
+                <button onclick="switchTab('pc-units')" id="tab-pc-units" class="px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center">
+                    <i class="fa-solid fa-desktop mr-2"></i>PC Units
+                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-500 text-white rounded-full"><?php echo $total_pc_units; ?></span>
+                </button>
+                <button onclick="switchTab('all-assets')" id="tab-all-assets" class="px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-blue-500 text-blue-600 bg-blue-50 flex items-center justify-center cursor-default">
+                    <i class="fa-solid fa-boxes-stacked mr-2"></i>All Assets
+                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-[#1E3A8A] text-white rounded-full"><?php echo $total_assets; ?></span>
+                </button>
+                <a href="archived_pc_units.php?room_id=<?php echo $room_id; ?>" 
+                   class="px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center">
+                    <i class="fa-solid fa-archive mr-2"></i>Archived PC
+                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full"><?php echo $total_archived_pc; ?></span>
+                </a>
+                <a href="archived_assets.php?room_id=<?php echo $room_id; ?>" 
+                   class="px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center">
+                    <i class="fa-solid fa-archive mr-2"></i>Archived Assets
+                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full"><?php echo $total_archived_assets; ?></span>
+                </a>
             </div>
-            
-            <button onclick="openAddAssetModal()" 
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Asset</span>
-            </button>
         </div>
 
         <!-- Search Bar -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
-            <form method="GET" action="" class="flex gap-3">
+            <div class="flex gap-3">
                 <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
                 <div class="flex-1">
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
                            placeholder="Search by asset tag, name, brand, or model..." 
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fa-solid fa-search mr-2"></i>Search
-                </button>
                 <?php if (!empty($search)): ?>
                 <a href="?room_id=<?php echo $room_id; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fa-solid fa-times mr-2"></i>Clear
                 </a>
                 <?php endif; ?>
-            </form>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
-            <div class="flex border-b border-gray-200">
-                <button onclick="switchTab('pc-units')" id="tab-pc-units" 
-                        class="flex-1 px-6 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-[#1E3A8A] text-[#1E3A8A] bg-blue-50">
-                    <i class="fa-solid fa-desktop mr-2"></i>PC Units
-                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-[#1E3A8A] text-white rounded-full"><?php echo $total_pc_units; ?></span>
-                </button>
-                <button onclick="switchTab('all-assets')" id="tab-all-assets" 
-                        class="flex-1 px-6 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50">
-                    <i class="fa-solid fa-boxes-stacked mr-2"></i>All Assets
-                    <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-500 text-white rounded-full"><?php echo $total_assets; ?></span>
-                </button>
             </div>
         </div>
 
         <!-- PC Units Section -->
-        <div id="content-pc-units" class="tab-content">
+        <div id="content-pc-units" class="tab-content hidden">
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
             <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -819,22 +1078,28 @@ main {
                         <?php echo $total_pc_units; ?> Total
                     </span>
                 </div>
-                <button onclick="openAddPCUnitModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#153570] rounded transition-colors">
-                    <i class="fa-solid fa-plus mr-1"></i>Add PC Unit
-                </button>
+                <div class="flex items-center gap-2">
+                    <div id="pc-bulk-actions" class="hidden flex items-center gap-2">
+                        <button onclick="bulkArchivePCUnits()" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors">
+                            <i class="fa-solid fa-archive mr-1"></i>Archive Selected
+                        </button>
+                    </div>
+                    <button onclick="openAddPCUnitModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#153570] rounded transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i>Add PC Unit
+                    </button>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                                <input type="checkbox" id="select-all-pc" class="rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]">
+                            </th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PC Name</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPU</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RAM</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Storage</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Online</th>
                             <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -842,6 +1107,9 @@ main {
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php foreach ($pc_units as $pc): ?>
                             <tr class="hover:bg-blue-50 transition-colors cursor-pointer" onclick="window.location.href='pcassets.php?pc_unit_id=<?php echo $pc['id']; ?>'">
+                                <td class="px-4 py-3 whitespace-nowrap text-center" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="pc-checkbox rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]" value="<?php echo $pc['id']; ?>">
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span class="text-sm font-semibold text-blue-600"><?php echo htmlspecialchars($pc['terminal_number']); ?></span>
                                 </td>
@@ -852,48 +1120,18 @@ main {
                                     <span class="text-sm text-gray-600"><?php echo htmlspecialchars($pc['asset_tag']); ?></span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="text-xs text-gray-600"><?php echo htmlspecialchars($pc['cpu']); ?></span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="text-xs text-gray-600"><?php echo htmlspecialchars($pc['ram']); ?></span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="text-xs text-gray-600"><?php echo htmlspecialchars($pc['storage']); ?></span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
                                     <?php
-                                    $pc_status_colors = [
-                                        'Active' => 'bg-green-100 text-green-700',
-                                        'Inactive' => 'bg-gray-100 text-gray-700',
-                                        'Under Maintenance' => 'bg-yellow-100 text-yellow-700',
-                                        'Maintenance' => 'bg-yellow-100 text-yellow-700',
-                                        'Archive' => 'bg-purple-100 text-purple-700',
-                                        'Disposed' => 'bg-red-100 text-red-700'
+                                    $condition_colors = [
+                                        'Excellent' => 'bg-green-100 text-green-700',
+                                        'Good' => 'bg-blue-100 text-blue-700',
+                                        'Fair' => 'bg-yellow-100 text-yellow-700',
+                                        'Poor' => 'bg-orange-100 text-orange-700',
+                                        'Non-Functional' => 'bg-red-100 text-red-700'
                                     ];
-                                    $pc_status_class = $pc_status_colors[$pc['status']] ?? 'bg-gray-100 text-gray-700';
+                                    $condition_class = $condition_colors[$pc['condition']] ?? 'bg-gray-100 text-gray-700';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $pc_status_class; ?>">
-                                        <?php echo htmlspecialchars($pc['status']); ?>
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <?php
-                                    $health_colors = [
-                                        'Healthy' => 'bg-green-100 text-green-700 border-green-200',
-                                        'Warning' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                        'Critical' => 'bg-red-100 text-red-700 border-red-200'
-                                    ];
-                                    $health_icons = [
-                                        'Healthy' => 'fa-circle-check',
-                                        'Warning' => 'fa-triangle-exclamation',
-                                        'Critical' => 'fa-circle-xmark'
-                                    ];
-                                    $health_class = $health_colors[$pc['health_status']] ?? 'bg-gray-100 text-gray-700 border-gray-200';
-                                    $health_icon = $health_icons[$pc['health_status']] ?? 'fa-circle-question';
-                                    ?>
-                                    <span class="px-2 py-1 inline-flex items-center gap-1 text-xs leading-5 font-semibold rounded-full border <?php echo $health_class; ?>">
-                                        <i class="fa-solid <?php echo $health_icon; ?>"></i>
-                                        <?php echo htmlspecialchars($pc['health_status']); ?>
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $condition_class; ?>">
+                                        <?php echo htmlspecialchars($pc['condition']); ?>
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
@@ -918,12 +1156,8 @@ main {
                                                     <i class="fa-solid fa-edit text-blue-600"></i> Edit
                                                 </button>
                                                 <button onclick="archivePCUnit(<?php echo $pc['id']; ?>, '<?php echo htmlspecialchars($pc['terminal_number'], ENT_QUOTES); ?>')" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                                                    <i class="fa-solid fa-box-archive text-purple-600"></i> Archive
-                                                </button>
-                                                <button onclick="deletePCUnit(<?php echo $pc['id']; ?>)" 
                                                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fa-solid fa-trash"></i> Delete
+                                                    <i class="fa-solid fa-box-archive text-red-600"></i> Archive
                                                 </button>
                                             </div>
                                         </div>
@@ -989,19 +1223,44 @@ main {
         </div>
 
         <!-- All Assets Section -->
-        <div id="content-all-assets" class="tab-content hidden">
-        <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
+        <div id="content-all-assets" class="tab-content">
+        <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
+            <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked text-green-600"></i>
+                    <h4 class="text-sm font-semibold text-gray-800">All Assets</h4>
+                    <span class="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                        <?php echo $total_assets; ?> Total
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div id="asset-bulk-actions" class="hidden flex items-center gap-2">
+                        <button onclick="bulkPrintQRAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors">
+                            <i class="fa-solid fa-qrcode mr-1"></i>Print QR Codes
+                        </button>
+                        <button onclick="bulkArchiveAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors">
+                            <i class="fa-solid fa-archive mr-1"></i>Archive Selected
+                        </button>
+                    </div>
+                    <button onclick="openAddAssetModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i>Add Asset
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
             <!-- Assets Table -->
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
                     <tr>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                            <input type="checkbox" id="select-all-assets" class="rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]">
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">#</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand/Model</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To PC</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
                     </tr>
@@ -1022,6 +1281,9 @@ main {
                     <?php else: ?>
                         <?php foreach ($assets as $index => $asset): ?>
                             <tr class="hover:bg-gray-50 transition-colors" data-id="<?php echo $asset['id']; ?>">
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <input type="checkbox" class="asset-checkbox rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]" value="<?php echo $asset['id']; ?>">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo $offset + $index + 1; ?>
                                 </td>
@@ -1065,24 +1327,6 @@ main {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <?php
-                                    $status_colors = [
-                                        'Active' => 'bg-green-100 text-green-700',
-                                        'In Use' => 'bg-blue-100 text-blue-700',
-                                        'Available' => 'bg-green-100 text-green-700',
-                                        'Under Maintenance' => 'bg-yellow-100 text-yellow-700',
-                                        'Retired' => 'bg-gray-100 text-gray-700',
-                                        'Disposed' => 'bg-red-100 text-red-700',
-                                        'Lost' => 'bg-red-100 text-red-700',
-                                        'Damaged' => 'bg-orange-100 text-orange-700'
-                                    ];
-                                    $status_class = $status_colors[$asset['status']] ?? 'bg-gray-100 text-gray-700';
-                                    ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
-                                        <?php echo htmlspecialchars($asset['status']); ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php
                                     $condition_colors = [
                                         'Excellent' => 'bg-green-100 text-green-700',
                                         'Good' => 'bg-blue-100 text-blue-700',
@@ -1111,16 +1355,12 @@ main {
                                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                     <i class="fa-solid fa-pencil text-blue-600"></i> Edit
                                                 </button>
-                                                <?php if ($asset['status'] !== 'Archived'): ?>
+                                                <?php if ($asset['status'] !== 'Archive' && $asset['status'] !== 'Archived'): ?>
                                                 <button onclick="archiveAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2">
-                                                    <i class="fa-solid fa-archive"></i> Archive
+                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                    <i class="fa-solid fa-archive text-red-600"></i> Archive
                                                 </button>
                                                 <?php endif; ?>
-                                                <button onclick="deleteAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fa-solid fa-trash"></i> Delete
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1130,9 +1370,9 @@ main {
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
-
-        <!-- Assets Pagination -->
+            </div>
+            
+            <!-- Assets Pagination -->
         <?php if ($total_pages > 1): ?>
         <div class="bg-white rounded shadow-sm border border-gray-200 mt-3 px-4 py-3">
             <div class="flex items-center justify-between">
@@ -1186,6 +1426,8 @@ main {
         <?php endif; ?>
         </div>
     </div>
+
+
 </main>
 
 <!-- Add Asset Modal -->
@@ -1343,8 +1585,9 @@ main {
                             Starting Number <span class="text-red-500">*</span>
                         </label>
                         <input type="number" id="bulkStartNumber" name="bulk_start_number" 
-                               min="1" value="1"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               min="1" value="1" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Automatically calculated based on existing assets</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -1704,6 +1947,36 @@ main {
     </div>
 </div>
 
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Confirm Archive</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl mr-3"></i>
+                <div>
+                    <p class="text-gray-800 font-medium">Archive PC Unit(s)</p>
+                </div>
+            </div>
+            <div id="archiveModalContent" class="mb-6">
+                <!-- Content will be dynamically inserted -->
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeArchiveModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="confirmArchiveBtn" onclick="confirmArchive()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-archive mr-2"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -1732,6 +2005,44 @@ main {
 </style>
 
 <script>
+// Tab switching function
+function switchTab(tabName) {
+    // Hide all tab contents
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => content.classList.add('hidden'));
+    
+    // Remove active state from all tabs
+    const tabs = document.querySelectorAll('[id^="tab-"]');
+    tabs.forEach(tab => {
+        tab.classList.remove('border-[#1E3A8A]', 'text-[#1E3A8A]', 'bg-blue-50');
+        tab.classList.add('border-transparent', 'text-gray-600');
+        // Update badge colors
+        const badge = tab.querySelector('span');
+        if (badge) {
+            badge.classList.remove('bg-[#1E3A8A]', 'text-white');
+            badge.classList.add('bg-gray-500', 'text-white');
+        }
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById('content-' + tabName);
+    if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+    }
+    
+    // Add active state to selected tab
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.classList.add('border-[#1E3A8A]', 'text-[#1E3A8A]', 'bg-blue-50');
+    activeTab.classList.remove('border-transparent', 'text-gray-600');
+    
+    // Update badge color for active tab
+    const activeBadge = activeTab.querySelector('span');
+    if (activeBadge) {
+        activeBadge.classList.add('bg-[#1E3A8A]', 'text-white');
+        activeBadge.classList.remove('bg-gray-500');
+    }
+}
+
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
@@ -1746,6 +2057,25 @@ function closeAddAssetModal() {
 function closeEditAssetModal() {
     document.getElementById('editAssetModal').classList.add('hidden');
     document.getElementById('editAssetForm').reset();
+}
+
+function openArchiveModal(content, callback) {
+    document.getElementById('archiveModalContent').innerHTML = content;
+    document.getElementById('archiveModal').classList.remove('hidden');
+    window.confirmArchiveCallback = callback;
+}
+
+function closeArchiveModal() {
+    document.getElementById('archiveModal').classList.add('hidden');
+    document.getElementById('archiveModalContent').innerHTML = '';
+    window.confirmArchiveCallback = null;
+}
+
+function confirmArchive() {
+    if (window.confirmArchiveCallback) {
+        window.confirmArchiveCallback();
+    }
+    closeArchiveModal();
 }
 
 // Add Asset Form Submit
@@ -1819,6 +2149,39 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
     }
 });
 
+// Update Starting Number for Bulk Assets
+async function updateBulkStartNumber() {
+    const assetName = document.getElementById('bulkAssetName')?.value?.trim();
+    const roomNumber = document.getElementById('bulkRoomNumber')?.value?.trim();
+    const startNumberField = document.getElementById('bulkStartNumber');
+    
+    if (!assetName || !roomNumber || !startNumberField) {
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_start_number');
+        formData.append('asset_name', assetName);
+        formData.append('room_number', roomNumber);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            startNumberField.value = result.next_number;
+            updateAssetTagPreview();
+        }
+    } catch (error) {
+        console.error('Error updating start number:', error);
+    }
+}
+
 // Toggle Asset Bulk Mode
 function toggleAssetBulkMode() {
     const bulkMode = document.querySelector('input[name="asset_bulk_mode"]:checked').value;
@@ -1830,6 +2193,7 @@ function toggleAssetBulkMode() {
         singleFields.classList.add('hidden');
         bulkFields.classList.remove('hidden');
         submitBtn.textContent = 'Create Assets';
+        updateBulkStartNumber();
         updateAssetTagPreview();
     } else {
         singleFields.classList.remove('hidden');
@@ -1873,6 +2237,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const field = document.getElementById(fieldId);
         if (field) {
             field.addEventListener('input', updateAssetTagPreview);
+        }
+    });
+    
+    // Add listeners for start number update
+    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
+    startNumberTriggerFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateBulkStartNumber);
         }
     });
 });
@@ -1930,64 +2303,42 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
 });
 
 // Delete Asset
-async function deleteAsset(id, assetTag) {
-    closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to delete asset "${assetTag}"?`)) return;
-    
-    const formData = new URLSearchParams();
-    formData.append('ajax', '1');
-    formData.append('action', 'delete_asset');
-    formData.append('id', id);
-    
-    try {
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            window.location.reload();
-        } else {
-            showAlert('error', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while deleting the asset');
-    }
-}
-
 // Archive Asset
 async function archiveAsset(id, assetTag) {
     closeAllMenus();
     
-    if (!confirm(`Are you sure you want to archive asset "${assetTag}"?`)) return;
+    const content = `
+        <p class="text-gray-700 mb-2">Are you sure you want to archive the following asset?</p>
+        <div class="bg-gray-50 p-3 rounded-lg border">
+            <strong>Asset Tag:</strong> ${assetTag}
+        </div>
+    `;
     
-    const formData = new URLSearchParams();
-    formData.append('ajax', '1');
-    formData.append('action', 'archive_asset');
-    formData.append('id', id);
-    
-    try {
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
+    openArchiveModal(content, async () => {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'archive_asset');
+        formData.append('id', id);
         
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
+        try {
+            const response = await fetch(location.href, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('success', result.message);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showAlert('error', result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred while archiving the asset');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while archiving the asset');
-    }
+    });
 }
 
 // Print QR Code for single asset
@@ -2253,71 +2604,7 @@ function submitEditPCUnit() {
     });
 }
 
-function deletePCUnit(id) {
-    if (!confirm('Are you sure you want to delete this PC unit? All assigned components will be unassigned.')) {
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('ajax', '1');
-    formData.append('action', 'delete_pc_unit');
-    formData.append('id', id);
-    
-    fetch('', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('success', data.message);
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('error', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('error', 'An error occurred while deleting the PC unit');
-    });
-}
 
-// Tab Switching Function
-function switchTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    
-    // Remove active state from all tabs
-    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
-        tab.classList.remove('border-[#1E3A8A]', 'text-[#1E3A8A]', 'bg-blue-50');
-        tab.classList.add('border-transparent', 'text-gray-600');
-        // Update badge colors
-        const badge = tab.querySelector('span');
-        if (badge) {
-            badge.classList.remove('bg-[#1E3A8A]', 'text-white');
-            badge.classList.add('bg-gray-500', 'text-white');
-        }
-    });
-    
-    // Show selected tab content
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    
-    // Add active state to selected tab
-    const activeTab = document.getElementById('tab-' + tabName);
-    activeTab.classList.add('border-[#1E3A8A]', 'text-[#1E3A8A]', 'bg-blue-50');
-    activeTab.classList.remove('border-transparent', 'text-gray-600');
-    
-    // Update badge color for active tab
-    const activeBadge = activeTab.querySelector('span');
-    if (activeBadge) {
-        activeBadge.classList.add('bg-[#1E3A8A]', 'text-white');
-        activeBadge.classList.remove('bg-gray-500');
-    }
-}
-
-// PC Unit Kebab Menu Functions
 function togglePCMenu(id) {
     event.stopPropagation();
     const menu = document.getElementById('pc-menu-' + id);
@@ -2337,31 +2624,36 @@ function togglePCMenu(id) {
 function archivePCUnit(id, terminalNumber) {
     event.stopPropagation();
     
-    if (!confirm(`Are you sure you want to archive PC Unit "${terminalNumber}"?\n\nArchived units can be restored later.`)) {
-        return;
-    }
+    const content = `
+        <p class="text-gray-700 mb-2">Are you sure you want to archive the following PC Unit?</p>
+        <div class="bg-gray-50 p-3 rounded-lg border">
+            <strong>Terminal Number:</strong> ${terminalNumber}
+        </div>
+    `;
     
-    const formData = new FormData();
-    formData.append('ajax', '1');
-    formData.append('action', 'archive_pc_unit');
-    formData.append('id', id);
-    
-    fetch('', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('success', 'PC Unit archived successfully');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('error', data.message || 'Failed to archive PC unit');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('error', 'An error occurred while archiving the PC unit');
+    openArchiveModal(content, () => {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'archive_pc_unit');
+        formData.append('id', id);
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'PC Unit archived successfully');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('error', data.message || 'Failed to archive PC unit');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'An error occurred while archiving the PC unit');
+        });
     });
 }
 
@@ -2373,6 +2665,438 @@ document.addEventListener('click', function(e) {
         });
     }
 });
+
+// Restore PC Unit
+function restorePCUnit(id, terminalNumber) {
+    event.stopPropagation();
+    
+    if (!confirm(`Are you sure you want to restore PC Unit "${terminalNumber}"?\n\nThis will make the unit active again.`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('action', 'restore_pc_unit');
+    formData.append('id', id);
+    
+    fetch('', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', 'PC Unit restored successfully');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('error', data.message || 'Failed to restore PC unit');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('error', 'An error occurred while restoring the PC unit');
+    });
+}
+
+// Restore Asset
+function restoreAsset(id, assetTag) {
+    if (!confirm(`Are you sure you want to restore asset "${assetTag}"?\n\nThis will make the asset active again.`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('action', 'restore_asset');
+    formData.append('id', id);
+    
+    fetch('', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', 'Asset restored successfully');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('error', data.message || 'Failed to restore asset');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('error', 'An error occurred while restoring the asset');
+    });
+}
+
+// Initialize default tab on page load
+document.addEventListener('DOMContentLoaded', function() {
+    switchTab('pc-units');
+    
+    // Initialize select all functionality
+    initializeSelectAll();
+});
+
+// Select All functionality
+function initializeSelectAll() {
+    // PC Units select all
+    const selectAllPC = document.getElementById('select-all-pc');
+    if (selectAllPC) {
+        selectAllPC.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.pc-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            togglePCBulkActions();
+        });
+        
+        // Individual PC checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('pc-checkbox')) {
+                updateSelectAllPC();
+                togglePCBulkActions();
+            }
+        });
+    }
+    
+    // Assets select all
+    const selectAllAssets = document.getElementById('select-all-assets');
+    if (selectAllAssets) {
+        selectAllAssets.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.asset-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleAssetBulkActions();
+        });
+        
+        // Individual asset checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('asset-checkbox')) {
+                updateSelectAllAssets();
+                toggleAssetBulkActions();
+            }
+        });
+    }
+}
+
+function updateSelectAllPC() {
+    const selectAll = document.getElementById('select-all-pc');
+    const checkboxes = document.querySelectorAll('.pc-checkbox');
+    const checkedBoxes = document.querySelectorAll('.pc-checkbox:checked');
+    selectAll.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+function updateSelectAllAssets() {
+    const selectAll = document.getElementById('select-all-assets');
+    const checkboxes = document.querySelectorAll('.asset-checkbox');
+    const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+    selectAll.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+function togglePCBulkActions() {
+    const bulkActions = document.getElementById('pc-bulk-actions');
+    const checkedBoxes = document.querySelectorAll('.pc-checkbox:checked');
+    if (checkedBoxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+function toggleAssetBulkActions() {
+    const bulkActions = document.getElementById('asset-bulk-actions');
+    const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (checkedBoxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+// Bulk actions for PC Units
+function bulkArchivePCUnits() {
+    const selectedIds = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    const terminalNumbers = selectedIds.map(id => {
+        const row = document.querySelector(`.pc-checkbox[value="${id}"]`).closest('tr');
+        return row.querySelector('td:nth-child(2) span').textContent.trim();
+    });
+    
+    const content = `
+        <p class="text-gray-700 mb-2">Are you sure you want to archive the following ${selectedIds.length} PC Unit(s)?</p>
+        <div class="bg-gray-50 p-3 rounded-lg border max-h-32 overflow-y-auto">
+            <strong>Terminal Numbers:</strong><br>
+            ${terminalNumbers.map(num => `<span class="inline-block bg-white px-2 py-1 rounded border text-sm mr-1 mb-1">${num}</span>`).join('')}
+        </div>
+    `;
+    
+    openArchiveModal(content, () => {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_archive_pc_units');
+        formData.append('ids', JSON.stringify(selectedIds));
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', data.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('error', data.message || 'Failed to archive PC units');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'An error occurred while archiving PC units');
+        });
+    });
+}
+
+// Bulk actions for Assets
+function bulkPrintQRAssets() {
+    const selectedIds = Array.from(document.querySelectorAll('.asset-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    openQRPrintModalForAssets(selectedIds);
+}
+
+function bulkArchiveAssets() {
+    const selectedIds = Array.from(document.querySelectorAll('.asset-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    const assetTags = selectedIds.map(id => {
+        const row = document.querySelector(`.asset-checkbox[value="${id}"]`).closest('tr');
+        return row.querySelector('td:nth-child(3) span').textContent.trim();
+    });
+    
+    const content = `
+        <p class="text-gray-700 mb-2">Are you sure you want to archive the following ${selectedIds.length} asset(s)?</p>
+        <div class="bg-gray-50 p-3 rounded-lg border max-h-32 overflow-y-auto">
+            <strong>Asset Tags:</strong><br>
+            ${assetTags.map(tag => `<span class="inline-block bg-white px-2 py-1 rounded border text-sm mr-1 mb-1">${tag}</span>`).join('')}
+        </div>
+    `;
+    
+    openArchiveModal(content, () => {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_archive_assets');
+        formData.append('ids', JSON.stringify(selectedIds));
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', data.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('error', data.message || 'Failed to archive assets');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'An error occurred while archiving assets');
+        });
+    });
+}
+
+
+// Initialize select all functionality for archived items
+initializeArchivedSelectAll();
+
+// Archived Select All functionality
+function initializeArchivedSelectAll() {
+    // Archived PC Units select all
+    const selectAllArchivedPC = document.getElementById('select-all-archived-pc');
+    if (selectAllArchivedPC) {
+        selectAllArchivedPC.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.archived-pc-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleArchivedPCBulkActions();
+        });
+        
+        // Individual archived PC checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('archived-pc-checkbox')) {
+                updateSelectAllArchivedPC();
+                toggleArchivedPCBulkActions();
+            }
+        });
+    }
+    
+    // Archived Assets select all
+    const selectAllArchivedAssets = document.getElementById('select-all-archived-assets');
+    if (selectAllArchivedAssets) {
+        selectAllArchivedAssets.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.archived-asset-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleArchivedAssetsBulkActions();
+        });
+        
+        // Individual archived asset checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('archived-asset-checkbox')) {
+                updateSelectAllArchivedAssets();
+                toggleArchivedAssetsBulkActions();
+            }
+        });
+    }
+}
+
+function updateSelectAllArchivedPC() {
+    const selectAll = document.getElementById('select-all-archived-pc');
+    const checkboxes = document.querySelectorAll('.archived-pc-checkbox');
+    const checkedBoxes = document.querySelectorAll('.archived-pc-checkbox:checked');
+    selectAll.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+function updateSelectAllArchivedAssets() {
+    const selectAll = document.getElementById('select-all-archived-assets');
+    const checkboxes = document.querySelectorAll('.archived-asset-checkbox');
+    const checkedBoxes = document.querySelectorAll('.archived-asset-checkbox:checked');
+    selectAll.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+}
+
+function toggleArchivedPCBulkActions() {
+    const bulkActions = document.getElementById('archived-pc-bulk-actions');
+    const checkedBoxes = document.querySelectorAll('.archived-pc-checkbox:checked');
+    if (checkedBoxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+function toggleArchivedAssetsBulkActions() {
+    const bulkActions = document.getElementById('archived-assets-bulk-actions');
+    const checkedBoxes = document.querySelectorAll('.archived-asset-checkbox:checked');
+    if (checkedBoxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+// Bulk actions for Archived PC Units
+function bulkRestoreArchivedPCUnits() {
+    const selectedIds = Array.from(document.querySelectorAll('.archived-pc-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    const terminalNumbers = selectedIds.map(id => {
+        const row = document.querySelector(`.archived-pc-checkbox[value="${id}"]`).closest('tr');
+        return row.querySelector('td:nth-child(3) span').textContent.trim();
+    });
+    
+    const content = `
+        <p class="text-gray-700 mb-2">Are you sure you want to restore the following ${selectedIds.length} archived PC Unit(s)?</p>
+        <div class="bg-gray-50 p-3 rounded-lg border max-h-32 overflow-y-auto">
+            <strong>Terminal Numbers:</strong><br>
+            ${terminalNumbers.map(num => `<span class="inline-block bg-white px-2 py-1 rounded border text-sm mr-1 mb-1">${num}</span>`).join('')}
+        </div>
+        <p class="text-sm text-gray-600 mt-3">
+            <i class="fa-solid fa-info-circle mr-1"></i>
+            This will make them active again.
+        </p>
+    `;
+    
+    openArchiveModal(content, () => {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_restore_pc_units');
+        formData.append('ids', JSON.stringify(selectedIds));
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', data.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('error', data.message || 'Failed to restore PC units');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'An error occurred while restoring PC units');
+        });
+    });
+}
+
+// Bulk actions for Archived Assets
+function bulkRestoreArchivedAssets() {
+    const selectedIds = Array.from(document.querySelectorAll('.archived-asset-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    const assetTags = selectedIds.map(id => {
+        const row = document.querySelector(`.archived-asset-checkbox[value="${id}"]`).closest('tr');
+        return row.querySelector('td:nth-child(4) span').textContent.trim();
+    }).join(', ');
+    
+    if (!confirm(`Are you sure you want to restore ${selectedIds.length} archived asset(s)?\n\nAssets: ${assetTags}\n\nThis will make them active again.`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('action', 'bulk_restore_assets');
+    formData.append('ids', JSON.stringify(selectedIds));
+    
+    fetch('', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('error', data.message || 'Failed to restore assets');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('error', 'An error occurred while restoring assets');
+    });
+}
+
+// Automatic search with debouncing
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        searchTimeout = setTimeout(() => {
+            // Update URL without page reload
+            const url = new URL(window.location);
+            if (query) {
+                url.searchParams.set('search', query);
+            } else {
+                url.searchParams.delete('search');
+            }
+            // Reset to page 1 when searching
+            url.searchParams.delete('page');
+            url.searchParams.delete('pc_page');
+            url.searchParams.delete('avail_page');
+            
+            window.location.href = url.toString();
+        }, 500); // 500ms debounce
+    });
+}
 
 </script>
 

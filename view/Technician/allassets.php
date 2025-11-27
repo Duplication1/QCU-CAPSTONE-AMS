@@ -128,7 +128,7 @@ $params = [];
 $types = '';
 
 if (!$show_archived) {
-    $count_query .= " AND status != 'Archived'";
+    $count_query .= " AND status NOT IN ('Archive', 'Archived')";
 }
 
 if (!empty($filter_status)) {
@@ -196,7 +196,7 @@ $params = [];
 $types = '';
 
 if (!$show_archived) {
-    $query_sql .= " AND a.status != 'Archived'";
+    $query_sql .= " AND a.status NOT IN ('Archive', 'Archived')";
 }
 
 if (!empty($filter_status)) {

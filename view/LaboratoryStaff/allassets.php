@@ -36,7 +36,7 @@ function buildAssetFilters($filters, $show_archived = false, $show_standby = fal
     
     // Exclude archived assets by default
     if (!$show_archived) {
-        $conditions[] = "status != 'Archived'";
+        $conditions[] = "status NOT IN ('Archive', 'Archived')";
     }
     
     // Filter by status
@@ -135,6 +135,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+        exit;
+    }
+    
+    if ($action === 'get_next_start_number') {
+        $asset_name_prefix = trim($_POST['asset_name'] ?? '');
+        $room_number = trim($_POST['room_number'] ?? '');
+        
+        if (empty($asset_name_prefix) || empty($room_number)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name and room number are required']);
+            exit;
+        }
+        
+        // Find the highest existing number for this asset prefix and room
+        $pattern = "%-{$asset_name_prefix}-{$room_number}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last 3 characters before any extension
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
         exit;
     }
     
@@ -923,8 +961,9 @@ main {
                             Starting Number <span class="text-red-500">*</span>
                         </label>
                         <input type="number" id="bulkStartNumber" name="bulk_start_number" 
-                               min="1" value="1"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               min="1" value="1" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Automatically calculated based on existing assets</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -1197,6 +1236,15 @@ document.addEventListener('DOMContentLoaded', function() {
             field.addEventListener('input', updateAssetTagPreview);
         }
     });
+    
+    // Add listeners for start number update
+    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
+    startNumberTriggerFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateBulkStartNumber);
+        }
+    });
 });
 
 // Modal functions
@@ -1220,6 +1268,39 @@ function closeQRPrintModal() {
     window.location.reload();
 }
 
+// Update Starting Number for Bulk Assets
+async function updateBulkStartNumber() {
+    const assetName = document.getElementById('bulkAssetName')?.value?.trim();
+    const roomNumber = document.getElementById('bulkRoomNumber')?.value?.trim();
+    const startNumberField = document.getElementById('bulkStartNumber');
+    
+    if (!assetName || !roomNumber || !startNumberField) {
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_start_number');
+        formData.append('asset_name', assetName);
+        formData.append('room_number', roomNumber);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            startNumberField.value = result.next_number;
+            updateAssetTagPreview();
+        }
+    } catch (error) {
+        console.error('Error updating start number:', error);
+    }
+}
+
 // Toggle Asset Bulk Mode
 function toggleAssetBulkMode() {
     const bulkMode = document.querySelector('input[name="asset_bulk_mode"]:checked').value;
@@ -1231,6 +1312,7 @@ function toggleAssetBulkMode() {
         singleFields.classList.add('hidden');
         bulkFields.classList.remove('hidden');
         submitBtn.textContent = 'Create Assets';
+        updateBulkStartNumber();
         updateAssetTagPreview();
     } else {
         singleFields.classList.remove('hidden');

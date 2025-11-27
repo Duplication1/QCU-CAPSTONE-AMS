@@ -71,6 +71,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_start_number') {
+        $asset_name_prefix = trim($_POST['asset_name'] ?? '');
+        $room_number = trim($_POST['room_number'] ?? '');
+        
+        if (empty($asset_name_prefix) || empty($room_number)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name and room number are required']);
+            exit;
+        }
+        
+        // Find the highest existing number for this asset prefix and room
+        $pattern = "%-{$asset_name_prefix}-{$room_number}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last 3 characters before any extension
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'bulk_create_assets') {
         $acquisition_date = trim($_POST['acquisition_date'] ?? '');
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
@@ -209,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            $stmt = $conn->prepare("UPDATE assets SET status = 'Archived', updated_by = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id = ?");
             $updated_by = $_SESSION['user_id'];
             $stmt->bind_param('ii', $updated_by, $id);
             $success = $stmt->execute();
@@ -295,8 +333,10 @@ $count_query = "SELECT COUNT(*) as total FROM assets WHERE (room_id IS NULL OR r
 $params = [];
 $types = '';
 
-if (!$show_archived) {
-    $count_query .= " AND status != 'Archived'";
+if ($show_archived) {
+    $count_query .= " AND status IN ('Archive', 'Archived')";
+} else {
+    $count_query .= " AND status NOT IN ('Archive', 'Archived')";
 }
 
 if (!empty($filter_status)) {
@@ -338,8 +378,10 @@ $query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON
 $params = [];
 $types = '';
 
-if (!$show_archived) {
-    $query_sql .= " AND a.status != 'Archived'";
+if ($show_archived) {
+    $query_sql .= " AND a.status IN ('Archive', 'Archived')";
+} else {
+    $query_sql .= " AND a.status NOT IN ('Archive', 'Archived')";
 }
 
 if (!empty($filter_status)) {
@@ -472,7 +514,7 @@ main {
                 </select>
                 <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                     <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> class="rounded">
-                    <span class="text-sm text-gray-700">Show Archived</span>
+                    <span class="text-sm text-gray-700">Show Only Archived Assets</span>
                 </label>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
@@ -556,6 +598,7 @@ main {
                                         'Disposed' => 'bg-red-100 text-red-700',
                                         'Lost' => 'bg-red-100 text-red-700',
                                         'Damaged' => 'bg-orange-100 text-orange-700',
+                                        'Archive' => 'bg-purple-100 text-purple-700',
                                         'Archived' => 'bg-purple-100 text-purple-700'
                                     ];
                                     $status_class = $status_colors[$asset['status']] ?? 'bg-gray-100 text-gray-700';
@@ -831,8 +874,9 @@ main {
                             Starting Number <span class="text-red-500">*</span>
                         </label>
                         <input type="number" id="bulkStartNumber" name="bulk_start_number" 
-                               min="1" value="1"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               min="1" value="1" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Automatically calculated based on existing assets</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -1061,6 +1105,15 @@ document.addEventListener('DOMContentLoaded', function() {
             field.addEventListener('input', updateAssetTagPreview);
         }
     });
+    
+    // Add listeners for start number update
+    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
+    startNumberTriggerFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateBulkStartNumber);
+        }
+    });
 });
 
 // Modal functions
@@ -1084,6 +1137,39 @@ function closeQRPrintModal() {
     window.location.reload();
 }
 
+// Update Starting Number for Bulk Assets
+async function updateBulkStartNumber() {
+    const assetName = document.getElementById('bulkAssetName')?.value?.trim();
+    const roomNumber = document.getElementById('bulkRoomNumber')?.value?.trim();
+    const startNumberField = document.getElementById('bulkStartNumber');
+    
+    if (!assetName || !roomNumber || !startNumberField) {
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_start_number');
+        formData.append('asset_name', assetName);
+        formData.append('room_number', roomNumber);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            startNumberField.value = result.next_number;
+            updateAssetTagPreview();
+        }
+    } catch (error) {
+        console.error('Error updating start number:', error);
+    }
+}
+
 // Toggle Asset Bulk Mode
 function toggleAssetBulkMode() {
     const bulkMode = document.querySelector('input[name="asset_bulk_mode"]:checked').value;
@@ -1095,6 +1181,7 @@ function toggleAssetBulkMode() {
         singleFields.classList.add('hidden');
         bulkFields.classList.remove('hidden');
         submitBtn.textContent = 'Create Assets';
+        updateBulkStartNumber();
         updateAssetTagPreview();
     } else {
         singleFields.classList.remove('hidden');
