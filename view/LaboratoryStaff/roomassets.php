@@ -774,22 +774,17 @@ main {
 
         <!-- Search Bar -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
-            <form method="GET" action="" class="flex gap-3">
-                <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
-                <div class="flex-1">
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Search by asset tag, name, brand, or model..." 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <div class="flex gap-3">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" 
+                           placeholder="Search by terminal, name, asset tag, or components..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fa-solid fa-search mr-2"></i>Search
-                </button>
-                <?php if (!empty($search)): ?>
-                <a href="?room_id=<?php echo $room_id; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <button onclick="clearSearch()" id="clearSearchBtn" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors hidden">
                     <i class="fa-solid fa-times mr-2"></i>Clear
-                </a>
-                <?php endif; ?>
-            </form>
+                </button>
+            </div>
         </div>
 
         <!-- Tab Navigation -->
@@ -839,9 +834,17 @@ main {
                             <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200" id="pcUnitsTableBody">
                         <?php foreach ($pc_units as $pc): ?>
-                            <tr class="hover:bg-blue-50 transition-colors cursor-pointer" onclick="window.location.href='pcassets.php?pc_unit_id=<?php echo $pc['id']; ?>'">
+                            <tr class="pc-unit-row hover:bg-blue-50 transition-colors cursor-pointer" 
+                                data-terminal="<?php echo htmlspecialchars($pc['terminal_number']); ?>"
+                                data-pcname="<?php echo htmlspecialchars($pc['pc_name']); ?>"
+                                data-assettag="<?php echo htmlspecialchars($pc['asset_tag']); ?>"
+                                data-cpu="<?php echo htmlspecialchars($pc['cpu']); ?>"
+                                data-ram="<?php echo htmlspecialchars($pc['ram']); ?>"
+                                data-storage="<?php echo htmlspecialchars($pc['storage']); ?>"
+                                data-status="<?php echo htmlspecialchars($pc['status']); ?>"
+                                onclick="window.location.href='pcassets.php?pc_unit_id=<?php echo $pc['id']; ?>'">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span class="text-sm font-semibold text-blue-600"><?php echo htmlspecialchars($pc['terminal_number']); ?></span>
                                 </td>
@@ -1006,22 +1009,26 @@ main {
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200" id="allAssetsTableBody">
                     <?php if (empty($assets)): ?>
-                        <tr>
-                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                        <tr class="no-results-row">
+                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                                 <i class="fa-solid fa-box text-5xl mb-3 opacity-30"></i>
                                 <p class="text-lg">No assets found</p>
-                                <?php if (!empty($search)): ?>
-                                    <p class="text-sm">Try adjusting your search</p>
-                                <?php else: ?>
-                                    <p class="text-sm">Click "Add Asset" to create one</p>
-                                <?php endif; ?>
+                                <p class="text-sm">Click "Add Asset" to create one</p>
                             </td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($assets as $index => $asset): ?>
-                            <tr class="hover:bg-gray-50 transition-colors" data-id="<?php echo $asset['id']; ?>">
+                            <tr class="asset-row hover:bg-gray-50 transition-colors" 
+                                data-id="<?php echo $asset['id']; ?>"
+                                data-assettag="<?php echo htmlspecialchars($asset['asset_tag']); ?>"
+                                data-name="<?php echo htmlspecialchars($asset['asset_name']); ?>"
+                                data-type="<?php echo htmlspecialchars($asset['asset_type']); ?>"
+                                data-brand="<?php echo htmlspecialchars($asset['brand'] ?? ''); ?>"
+                                data-model="<?php echo htmlspecialchars($asset['model'] ?? ''); ?>"
+                                data-status="<?php echo htmlspecialchars($asset['status']); ?>"
+                                data-condition="<?php echo htmlspecialchars($asset['condition']); ?>">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo $offset + $index + 1; ?>
                                 </td>
@@ -1704,6 +1711,157 @@ main {
     </div>
 </div>
 
+<!-- Delete Asset Modal -->
+<div id="deleteAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Delete Asset</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fa-solid fa-trash text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to delete this asset?</p>
+                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="deleteAssetTag" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-red-600 mt-2 font-medium">This action cannot be undone!</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeDeleteAssetModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDeleteAsset()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-trash mr-2"></i>Delete Asset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive Asset Modal -->
+<div id="archiveAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Archive Asset</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                    <i class="fa-solid fa-archive text-orange-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to archive this asset?</p>
+                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="archiveAssetTag" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-gray-500 mt-2">Archived assets can be restored later.</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeArchiveAssetModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmArchiveAsset()" 
+                        class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                    <i class="fa-solid fa-archive mr-2"></i>Archive Asset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete PC Unit Modal -->
+<div id="deletePCUnitModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Delete PC Unit</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fa-solid fa-trash text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to delete this PC unit?</p>
+                    <p class="text-xs text-red-600 mt-2 font-medium">All assigned components will be unassigned. This action cannot be undone!</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closePCUnitModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDeletePCUnit()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-trash mr-2"></i>Delete PC Unit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive PC Unit Modal -->
+<div id="archivePCUnitModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Archive PC Unit</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <i class="fa-solid fa-box-archive text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to archive this PC unit?</p>
+                    <p class="text-sm text-gray-600 mb-1">Terminal: <span id="archivePCUnitTerminal" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-gray-500 mt-2">Archived units can be restored later.</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closePCArchiveModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmArchivePCUnit()" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    <i class="fa-solid fa-box-archive mr-2"></i>Archive PC Unit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk PC Creation Confirmation Modal -->
+<div id="bulkPCModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="fas fa-desktop text-white text-xl"></i>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4 text-center">Create Multiple PC Units</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 text-center">
+                    You are about to create <span id="bulkPCCount" class="font-bold text-purple-600"></span> PC units
+                </p>
+                <p class="text-xs text-gray-400 text-center mt-2">
+                    Range: <span id="bulkPCRange" class="font-mono"></span>
+                </p>
+            </div>
+            <div class="flex gap-3 px-4 py-3">
+                <button onclick="closeBulkPCModal()" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancel
+                </button>
+                <button onclick="confirmBulkPCCreation()" class="flex-1 px-4 py-2 text-white text-base font-medium rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    Create Units
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -1930,10 +2088,22 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
 });
 
 // Delete Asset
-async function deleteAsset(id, assetTag) {
+let assetToDelete = { id: null, tag: null };
+
+function deleteAsset(id, assetTag) {
     closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to delete asset "${assetTag}"?`)) return;
+    assetToDelete = { id, tag: assetTag };
+    document.getElementById('deleteAssetTag').textContent = assetTag;
+    document.getElementById('deleteAssetModal').classList.remove('hidden');
+}
+
+function closeDeleteAssetModal() {
+    document.getElementById('deleteAssetModal').classList.add('hidden');
+    assetToDelete = { id: null, tag: null };
+}
+
+async function confirmDeleteAsset() {
+    const { id } = assetToDelete;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
@@ -1949,7 +2119,9 @@ async function deleteAsset(id, assetTag) {
         const result = await response.json();
         
         if (result.success) {
-            window.location.reload();
+            closeDeleteAssetModal();
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
         }
@@ -1960,10 +2132,22 @@ async function deleteAsset(id, assetTag) {
 }
 
 // Archive Asset
-async function archiveAsset(id, assetTag) {
+let assetToArchive = { id: null, tag: null };
+
+function archiveAsset(id, assetTag) {
     closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to archive asset "${assetTag}"?`)) return;
+    assetToArchive = { id, tag: assetTag };
+    document.getElementById('archiveAssetTag').textContent = assetTag;
+    document.getElementById('archiveAssetModal').classList.remove('hidden');
+}
+
+function closeArchiveAssetModal() {
+    document.getElementById('archiveAssetModal').classList.add('hidden');
+    assetToArchive = { id: null, tag: null };
+}
+
+async function confirmArchiveAsset() {
+    const { id } = assetToArchive;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
@@ -1979,6 +2163,7 @@ async function archiveAsset(id, assetTag) {
         const result = await response.json();
         
         if (result.success) {
+            closeArchiveAssetModal();
             showAlert('success', result.message);
             setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -2170,13 +2355,30 @@ function submitPCUnit() {
             return;
         }
         
-        // Confirm bulk creation
+        // Show bulk creation confirmation modal
         const count = rangeEnd - rangeStart + 1;
-        if (!confirm(`Are you sure you want to create ${count} PC units?\n\nRange: ${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`)) {
-            return;
-        }
+        const range = `${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`;
+        document.getElementById('bulkPCCount').textContent = `${count}`;
+        document.getElementById('bulkPCRange').textContent = range;
+        document.getElementById('bulkPCModal').classList.remove('hidden');
+        return; // Wait for modal confirmation
     }
     
+    // Continue with submission
+    submitPCUnitForm(form);
+}
+
+function closeBulkPCModal() {
+    document.getElementById('bulkPCModal').classList.add('hidden');
+}
+
+function confirmBulkPCCreation() {
+    closeBulkPCModal();
+    const form = document.getElementById('addPCUnitForm');
+    submitPCUnitForm(form);
+}
+
+function submitPCUnitForm(form) {
     const formData = new FormData(form);
     formData.append('ajax', '1');
     formData.append('action', 'create_pc_unit');
@@ -2253,15 +2455,25 @@ function submitEditPCUnit() {
     });
 }
 
+let pcUnitToDelete = null;
+
 function deletePCUnit(id) {
-    if (!confirm('Are you sure you want to delete this PC unit? All assigned components will be unassigned.')) {
-        return;
-    }
+    pcUnitToDelete = id;
+    document.getElementById('deletePCUnitModal').classList.remove('hidden');
+}
+
+function closePCUnitModal() {
+    document.getElementById('deletePCUnitModal').classList.add('hidden');
+    pcUnitToDelete = null;
+}
+
+function confirmDeletePCUnit() {
+    if (!pcUnitToDelete) return;
     
     const formData = new FormData();
     formData.append('ajax', '1');
     formData.append('action', 'delete_pc_unit');
-    formData.append('id', id);
+    formData.append('id', pcUnitToDelete);
     
     fetch('', {
         method: 'POST',
@@ -2270,6 +2482,7 @@ function deletePCUnit(id) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            closePCUnitModal();
             showNotification('success', data.message);
             setTimeout(() => location.reload(), 1000);
         } else {
@@ -2315,6 +2528,151 @@ function switchTab(tabName) {
         activeBadge.classList.add('bg-[#1E3A8A]', 'text-white');
         activeBadge.classList.remove('bg-gray-500');
     }
+    
+    // Apply search filter when switching tabs
+    applySearch();
+}
+
+// Real-time search functionality
+const searchInput = document.getElementById('searchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+if (searchInput) {
+    searchInput.addEventListener('input', debounce(applySearch, 300));
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function applySearch() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    // Show/hide clear button
+    if (searchTerm) {
+        clearSearchBtn.classList.remove('hidden');
+    } else {
+        clearSearchBtn.classList.add('hidden');
+    }
+    
+    // Filter PC Units
+    const pcRows = document.querySelectorAll('.pc-unit-row');
+    let pcVisibleCount = 0;
+    
+    pcRows.forEach(row => {
+        const terminal = row.dataset.terminal.toLowerCase();
+        const pcName = row.dataset.pcname.toLowerCase();
+        const assetTag = row.dataset.assettag.toLowerCase();
+        const cpu = row.dataset.cpu.toLowerCase();
+        const ram = row.dataset.ram.toLowerCase();
+        const storage = row.dataset.storage.toLowerCase();
+        const status = row.dataset.status.toLowerCase();
+        
+        const matches = terminal.includes(searchTerm) ||
+                       pcName.includes(searchTerm) ||
+                       assetTag.includes(searchTerm) ||
+                       cpu.includes(searchTerm) ||
+                       ram.includes(searchTerm) ||
+                       storage.includes(searchTerm) ||
+                       status.includes(searchTerm);
+        
+        if (matches) {
+            row.style.display = '';
+            pcVisibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show/hide PC Units no results message
+    const pcTableBody = document.getElementById('pcUnitsTableBody');
+    let pcNoResults = pcTableBody ? pcTableBody.querySelector('.search-no-results') : null;
+    
+    if (pcTableBody && pcVisibleCount === 0 && pcRows.length > 0) {
+        if (!pcNoResults) {
+            pcNoResults = document.createElement('tr');
+            pcNoResults.className = 'search-no-results';
+            pcNoResults.innerHTML = `
+                <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                    <i class="fa-solid fa-search text-5xl mb-3 opacity-30"></i>
+                    <p class="text-lg">No PC units found</p>
+                    <p class="text-sm">Try adjusting your search</p>
+                </td>
+            `;
+            pcTableBody.appendChild(pcNoResults);
+        }
+        pcNoResults.style.display = '';
+    } else if (pcNoResults) {
+        pcNoResults.style.display = 'none';
+    }
+    
+    // Filter All Assets
+    const assetRows = document.querySelectorAll('.asset-row');
+    let assetVisibleCount = 0;
+    
+    assetRows.forEach(row => {
+        const assetTag = row.dataset.assettag.toLowerCase();
+        const name = row.dataset.name.toLowerCase();
+        const type = row.dataset.type.toLowerCase();
+        const brand = row.dataset.brand.toLowerCase();
+        const model = row.dataset.model.toLowerCase();
+        const status = row.dataset.status.toLowerCase();
+        const condition = row.dataset.condition.toLowerCase();
+        
+        const matches = assetTag.includes(searchTerm) ||
+                       name.includes(searchTerm) ||
+                       type.includes(searchTerm) ||
+                       brand.includes(searchTerm) ||
+                       model.includes(searchTerm) ||
+                       status.includes(searchTerm) ||
+                       condition.includes(searchTerm);
+        
+        if (matches) {
+            row.style.display = '';
+            assetVisibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show/hide All Assets no results message
+    const assetTableBody = document.getElementById('allAssetsTableBody');
+    let assetNoResults = assetTableBody ? assetTableBody.querySelector('.search-no-results') : null;
+    const originalNoResults = assetTableBody ? assetTableBody.querySelector('.no-results-row') : null;
+    
+    if (assetTableBody && assetVisibleCount === 0 && assetRows.length > 0) {
+        if (originalNoResults) originalNoResults.style.display = 'none';
+        if (!assetNoResults) {
+            assetNoResults = document.createElement('tr');
+            assetNoResults.className = 'search-no-results';
+            assetNoResults.innerHTML = `
+                <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                    <i class="fa-solid fa-search text-5xl mb-3 opacity-30"></i>
+                    <p class="text-lg">No assets found</p>
+                    <p class="text-sm">Try adjusting your search</p>
+                </td>
+            `;
+            assetTableBody.appendChild(assetNoResults);
+        }
+        assetNoResults.style.display = '';
+    } else if (assetNoResults) {
+        assetNoResults.style.display = 'none';
+        if (originalNoResults && assetRows.length === 0) originalNoResults.style.display = '';
+    }
+}
+
+function clearSearch() {
+    searchInput.value = '';
+    applySearch();
+    searchInput.focus();
 }
 
 // PC Unit Kebab Menu Functions
@@ -2334,17 +2692,27 @@ function togglePCMenu(id) {
     menu.classList.toggle('hidden');
 }
 
+let pcUnitToArchive = { id: null, terminal: null };
+
 function archivePCUnit(id, terminalNumber) {
     event.stopPropagation();
-    
-    if (!confirm(`Are you sure you want to archive PC Unit "${terminalNumber}"?\n\nArchived units can be restored later.`)) {
-        return;
-    }
+    pcUnitToArchive = { id, terminal: terminalNumber };
+    document.getElementById('archivePCUnitTerminal').textContent = terminalNumber;
+    document.getElementById('archivePCUnitModal').classList.remove('hidden');
+}
+
+function closePCArchiveModal() {
+    document.getElementById('archivePCUnitModal').classList.add('hidden');
+    pcUnitToArchive = { id: null, terminal: null };
+}
+
+function confirmArchivePCUnit() {
+    if (!pcUnitToArchive.id) return;
     
     const formData = new FormData();
     formData.append('ajax', '1');
     formData.append('action', 'archive_pc_unit');
-    formData.append('id', id);
+    formData.append('id', pcUnitToArchive.id);
     
     fetch('', {
         method: 'POST',
@@ -2353,6 +2721,7 @@ function archivePCUnit(id, terminalNumber) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            closePCArchiveModal();
             showNotification('success', 'PC Unit archived successfully');
             setTimeout(() => location.reload(), 1000);
         } else {

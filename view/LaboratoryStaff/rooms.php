@@ -387,6 +387,37 @@ main {
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteRoomModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Delete Room</h3>
+        </div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fa-solid fa-trash text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to delete this room?</p>
+                    <p class="text-sm text-gray-600 mb-1">Room: <span id="deleteRoomName" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-red-600 mt-2 font-medium">This action cannot be undone!</p>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeDeleteRoomModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDeleteRoom()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-trash mr-2"></i>Delete Room
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Modal functions
 function openAddRoomModal() {
@@ -473,10 +504,22 @@ document.getElementById('editRoomForm').addEventListener('submit', async functio
 });
 
 // Delete Room
-async function deleteRoom(id, name) {
+let roomToDelete = { id: null, name: null };
+
+function deleteRoom(id, name) {
     closeAllMenus();
-    
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    roomToDelete = { id, name };
+    document.getElementById('deleteRoomName').textContent = name;
+    document.getElementById('deleteRoomModal').classList.remove('hidden');
+}
+
+function closeDeleteRoomModal() {
+    document.getElementById('deleteRoomModal').classList.add('hidden');
+    roomToDelete = { id: null, name: null };
+}
+
+async function confirmDeleteRoom() {
+    const { id } = roomToDelete;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
@@ -492,8 +535,9 @@ async function deleteRoom(id, name) {
         const result = await response.json();
         
         if (result.success) {
-            // Reload page to update table
-            window.location.reload();
+            showAlert('success', result.message);
+            closeDeleteRoomModal();
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
         }
@@ -576,6 +620,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAddRoomModal();
         closeEditRoomModal();
+        closeDeleteRoomModal();
     }
 });
 </script>
