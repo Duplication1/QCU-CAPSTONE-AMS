@@ -129,7 +129,7 @@ main {
 <div class="flex items-center gap-6">
   <!-- Avatar -->
   <div class="relative shrink-0">
-    <img src="../../assets/images/admin1.png" alt="Avatar"
+    <img src="../../assets/images/admin_profile.png" alt="Avatar"
          class="w-24 h-24 rounded-full border border-gray-300 object-cover shadow-sm ring-2 ring-[#1E3A8A]">
     <span class="absolute bottom-1 right-1 inline-block w-4 h-4 bg-green-500 rounded-full border border-white"
           title="Online - Active Administrator"></span>

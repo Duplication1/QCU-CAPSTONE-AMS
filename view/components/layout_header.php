@@ -39,6 +39,8 @@ $page_title = "AMS - " . $current_role . " Dashboard";
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link rel="stylesheet" href="../../assets/css/output.css">
     <link rel="stylesheet" href="../../node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Include Poppins font -->
     <link href="../../assets/css/poppins.css" rel="stylesheet">
     <!-- DataTables CSS -->
