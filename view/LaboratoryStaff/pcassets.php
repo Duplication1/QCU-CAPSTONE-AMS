@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
 // Fetch components assigned to this PC unit
 $components = [];
-$comp_query = $conn->prepare("SELECT * FROM assets WHERE pc_unit_id = ? ORDER BY asset_type, asset_name");
+$comp_query = $conn->prepare("SELECT a.*, ac.name as category_name FROM assets a LEFT JOIN asset_categories ac ON a.category = ac.id WHERE a.pc_unit_id = ? ORDER BY a.asset_type, a.asset_name");
 $comp_query->bind_param('i', $pc_unit_id);
 $comp_query->execute();
 $comp_result = $comp_query->get_result();
@@ -122,9 +122,32 @@ $avail_page = isset($_GET['avail_page']) ? max(1, intval($_GET['avail_page'])) :
 $avail_limit = 6;
 $avail_offset = ($avail_page - 1) * $avail_limit;
 
-// Count total available assets
-$avail_count_query = $conn->prepare("SELECT COUNT(*) as total FROM assets WHERE room_id = ? AND (pc_unit_id IS NULL OR pc_unit_id = 0)");
-$avail_count_query->bind_param('i', $room_id);
+// Get filter parameters
+$category_filter = isset($_GET['category_filter']) ? intval($_GET['category_filter']) : 0;
+
+// Fetch categories for filter dropdown
+$categories = [];
+$cat_query = $conn->prepare("SELECT id, name FROM asset_categories ORDER BY name ASC");
+$cat_query->execute();
+$cat_result = $cat_query->get_result();
+while ($row = $cat_result->fetch_assoc()) {
+    $categories[] = $row;
+}
+$cat_query->close();
+
+// Count total available assets with filter
+$count_query = "SELECT COUNT(*) as total FROM assets a WHERE a.room_id = ? AND (a.pc_unit_id IS NULL OR a.pc_unit_id = 0)";
+$params = [$room_id];
+$types = 'i';
+
+if ($category_filter > 0) {
+    $count_query .= " AND a.category = ?";
+    $params[] = $category_filter;
+    $types .= 'i';
+}
+
+$avail_count_query = $conn->prepare($count_query);
+$avail_count_query->bind_param($types, ...$params);
 $avail_count_query->execute();
 $avail_count_result = $avail_count_query->get_result();
 $total_available = $avail_count_result->fetch_assoc()['total'];
@@ -133,8 +156,23 @@ $avail_count_query->close();
 $total_avail_pages = ceil($total_available / $avail_limit);
 
 $available_assets = [];
-$avail_query = $conn->prepare("SELECT * FROM assets WHERE room_id = ? AND (pc_unit_id IS NULL OR pc_unit_id = 0) ORDER BY asset_type, asset_tag LIMIT ? OFFSET ?");
-$avail_query->bind_param('iii', $room_id, $avail_limit, $avail_offset);
+$query = "SELECT a.*, ac.name as category_name FROM assets a LEFT JOIN asset_categories ac ON a.category = ac.id WHERE a.room_id = ? AND (a.pc_unit_id IS NULL OR a.pc_unit_id = 0)";
+$params = [$room_id];
+$types = 'i';
+
+if ($category_filter > 0) {
+    $query .= " AND a.category = ?";
+    $params[] = $category_filter;
+    $types .= 'i';
+}
+
+$query .= " ORDER BY a.asset_type, a.asset_tag LIMIT ? OFFSET ?";
+$params[] = $avail_limit;
+$params[] = $avail_offset;
+$types .= 'ii';
+
+$avail_query = $conn->prepare($query);
+$avail_query->bind_param($types, ...$params);
 $avail_query->execute();
 $avail_result = $avail_query->get_result();
 while ($row = $avail_result->fetch_assoc()) {
@@ -240,6 +278,7 @@ main {
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component Name</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand/Model</th>
@@ -252,6 +291,7 @@ main {
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-4 py-3 text-sm text-gray-500"><?php echo $index + 1; ?></td>
                                         <td class="px-4 py-3 text-sm font-medium text-blue-600"><?php echo htmlspecialchars($comp['asset_tag']); ?></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600"><?php echo htmlspecialchars($comp['category_name'] ?? 'N/A'); ?></td>
                                         <td class="px-4 py-3 text-sm font-medium text-gray-900"><?php echo htmlspecialchars($comp['asset_name']); ?></td>
                                         <td class="px-4 py-3 text-sm text-gray-600"><?php echo htmlspecialchars($comp['asset_type']); ?></td>
                                         <td class="px-4 py-3 text-sm text-gray-600">
@@ -293,11 +333,31 @@ main {
             <!-- Right Column - Available Assets -->
             <div class="w-96 flex flex-col bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
-                    <h4 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-box text-green-600"></i>
-                        Available Assets
-                    </h4>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-box text-green-600"></i>
+                            Available Assets
+                        </h4>
+                        <span class="text-xs text-gray-500"><?php echo $total_available; ?> total</span>
+                    </div>
                     <p class="text-xs text-gray-500 mt-0.5">Click to add to this PC unit</p>
+                </div>
+                
+                <!-- Filter Section -->
+                <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-medium text-gray-600">Filter by Category:</label>
+                        <select id="categoryFilter" onchange="applyCategoryFilter()" 
+                                class="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                            <option value="0">All Categories</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo $category['id']; ?>" 
+                                        <?php echo ($category_filter == $category['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="flex-1 overflow-auto">
@@ -319,6 +379,11 @@ main {
                                                 <span class="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">
                                                     <?php echo htmlspecialchars($asset['asset_type']); ?>
                                                 </span>
+                                                <?php if (!empty($asset['category_name'])): ?>
+                                                <span class="px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                                                    <?php echo htmlspecialchars($asset['category_name']); ?>
+                                                </span>
+                                                <?php endif; ?>
                                             </div>
                                             <p class="text-sm font-medium text-gray-900 mt-1 truncate"><?php echo htmlspecialchars($asset['asset_name']); ?></p>
                                             <?php if (!empty($asset['brand']) || !empty($asset['model'])): ?>
@@ -348,14 +413,20 @@ main {
                             Page <?php echo $avail_page; ?> of <?php echo $total_avail_pages; ?>
                         </div>
                         <div class="flex gap-2">
+                            <?php 
+                            $base_url = "?pc_unit_id=$pc_unit_id";
+                            if ($category_filter > 0) {
+                                $base_url .= "&category_filter=$category_filter";
+                            }
+                            ?>
                             <?php if ($avail_page > 1): ?>
-                                <a href="?pc_unit_id=<?php echo $pc_unit_id; ?>&avail_page=<?php echo $avail_page - 1; ?>" 
+                                <a href="<?php echo $base_url; ?>&avail_page=<?php echo $avail_page - 1; ?>" 
                                    class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </a>
                             <?php endif; ?>
                             <?php if ($avail_page < $total_avail_pages): ?>
-                                <a href="?pc_unit_id=<?php echo $pc_unit_id; ?>&avail_page=<?php echo $avail_page + 1; ?>" 
+                                <a href="<?php echo $base_url; ?>&avail_page=<?php echo $avail_page + 1; ?>" 
                                    class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </a>
@@ -500,6 +571,20 @@ function showAlert(type, message) {
     document.body.appendChild(alertDiv);
     
     setTimeout(() => alertDiv.remove(), 3000);
+}
+
+// Category filter function
+function applyCategoryFilter() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const selectedCategory = categoryFilter.value;
+    
+    // Build URL with current parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('category_filter', selectedCategory);
+    urlParams.delete('avail_page'); // Reset to first page when filtering
+    
+    // Redirect to the same page with filter
+    window.location.href = window.location.pathname + '?' + urlParams.toString();
 }
 </script>
 

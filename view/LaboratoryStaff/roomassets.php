@@ -45,6 +45,7 @@ if (!$room) {
 
 // Fetch assets with search, filter, and pagination
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$pc_search = isset($_GET['pc_search']) ? trim($_GET['pc_search']) : '';
 $filter_status = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
 $show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] === '1';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -65,6 +66,13 @@ if (!$show_archived) {
     $pc_count_query .= " AND status != 'Archive'";
 }
 
+if (!empty($pc_search)) {
+    $pc_count_query .= " AND terminal_number LIKE ?";
+    $pc_search_param = "%$pc_search%";
+    $pc_params[] = $pc_search_param;
+    $pc_types .= 's';
+}
+
 $pc_count_stmt = $conn->prepare($pc_count_query);
 $pc_count_stmt->bind_param($pc_types, ...$pc_params);
 $pc_count_stmt->execute();
@@ -82,6 +90,13 @@ $pc_types = 'i';
 
 if (!$show_archived) {
     $pc_query_sql .= " AND status != 'Archive'";
+}
+
+if (!empty($pc_search)) {
+    $pc_query_sql .= " AND terminal_number LIKE ?";
+    $pc_search_param = "%$pc_search%";
+    $pc_params = array_merge($pc_params, [$pc_search_param]);
+    $pc_types .= 's';
 }
 
 $pc_query_sql .= " ORDER BY terminal_number ASC LIMIT ? OFFSET ?";
@@ -472,6 +487,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             exit;
         }
         
+        // Lookup category ID
+        $category_id = null;
+        if (!empty($asset_name)) {
+            $category_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+            $category_stmt->bind_param('s', $asset_name);
+            $category_stmt->execute();
+            $category_result = $category_stmt->get_result();
+            if ($category_result->num_rows > 0) {
+                $category_id = $category_result->fetch_assoc()['id'];
+            }
+            $category_stmt->close();
+        }
+        
         try {
             // Generate QR code data
             $qr_data = json_encode([
@@ -483,9 +511,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             ]);
             $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
             
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssisss', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by);
+            $stmt->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
@@ -551,6 +579,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         
+        // Lookup category ID
+        $category_id = null;
+        if (!empty($asset_name_prefix)) {
+            $category_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+            $category_stmt->bind_param('s', $asset_name_prefix);
+            $category_stmt->execute();
+            $category_result = $category_stmt->get_result();
+            if ($category_result->num_rows > 0) {
+                $category_id = $category_result->fetch_assoc()['id'];
+            }
+            $category_stmt->close();
+        }
+        
         if (empty($acquisition_date) || empty($asset_name_prefix) || empty($room_number) || $quantity <= 0) {
             echo json_encode(['success' => false, 'message' => 'All required fields must be filled']);
             exit;
@@ -605,8 +646,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
                 
                 // Insert asset with QR code
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('sssssissssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
                 
                 if ($stmt->execute()) {
                     $created_count++;
@@ -867,6 +908,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'get_categories') {
+        $categories_data = [];
+        $cat_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+        $cat_result = $conn->query($cat_query);
+        if ($cat_result && $cat_result->num_rows > 0) {
+            while ($row = $cat_result->fetch_assoc()) {
+                $categories_data[] = $row;
+            }
+        }
+        echo json_encode(['success' => true, 'categories' => $categories_data]);
+        exit;
+    }
+    
+    if ($action === 'add_category') {
+        $category_name = trim($_POST['category_name'] ?? '');
+        
+        if (empty($category_name)) {
+            echo json_encode(['success' => false, 'message' => 'Category name is required']);
+            exit;
+        }
+        
+        // Check if category already exists
+        $check_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+        $check_stmt->bind_param('s', $category_name);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        
+        if ($check_stmt->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'Category already exists']);
+            $check_stmt->close();
+            exit;
+        }
+        $check_stmt->close();
+        
+        // Add new category
+        $insert_stmt = $conn->prepare("INSERT INTO asset_categories (name) VALUES (?)");
+        $insert_stmt->bind_param('s', $category_name);
+        $success = $insert_stmt->execute();
+        $new_id = $conn->insert_id;
+        $insert_stmt->close();
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Category added successfully', 'id' => $new_id, 'name' => $category_name]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to add category']);
+        }
+        exit;
+    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -1050,25 +1140,24 @@ main {
             </div>
         </div>
 
-        <!-- Search Bar -->
+        <!-- PC Units Section -->
+        <div id="content-pc-units" class="tab-content hidden">
+        <!-- PC Units Search Bar -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
             <div class="flex gap-3">
                 <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
                 <div class="flex-1">
-                    <input type="text" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Search by asset tag, name, brand, or model..." 
+                    <input type="text" id="pcSearchInput" value="<?php echo htmlspecialchars($pc_search); ?>" 
+                           placeholder="Search by terminal number..." 
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <?php if (!empty($search)): ?>
-                <a href="?room_id=<?php echo $room_id; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <?php if (!empty($pc_search)): ?>
+                <a href="?room_id=<?php echo $room_id; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fa-solid fa-times mr-2"></i>Clear
                 </a>
                 <?php endif; ?>
             </div>
         </div>
-
-        <!-- PC Units Section -->
-        <div id="content-pc-units" class="tab-content hidden">
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
             <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -1178,7 +1267,7 @@ main {
                     </div>
                     <div class="flex items-center gap-2">
                         <?php if ($pc_page > 1): ?>
-                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $pc_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
+                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $pc_page - 1; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
                                class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                                 <i class="fa-solid fa-chevron-left"></i> Previous
                             </a>
@@ -1189,7 +1278,7 @@ main {
                         $end_page = min($total_pc_pages, $pc_page + 2);
                         
                         if ($start_page > 1): ?>
-                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
+                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=1<?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
                                class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">1</a>
                             <?php if ($start_page > 2): ?>
                                 <span class="px-2 text-gray-500">...</span>
@@ -1197,7 +1286,7 @@ main {
                         <?php endif; ?>
                         
                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $i; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
                            class="px-3 py-1 text-sm rounded <?php echo $i === $pc_page ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?> transition-colors">
                             <?php echo $i; ?>
                         </a>
@@ -1205,12 +1294,12 @@ main {
                             <?php if ($end_page < $total_pc_pages - 1): ?>
                                 <span class="px-2 text-gray-500">...</span>
                             <?php endif; ?>
-                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $total_pc_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
+                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $total_pc_pages; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
                                class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"><?php echo $total_pc_pages; ?></a>
                         <?php endif; ?>
                         
                         <?php if ($pc_page < $total_pc_pages): ?>
-                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $pc_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
+                            <a href="?room_id=<?php echo $room_id; ?>&pc_page=<?php echo $pc_page + 1; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?><?php echo isset($_GET['page']) ? '&page=' . $_GET['page'] : ''; ?>" 
                                class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                                 Next <i class="fa-solid fa-chevron-right"></i>
                             </a>
@@ -1224,6 +1313,22 @@ main {
 
         <!-- All Assets Section -->
         <div id="content-all-assets" class="tab-content">
+        <!-- Assets Search Bar -->
+        <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
+            <div class="flex gap-3">
+                <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                <div class="flex-1">
+                    <input type="text" id="assetSearchInput" value="<?php echo htmlspecialchars($search); ?>" 
+                           placeholder="Search by asset tag, name, brand, or model..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <?php if (!empty($search)): ?>
+                <a href="?room_id=<?php echo $room_id; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fa-solid fa-times mr-2"></i>Clear
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
             <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -1381,7 +1486,7 @@ main {
                 </div>
                 <div class="flex items-center gap-2">
                     <?php if ($page > 1): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                             <i class="fa-solid fa-chevron-left"></i> Previous
                         </a>
@@ -1392,7 +1497,7 @@ main {
                     $end_page = min($total_pages, $page + 2);
                     
                     if ($start_page > 1): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">1</a>
                         <?php if ($start_page > 2): ?>
                             <span class="px-2 text-gray-500">...</span>
@@ -1400,7 +1505,7 @@ main {
                     <?php endif; ?>
                     
                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?> transition-colors">
                             <?php echo $i; ?>
                         </a>
@@ -1410,12 +1515,12 @@ main {
                         <?php if ($end_page < $total_pages - 1): ?>
                             <span class="px-2 text-gray-500">...</span>
                         <?php endif; ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"><?php echo $total_pages; ?></a>
                     <?php endif; ?>
                     
                     <?php if ($page < $total_pages): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                             Next <i class="fa-solid fa-chevron-right"></i>
                         </a>
@@ -1464,9 +1569,22 @@ main {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
-                    <input type="text" id="assetName" name="asset_name"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., Desktop Computer">
+                    <div class="searchable-dropdown relative">
+                        <div class="dropdown-display flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors">
+                            <span class="selected-text text-gray-500">Select Category</span>
+                            <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <div class="dropdown-options absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                            <input type="text" class="dropdown-search w-full px-4 py-2 border-b border-gray-200 text-sm focus:outline-none focus:ring-0" placeholder="Search categories...">
+                            <div class="dropdown-list max-h-48 overflow-y-auto">
+                                <!-- Options will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    <select id="assetName" name="asset_name" class="hidden">
+                        <option value="">Select Category</option>
+                        <option value="__add_new__">+ Add New Category</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -1552,9 +1670,22 @@ main {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Asset Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" id="bulkAssetName" name="bulk_asset_name" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., LAPTOP">
+                        <div class="searchable-dropdown relative">
+                            <div class="dropdown-display flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors">
+                                <span class="selected-text text-gray-500">Select Category</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                            </div>
+                            <div class="dropdown-options absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                <input type="text" class="dropdown-search w-full px-4 py-2 border-b border-gray-200 text-sm focus:outline-none focus:ring-0" placeholder="Search categories...">
+                                <div class="dropdown-list max-h-48 overflow-y-auto">
+                                    <!-- Options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        <select id="bulkAssetName" name="bulk_asset_name" class="hidden">
+                            <option value="">Select Category</option>
+                            <option value="__add_new__">+ Add New Category</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1977,6 +2108,29 @@ main {
     </div>
 </div>
 
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Add New Category</h3>
+        </div>
+        <div class="p-6">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+                <input type="text" id="newCategoryName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeAddCategoryModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="addNewCategory()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -2001,6 +2155,48 @@ main {
         padding: 10px;
         text-align: center;
     }
+}
+
+.searchable-dropdown {
+    position: relative;
+}
+
+.dropdown-display {
+    transition: all 0.2s ease;
+}
+
+.dropdown-display:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dropdown-options {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-option {
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-option:hover {
+    background-color: #eff6ff;
+}
+
+.dropdown-option.selected {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.dropdown-search:focus {
+    outline: none;
+}
+
+/* Special styling for Add New Category option */
+.dropdown-option[data-value="__add_new__"] {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 4px;
+    padding-bottom: 8px;
 }
 </style>
 
@@ -2083,6 +2279,48 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
     e.preventDefault();
     
     const bulkMode = document.querySelector('input[name="asset_bulk_mode"]:checked').value;
+    
+    // Validate category selection
+    if (bulkMode === 'bulk') {
+        let bulkCategory = document.getElementById('bulkAssetName').value;
+        if (!bulkCategory) {
+            // Try to select the first valid category
+            const dropdown = document.getElementById('bulkAssetName').parentElement.querySelector('.searchable-dropdown');
+            const options = dropdown.querySelectorAll('.dropdown-option');
+            for (let option of options) {
+                const value = option.getAttribute('data-value');
+                if (value && value !== '__add_new__') {
+                    updateSearchableDropdownDisplay('bulkAssetName', value);
+                    bulkCategory = value;
+                    break;
+                }
+            }
+        }
+        if (!bulkCategory || bulkCategory === '__add_new__') {
+            showAlert('error', 'Please select a valid category for bulk creation');
+            return;
+        }
+    } else {
+        let singleCategory = document.getElementById('assetName').value;
+        if (!singleCategory) {
+            // Try to select the first valid category
+            const dropdown = document.getElementById('assetName').parentElement.querySelector('.searchable-dropdown');
+            const options = dropdown.querySelectorAll('.dropdown-option');
+            for (let option of options) {
+                const value = option.getAttribute('data-value');
+                if (value && value !== '__add_new__') {
+                    updateSearchableDropdownDisplay('assetName', value);
+                    singleCategory = value;
+                    break;
+                }
+            }
+        }
+        if (!singleCategory || singleCategory === '__add_new__') {
+            showAlert('error', 'Please select a valid category for asset creation');
+            return;
+        }
+    }
+    
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
     
@@ -2193,12 +2431,27 @@ function toggleAssetBulkMode() {
         singleFields.classList.add('hidden');
         bulkFields.classList.remove('hidden');
         submitBtn.textContent = 'Create Assets';
+        
+        // Sync category selection from single to bulk mode
+        const singleCategory = document.getElementById('assetName').value;
+        if (singleCategory && singleCategory !== '__add_new__') {
+            updateSearchableDropdownDisplay('bulkAssetName', singleCategory);
+            document.getElementById('bulkAssetName').dispatchEvent(new Event('change'));
+        }
+        
         updateBulkStartNumber();
         updateAssetTagPreview();
     } else {
         singleFields.classList.remove('hidden');
         bulkFields.classList.add('hidden');
         submitBtn.textContent = 'Create Asset';
+        
+        // Sync category selection from bulk to single mode
+        const bulkCategory = document.getElementById('bulkAssetName').value;
+        if (bulkCategory && bulkCategory !== '__add_new__') {
+            updateSearchableDropdownDisplay('assetName', bulkCategory);
+            document.getElementById('assetName').dispatchEvent(new Event('change'));
+        }
     }
 }
 
@@ -2237,6 +2490,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const field = document.getElementById(fieldId);
         if (field) {
             field.addEventListener('input', updateAssetTagPreview);
+            // Also listen for change events for select elements
+            if (field.tagName === 'SELECT') {
+                field.addEventListener('change', updateAssetTagPreview);
+            }
         }
     });
     
@@ -2246,6 +2503,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const field = document.getElementById(fieldId);
         if (field) {
             field.addEventListener('input', updateBulkStartNumber);
+            // Also listen for change events for select elements
+            if (field.tagName === 'SELECT') {
+                field.addEventListener('change', updateBulkStartNumber);
+            }
         }
     });
 });
@@ -2734,6 +2995,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize select all functionality
     initializeSelectAll();
+    
+    // Initialize searchable dropdowns
+    initializeSearchableDropdowns();
+    
+    // Populate dropdowns with existing categories
+    updateSearchableDropdownOptions('assetName');
+    updateSearchableDropdownOptions('bulkAssetName');
+    
+    // Handle category dropdown changes for all asset name selects
+    const categorySelects = ['assetName', 'bulkAssetName'];
+    categorySelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.addEventListener('change', function() {
+                if (this.value === '__add_new__') {
+                    openAddCategoryModal(this.id);
+                    // Reset the select to empty
+                    this.value = '';
+                }
+            });
+        }
+    });
 });
 
 // Select All functionality
@@ -3071,16 +3354,43 @@ function bulkRestoreArchivedAssets() {
     });
 }
 
-// Automatic search with debouncing
-let searchTimeout;
-const searchInput = document.getElementById('searchInput');
+// Automatic search with debouncing for PC Units
+let pcSearchTimeout;
+const pcSearchInput = document.getElementById('pcSearchInput');
 
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
+if (pcSearchInput) {
+    pcSearchInput.addEventListener('input', function() {
+        clearTimeout(pcSearchTimeout);
         const query = this.value.trim();
         
-        searchTimeout = setTimeout(() => {
+        pcSearchTimeout = setTimeout(() => {
+            // Update URL without page reload
+            const url = new URL(window.location);
+            if (query) {
+                url.searchParams.set('pc_search', query);
+            } else {
+                url.searchParams.delete('pc_search');
+            }
+            // Reset to page 1 when searching
+            url.searchParams.delete('pc_page');
+            url.searchParams.delete('page');
+            url.searchParams.delete('search');
+            
+            window.location.href = url.toString();
+        }, 1000); // 1000ms debounce
+    });
+}
+
+// Automatic search with debouncing for Assets
+let assetSearchTimeout;
+const assetSearchInput = document.getElementById('assetSearchInput');
+
+if (assetSearchInput) {
+    assetSearchInput.addEventListener('input', function() {
+        clearTimeout(assetSearchTimeout);
+        const query = this.value.trim();
+        
+        assetSearchTimeout = setTimeout(() => {
             // Update URL without page reload
             const url = new URL(window.location);
             if (query) {
@@ -3091,13 +3401,361 @@ if (searchInput) {
             // Reset to page 1 when searching
             url.searchParams.delete('page');
             url.searchParams.delete('pc_page');
-            url.searchParams.delete('avail_page');
+            url.searchParams.delete('pc_search');
             
             window.location.href = url.toString();
-        }, 500); // 500ms debounce
+        }, 1000); // 1000ms debounce
     });
 }
+
+// Initialize searchable dropdowns
+function initializeSearchableDropdowns() {
+    const dropdowns = document.querySelectorAll('.searchable-dropdown');
+    
+    dropdowns.forEach(dropdown => {
+        const display = dropdown.querySelector('.dropdown-display');
+        const options = dropdown.querySelector('.dropdown-options');
+        const searchInput = dropdown.querySelector('.dropdown-search');
+        const selectElement = dropdown.parentElement.querySelector('select');
+        const selectedText = dropdown.querySelector('.selected-text');
+        
+        // Toggle dropdown on display click
+        display.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-options').forEach(opt => {
+                if (opt !== options) {
+                    opt.classList.add('hidden');
+                }
+            });
+            
+            // Toggle current dropdown
+            options.classList.toggle('hidden');
+            
+            if (!options.classList.contains('hidden')) {
+                if (searchInput) searchInput.focus();
+                if (searchInput) searchInput.value = '';
+                filterDropdownOptions(options, '');
+            }
+        });
+        
+        // Handle search input
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                filterDropdownOptions(options, this.value.toLowerCase());
+            });
+        }
+        
+        // Handle option selection
+        const optionElements = options.querySelectorAll('.dropdown-option');
+        optionElements.forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                const text = this.textContent.trim();
+                
+                if (value === '__add_new__') {
+                    openAddCategoryModal(selectElement.id);
+                    options.classList.add('hidden');
+                    return;
+                }
+                
+                // Update hidden select
+                selectElement.value = value;
+                
+                // Update display text
+                selectedText.textContent = text;
+                selectedText.className = 'selected-text text-gray-900';
+                
+                // Close dropdown
+                options.classList.add('hidden');
+                
+                // Trigger change event for compatibility
+                selectElement.dispatchEvent(new Event('change'));
+                
+                // Clear search
+                if (searchInput) searchInput.value = '';
+            });
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.searchable-dropdown')) {
+            document.querySelectorAll('.dropdown-options').forEach(options => {
+                options.classList.add('hidden');
+            });
+        }
+    });
+}
+
+// Filter dropdown options based on search
+function filterDropdownOptions(optionsContainer, searchTerm) {
+    const optionElements = optionsContainer.querySelectorAll('.dropdown-option');
+    
+    optionElements.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        const value = option.getAttribute('data-value');
+        
+        // Always show "Add New Category" option
+        if (value === '__add_new__') {
+            option.style.display = '';
+            return;
+        }
+        
+        // Filter other options based on search
+        if (text.includes(searchTerm)) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+}
+
+// Update searchable dropdown display
+function updateSearchableDropdownDisplay(selectId, value) {
+    const select = document.getElementById(selectId);
+    const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+    const selectedText = dropdown.querySelector('.selected-text');
+    
+    if (value) {
+        selectedText.textContent = value;
+        selectedText.className = 'selected-text text-gray-900';
+        select.value = value;
+    } else {
+        selectedText.textContent = 'Select Category';
+        selectedText.className = 'selected-text text-gray-500';
+        select.value = '';
+    }
+}
+
+// Update searchable dropdown options
+async function updateSearchableDropdownOptions(selectId) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_categories');
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.categories) {
+            const select = document.getElementById(selectId);
+            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            const dropdownList = dropdown.querySelector('.dropdown-list');
+            
+            // Clear existing options
+            dropdownList.innerHTML = '';
+            
+            // Add "Add New Category" option first (at the top)
+            const addNewOption = document.createElement('div');
+            addNewOption.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-200 mb-2 pb-3';
+            addNewOption.setAttribute('data-value', '__add_new__');
+            addNewOption.innerHTML = '<i class="fa-solid fa-plus mr-2 text-blue-600"></i>Add New Category';
+            dropdownList.appendChild(addNewOption);
+            
+            // Set click handler for Add New Category
+            addNewOption.addEventListener('click', () => openAddCategoryModal(selectId));
+            
+            // Add new category options
+            result.categories.forEach(category => {
+                const option = document.createElement('div');
+                option.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
+                option.setAttribute('data-value', category.name);
+                option.textContent = category.name;
+                dropdownList.appendChild(option);
+                
+                // Re-attach click event
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent.trim();
+                    
+                    // Update hidden select
+                    select.value = value;
+                    
+                    // Update display text
+                    const selectedText = dropdown.querySelector('.selected-text');
+                    selectedText.textContent = text;
+                    selectedText.className = 'selected-text text-gray-900';
+                    
+                    // Close dropdown
+                    const options = dropdown.querySelector('.dropdown-options');
+                    options.classList.add('hidden');
+                    
+                    // Trigger change event for compatibility
+                    select.dispatchEvent(new Event('change'));
+                    
+                    // Clear search
+                    const searchInput = dropdown.querySelector('.dropdown-search');
+                    if (searchInput) searchInput.value = '';
+                });
+            });
+            
+            // Update the hidden select options too
+            select.innerHTML = '<option value="">Select Category</option>';
+            result.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.name;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+            const addNewSelectOption = document.createElement('option');
+            addNewSelectOption.value = '__add_new__';
+            addNewSelectOption.textContent = '+ Add New Category';
+            select.appendChild(addNewSelectOption);
+        }
+    } catch (error) {
+        console.error('Error updating dropdown options:', error);
+    }
+}
+
+// Open Add Category Modal
+function openAddCategoryModal(sourceSelectId) {
+    // Store which select triggered the modal
+    window.currentCategorySource = sourceSelectId;
+    document.getElementById('addCategoryModal').classList.remove('hidden');
+    document.getElementById('newCategoryName').focus();
+}
+
+// Close Add Category Modal
+function closeAddCategoryModal() {
+    document.getElementById('addCategoryModal').classList.add('hidden');
+    document.getElementById('newCategoryName').value = '';
+    window.currentCategorySource = null;
+}
+
+// Add New Category
+async function addNewCategory() {
+    const categoryName = document.getElementById('newCategoryName').value.trim();
+    
+    if (!categoryName) {
+        showAlert('error', 'Please enter a category name');
+        return;
+    }
+    
+    // Add the category locally first for instant feedback
+    if (window.currentCategorySource) {
+        const select = document.getElementById(window.currentCategorySource);
+        const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+        const dropdownList = dropdown.querySelector('.dropdown-list');
+        
+        // Check if already exists
+        const existing = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+        if (!existing) {
+            // Add to dropdown options
+            const option = document.createElement('div');
+            option.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
+            option.setAttribute('data-value', categoryName);
+            option.textContent = categoryName;
+            
+            // Add click handler
+            option.addEventListener('click', function() {
+                select.value = categoryName;
+                const selectedText = dropdown.querySelector('.selected-text');
+                selectedText.textContent = categoryName;
+                selectedText.className = 'selected-text text-gray-900';
+                const options = dropdown.querySelector('.dropdown-options');
+                options.classList.add('hidden');
+                select.dispatchEvent(new Event('change'));
+                const searchInput = dropdown.querySelector('.dropdown-search');
+                if (searchInput) searchInput.value = '';
+            });
+            
+            // Insert before "Add New Category"
+            const addNew = dropdownList.querySelector('[data-value="__add_new__]');
+            dropdownList.insertBefore(option, addNew);
+            
+            // Add to select options
+            const selectOption = document.createElement('option');
+            selectOption.value = categoryName;
+            selectOption.textContent = categoryName;
+            const addNewSelect = select.querySelector('[value="__add_new__]');
+            select.insertBefore(selectOption, addNewSelect);
+            
+            // Set as selected
+            updateSearchableDropdownDisplay(window.currentCategorySource, categoryName);
+            
+            // Dispatch change event to trigger preview updates
+            select.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'add_category');
+        formData.append('category_name', categoryName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            closeAddCategoryModal();
+            
+            // Update all other dropdowns with the new category (excluding the current one since it's already updated)
+            const dropdownIds = ['assetName', 'bulkAssetName'].filter(id => id !== window.currentCategorySource);
+            await Promise.all(dropdownIds.map(id => updateSearchableDropdownOptions(id)));
+        } else {
+            showAlert('error', result.message);
+            
+            // Revert local changes if server failed
+            if (window.currentCategorySource) {
+                const select = document.getElementById(window.currentCategorySource);
+                const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+                const dropdownList = dropdown.querySelector('.dropdown-list');
+                
+                // Remove from dropdown
+                const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+                if (option) option.remove();
+                
+                // Remove from select
+                const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+                if (selectOption) selectOption.remove();
+                
+                // Reset display if it was selected
+                if (select.value === categoryName) {
+                    updateSearchableDropdownDisplay(window.currentCategorySource, '');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error adding category:', error);
+        showAlert('error', 'An error occurred while adding the category');
+        
+        // Revert local changes on error
+        if (window.currentCategorySource) {
+            const select = document.getElementById(window.currentCategorySource);
+            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            const dropdownList = dropdown.querySelector('.dropdown-list');
+            
+            // Remove from dropdown
+            const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+            if (option) option.remove();
+            
+            // Remove from select
+            const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+            if (selectOption) selectOption.remove();
+            
+            // Reset display if it was selected
+            if (select.value === categoryName) {
+                updateSearchableDropdownDisplay(window.currentCategorySource, '');
+            }
+        }
+    }
+}
+
 
 </script>
 
 <?php include '../components/layout_footer.php'; ?>
+
+

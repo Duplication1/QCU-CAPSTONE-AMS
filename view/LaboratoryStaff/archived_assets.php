@@ -43,14 +43,28 @@ if (!$room) {
     exit();
 }
 
+// Get search parameter
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
 // Pagination for archived assets
 $archived_assets_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $archived_assets_limit = 5;
 $archived_assets_offset = ($archived_assets_page - 1) * $archived_assets_limit;
 
 // Count total archived assets
-$archived_assets_count_stmt = $conn->prepare("SELECT COUNT(*) as total FROM assets WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')");
-$archived_assets_count_stmt->bind_param('i', $room_id);
+$archived_assets_count_query = "SELECT COUNT(*) as total FROM assets WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')";
+$archived_assets_count_params = [$room_id];
+$archived_assets_count_types = 'i';
+
+if (!empty($search)) {
+    $archived_assets_count_query .= " AND (asset_name LIKE ? OR asset_tag LIKE ? OR brand LIKE ? OR model LIKE ?)";
+    $search_param = '%' . $search . '%';
+    $archived_assets_count_params = array_merge($archived_assets_count_params, [$search_param, $search_param, $search_param, $search_param]);
+    $archived_assets_count_types .= 'ssss';
+}
+
+$archived_assets_count_stmt = $conn->prepare($archived_assets_count_query);
+$archived_assets_count_stmt->bind_param($archived_assets_count_types, ...$archived_assets_count_params);
 $archived_assets_count_stmt->execute();
 $archived_assets_result = $archived_assets_count_stmt->get_result();
 $total_archived_assets = $archived_assets_result->fetch_assoc()['total'];
@@ -82,10 +96,25 @@ $archived_pc_count_stmt->close();
 // Fetch archived assets with pagination
 $archived_assets = [];
 if ($total_archived_assets > 0) {
-    $archived_assets_query = $conn->prepare("SELECT * FROM assets WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived') ORDER BY asset_name ASC LIMIT ? OFFSET ?");
-    $archived_assets_query->bind_param('iii', $room_id, $archived_assets_limit, $archived_assets_offset);
-    $archived_assets_query->execute();
-    $archived_assets_result = $archived_assets_query->get_result();
+    $archived_assets_query = "SELECT * FROM assets WHERE room_id = ? AND (status = 'Archive' OR status = 'Archived')";
+    $archived_assets_params = [$room_id];
+    $archived_assets_types = 'i';
+
+    if (!empty($search)) {
+        $archived_assets_query .= " AND (asset_name LIKE ? OR asset_tag LIKE ? OR brand LIKE ? OR model LIKE ?)";
+        $search_param = '%' . $search . '%';
+        $archived_assets_params = array_merge($archived_assets_params, [$search_param, $search_param, $search_param, $search_param]);
+        $archived_assets_types .= 'ssss';
+    }
+
+    $archived_assets_query .= " ORDER BY asset_name ASC LIMIT ? OFFSET ?";
+    $archived_assets_params = array_merge($archived_assets_params, [$archived_assets_limit, $archived_assets_offset]);
+    $archived_assets_types .= 'ii';
+
+    $archived_assets_stmt = $conn->prepare($archived_assets_query);
+    $archived_assets_stmt->bind_param($archived_assets_types, ...$archived_assets_params);
+    $archived_assets_stmt->execute();
+    $archived_assets_result = $archived_assets_stmt->get_result();
 
     while ($asset_row = $archived_assets_result->fetch_assoc()) {
         $archived_assets[] = [
@@ -99,7 +128,7 @@ if ($total_archived_assets > 0) {
             'updated_at' => $asset_row['updated_at']
         ];
     }
-    $archived_assets_query->close();
+    $archived_assets_stmt->close();
 }
 
 // Handle AJAX requests
@@ -229,6 +258,21 @@ main {
 
         <!-- Archived Assets Table -->
         <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Search Bar -->
+            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="search-input" placeholder="Search by asset name, tag, brand, or model..." 
+                               value="<?php echo htmlspecialchars($search); ?>" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    </div>
+                    <?php if (!empty($search)): ?>
+                    <a href="?room_id=<?php echo $room_id; ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <i class="fa-solid fa-times mr-1"></i>Clear
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </div>
             <div class="px-4 py-3 bg-gradient-to-r from-red-50 to-red-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-box-archive text-red-600"></i>
@@ -325,7 +369,7 @@ main {
                 </div>
                 <div class="flex items-center space-x-1">
                     <?php if ($archived_assets_page > 1): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page - 1; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         <i class="fa-solid fa-chevron-left mr-1"></i>Previous
                     </a>
@@ -336,14 +380,14 @@ main {
                     $end_page = min($total_archived_assets_pages, $archived_assets_page + 2);
                     for ($i = $start_page; $i <= $end_page; $i++):
                     ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
                        class="px-3 py-1 text-sm font-medium <?php echo $i === $archived_assets_page ? 'text-blue-600 bg-blue-50 border-blue-500' : 'text-gray-500 bg-white border-gray-300'; ?> border rounded-md hover:bg-gray-50">
                         <?php echo $i; ?>
                     </a>
                     <?php endfor; ?>
 
                     <?php if ($archived_assets_page < $total_archived_assets_pages): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page + 1; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Next<i class="fa-solid fa-chevron-right ml-1"></i>
                     </a>
@@ -429,6 +473,23 @@ document.addEventListener('click', function(event) {
             menu.classList.add('hidden');
         }
     });
+});
+
+// Debounced search
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const searchValue = this.value.trim();
+        const url = new URL(window.location);
+        if (searchValue) {
+            url.searchParams.set('search', searchValue);
+        } else {
+            url.searchParams.delete('search');
+        }
+        url.searchParams.delete('page'); // Reset to page 1
+        window.location.href = url.toString();
+    }, 1000);
 });
 
 // Bulk actions for Archived Assets

@@ -22,6 +22,16 @@ if (!isset($conn)) {
     }
 }
 
+// Fetch asset categories
+$categories = [];
+$category_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+$category_result = $conn->query($category_query);
+if ($category_result && $category_result->num_rows > 0) {
+    while ($row = $category_result->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
 /**
  * Build filter conditions and parameters for asset queries
  * @param array $filters Array of filter values (status, type, building, room, search, etc.)
@@ -382,6 +392,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+        exit;
+    }
+    
+    if ($action === 'add_category') {
+        $category_name = trim($_POST['category_name'] ?? '');
+        
+        if (empty($category_name)) {
+            echo json_encode(['success' => false, 'message' => 'Category name is required']);
+            exit;
+        }
+        
+        // Check if category already exists
+        $check_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+        $check_stmt->bind_param('s', $category_name);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        
+        if ($check_stmt->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'Category already exists']);
+            $check_stmt->close();
+            exit;
+        }
+        $check_stmt->close();
+        
+        // Add new category
+        $insert_stmt = $conn->prepare("INSERT INTO asset_categories (name) VALUES (?)");
+        $insert_stmt->bind_param('s', $category_name);
+        $success = $insert_stmt->execute();
+        $new_id = $conn->insert_id;
+        $insert_stmt->close();
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Category added successfully', 'id' => $new_id, 'name' => $category_name]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to add category']);
+        }
+        exit;
+    }
+    
+    if ($action === 'get_categories') {
+        $categories_data = [];
+        $cat_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+        $cat_result = $conn->query($cat_query);
+        if ($cat_result && $cat_result->num_rows > 0) {
+            while ($row = $cat_result->fetch_assoc()) {
+                $categories_data[] = $row;
+            }
+        }
+        echo json_encode(['success' => true, 'categories' => $categories_data]);
         exit;
     }
 }
@@ -834,9 +893,36 @@ main {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
-                    <input type="text" id="assetName" name="asset_name"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., Desktop Computer">
+                    <div class="relative">
+                        <select id="assetName" name="asset_name" class="hidden">
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                            <option value="__add_new__">+ Add New Category</option>
+                        </select>
+                        <div class="searchable-dropdown">
+                            <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer flex items-center justify-between">
+                                <span class="selected-text text-gray-500">Select Category</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                            </div>
+                            <div class="dropdown-options absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                <div class="p-2 border-b border-gray-200">
+                                    <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search categories...">
+                                </div>
+                                <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-blue-600 font-medium border-b border-gray-200" data-value="__add_new__">
+                                    <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                                </div>
+                                <div class="dropdown-list">
+                                    <?php foreach ($categories as $category): ?>
+                                        <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
+                                            <?php echo htmlspecialchars($category['name']); ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -930,9 +1016,36 @@ main {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Asset Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" id="bulkAssetName" name="bulk_asset_name" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., LAPTOP">
+                        <div class="relative">
+                            <select id="bulkAssetName" name="bulk_asset_name" class="hidden">
+                                <option value="">Select Category</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                <?php endforeach; ?>
+                                <option value="__add_new__">+ Add New Category</option>
+                            </select>
+                            <div class="searchable-dropdown">
+                                <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer flex items-center justify-between">
+                                    <span class="selected-text text-gray-500">Select Category</span>
+                                    <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                                </div>
+                                <div class="dropdown-options absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                    <div class="p-2 border-b border-gray-200">
+                                        <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search categories...">
+                                    </div>
+                                    <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-blue-600 font-medium border-b border-gray-200" data-value="__add_new__">
+                                        <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                                    </div>
+                                    <div class="dropdown-list">
+                                        <?php foreach ($categories as $category): ?>
+                                            <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
+                                                <?php echo htmlspecialchars($category['name']); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1050,8 +1163,36 @@ main {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
-                    <input type="text" id="editAssetName" name="asset_name" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="relative">
+                        <select id="editAssetName" name="asset_name" required class="hidden">
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                            <option value="__add_new__">+ Add New Category</option>
+                        </select>
+                        <div class="searchable-dropdown">
+                            <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer flex items-center justify-between">
+                                <span class="selected-text text-gray-500">Select Category</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                            </div>
+                            <div class="dropdown-options absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                <div class="p-2 border-b border-gray-200">
+                                    <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search categories...">
+                                </div>
+                                <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-blue-600 font-medium border-b border-gray-200" data-value="__add_new__">
+                                    <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                                </div>
+                                <div class="dropdown-list">
+                                    <?php foreach ($categories as $category): ?>
+                                        <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
+                                            <?php echo htmlspecialchars($category['name']); ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
@@ -1156,6 +1297,34 @@ main {
     </div>
 </div>
 
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Add New Category</h3>
+        </div>
+        <div class="p-6">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category Name *</label>
+                <input type="text" id="newCategoryName" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="e.g., MONITOR, KEYBOARD">
+                <p class="text-xs text-gray-500 mt-1">Enter a new category name to add to the list</p>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeAddCategoryModal()" 
+                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="addNewCategory()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-plus mr-2"></i>Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -1179,6 +1348,49 @@ main {
     .qr-item {
         page-break-inside: avoid;
     }
+}
+
+/* Searchable Dropdown Styles */
+.searchable-dropdown {
+    position: relative;
+}
+
+.dropdown-display {
+    transition: all 0.2s ease;
+}
+
+.dropdown-display:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dropdown-options {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-option {
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-option:hover {
+    background-color: #eff6ff;
+}
+
+.dropdown-option.selected {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.dropdown-search:focus {
+    outline: none;
+}
+
+/* Special styling for Add New Category option */
+.dropdown-option[data-value="__add_new__"] {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 4px;
+    padding-bottom: 8px;
 }
 </style>
 
@@ -1256,11 +1468,18 @@ function openAddAssetModal() {
 function closeAddAssetModal() {
     document.getElementById('addAssetModal').classList.add('hidden');
     document.getElementById('addAssetForm').reset();
+    
+    // Reset searchable dropdown displays
+    updateSearchableDropdownDisplay('assetName', '');
+    updateSearchableDropdownDisplay('bulkAssetName', '');
 }
 
 function closeEditAssetModal() {
     document.getElementById('editAssetModal').classList.add('hidden');
     document.getElementById('editAssetForm').reset();
+    
+    // Reset searchable dropdown display
+    updateSearchableDropdownDisplay('editAssetName', '');
 }
 
 function closeQRPrintModal() {
@@ -1434,6 +1653,9 @@ function editAsset(asset) {
     document.getElementById('editCondition').value = asset.condition;
     document.getElementById('editAssetModal').classList.remove('hidden');
     document.getElementById('editAssetTag').focus();
+    
+    // Update searchable dropdown display
+    updateSearchableDropdownDisplay('editAssetName', asset.asset_name);
 }
 
 // Edit Asset Form Submit
@@ -1628,6 +1850,355 @@ document.addEventListener('click', function(e) {
         closeAllMenus();
     }
 });
-</script>
 
+// Category dropdown handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize searchable dropdowns
+    initializeSearchableDropdowns();
+    
+    // Handle category dropdown changes for all asset name selects
+    const categorySelects = ['assetName', 'bulkAssetName', 'editAssetName'];
+    categorySelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.addEventListener('change', function() {
+                if (this.value === '__add_new__') {
+                    openAddCategoryModal(this.id);
+                    // Reset the select to empty
+                    this.value = '';
+                }
+            });
+        }
+    });
+});
+
+// Initialize searchable dropdowns
+function initializeSearchableDropdowns() {
+    const dropdowns = document.querySelectorAll('.searchable-dropdown');
+    
+    dropdowns.forEach(dropdown => {
+        const display = dropdown.querySelector('.dropdown-display');
+        const options = dropdown.querySelector('.dropdown-options');
+        const searchInput = dropdown.querySelector('.dropdown-search');
+        const selectElement = dropdown.parentElement.querySelector('select');
+        const selectedText = dropdown.querySelector('.selected-text');
+        
+        // Toggle dropdown on display click
+        display.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-options').forEach(opt => {
+                if (opt !== options) {
+                    opt.classList.add('hidden');
+                }
+            });
+            
+            // Toggle current dropdown
+            options.classList.toggle('hidden');
+            
+            if (!options.classList.contains('hidden')) {
+                searchInput.focus();
+                searchInput.value = '';
+                filterDropdownOptions(options, '');
+            }
+        });
+        
+        // Handle search input
+        searchInput.addEventListener('input', function() {
+            filterDropdownOptions(options, this.value.toLowerCase());
+        });
+        
+        // Handle option selection
+        const optionElements = options.querySelectorAll('.dropdown-option');
+        optionElements.forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                const text = this.textContent.trim();
+                
+                // Update hidden select
+                selectElement.value = value;
+                
+                // Update display text
+                selectedText.textContent = text;
+                selectedText.className = 'selected-text text-gray-900';
+                
+                // Close dropdown
+                options.classList.add('hidden');
+                
+                // Trigger change event for compatibility
+                selectElement.dispatchEvent(new Event('change'));
+                
+                // Clear search
+                searchInput.value = '';
+            });
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.searchable-dropdown')) {
+            document.querySelectorAll('.dropdown-options').forEach(options => {
+                options.classList.add('hidden');
+            });
+        }
+    });
+}
+
+// Filter dropdown options based on search
+function filterDropdownOptions(optionsContainer, searchTerm) {
+    const optionElements = optionsContainer.querySelectorAll('.dropdown-option');
+    
+    optionElements.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        const value = option.getAttribute('data-value');
+        
+        // Always show "Add New Category" option
+        if (value === '__add_new__') {
+            option.style.display = '';
+            return;
+        }
+        
+        // Filter other options based on search
+        if (text.includes(searchTerm)) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+}
+
+// Update searchable dropdown display
+function updateSearchableDropdownDisplay(selectId, value) {
+    const select = document.getElementById(selectId);
+    const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+    const selectedText = dropdown.querySelector('.selected-text');
+    
+    if (value) {
+        selectedText.textContent = value;
+        selectedText.className = 'selected-text text-gray-900';
+        select.value = value;
+    } else {
+        selectedText.textContent = 'Select Category';
+        selectedText.className = 'selected-text text-gray-500';
+        select.value = '';
+    }
+}
+
+// Update searchable dropdown options
+async function updateSearchableDropdownOptions(selectId) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_categories');
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.categories) {
+            const select = document.getElementById(selectId);
+            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            const dropdownList = dropdown.querySelector('.dropdown-list');
+            
+            // Clear existing options except "Add New Category"
+            const addNewOption = dropdownList.querySelector('[data-value="__add_new__]');
+            dropdownList.innerHTML = '';
+            dropdownList.appendChild(addNewOption);
+            
+            // Set click handler for Add New Category
+            addNewOption.addEventListener('click', () => openAddCategoryModal(selectId));
+            
+            // Add new category options
+            result.categories.forEach(category => {
+                const option = document.createElement('div');
+                option.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
+                option.setAttribute('data-value', category.name);
+                option.textContent = category.name;
+                dropdownList.appendChild(option);
+                
+                // Re-attach click event
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent.trim();
+                    
+                    // Update hidden select
+                    select.value = value;
+                    
+                    // Update display text
+                    const selectedText = dropdown.querySelector('.selected-text');
+                    selectedText.textContent = text;
+                    selectedText.className = 'selected-text text-gray-900';
+                    
+                    // Close dropdown
+                    const options = dropdown.querySelector('.dropdown-options');
+                    options.classList.add('hidden');
+                    
+                    // Trigger change event for compatibility
+                    select.dispatchEvent(new Event('change'));
+                    
+                    // Clear search
+                    const searchInput = dropdown.querySelector('.dropdown-search');
+                    searchInput.value = '';
+                });
+            });
+            
+            // Update the hidden select options too
+            select.innerHTML = '<option value="">Select Category</option>';
+            result.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.name;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+            const addNewSelectOption = document.createElement('option');
+            addNewSelectOption.value = '__add_new__';
+            addNewSelectOption.textContent = '+ Add New Category';
+            select.appendChild(addNewSelectOption);
+        }
+    } catch (error) {
+        console.error('Error updating dropdown options:', error);
+    }
+}
+
+// Open Add Category Modal
+function openAddCategoryModal(sourceSelectId) {
+    // Store which select triggered the modal
+    window.currentCategorySource = sourceSelectId;
+    document.getElementById('addCategoryModal').classList.remove('hidden');
+    document.getElementById('newCategoryName').focus();
+}
+
+// Close Add Category Modal
+function closeAddCategoryModal() {
+    document.getElementById('addCategoryModal').classList.add('hidden');
+    document.getElementById('newCategoryName').value = '';
+    window.currentCategorySource = null;
+}
+
+// Add New Category
+async function addNewCategory() {
+    const categoryName = document.getElementById('newCategoryName').value.trim();
+    
+    if (!categoryName) {
+        showAlert('error', 'Please enter a category name');
+        return;
+    }
+    
+    // Add the category locally first for instant feedback
+    if (window.currentCategorySource) {
+        const select = document.getElementById(window.currentCategorySource);
+        const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+        const dropdownList = dropdown.querySelector('.dropdown-list');
+        
+        // Check if already exists
+        const existing = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+        if (!existing) {
+            // Add to dropdown options
+            const option = document.createElement('div');
+            option.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
+            option.setAttribute('data-value', categoryName);
+            option.textContent = categoryName;
+            
+            // Add click handler
+            option.addEventListener('click', function() {
+                select.value = categoryName;
+                const selectedText = dropdown.querySelector('.selected-text');
+                selectedText.textContent = categoryName;
+                selectedText.className = 'selected-text text-gray-900';
+                const options = dropdown.querySelector('.dropdown-options');
+                options.classList.add('hidden');
+                select.dispatchEvent(new Event('change'));
+                const searchInput = dropdown.querySelector('.dropdown-search');
+                searchInput.value = '';
+            });
+            
+            // Insert before "Add New Category"
+            const addNew = dropdownList.querySelector('[data-value="__add_new__]');
+            dropdownList.insertBefore(option, addNew);
+            
+            // Add to select options
+            const selectOption = document.createElement('option');
+            selectOption.value = categoryName;
+            selectOption.textContent = categoryName;
+            const addNewSelect = select.querySelector('[value="__add_new__]');
+            select.insertBefore(selectOption, addNewSelect);
+            
+            // Set as selected
+            updateSearchableDropdownDisplay(window.currentCategorySource, categoryName);
+        }
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'add_category');
+        formData.append('category_name', categoryName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            closeAddCategoryModal();
+            
+            // Update all other dropdowns with the new category (excluding the current one since it's already updated)
+            const dropdownIds = ['assetName', 'bulkAssetName', 'editAssetName'].filter(id => id !== window.currentCategorySource);
+            await Promise.all(dropdownIds.map(id => updateSearchableDropdownOptions(id)));
+        } else {
+            showAlert('error', result.message);
+            
+            // Revert local changes if server failed
+            if (window.currentCategorySource) {
+                const select = document.getElementById(window.currentCategorySource);
+                const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+                const dropdownList = dropdown.querySelector('.dropdown-list');
+                
+                // Remove from dropdown
+                const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+                if (option) option.remove();
+                
+                // Remove from select
+                const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+                if (selectOption) selectOption.remove();
+                
+                // Reset display if it was selected
+                if (select.value === categoryName) {
+                    updateSearchableDropdownDisplay(window.currentCategorySource, '');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error adding category:', error);
+        showAlert('error', 'An error occurred while adding the category');
+        
+        // Revert local changes on error
+        if (window.currentCategorySource) {
+            const select = document.getElementById(window.currentCategorySource);
+            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            const dropdownList = dropdown.querySelector('.dropdown-list');
+            
+            // Remove from dropdown
+            const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+            if (option) option.remove();
+            
+            // Remove from select
+            const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+            if (selectOption) selectOption.remove();
+            
+            // Reset display if it was selected
+            if (select.value === categoryName) {
+                updateSearchableDropdownDisplay(window.currentCategorySource, '');
+            }
+        }
+    }
+}
+</script>
 <?php include '../components/layout_footer.php'; ?>

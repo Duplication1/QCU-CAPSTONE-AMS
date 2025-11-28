@@ -29,23 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    // Mobile menu toggle
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', function() {
-            sidebar.classList.remove('-translate-x-full');
-            mobileOverlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        });
-    }
-
-    // Mobile close functionality
-    if (mobileClose) {
-        mobileClose.addEventListener('click', function() {
-            sidebar.classList.add('-translate-x-full');
-            mobileOverlay.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        });
-    }
 
     // Mobile overlay click to close
     if (mobileOverlay) {
