@@ -257,7 +257,7 @@ main {
         </div>
 
         <!-- Archived Assets Table -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-visible">
             <!-- Search Bar -->
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div class="flex items-center gap-4">
@@ -291,6 +291,7 @@ main {
                 </div>
             </div>
             <div class="overflow-x-auto">
+                <div class="inline-block min-w-full align-middle">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
@@ -336,17 +337,17 @@ main {
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span class="text-xs text-gray-500"><?php echo date('M d, H:i', strtotime($asset['updated_at'])); ?></span>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center" onclick="event.stopPropagation()">
-                                        <div class="relative">
+                                    <td class="px-4 py-3 whitespace-nowrap text-center relative" onclick="event.stopPropagation()">
+                                        <div class="relative inline-block">
                                             <button onclick="toggleAssetMenu(<?php echo $asset['id']; ?>)" 
                                                     class="p-2 hover:bg-gray-100 rounded-full transition-colors" 
                                                     title="Actions">
                                                 <i class="fa-solid fa-ellipsis-vertical text-gray-600"></i>
                                             </button>
                                             <div id="asset-menu-<?php echo $asset['id']; ?>" 
-                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                                                 <div class="py-1">
-                                                    <button onclick="restoreAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
+                                                    <button onclick="openRestoreAssetModal(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
                                                             class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2">
                                                         <i class="fa-solid fa-rotate-left text-green-600"></i> Restore
                                                     </button>
@@ -359,6 +360,7 @@ main {
                         <?php endif; ?>
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -398,6 +400,34 @@ main {
         </div>
     </div>
 </main>
+
+<!-- Restore Confirmation Modal -->
+<div id="restoreAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore Asset?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="restoreAssetName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The asset will be available again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeRestoreAssetModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmRestoreAssetBtn" onclick="confirmRestoreAsset()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- QR Code Print Modal -->
 <div id="qrPrintModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -551,36 +581,66 @@ function bulkRestoreArchivedAssets() {
     });
 }
 
-// Individual restore function
-function restoreAsset(id, assetTag) {
-    if (!confirm(`Are you sure you want to restore asset "${assetTag}"?\n\nThe asset will be available again.`)) {
-        return;
-    }
+// Restore Asset Modal Functions
+let currentRestoreAssetId = null;
 
+function openRestoreAssetModal(id, assetTag) {
+    currentRestoreAssetId = id;
+    const modal = document.getElementById('restoreAssetModal');
+    const assetName = document.getElementById('restoreAssetName');
+    
+    assetName.textContent = assetTag;
+    modal.classList.remove('hidden');
+}
+
+function closeRestoreAssetModal() {
+    const modal = document.getElementById('restoreAssetModal');
+    modal.classList.add('hidden');
+    currentRestoreAssetId = null;
+}
+
+function confirmRestoreAsset() {
+    if (!currentRestoreAssetId) return;
+    
+    const button = document.getElementById('confirmRestoreAssetBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
+    button.disabled = true;
+    
     fetch('../../controller/restore_asset.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            id: id,
+            id: currentRestoreAssetId,
             room_id: <?php echo $room_id; ?>
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Asset restored successfully');
             location.reload();
         } else {
             alert('Error: ' + (data.message || 'Failed to restore asset'));
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('An error occurred while restoring the asset');
+        button.innerHTML = originalText;
+        button.disabled = false;
     });
 }
+
+// Close modal when clicking outside
+document.getElementById('restoreAssetModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRestoreAssetModal();
+    }
+});
 
 // Select all functionality
 document.getElementById('select-all-archived-assets')?.addEventListener('change', function() {

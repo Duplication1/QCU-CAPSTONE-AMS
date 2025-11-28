@@ -242,7 +242,7 @@ main {
         </div>
 
         <!-- Archived PC Units Table -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-visible">
             <!-- Search Bar -->
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div class="flex items-center gap-4">
@@ -273,8 +273,9 @@ main {
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
+                <div class="inline-block min-w-full align-middle">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                                 <input type="checkbox" id="select-all-archived-pc" class="rounded border-gray-300 text-red-600 focus:ring-red-600">
@@ -319,21 +320,21 @@ main {
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span class="text-xs text-gray-500"><?php echo date('M d, H:i', strtotime($pc['last_online'])); ?></span>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center" onclick="event.stopPropagation()">
-                                        <div class="relative">
+                                    <td class="px-4 py-3 whitespace-nowrap text-center relative" onclick="event.stopPropagation()">
+                                        <div class="relative inline-block">
                                             <button onclick="togglePCMenu(<?php echo $pc['id']; ?>)" 
                                                     class="p-2 hover:bg-gray-100 rounded-full transition-colors" 
                                                     title="Actions">
                                                 <i class="fa-solid fa-ellipsis-vertical text-gray-600"></i>
                                             </button>
                                             <div id="pc-menu-<?php echo $pc['id']; ?>" 
-                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                                                 <div class="py-1">
-                                                    <a href="pcassets.php?pc_unit_id=<?php echo $pc['id']; ?>" 
-                                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                    <button onclick="openComponentsModal(<?php echo $pc['id']; ?>, '<?php echo htmlspecialchars($pc['terminal_number'], ENT_QUOTES); ?>')" 
+                                                       class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                                                         <i class="fa-solid fa-microchip text-red-600"></i> View Components
-                                                    </a>
-                                                    <button onclick="restorePCUnit(<?php echo $pc['id']; ?>, '<?php echo htmlspecialchars($pc['terminal_number'], ENT_QUOTES); ?>')" 
+                                                    </button>
+                                                    <button onclick="openRestoreModal(<?php echo $pc['id']; ?>, '<?php echo htmlspecialchars($pc['terminal_number'], ENT_QUOTES); ?>')" 
                                                             class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2">
                                                         <i class="fa-solid fa-rotate-left text-green-600"></i> Restore
                                                     </button>
@@ -346,6 +347,7 @@ main {
                         <?php endif; ?>
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -385,6 +387,54 @@ main {
         </div>
     </div>
 </main>
+
+<!-- Components Modal -->
+<div id="componentsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fa-solid fa-microchip text-red-600 mr-2"></i>
+                PC Components - <span id="modalPCName"></span>
+            </h3>
+            <button onclick="closeComponentsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="componentsContent" class="overflow-y-auto max-h-96">
+            <div class="flex items-center justify-center py-8">
+                <i class="fa-solid fa-spinner fa-spin text-3xl text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Confirmation Modal -->
+<div id="restoreModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore PC Unit?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="restorePCName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The PC unit will be available again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeRestoreModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmRestoreBtn" onclick="confirmRestore()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 // PC Unit Kebab Menu Functions
@@ -477,36 +527,66 @@ function bulkRestoreArchivedPCUnits() {
     });
 }
 
-// Individual restore function
-function restorePCUnit(id, terminalNumber) {
-    if (!confirm(`Are you sure you want to restore PC Unit "${terminalNumber}"?\n\nThe PC unit will be available again.`)) {
-        return;
-    }
+// Restore Modal Functions
+let currentRestorePCId = null;
 
+function openRestoreModal(id, terminalNumber) {
+    currentRestorePCId = id;
+    const modal = document.getElementById('restoreModal');
+    const pcName = document.getElementById('restorePCName');
+    
+    pcName.textContent = terminalNumber;
+    modal.classList.remove('hidden');
+}
+
+function closeRestoreModal() {
+    const modal = document.getElementById('restoreModal');
+    modal.classList.add('hidden');
+    currentRestorePCId = null;
+}
+
+function confirmRestore() {
+    if (!currentRestorePCId) return;
+    
+    const button = document.getElementById('confirmRestoreBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
+    button.disabled = true;
+    
     fetch('../../controller/restore_pc_unit.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            id: id,
+            id: currentRestorePCId,
             room_id: <?php echo $room_id; ?>
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('PC unit restored successfully');
             location.reload();
         } else {
             alert('Error: ' + (data.message || 'Failed to restore PC unit'));
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('An error occurred while restoring the PC unit');
+        button.innerHTML = originalText;
+        button.disabled = false;
     });
 }
+
+// Close modal when clicking outside
+document.getElementById('restoreModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRestoreModal();
+    }
+});
 
 // Select all functionality
 document.getElementById('select-all-archived-pc')?.addEventListener('change', function() {
@@ -546,6 +626,102 @@ function toggleArchivedPCBulkActions() {
         }
     }
 }
+
+// Components Modal Functions
+function openComponentsModal(pcId, terminalNumber) {
+    const modal = document.getElementById('componentsModal');
+    const modalPCName = document.getElementById('modalPCName');
+    const componentsContent = document.getElementById('componentsContent');
+    
+    modalPCName.textContent = terminalNumber;
+    modal.classList.remove('hidden');
+    
+    // Show loading state
+    componentsContent.innerHTML = `
+        <div class="flex items-center justify-center py-8">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-gray-400"></i>
+        </div>
+    `;
+    
+    // Fetch components data
+    fetch('../../controller/get_pc_details.php?pc_unit_id=' + pcId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.components && data.components.length > 0) {
+                let html = '<div class="space-y-3">';
+                data.components.forEach(component => {
+                    html += `
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-700">
+                                            ${component.component_type || 'N/A'}
+                                        </span>
+                                        <span class="text-sm font-medium text-gray-900">
+                                            ${component.brand || 'N/A'} ${component.model || ''}
+                                        </span>
+                                    </div>
+                                    ${component.specifications ? `
+                                        <p class="text-sm text-gray-600 mb-1">
+                                            <i class="fa-solid fa-info-circle mr-1"></i>
+                                            ${component.specifications}
+                                        </p>
+                                    ` : ''}
+                                    ${component.serial_number ? `
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fa-solid fa-barcode mr-1"></i>
+                                            S/N: ${component.serial_number}
+                                        </p>
+                                    ` : ''}
+                                </div>
+                                <span class="px-2 py-1 text-xs font-semibold rounded ${
+                                    component.condition === 'Excellent' ? 'bg-green-100 text-green-700' :
+                                    component.condition === 'Good' ? 'bg-blue-100 text-blue-700' :
+                                    component.condition === 'Fair' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-red-100 text-red-700'
+                                }">
+                                    ${component.condition || 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                componentsContent.innerHTML = html;
+            } else {
+                componentsContent.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fa-solid fa-microchip text-5xl mb-3 opacity-30"></i>
+                        <p class="text-lg">No components found</p>
+                        <p class="text-sm">This PC unit has no registered components</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            componentsContent.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fa-solid fa-exclamation-circle text-5xl mb-3 opacity-30"></i>
+                    <p class="text-lg">Error loading components</p>
+                    <p class="text-sm">Please try again later</p>
+                </div>
+            `;
+        });
+}
+
+function closeComponentsModal() {
+    const modal = document.getElementById('componentsModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('componentsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeComponentsModal();
+    }
+});
 </script>
 
 <?php include '../components/layout_footer.php'; ?>
