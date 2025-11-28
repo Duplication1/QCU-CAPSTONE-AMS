@@ -1535,6 +1535,121 @@ main {
 
 </main>
 
+<!-- Bulk Create PC Units Confirmation Modal -->
+<div id="bulkCreatePCModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full mb-4">
+                <i class="fa-solid fa-desktop text-blue-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Create PC Units?</h3>
+            <p class="text-sm text-gray-600 text-center mb-2">
+                Are you sure you want to create <strong id="bulkCreateCount"></strong> PC units?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                Range: <strong id="bulkCreateRange"></strong>
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkCreatePCModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkCreatePCBtn" onclick="confirmBulkCreatePC()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-plus mr-1"></i>Create
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore PC Unit Confirmation Modal -->
+<div id="restorePCUnitModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore PC Unit?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="restorePCUnitName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                This will make the unit active again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeRestorePCUnitModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmRestorePCUnitBtn" onclick="confirmRestorePCUnit()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Asset Confirmation Modal -->
+<div id="restoreAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore Asset?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="restoreAssetName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                This will make the asset active again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeRestoreAssetModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmRestoreAssetBtn" onclick="confirmRestoreAsset()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Restore Assets Confirmation Modal -->
+<div id="bulkRestoreAssetsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-2">
+                Are you sure you want to restore <strong id="bulkRestoreCount"></strong> archived asset(s)?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-2">
+                Assets: <strong id="bulkRestoreList"></strong>
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                This will make them active again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkRestoreAssetsModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkRestoreAssetsBtn" onclick="confirmBulkRestoreAssets()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -2782,22 +2897,59 @@ function submitPCUnit() {
             return;
         }
         
-        // Confirm bulk creation
+        // Show bulk creation confirmation modal
         const count = rangeEnd - rangeStart + 1;
-        if (!confirm(`Are you sure you want to create ${count} PC units?\n\nRange: ${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`)) {
-            return;
-        }
+        const range = `${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`;
+        openBulkCreatePCModal(count, range, form);
+        return;
     }
     
+    // For single mode, proceed directly
+    proceedWithPCCreation(form);
+}
+
+// Bulk Create PC Modal Functions
+let currentBulkCreateForm = null;
+
+function openBulkCreatePCModal(count, range, form) {
+    currentBulkCreateForm = form;
+    const modal = document.getElementById('bulkCreatePCModal');
+    document.getElementById('bulkCreateCount').textContent = count;
+    document.getElementById('bulkCreateRange').textContent = range;
+    modal.classList.remove('hidden');
+}
+
+function closeBulkCreatePCModal() {
+    const modal = document.getElementById('bulkCreatePCModal');
+    modal.classList.add('hidden');
+    currentBulkCreateForm = null;
+}
+
+function confirmBulkCreatePC() {
+    if (!currentBulkCreateForm) return;
+    closeBulkCreatePCModal();
+    proceedWithPCCreation(currentBulkCreateForm);
+}
+
+// Close modal when clicking outside
+document.getElementById('bulkCreatePCModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkCreatePCModal();
+    }
+});
+
+function proceedWithPCCreation(form) {
     const formData = new FormData(form);
     formData.append('ajax', '1');
     formData.append('action', 'create_pc_unit');
     
     // Disable submit button
-    const submitBtn = event.target;
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Creating...';
+    const submitBtn = document.getElementById('confirmBulkCreatePCBtn') || event.target;
+    const originalText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Creating...';
+    }
     
     fetch('', {
         method: 'POST',
@@ -2928,17 +3080,34 @@ document.addEventListener('click', function(e) {
 });
 
 // Restore PC Unit
-function restorePCUnit(id, terminalNumber) {
-    event.stopPropagation();
+// Restore PC Unit Modal Functions
+let currentRestorePCUnitId = null;
+
+function openRestorePCUnitModal(id, terminalNumber) {
+    currentRestorePCUnitId = id;
+    const modal = document.getElementById('restorePCUnitModal');
+    document.getElementById('restorePCUnitName').textContent = terminalNumber;
+    modal.classList.remove('hidden');
+}
+
+function closeRestorePCUnitModal() {
+    const modal = document.getElementById('restorePCUnitModal');
+    modal.classList.add('hidden');
+    currentRestorePCUnitId = null;
+}
+
+function confirmRestorePCUnit() {
+    if (!currentRestorePCUnitId) return;
     
-    if (!confirm(`Are you sure you want to restore PC Unit "${terminalNumber}"?\n\nThis will make the unit active again.`)) {
-        return;
-    }
+    const button = document.getElementById('confirmRestorePCUnitBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
+    button.disabled = true;
     
     const formData = new FormData();
     formData.append('ajax', '1');
     formData.append('action', 'restore_pc_unit');
-    formData.append('id', id);
+    formData.append('id', currentRestorePCUnitId);
     
     fetch('', {
         method: 'POST',
@@ -2948,27 +3117,62 @@ function restorePCUnit(id, terminalNumber) {
     .then(data => {
         if (data.success) {
             showNotification('success', 'PC Unit restored successfully');
+            closeRestorePCUnitModal();
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification('error', data.message || 'Failed to restore PC unit');
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showNotification('error', 'An error occurred while restoring the PC unit');
+        button.innerHTML = originalText;
+        button.disabled = false;
     });
 }
 
-// Restore Asset
-function restoreAsset(id, assetTag) {
-    if (!confirm(`Are you sure you want to restore asset "${assetTag}"?\n\nThis will make the asset active again.`)) {
-        return;
+// Close modal when clicking outside
+document.getElementById('restorePCUnitModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRestorePCUnitModal();
     }
+});
+
+function restorePCUnit(id, terminalNumber) {
+    event.stopPropagation();
+    openRestorePCUnitModal(id, terminalNumber);
+}
+
+// Restore Asset Modal Functions
+let currentRestoreAssetId = null;
+
+function openRestoreAssetModal(id, assetTag) {
+    currentRestoreAssetId = id;
+    const modal = document.getElementById('restoreAssetModal');
+    document.getElementById('restoreAssetName').textContent = assetTag;
+    modal.classList.remove('hidden');
+}
+
+function closeRestoreAssetModal() {
+    const modal = document.getElementById('restoreAssetModal');
+    modal.classList.add('hidden');
+    currentRestoreAssetId = null;
+}
+
+function confirmRestoreAsset() {
+    if (!currentRestoreAssetId) return;
+    
+    const button = document.getElementById('confirmRestoreAssetBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
+    button.disabled = true;
     
     const formData = new FormData();
     formData.append('ajax', '1');
     formData.append('action', 'restore_asset');
-    formData.append('id', id);
+    formData.append('id', currentRestoreAssetId);
     
     fetch('', {
         method: 'POST',
@@ -2978,15 +3182,39 @@ function restoreAsset(id, assetTag) {
     .then(data => {
         if (data.success) {
             showNotification('success', 'Asset restored successfully');
+            closeRestoreAssetModal();
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification('error', data.message || 'Failed to restore asset');
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showNotification('error', 'An error occurred while restoring the asset');
+        button.innerHTML = originalText;
+        button.disabled = false;
     });
+}
+
+// Close modal when clicking outside
+document.getElementById('restoreAssetModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRestoreAssetModal();
+    }
+});
+
+function restorePCUnit(id, terminalNumber) {
+    event.stopPropagation();
+    openRestorePCUnitModal(id, terminalNumber);
+}
+
+// Restore Asset
+function restoreAsset(id, assetTag) {
+    openRestoreAssetModal(id, assetTag);
+        return;
+    openRestoreAssetModal(id, assetTag);
 }
 
 // Initialize default tab on page load
@@ -3317,23 +3545,35 @@ function bulkRestoreArchivedPCUnits() {
 }
 
 // Bulk actions for Archived Assets
-function bulkRestoreArchivedAssets() {
-    const selectedIds = Array.from(document.querySelectorAll('.archived-asset-checkbox:checked')).map(cb => cb.value);
-    if (selectedIds.length === 0) return;
+// Bulk Restore Assets Modal Functions
+let currentBulkRestoreAssetIds = null;
+
+function openBulkRestoreAssetsModal(selectedIds, assetTags) {
+    currentBulkRestoreAssetIds = selectedIds;
+    const modal = document.getElementById('bulkRestoreAssetsModal');
+    document.getElementById('bulkRestoreCount').textContent = selectedIds.length;
+    document.getElementById('bulkRestoreList').textContent = assetTags;
+    modal.classList.remove('hidden');
+}
+
+function closeBulkRestoreAssetsModal() {
+    const modal = document.getElementById('bulkRestoreAssetsModal');
+    modal.classList.add('hidden');
+    currentBulkRestoreAssetIds = null;
+}
+
+function confirmBulkRestoreAssets() {
+    if (!currentBulkRestoreAssetIds) return;
     
-    const assetTags = selectedIds.map(id => {
-        const row = document.querySelector(`.archived-asset-checkbox[value="${id}"]`).closest('tr');
-        return row.querySelector('td:nth-child(4) span').textContent.trim();
-    }).join(', ');
-    
-    if (!confirm(`Are you sure you want to restore ${selectedIds.length} archived asset(s)?\n\nAssets: ${assetTags}\n\nThis will make them active again.`)) {
-        return;
-    }
+    const button = document.getElementById('confirmBulkRestoreAssetsBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
+    button.disabled = true;
     
     const formData = new FormData();
     formData.append('ajax', '1');
     formData.append('action', 'bulk_restore_assets');
-    formData.append('ids', JSON.stringify(selectedIds));
+    formData.append('ids', JSON.stringify(currentBulkRestoreAssetIds));
     
     fetch('', {
         method: 'POST',
@@ -3343,15 +3583,39 @@ function bulkRestoreArchivedAssets() {
     .then(data => {
         if (data.success) {
             showNotification('success', data.message);
+            closeBulkRestoreAssetsModal();
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification('error', data.message || 'Failed to restore assets');
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showNotification('error', 'An error occurred while restoring assets');
+        button.innerHTML = originalText;
+        button.disabled = false;
     });
+}
+
+// Close modal when clicking outside
+document.getElementById('bulkRestoreAssetsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkRestoreAssetsModal();
+    }
+});
+
+function bulkRestoreArchivedAssets() {
+    const selectedIds = Array.from(document.querySelectorAll('.archived-asset-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    const assetTags = selectedIds.map(id => {
+        const row = document.querySelector(`.archived-asset-checkbox[value="${id}"]`).closest('tr');
+        return row.querySelector('td:nth-child(4) span').textContent.trim();
+    }).join(', ');
+    
+    openBulkRestoreAssetsModal(selectedIds, assetTags);
 }
 
 // Automatic search with debouncing for PC Units

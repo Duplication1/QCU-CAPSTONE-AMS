@@ -191,6 +191,15 @@ main {
     flex-direction: column;
     padding: 0.5rem;
 }
+.overflow-x-auto {
+    overflow: visible !important;
+}
+table {
+    position: relative;
+}
+tbody tr {
+    position: relative;
+}
 </style>
 
 <main class="flex-1 overflow-auto">
@@ -257,7 +266,7 @@ main {
         </div>
 
         <!-- Archived Assets Table -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 overflow-visible">
+        <div class="bg-white rounded shadow-sm border border-gray-200">
             <!-- Search Bar -->
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div class="flex items-center gap-4">
@@ -291,7 +300,6 @@ main {
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <div class="inline-block min-w-full align-middle">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
@@ -337,15 +345,15 @@ main {
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span class="text-xs text-gray-500"><?php echo date('M d, H:i', strtotime($asset['updated_at'])); ?></span>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center relative" onclick="event.stopPropagation()">
-                                        <div class="relative inline-block">
+                                    <td class="px-4 py-3 whitespace-nowrap text-center" onclick="event.stopPropagation()">
+                                        <div class="relative">
                                             <button onclick="toggleAssetMenu(<?php echo $asset['id']; ?>)" 
                                                     class="p-2 hover:bg-gray-100 rounded-full transition-colors" 
                                                     title="Actions">
                                                 <i class="fa-solid fa-ellipsis-vertical text-gray-600"></i>
                                             </button>
                                             <div id="asset-menu-<?php echo $asset['id']; ?>" 
-                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                                                 <div class="py-1">
                                                     <button onclick="openRestoreAssetModal(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
                                                             class="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2">
@@ -360,7 +368,6 @@ main {
                         <?php endif; ?>
                     </tbody>
                 </table>
-                </div>
             </div>
 
             <!-- Pagination -->

@@ -859,6 +859,62 @@ main {
     </div>
 </main>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Delete Asset?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to delete <strong id="deleteAssetName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                This action cannot be undone.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteAssetModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteAssetBtn" onclick="confirmDeleteAsset()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-trash mr-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive Confirmation Modal -->
+<div id="archiveAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-orange-100 rounded-full mb-4">
+                <i class="fa-solid fa-box-archive text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Archive Asset?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to archive <strong id="archiveAssetName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The asset will be moved to archived assets.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeArchiveAssetModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmArchiveAssetBtn" onclick="confirmArchiveAsset()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-box-archive mr-1"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -1697,15 +1753,37 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
 });
 
 // Delete Asset
-async function deleteAsset(id, assetTag) {
+// Delete Asset Modal Functions
+let currentDeleteAssetId = null;
+
+function openDeleteAssetModal(id, assetTag) {
     closeAllMenus();
+    currentDeleteAssetId = id;
+    const modal = document.getElementById('deleteAssetModal');
+    const assetName = document.getElementById('deleteAssetName');
     
-    if (!confirm(`Are you sure you want to delete asset "${assetTag}"?`)) return;
+    assetName.textContent = assetTag;
+    modal.classList.remove('hidden');
+}
+
+function closeDeleteAssetModal() {
+    const modal = document.getElementById('deleteAssetModal');
+    modal.classList.add('hidden');
+    currentDeleteAssetId = null;
+}
+
+async function confirmDeleteAsset() {
+    if (!currentDeleteAssetId) return;
+    
+    const button = document.getElementById('confirmDeleteAssetBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Deleting...';
+    button.disabled = true;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
     formData.append('action', 'delete_asset');
-    formData.append('id', id);
+    formData.append('id', currentDeleteAssetId);
     
     try {
         const response = await fetch(location.href, {
@@ -1720,23 +1798,55 @@ async function deleteAsset(id, assetTag) {
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     } catch (error) {
         console.error('Error:', error);
         showAlert('error', 'An error occurred while deleting the asset');
+        button.innerHTML = originalText;
+        button.disabled = false;
     }
 }
 
-// Archive Asset
-async function archiveAsset(id, assetTag) {
+// Close delete modal when clicking outside
+document.getElementById('deleteAssetModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteAssetModal();
+    }
+});
+
+// Archive Asset Modal Functions
+let currentArchiveAssetId = null;
+
+function openArchiveAssetModal(id, assetTag) {
     closeAllMenus();
+    currentArchiveAssetId = id;
+    const modal = document.getElementById('archiveAssetModal');
+    const assetName = document.getElementById('archiveAssetName');
     
-    if (!confirm(`Are you sure you want to archive asset "${assetTag}"?`)) return;
+    assetName.textContent = assetTag;
+    modal.classList.remove('hidden');
+}
+
+function closeArchiveAssetModal() {
+    const modal = document.getElementById('archiveAssetModal');
+    modal.classList.add('hidden');
+    currentArchiveAssetId = null;
+}
+
+async function confirmArchiveAsset() {
+    if (!currentArchiveAssetId) return;
+    
+    const button = document.getElementById('confirmArchiveAssetBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Archiving...';
+    button.disabled = true;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
     formData.append('action', 'archive_asset');
-    formData.append('id', id);
+    formData.append('id', currentArchiveAssetId);
     
     try {
         const response = await fetch(location.href, {
@@ -1751,11 +1861,32 @@ async function archiveAsset(id, assetTag) {
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     } catch (error) {
         console.error('Error:', error);
         showAlert('error', 'An error occurred while archiving the asset');
+        button.innerHTML = originalText;
+        button.disabled = false;
     }
+}
+
+// Close archive modal when clicking outside
+document.getElementById('archiveAssetModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeArchiveAssetModal();
+    }
+});
+
+// Delete Asset (now opens modal)
+async function deleteAsset(id, assetTag) {
+    openDeleteAssetModal(id, assetTag);
+}
+
+// Archive Asset (now opens modal)
+async function archiveAsset(id, assetTag) {
+    openArchiveAssetModal(id, assetTag);
 }
 
 // Print QR Code for single asset

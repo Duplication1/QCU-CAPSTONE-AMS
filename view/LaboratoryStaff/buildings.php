@@ -210,6 +210,34 @@ main {
     </div>
 </main>
 
+<!-- Delete Building Confirmation Modal -->
+<div id="deleteBuildingModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Delete Building?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to delete <strong id="deleteBuildingName"></strong>?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                This action cannot be undone.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteBuildingModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteBuildingBtn" onclick="confirmDeleteBuilding()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-trash mr-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Building Modal -->
 <div id="addBuildingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
@@ -408,17 +436,40 @@ document.getElementById('editBuildingForm').addEventListener('submit', async fun
     }
 });
 
-// Delete Building
-async function deleteBuilding(id, name) {
-    // Close the menu first
+// Delete Building Modal Functions
+let currentDeleteBuildingId = null;
+let currentDeleteBuildingName = null;
+
+function openDeleteBuildingModal(id, name) {
     closeAllMenus();
+    currentDeleteBuildingId = id;
+    currentDeleteBuildingName = name;
+    const modal = document.getElementById('deleteBuildingModal');
+    const buildingName = document.getElementById('deleteBuildingName');
     
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    buildingName.textContent = name;
+    modal.classList.remove('hidden');
+}
+
+function closeDeleteBuildingModal() {
+    const modal = document.getElementById('deleteBuildingModal');
+    modal.classList.add('hidden');
+    currentDeleteBuildingId = null;
+    currentDeleteBuildingName = null;
+}
+
+async function confirmDeleteBuilding() {
+    if (!currentDeleteBuildingId) return;
+    
+    const button = document.getElementById('confirmDeleteBuildingBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Deleting...';
+    button.disabled = true;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
     formData.append('action', 'delete_building');
-    formData.append('id', id);
+    formData.append('id', currentDeleteBuildingId);
     
     try {
         const response = await fetch(location.href, {
@@ -429,35 +480,32 @@ async function deleteBuilding(id, name) {
         const result = await response.json();
         
         if (result.success) {
-            // Remove the card
-            const card = document.querySelector(`[data-id="${id}"]`);
-            if (card) {
-                card.style.animation = 'slideOut 0.3s ease-out';
-                setTimeout(() => {
-                    card.remove();
-                    
-                    // Show empty state if no buildings left
-                    const grid = document.getElementById('buildingsGrid');
-                    if (grid.children.length === 0) {
-                        grid.innerHTML = `
-                            <div class="col-span-full text-center py-12 text-gray-500">
-                                <i class="fa-solid fa-building text-6xl mb-4 opacity-30"></i>
-                                <p class="text-lg">No buildings yet</p>
-                                <p class="text-sm">Click "Add Building" to create one</p>
-                            </div>
-                        `;
-                    }
-                }, 300);
-            }
-            
             showAlert('success', result.message);
+            closeDeleteBuildingModal();
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
         }
     } catch (error) {
         console.error('Error:', error);
         showAlert('error', 'An error occurred while deleting the building');
+        button.innerHTML = originalText;
+        button.disabled = false;
     }
+}
+
+// Close delete modal when clicking outside
+document.getElementById('deleteBuildingModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteBuildingModal();
+    }
+});
+
+// Replace deleteBuilding function to use modal
+async function deleteBuilding(id, name) {
+    openDeleteBuildingModal(id, name);
 }
 
 // Alert function
