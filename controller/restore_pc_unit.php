@@ -18,8 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 header('Content-Type: application/json');
 
 try {
-    $id = intval($_POST['id'] ?? 0);
-    $room_id = intval($_POST['room_id'] ?? 0);
+    // Get JSON input
+    $json_input = file_get_contents('php://input');
+    $data = json_decode($json_input, true);
+    
+    $id = intval($data['id'] ?? 0);
+    $room_id = intval($data['room_id'] ?? 0);
 
     if ($id <= 0 || $room_id <= 0) {
         throw new Exception('Invalid PC unit ID or room ID');

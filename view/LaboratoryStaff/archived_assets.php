@@ -572,17 +572,17 @@ function bulkRestoreArchivedAssets() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Successfully restored ${selectedIds.length} asset(s)`);
-            location.reload();
+            showAlert('success', `Successfully restored ${selectedIds.length} asset(s)`);
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + (data.message || 'Failed to restore assets'));
+            showAlert('error', data.message || 'Failed to restore assets');
             button.innerHTML = originalText;
             button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while restoring assets');
+        showAlert('error', 'An error occurred while restoring assets');
         button.innerHTML = originalText;
         button.disabled = false;
     });
@@ -627,16 +627,17 @@ function confirmRestoreAsset() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showAlert('success', 'Asset restored successfully!');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + (data.message || 'Failed to restore asset'));
+            showAlert('error', data.message || 'Failed to restore asset');
             button.innerHTML = originalText;
             button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while restoring the asset');
+        showAlert('error', 'An error occurred while restoring the asset');
         button.innerHTML = originalText;
         button.disabled = false;
     });
@@ -735,6 +736,19 @@ function closeQRPrintModal() {
     document.getElementById('qrPrintModal').classList.add('hidden');
     // Reload page after closing print modal
     window.location.reload();
+}
+
+// Alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-medium`;
+    alertDiv.textContent = message;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => alertDiv.remove(), 3000);
 }
 </script>
 

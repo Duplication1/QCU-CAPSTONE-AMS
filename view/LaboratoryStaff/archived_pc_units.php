@@ -518,17 +518,17 @@ function bulkRestoreArchivedPCUnits() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Successfully restored ${selectedIds.length} PC unit(s)`);
-            location.reload();
+            showAlert('success', `Successfully restored ${selectedIds.length} PC unit(s)`);
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + (data.message || 'Failed to restore PC units'));
+            showAlert('error', data.message || 'Failed to restore PC units');
             button.innerHTML = originalText;
             button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while restoring PC units');
+        showAlert('error', 'An error occurred while restoring PC units');
         button.innerHTML = originalText;
         button.disabled = false;
     });
@@ -573,16 +573,17 @@ function confirmRestore() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showAlert('success', 'PC unit restored successfully!');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + (data.message || 'Failed to restore PC unit'));
+            showAlert('error', data.message || 'Failed to restore PC unit');
             button.innerHTML = originalText;
             button.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while restoring the PC unit');
+        showAlert('error', 'An error occurred while restoring the PC unit');
         button.innerHTML = originalText;
         button.disabled = false;
     });
@@ -729,6 +730,19 @@ document.getElementById('componentsModal')?.addEventListener('click', function(e
         closeComponentsModal();
     }
 });
+
+// Alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-medium`;
+    alertDiv.textContent = message;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => alertDiv.remove(), 3000);
+}
 </script>
 
 <?php include '../components/layout_footer.php'; ?>
