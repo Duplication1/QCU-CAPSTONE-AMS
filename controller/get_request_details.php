@@ -14,9 +14,9 @@ header('Content-Type: application/json');
 
 $request_id = $_GET['id'] ?? null;
 
-if (!$request_id) {
+if (!$request_id || $request_id <= 0) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Request ID is required']);
+    echo json_encode(['success' => false, 'error' => 'Valid request ID is required']);
     exit();
 }
 

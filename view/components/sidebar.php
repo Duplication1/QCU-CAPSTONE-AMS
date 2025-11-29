@@ -70,13 +70,7 @@ $navigation_items = [
             'color' => 'blue',
             'href' => 'tickets.php'
         ],
-        [
-            'id' => 'operations',
-            'label' => 'Lab Operations',
-            'icon' => 'fa-solid fa-flask',
-            'color' => 'blue',
-            'href' => 'operations.php'
-        ],
+       
         [
             'id' => 'registry',
             'label' => 'Asset Registry',

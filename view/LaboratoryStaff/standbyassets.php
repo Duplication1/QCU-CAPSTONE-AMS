@@ -131,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
+        $is_borrowable = isset($_POST['is_borrowable']) ? intval($_POST['is_borrowable']) : 0;
         
         if (empty($acquisition_date) || empty($asset_name_prefix) || empty($room_number) || $quantity <= 0) {
             echo json_encode(['success' => false, 'message' => 'All required fields must be filled']);
@@ -183,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 ]);
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
                 
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('sssssisssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $is_borrowable, $created_by);
                 
                 if ($stmt->execute()) {
                     $created_count++;
@@ -224,6 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
+        $is_borrowable = isset($_POST['is_borrowable']) ? intval($_POST['is_borrowable']) : 0;
         
         if ($id <= 0 || empty($asset_tag) || empty($asset_name)) {
             echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
@@ -231,9 +233,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, room_id = ?, status = ?, `condition` = ?, updated_by = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, room_id = ?, status = ?, `condition` = ?, is_borrowable = ?, updated_by = ? WHERE id = ?");
             $updated_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssissii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $updated_by, $id);
+            $stmt->bind_param('ssssssissiis', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $is_borrowable, $updated_by, $id);
             $success = $stmt->execute();
             $stmt->close();
             
@@ -274,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
-    if ($action === 'delete_asset') {
+    if ($action === 'dispose_asset') {
         $id = intval($_POST['id'] ?? 0);
         
         if ($id <= 0) {
@@ -283,15 +285,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            $stmt = $conn->prepare("DELETE FROM assets WHERE id = ?");
-            $stmt->bind_param('i', $id);
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Disposed', updated_by = ? WHERE id = ?");
+            $updated_by = $_SESSION['user_id'];
+            $stmt->bind_param('ii', $updated_by, $id);
             $success = $stmt->execute();
             $stmt->close();
             
             if ($success) {
-                echo json_encode(['success' => true, 'message' => 'Asset deleted successfully']);
+                echo json_encode(['success' => true, 'message' => 'Asset disposed successfully']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to delete asset']);
+                echo json_encode(['success' => false, 'message' => 'Failed to dispose asset']);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -364,16 +367,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
-    if ($action === 'get_categories') {
-        $categories_data = [];
-        $cat_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
-        $cat_result = $conn->query($cat_query);
-        if ($cat_result && $cat_result->num_rows > 0) {
-            while ($row = $cat_result->fetch_assoc()) {
-                $categories_data[] = $row;
-            }
+    if ($action === 'bulk_archive_assets') {
+        $asset_ids = json_decode($_POST['asset_ids'] ?? '[]', true);
+        
+        if (empty($asset_ids) || !is_array($asset_ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
+            exit;
         }
-        echo json_encode(['success' => true, 'categories' => $categories_data]);
+        
+        try {
+            $placeholders = str_repeat('?,', count($asset_ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id IN ($placeholders)");
+            $params = array_merge([$_SESSION['user_id']], $asset_ids);
+            $stmt->bind_param(str_repeat('i', count($params)), ...$params);
+            $success = $stmt->execute();
+            $affected_rows = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "Successfully archived {$affected_rows} asset(s)"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to archive assets']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_dispose_assets') {
+        $asset_ids = json_decode($_POST['asset_ids'] ?? '[]', true);
+        
+        if (empty($asset_ids) || !is_array($asset_ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($asset_ids) - 1) . '?';
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Disposed', updated_by = ? WHERE id IN ($placeholders)");
+            $params = array_merge([$_SESSION['user_id']], $asset_ids);
+            $stmt->bind_param(str_repeat('i', count($params)), ...$params);
+            $success = $stmt->execute();
+            $affected_rows = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "Successfully disposed {$affected_rows} asset(s)"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to dispose assets']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
         exit;
     }
 }
@@ -584,6 +630,19 @@ main {
                     </a>
                 <?php endif; ?>
             </form>
+        <!-- Bulk Actions -->
+        <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3 hidden" id="bulkActions">
+            <div class="flex items-center justify-between">
+                <span id="selectedCount" class="text-sm text-gray-600">0 assets selected</span>
+                <div class="flex gap-2">
+                    <button onclick="bulkArchive()" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors">
+                        <i class="fa-solid fa-archive mr-2"></i>Archive Selected
+                    </button>
+                    <button onclick="bulkDispose()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                        <i class="fa-solid fa-recycle mr-2"></i>Dispose Selected
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Assets Table -->
@@ -591,7 +650,10 @@ main {
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">#</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
@@ -606,7 +668,7 @@ main {
                 <tbody class="bg-white divide-y divide-gray-200" id="assetsTableBody">
                     <?php if (empty($assets)): ?>
                         <tr id="noResultsRow">
-                            <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="11" class="px-6 py-12 text-center text-gray-500">
                                 <i class="fa-solid fa-box text-5xl mb-3 opacity-30"></i>
                                 <p class="text-lg">No standby assets found</p>
                                 <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type)): ?>
@@ -626,6 +688,9 @@ main {
                                 data-brand="<?php echo htmlspecialchars($asset['brand'] ?? ''); ?>"
                                 data-model="<?php echo htmlspecialchars($asset['model'] ?? ''); ?>"
                                 data-serial="<?php echo htmlspecialchars($asset['serial_number'] ?? ''); ?>">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="asset-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="<?php echo $asset['id']; ?>">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo $offset + $index + 1; ?>
                                 </td>
@@ -693,7 +758,7 @@ main {
                                         <button onclick="toggleMenu(<?php echo $asset['id']; ?>)" class="text-gray-400 hover:text-gray-600 focus:outline-none">
                                             <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
                                         </button>
-                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden fixed bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 12rem;">
+                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden absolute bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 12rem; top: 100%; right: 0; margin-top: 2px;">
                                             <div class="py-1">
                                                 <button onclick='printQRCode(<?php echo json_encode($asset); ?>)' 
                                                         class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
@@ -709,9 +774,9 @@ main {
                                                     <i class="fa-solid fa-archive"></i> Archive
                                                 </button>
                                                 <?php endif; ?>
-                                                <button onclick="deleteAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
+                                                <button onclick="disposeAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
                                                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                    <i class="fa-solid fa-trash"></i> Delete
+                                                    <i class="fa-solid fa-recycle"></i> Disposal
                                                 </button>
                                             </div>
                                         </div>
@@ -908,6 +973,13 @@ main {
                         <option value="Non-Functional">Non-Functional</option>
                     </select>
                 </div>
+                <div>
+                    <label class="flex items-center cursor-pointer mt-6">
+                        <input type="checkbox" id="isBorrowable" name="is_borrowable" value="1"
+                               class="mr-2 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Allow this asset to be borrowed</span>
+                    </label>
+                </div>
             </div>
 
             <!-- Bulk Mode Fields -->
@@ -1051,6 +1123,13 @@ main {
                     <i class="fa-solid fa-lightbulb mr-1"></i>
                     <strong>Preview:</strong> <span id="assetTagPreview">11-23-2025-LAPTOP-IK501-001, 11-23-2025-LAPTOP-IK501-002, ...</span>
                 </div>
+                <div>
+                    <label class="flex items-center cursor-pointer mt-4">
+                        <input type="checkbox" id="bulkIsBorrowable" name="bulk_is_borrowable" value="1"
+                               class="mr-2 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Allow these assets to be borrowed</span>
+                    </label>
+                </div>
             </div>
 
             <div class="flex gap-3 justify-end mt-6">
@@ -1175,6 +1254,13 @@ main {
                         <option value="Non-Functional">Non-Functional</option>
                     </select>
                 </div>
+                <div>
+                    <label class="flex items-center cursor-pointer mt-6">
+                        <input type="checkbox" id="editIsBorrowable" name="edit_is_borrowable" value="1"
+                               class="mr-2 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Allow this asset to be borrowed</span>
+                    </label>
+                </div>
             </div>
             <div class="flex gap-3 justify-end mt-6">
                 <button type="button" onclick="closeEditAssetModal()" 
@@ -1248,31 +1334,31 @@ main {
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+<!-- Disposal Confirmation Modal -->
+<div id="disposalModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
-            <h3 class="text-xl font-semibold text-white">Delete Asset</h3>
+            <h3 class="text-xl font-semibold text-white">Dispose Asset</h3>
         </div>
         <div class="p-6">
             <div class="flex items-start gap-4 mb-6">
                 <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <i class="fa-solid fa-trash text-red-600 text-xl"></i>
+                    <i class="fa-solid fa-recycle text-red-600 text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to delete this asset?</p>
-                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="deleteAssetTag" class="font-semibold text-gray-800"></span></p>
-                    <p class="text-xs text-red-600 mt-2 font-medium">This action cannot be undone!</p>
+                    <p class="text-gray-800 font-medium mb-2">Are you sure you want to dispose of this asset?</p>
+                    <p class="text-sm text-gray-600 mb-1">Asset Tag: <span id="disposalAssetTag" class="font-semibold text-gray-800"></span></p>
+                    <p class="text-xs text-red-600 mt-2 font-medium">This will mark the asset as disposed and remove it from active inventory.</p>
                 </div>
             </div>
             <div class="flex gap-3 justify-end">
-                <button onclick="closeDeleteModal()" 
+                <button onclick="closeDisposalModal()" 
                         class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button onclick="confirmDeleteAsset()" 
+                <button onclick="confirmDisposeAsset()" 
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                    <i class="fa-solid fa-trash mr-2"></i>Delete Asset
+                    <i class="fa-solid fa-recycle mr-2"></i>Dispose Asset
                 </button>
             </div>
         </div>
@@ -1377,25 +1463,122 @@ main {
 </style>
 
 <script>
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const previewFields = ['bulkAcquisitionDate', 'bulkAssetName', 'bulkRoomNumber', 'bulkQuantity', 'bulkStartNumber'];
-    previewFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-            field.addEventListener('input', updateAssetTagPreview);
-        }
+// Initialize bulk selection
+function initializeBulkSelection() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    // Select all checkbox
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        assetCheckboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+        updateBulkActions();
     });
     
-    // Add listeners for start number update
-    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
-    startNumberTriggerFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-            field.addEventListener('input', updateBulkStartNumber);
-        }
+    // Individual checkboxes
+    assetCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+            selectAllCheckbox.checked = checkedBoxes.length === assetCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < assetCheckboxes.length;
+            updateBulkActions();
+        });
     });
-});
+    
+    function updateBulkActions() {
+        const checkedBoxes = document.querySelectorAll('.asset-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        if (count > 0) {
+            bulkActions.classList.remove('hidden');
+            selectedCount.textContent = `${count} asset${count > 1 ? 's' : ''} selected`;
+        } else {
+            bulkActions.classList.add('hidden');
+        }
+    }
+}
+
+// Bulk Archive
+async function bulkArchive() {
+    const selectedAssets = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedAssets.length === 0) {
+        showAlert('error', 'No assets selected');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
+    
+    if (!confirm(`Are you sure you want to archive ${assetIds.length} asset(s)?`)) {
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_archive_assets');
+        formData.append('asset_ids', JSON.stringify(assetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while archiving assets');
+    }
+}
+
+// Bulk Dispose
+async function bulkDispose() {
+    const selectedAssets = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedAssets.length === 0) {
+        showAlert('error', 'No assets selected');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
+    
+    if (!confirm(`Are you sure you want to dispose ${assetIds.length} asset(s)? This will mark them as disposed.`)) {
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_dispose_assets');
+        formData.append('asset_ids', JSON.stringify(assetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while disposing assets');
+    }
+}
 
 // Debounce function for search input
 function debounce(func, wait) {
@@ -1610,6 +1793,7 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('room_id', document.getElementById('bulkRoomId').value);
         formData.append('status', document.getElementById('bulkStatus').value);
         formData.append('condition', 'Good');
+        formData.append('is_borrowable', document.getElementById('bulkIsBorrowable').checked ? '1' : '0');
     } else {
         formData.append('action', 'create_asset');
         formData.append('asset_tag', document.getElementById('assetTag').value);
@@ -1621,6 +1805,7 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('room_id', document.getElementById('roomId').value);
         formData.append('status', document.getElementById('status').value);
         formData.append('condition', document.getElementById('condition').value);
+        formData.append('is_borrowable', document.getElementById('isBorrowable').checked ? '1' : '0');
     }
     
     try {
@@ -1672,6 +1857,7 @@ function editAsset(asset) {
     document.getElementById('editRoomId').value = asset.room_id || '';
     document.getElementById('editStatus').value = asset.status;
     document.getElementById('editCondition').value = asset.condition;
+    document.getElementById('editIsBorrowable').checked = asset.is_borrowable == '1';
     document.getElementById('editAssetModal').classList.remove('hidden');
     document.getElementById('editAssetTag').focus();
     
@@ -1696,6 +1882,7 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
     formData.append('room_id', document.getElementById('editRoomId').value);
     formData.append('status', document.getElementById('editStatus').value);
     formData.append('condition', document.getElementById('editCondition').value);
+    formData.append('is_borrowable', document.getElementById('editIsBorrowable').checked ? '1' : '0');
     
     try {
         const response = await fetch(location.href, {
@@ -1717,27 +1904,27 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
     }
 });
 
-// Delete Asset
-let assetToDelete = { id: null, tag: null };
+// Dispose Asset
+let assetToDispose = { id: null, tag: null };
 
-function deleteAsset(id, assetTag) {
+function disposeAsset(id, assetTag) {
     closeAllMenus();
-    assetToDelete = { id, tag: assetTag };
-    document.getElementById('deleteAssetTag').textContent = assetTag;
-    document.getElementById('deleteModal').classList.remove('hidden');
+    assetToDispose = { id, tag: assetTag };
+    document.getElementById('disposalAssetTag').textContent = assetTag;
+    document.getElementById('disposalModal').classList.remove('hidden');
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.add('hidden');
-    assetToDelete = { id: null, tag: null };
+function closeDisposalModal() {
+    document.getElementById('disposalModal').classList.add('hidden');
+    assetToDispose = { id: null, tag: null };
 }
 
-async function confirmDeleteAsset() {
-    const { id } = assetToDelete;
+async function confirmDisposeAsset() {
+    const { id } = assetToDispose;
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
-    formData.append('action', 'delete_asset');
+    formData.append('action', 'dispose_asset');
     formData.append('id', id);
     
     try {
@@ -1750,14 +1937,14 @@ async function confirmDeleteAsset() {
         
         if (result.success) {
             showAlert('success', result.message);
-            closeDeleteModal();
+            closeDisposalModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
         }
     } catch (error) {
         console.error('Error:', error);
-        showAlert('error', 'An error occurred while deleting the asset');
+        showAlert('error', 'An error occurred while disposing the asset');
     }
 }
 
@@ -1851,11 +2038,25 @@ async function openQRPrintModalForAssets(assetIds) {
             qrContent.innerHTML = '';
             
             result.assets.forEach(asset => {
+                // Generate QR code URL if not stored in database
+                let qrCodeUrl = asset.qr_code;
+                if (!qrCodeUrl || qrCodeUrl.trim() === '') {
+                    const qrData = {
+                        asset_tag: asset.asset_tag,
+                        asset_name: asset.asset_name,
+                        asset_type: asset.asset_type,
+                        room_id: asset.room_id,
+                        brand: asset.brand,
+                        model: asset.model
+                    };
+                    qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(JSON.stringify(qrData));
+                }
+                
                 const qrItem = document.createElement('div');
                 qrItem.className = 'qr-item p-4 border border-gray-300 rounded-lg text-center';
                 qrItem.innerHTML = `
                     <div class="mb-2">
-                        <img src="${asset.qr_code || 'placeholder.png'}" alt="QR Code" class="w-48 h-48 mx-auto">
+                        <img src="${qrCodeUrl}" alt="QR Code" class="w-48 h-48 mx-auto" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5RVI8L3RleHQ+PC9zdmc+'">
                     </div>
                     <div class="text-sm font-semibold text-gray-900">${asset.asset_tag}</div>
                     <div class="text-xs text-gray-600">${asset.asset_name}</div>
@@ -1864,7 +2065,10 @@ async function openQRPrintModalForAssets(assetIds) {
                 qrContent.appendChild(qrItem);
             });
             
-            closeAddAssetModal();
+            // Only close add asset modal if it's open
+            if (!document.getElementById('addAssetModal').classList.contains('hidden')) {
+                closeAddAssetModal();
+            }
             document.getElementById('qrPrintModal').classList.remove('hidden');
         } else {
             showAlert('error', result.message || 'Failed to load QR codes');
@@ -1920,6 +2124,9 @@ document.addEventListener('click', function(e) {
 
 // Category dropdown handlers
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize bulk selection
+    initializeBulkSelection();
+    
     // Initialize searchable dropdowns
     initializeSearchableDropdowns();
     

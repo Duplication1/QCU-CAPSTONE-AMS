@@ -191,6 +191,30 @@ if (!empty($filterRoom)) {
 $whereClause = implode(' AND ', $whereConditions);
 
 // Count total tickets for pagination
+$whereConditions = ["COALESCE(i.category,'') <> 'borrow'"];
+$params = [];
+$types = '';
+
+if ($filterKey !== 'all') {
+    $whereConditions[] = "LOWER(COALESCE(i.category,'')) = ?";
+    $params[] = $filterKey;
+    $types .= 's';
+}
+
+if (!empty($filterBuilding)) {
+    $whereConditions[] = "i.building_id = ?";
+    $params[] = $filterBuilding;
+    $types .= 'i';
+}
+
+if (!empty($filterRoom)) {
+    $whereConditions[] = "i.room_id = ?";
+    $params[] = $filterRoom;
+    $types .= 'i';
+}
+
+$whereClause = implode(' AND ', $whereConditions);
+
 $countQuery = "SELECT COUNT(*) as total FROM issues i WHERE {$whereClause}";
 if (!empty($params)) {
     $countStmt = $conn->prepare($countQuery);
@@ -218,24 +242,25 @@ if ($filterKey !== 'all') {
 }
 
 if (!empty($filterBuilding)) {
-    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci IN (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE building_id = ?)";
+    $whereConditions[] = "i.building_id = ?";
     $params[] = $filterBuilding;
     $types .= 'i';
 }
 
 if (!empty($filterRoom)) {
-    $whereConditions[] = "i.room COLLATE utf8mb4_unicode_ci = (SELECT name COLLATE utf8mb4_unicode_ci FROM rooms WHERE id = ?)";
+    $whereConditions[] = "i.room_id = ?";
     $params[] = $filterRoom;
     $types .= 'i';
 }
 
 $whereClause = implode(' AND ', $whereConditions);
 
-$query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
+$query = "SELECT i.id, i.user_id, i.category, r.name AS room, i.pc_id AS terminal, i.title, i.description, 
                  i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
                  u.full_name AS reporter_name
           FROM issues i
           LEFT JOIN users u ON u.id = i.user_id
+          LEFT JOIN rooms r ON r.id = i.room_id
           WHERE {$whereClause}
           ORDER BY 
             CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,

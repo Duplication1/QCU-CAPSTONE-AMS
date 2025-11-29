@@ -29,11 +29,7 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch(PDOException $e) {
-            if (Config::isDebug()) {
-                die("Connection Error: " . $e->getMessage());
-            } else {
-                die("Database connection failed. Please contact the administrator.");
-            }
+            throw new Exception("Database connection failed: " . $e->getMessage());
         }
         
         return $this->conn;

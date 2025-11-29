@@ -21,19 +21,20 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 $category = $_POST['category'] ?? '';
 $title = trim($_POST['title'] ?? '');
 $description = trim($_POST['description'] ?? '');
-$room = $_POST['room'] ?? null;
+$building_id = $_POST['building_id'] ?? null;
+$room_id = $_POST['room_id'] ?? null;
+$pc_id = $_POST['pc_id'] ?? null;
 
 if ($category==='' || $title==='') {
   echo json_encode(['success'=>false,'message'=>'Missing required fields']); exit;
 }
 
 // insert into issues
-$stmt = $conn->prepare("INSERT INTO issues (category, title, description, room, terminal, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
+$stmt = $conn->prepare("INSERT INTO issues (category, title, description, building_id, room_id, pc_id, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
 if (!$stmt) { echo json_encode(['success'=>false,'message'=>'DB prepare failed']); exit; }
 $user_id = $_SESSION['user_id'] ?? null;
-$terminal = $_POST['terminal'] ?? null;
 $priority = $_POST['priority'] ?? 'Medium';
-$stmt->bind_param('sssssis', $category, $title, $description, $room, $terminal, $priority, $user_id);
+$stmt->bind_param('sssssiss', $category, $title, $description, $building_id, $room_id, $pc_id, $priority, $user_id);
 $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();

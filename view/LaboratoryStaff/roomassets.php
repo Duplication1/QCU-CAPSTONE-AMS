@@ -578,6 +578,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $model = trim($_POST['model'] ?? '');
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
+        $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
         
         // Lookup category ID
         $category_id = null;
@@ -646,8 +647,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
                 
                 // Insert asset with QR code
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssissssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('sssssissssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
                 
                 if ($stmt->execute()) {
                     $created_count++;
@@ -686,6 +687,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $serial_number = trim($_POST['serial_number'] ?? '');
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
+        $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
         
         if ($id <= 0 || empty($asset_tag) || empty($asset_name)) {
             echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
@@ -693,9 +695,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, status = ?, `condition` = ?, updated_by = ? WHERE id = ? AND room_id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, status = ?, `condition` = ?, is_borrowable = ?, updated_by = ? WHERE id = ? AND room_id = ?");
             $updated_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssssiis', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $status, $condition, $updated_by, $id, $room_id);
+            $stmt->bind_param('sssssssiisis', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $status, $condition, $is_borrowable, $updated_by, $id, $room_id);
             $success = $stmt->execute();
             $stmt->close();
             
@@ -1757,6 +1759,13 @@ main {
                         <option value="Non-Functional">Non-Functional</option>
                     </select>
                 </div>
+                <div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="isBorrowable" name="is_borrowable" value="1"
+                               class="mr-2 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">Allow this asset to be borrowed</span>
+                    </label>
+                </div>
             </div>
 
             <!-- Bulk Mode Fields -->
@@ -1890,6 +1899,16 @@ main {
                             <option value="Poor">Poor</option>
                             <option value="Non-Functional">Non-Functional</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="bulkIsBorrowable" name="bulk_is_borrowable" value="1"
+                                   class="mr-2 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium text-gray-700">Allow these assets to be borrowed</span>
+                        </label>
                     </div>
                 </div>
 
@@ -2147,6 +2166,15 @@ main {
                         <option value="Poor">Poor</option>
                         <option value="Non-Functional">Non-Functional</option>
                     </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="editIsBorrowable" name="edit_is_borrowable" value="1"
+                               class="mr-2 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">Allow this asset to be borrowed</span>
+                    </label>
                 </div>
             </div>
             <div class="flex gap-3 justify-end mt-6">
@@ -2452,6 +2480,7 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('model', document.getElementById('bulkModel').value);
         formData.append('status', document.getElementById('bulkStatus').value);
         formData.append('condition', document.getElementById('bulkCondition').value);
+        formData.append('is_borrowable', document.getElementById('bulkIsBorrowable').checked ? '1' : '0');
     } else {
         // Single mode
         formData.append('action', 'create_asset');
@@ -2463,6 +2492,7 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('serial_number', document.getElementById('serialNumber').value);
         formData.append('status', document.getElementById('status').value);
         formData.append('condition', document.getElementById('condition').value);
+        formData.append('is_borrowable', document.getElementById('isBorrowable').checked ? '1' : '0');
     }
     
     try {
@@ -2638,6 +2668,7 @@ function editAsset(asset) {
     document.getElementById('editSerialNumber').value = asset.serial_number || '';
     document.getElementById('editStatus').value = asset.status;
     document.getElementById('editCondition').value = asset.condition;
+    document.getElementById('editIsBorrowable').checked = asset.is_borrowable == '1';
     document.getElementById('editAssetModal').classList.remove('hidden');
     document.getElementById('editAssetTag').focus();
 }
@@ -2658,6 +2689,7 @@ document.getElementById('editAssetForm').addEventListener('submit', async functi
     formData.append('serial_number', document.getElementById('editSerialNumber').value);
     formData.append('status', document.getElementById('editStatus').value);
     formData.append('condition', document.getElementById('editCondition').value);
+    formData.append('is_borrowable', document.getElementById('editIsBorrowable').checked ? '1' : '0');
     
     try {
         const response = await fetch(location.href, {

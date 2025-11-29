@@ -26,12 +26,14 @@ try {
     $stmt = $conn->prepare("
         SELECT 
             i.*,
+            r.name as room,
             i.assigned_technician as technician_name,
             CASE 
                 WHEN i.status = 'Open' AND i.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 'Overdue'
                 ELSE i.status
             END as display_status
         FROM issues i
+        LEFT JOIN rooms r ON i.room_id = r.id
         WHERE i.user_id = ?
         ORDER BY 
             CASE i.status

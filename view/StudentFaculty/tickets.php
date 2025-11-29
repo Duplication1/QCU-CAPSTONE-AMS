@@ -14,18 +14,126 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !
 
 require_once '../../config/config.php';
 include '../components/layout_header.php';
+
+// Database connection
+$dbConfig = Config::database();
+try {
+    $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
+    $conn->set_charset('utf8mb4');
+} catch (mysqli_sql_exception $e) {
+    die("Database connection failed");
+}
+
+// Fetch buildings
+$buildingsQuery = "SELECT id, name FROM buildings ORDER BY name";
+$buildingsStmt = $conn->prepare($buildingsQuery);
+$buildingsStmt->execute();
+$buildings = $buildingsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$buildingsStmt->close();
+
+// Fetch rooms
+$roomsQuery = "SELECT id, name, building_id FROM rooms ORDER BY name";
+$roomsStmt = $conn->prepare($roomsQuery);
+$roomsStmt->execute();
+$rooms = $roomsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$roomsStmt->close();
+
+// Fetch pc_units
+$pcQuery = "SELECT id, terminal_number, room_id FROM pc_units WHERE status = 'Active' ORDER BY terminal_number";
+$pcStmt = $conn->prepare($pcQuery);
+$pcStmt->execute();
+$pcs = $pcStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$pcStmt->close();
 ?>
 
 <style>
     body, html { overflow: hidden !important; height: 100vh; }
     
-    /* Force DataTable wrapper and header to be full width */
-    #assetsTable_wrapper,
-    #assetsTable_wrapper .dataTables_scroll,
-    #assetsTable_wrapper .dataTables_scrollHead,
-    #assetsTable_wrapper .dataTables_scrollHeadInner,
-    #assetsTable_wrapper .dataTables_scrollHeadInner table {
+    /* DataTable container styling */
+    #assetsTableContainer {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Ensure table takes full width within container */
+    #assetsTable {
         width: 100% !important;
+        min-width: 600px;
+    }
+
+    /* Responsive table styling */
+    #assetsTable_wrapper .dataTables_scrollHead,
+    #assetsTable_wrapper .dataTables_scrollBody {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #assetsTable_wrapper .dataTables_scrollHead table,
+    #assetsTable_wrapper .dataTables_scrollBody table {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Style DataTables elements with Tailwind */
+    #assetsTable_wrapper .dataTables_length select,
+    #assetsTable_wrapper .dataTables_filter input {
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    #assetsTable_wrapper .dataTables_length select:focus,
+    #assetsTable_wrapper .dataTables_filter input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;
+    }
+
+    #assetsTable_wrapper .dataTables_info {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 1rem;
+    }
+
+    #assetsTable_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.5rem 0.75rem;
+        margin: 0 0.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        background-color: white;
+        color: #374151;
+    }
+    #assetsTable_wrapper .dataTables_paginate .paginate_button:hover {
+        background-color: #eff6ff;
+        border-color: #3b82f6;
+    }
+
+    #assetsTable_wrapper .dataTables_paginate .paginate_button.current {
+        background-color: #2563eb;
+        color: white;
+        border-color: #2563eb;
+    }
+
+    #assetsTable thead th {
+        background-color: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    #assetsTable tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+
+    #assetsTable tbody tr:hover {
+        background-color: #eff6ff;
     }
 </style>
 
@@ -158,24 +266,32 @@ include '../components/layout_header.php';
             <input type="hidden" name="category" id="issueCategory" value="">
             
             <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Building: *</label>
+                <select id="building" name="building_id" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
+                    <option value="" disabled selected>Select building</option>
+                    <?php foreach ($buildings as $building): ?>
+                        <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Room: *</label>
-                <select id="room" name="room" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
+                <select id="room" name="room_id" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
                     <option value="" disabled selected>Select room</option>
-                    <option value="IK501">IK501</option>
-                    <option value="IK502">IK502</option>
-                    <option value="IK503">IK503</option>
-                    <option value="IK504">IK504</option>
-                    <option value="IK505">IK505</option>
+                    <?php foreach ($rooms as $room): ?>
+                        <option value="<?php echo $room['id']; ?>" data-building="<?php echo $room['building_id']; ?>" data-name="<?php echo htmlspecialchars($room['name']); ?>"><?php echo htmlspecialchars($room['name']); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Terminal No: *</label>
-                <select id="terminal" name="terminal" class="mt-1 block w-full border rounded px-3 py-2" required>
+                <select id="terminal" name="pc_id" class="mt-1 block w-full border rounded px-3 py-2" required>
                     <option value="" disabled selected>Select terminal</option>
-                    <?php for ($i = 1; $i <= 30; $i++): ?>
-                        <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                    <?php endfor; ?>
+                    <?php foreach ($pcs as $pc): ?>
+                        <option value="<?php echo $pc['id']; ?>" data-room="<?php echo $pc['room_id']; ?>" data-name="<?php echo htmlspecialchars($pc['terminal_number']); ?>"><?php echo htmlspecialchars($pc['terminal_number']); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -499,10 +615,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const otherConcernOther = document.getElementById('otherConcernOther');
     
     function updatePreview() {
-        const room = roomSelect.value;
-        const terminal = terminalSelect.value;
-        if (room && terminal) {
-            preview.value = `Room: ${room}, Terminal: ${terminal}`;
+        const roomSelect = document.getElementById('room');
+        const terminalSelect = document.getElementById('terminal');
+        const roomOption = roomSelect.options[roomSelect.selectedIndex];
+        const terminalOption = terminalSelect.options[terminalSelect.selectedIndex];
+        const roomName = roomOption ? roomOption.getAttribute('data-name') : '';
+        const terminalName = terminalOption ? terminalOption.getAttribute('data-name') : '';
+        if (roomName && terminalName) {
+            preview.value = `Room: ${roomName}, Terminal: ${terminalName}`;
         } else {
             preview.value = '';
         }
@@ -512,6 +632,41 @@ document.addEventListener('DOMContentLoaded', function() {
         roomSelect.addEventListener('change', updatePreview);
         terminalSelect.addEventListener('change', updatePreview);
     }
+    
+    // Filter rooms by building
+    document.getElementById('building').addEventListener('change', function() {
+        const selectedBuilding = this.value;
+        const roomOptions = document.querySelectorAll('#room option');
+        roomOptions.forEach(option => {
+            if (option.value === '') return; // Skip placeholder
+            if (option.getAttribute('data-building') === selectedBuilding) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        // Reset room and terminal
+        document.getElementById('room').value = '';
+        document.getElementById('terminal').value = '';
+        updatePreview();
+    });
+    
+    // Filter terminals by room
+    document.getElementById('room').addEventListener('change', function() {
+        const selectedRoom = this.value;
+        const terminalOptions = document.querySelectorAll('#terminal option');
+        terminalOptions.forEach(option => {
+            if (option.value === '') return; // Skip placeholder
+            if (option.getAttribute('data-room') === selectedRoom) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        // Reset terminal
+        document.getElementById('terminal').value = '';
+        updatePreview();
+    });
     
     // Toggle "Others" text field for Hardware Component
     if (hardwareComponent) {
@@ -1059,10 +1214,17 @@ async function loadBorrowableAssets() {
     const errorDiv = document.getElementById('assetsError');
     
     try {
-        const response = await fetch('../../controller/get_borrowable_assets.php');
+        const response = await fetch('../../controller/get_borrowable_assets.php', {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         
-        if (data.success && data.assets.length > 0) {
+        if (data.success && data.assets && data.assets.length > 0) {
             availableAssets = data.assets;
             displayAssetsTable(data.assets);
             loadingDiv.classList.add('hidden');
@@ -1073,6 +1235,7 @@ async function loadBorrowableAssets() {
             errorDiv.innerHTML = '<i class="fa-solid fa-box-open text-4xl text-gray-400 mb-2"></i><p>No borrowable assets available at the moment.</p>';
         }
     } catch (error) {
+        console.error('Error loading assets:', error);
         loadingDiv.classList.add('hidden');
         errorDiv.classList.remove('hidden');
         errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-2"></i><p>Error loading assets. Please try again.</p>';
@@ -1102,8 +1265,8 @@ function displayAssetsTable(assets) {
     // Initialize DataTable
     assetsDataTable = $('#assetsTable').DataTable({
         data: tableData.map(item => item.data),
-        pageLength: 10,
-        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+        pageLength: 3,
+        lengthMenu: [[3, 10, 25, 50], [3, 10, 25, 50]],
         language: {
             search: "Search assets:",
             lengthMenu: "Show _MENU_ assets",
@@ -1118,8 +1281,7 @@ function displayAssetsTable(assets) {
             zeroRecords: "No matching assets found"
         },
         order: [[0, 'asc']], // Sort by asset tag by default
-        dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
-        scrollX: true,
+        responsive: true,
         autoWidth: false,
         createdRow: function(row, data, dataIndex) {
             // Store asset ID in row
@@ -1522,6 +1684,78 @@ document.addEventListener('DOMContentLoaded', function() {
     openBorrowingModal();
   }
 });
+
+// Show confirmation modal
+function showConfirmModal(options) {
+    const {
+        title = 'Confirm Action',
+        message = 'Are you sure?',
+        confirmText = 'Confirm',
+        cancelText = 'Cancel',
+        confirmColor = 'bg-blue-600 hover:bg-blue-700',
+        type = 'info'
+    } = options;
+
+    // Create modal HTML
+    const modalHTML = `
+        <div id="confirmModal" class="fixed inset-0 z-[70] flex items-center justify-center">
+            <div class="absolute inset-0 bg-black opacity-50" onclick="closeConfirmModal()"></div>
+            <div class="bg-white rounded-lg shadow-xl p-6 z-10 max-w-md w-full mx-4">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        ${type === 'warning' ? '<i class="fa-solid fa-exclamation-triangle text-yellow-500 text-xl"></i>' :
+                          type === 'error' ? '<i class="fa-solid fa-times-circle text-red-500 text-xl"></i>' :
+                          '<i class="fa-solid fa-info-circle text-blue-500 text-xl"></i>'}
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <p class="text-gray-700">${message}</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeConfirmModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        ${cancelText}
+                    </button>
+                    <button onclick="confirmAction()" class="${confirmColor} text-white px-4 py-2 rounded">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Store the resolve function for the promise
+    let resolvePromise;
+    const promise = new Promise(resolve => {
+        resolvePromise = resolve;
+    });
+
+    // Define global functions for the modal buttons
+    window.closeConfirmModal = function() {
+        const modal = document.getElementById('confirmModal');
+        if (modal) {
+            modal.remove();
+        }
+        resolvePromise(false);
+    };
+
+    window.confirmAction = function() {
+        const modal = document.getElementById('confirmModal');
+        if (modal) {
+            modal.remove();
+        }
+        resolvePromise(true);
+    };
+
+    return promise;
+}
 </script>
+
+<?php $conn->close(); ?>
 
 <?php include '../components/layout_footer.php'; ?>

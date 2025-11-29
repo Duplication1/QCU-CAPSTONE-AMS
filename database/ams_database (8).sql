@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 28, 2025 at 08:30 AM
+-- Generation Time: Nov 29, 2025 at 04:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,7 +44,42 @@ CREATE TABLE `activity_logs` (
 --
 
 INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `description`, `ip_address`, `user_agent`, `created_at`) VALUES
-(1, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-27 to 2025-11-26)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-26 13:33:21');
+(1, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-27 to 2025-11-26)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-26 13:33:21'),
+(2, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 08:14:05'),
+(3, 1, 'export', 'report', NULL, 'Generated users report', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 09:27:47'),
+(4, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 09:27:52'),
+(5, 1, 'view', 'report', NULL, 'Previewed assets report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 09:28:38'),
+(6, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 09:28:39'),
+(7, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 19:59:49'),
+(8, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 19:59:57'),
+(9, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 19:59:58'),
+(10, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-29 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 20:00:01'),
+(11, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-28 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 20:00:03'),
+(12, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-28 to 2025-11-28)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 20:00:04'),
+(13, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-28 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 20:00:06'),
+(14, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-10-28 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-28 20:00:07'),
+(15, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-30 to 2025-11-29)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:20'),
+(16, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-29)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:24'),
+(17, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-27)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:29'),
+(18, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-27)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:29'),
+(19, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-29)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:32'),
+(20, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-29)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:33'),
+(21, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:35'),
+(22, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-16 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:36'),
+(23, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:38'),
+(24, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:39'),
+(25, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:39'),
+(26, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:40'),
+(27, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:40'),
+(28, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:40'),
+(29, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:41'),
+(30, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:41'),
+(31, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:41'),
+(32, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:41'),
+(33, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:41'),
+(34, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:42'),
+(35, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:42'),
+(36, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-10-01 to 2025-11-30)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:43:42');
 
 -- --------------------------------------------------------
 
@@ -93,16 +128,16 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`, `brand`, `model`, `serial_number`, `specifications`, `room_id`, `pc_unit_id`, `location`, `terminal_number`, `purchase_date`, `purchase_cost`, `supplier`, `warranty_expiry`, `status`, `condition`, `is_borrowable`, `assigned_to`, `assigned_date`, `assigned_by`, `last_maintenance_date`, `next_maintenance_date`, `maintenance_notes`, `notes`, `qr_code`, `image`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
-(376, '11-28-2025-MOUSE-IK501-001', 'MOUSE #1', 'Hardware', '6', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-001%22%2C%22asset_name%22%3A%22MOUSE+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:25:13'),
-(377, '11-28-2025-MOUSE-IK501-002', 'MOUSE #2', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-002%22%2C%22asset_name%22%3A%22MOUSE+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(378, '11-28-2025-MOUSE-IK501-003', 'MOUSE #3', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-003%22%2C%22asset_name%22%3A%22MOUSE+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(379, '11-28-2025-MOUSE-IK501-004', 'MOUSE #4', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-004%22%2C%22asset_name%22%3A%22MOUSE+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(380, '11-28-2025-MOUSE-IK501-005', 'MOUSE #5', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-005%22%2C%22asset_name%22%3A%22MOUSE+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(381, '11-28-2025-MOUSE-IK501-006', 'MOUSE #6', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-006%22%2C%22asset_name%22%3A%22MOUSE+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(382, '11-28-2025-MOUSE-IK501-007', 'MOUSE #7', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-007%22%2C%22asset_name%22%3A%22MOUSE+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(383, '11-28-2025-MOUSE-IK501-008', 'MOUSE #8', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-008%22%2C%22asset_name%22%3A%22MOUSE+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(384, '11-28-2025-MOUSE-IK501-009', 'MOUSE #9', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-009%22%2C%22asset_name%22%3A%22MOUSE+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
-(385, '11-28-2025-MOUSE-IK501-010', 'MOUSE #10', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-010%22%2C%22asset_name%22%3A%22MOUSE+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
+(376, '11-28-2025-MOUSE-IK501-001', 'MOUSE #1', 'Hardware', '6', '', '', NULL, NULL, 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-001%22%2C%22asset_name%22%3A%22MOUSE+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(377, '11-28-2025-MOUSE-IK501-002', 'MOUSE #2', 'Hardware', '6', '', '', NULL, NULL, 7, 123, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-002%22%2C%22asset_name%22%3A%22MOUSE+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(378, '11-28-2025-MOUSE-IK501-003', 'MOUSE #3', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-003%22%2C%22asset_name%22%3A%22MOUSE+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(379, '11-28-2025-MOUSE-IK501-004', 'MOUSE #4', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-004%22%2C%22asset_name%22%3A%22MOUSE+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(380, '11-28-2025-MOUSE-IK501-005', 'MOUSE #5', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-005%22%2C%22asset_name%22%3A%22MOUSE+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(381, '11-28-2025-MOUSE-IK501-006', 'MOUSE #6', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-006%22%2C%22asset_name%22%3A%22MOUSE+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(382, '11-28-2025-MOUSE-IK501-007', 'MOUSE #7', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-007%22%2C%22asset_name%22%3A%22MOUSE+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(383, '11-28-2025-MOUSE-IK501-008', 'MOUSE #8', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-008%22%2C%22asset_name%22%3A%22MOUSE+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(384, '11-28-2025-MOUSE-IK501-009', 'MOUSE #9', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-009%22%2C%22asset_name%22%3A%22MOUSE+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
+(385, '11-28-2025-MOUSE-IK501-010', 'MOUSE #10', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-010%22%2C%22asset_name%22%3A%22MOUSE+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-29 02:47:40'),
 (386, '11-28-2025-MOUSE-IK501-011', 'MOUSE #11', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-011%22%2C%22asset_name%22%3A%22MOUSE+%2311%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:20:59', '2025-11-28 07:20:59'),
 (387, '11-28-2025-MOUSE-IK501-012', 'MOUSE #12', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-012%22%2C%22asset_name%22%3A%22MOUSE+%2312%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:21:00', '2025-11-28 07:21:00'),
 (388, '11-28-2025-MOUSE-IK501-013', 'MOUSE #13', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-013%22%2C%22asset_name%22%3A%22MOUSE+%2313%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:21:00', '2025-11-28 07:21:00'),
@@ -143,7 +178,7 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (423, '11-28-2025-MOUSE-IK501-048', 'MOUSE #48', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-048%22%2C%22asset_name%22%3A%22MOUSE+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:21:00', '2025-11-28 07:21:00'),
 (424, '11-28-2025-MOUSE-IK501-049', 'MOUSE #49', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-049%22%2C%22asset_name%22%3A%22MOUSE+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:21:00', '2025-11-28 07:21:00'),
 (425, '11-28-2025-MOUSE-IK501-050', 'MOUSE #50', 'Hardware', '6', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MOUSE-IK501-050%22%2C%22asset_name%22%3A%22MOUSE+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%2', NULL, 3, NULL, '2025-11-28 07:21:00', '2025-11-28 07:21:00'),
-(426, '11-28-2025-MONITOR-IK501-001', 'MONITOR #1', 'Hardware', '4', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-001%22%2C%22asset_name%22%3A%22MONITOR+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:29:06'),
+(426, '11-28-2025-MONITOR-IK501-001', 'MONITOR #1', 'Hardware', '4', '', '', NULL, NULL, 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-001%22%2C%22asset_name%22%3A%22MONITOR+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 09:34:41'),
 (427, '11-28-2025-MONITOR-IK501-002', 'MONITOR #2', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-002%22%2C%22asset_name%22%3A%22MONITOR+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
 (428, '11-28-2025-MONITOR-IK501-003', 'MONITOR #3', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-003%22%2C%22asset_name%22%3A%22MONITOR+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
 (429, '11-28-2025-MONITOR-IK501-004', 'MONITOR #4', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-004%22%2C%22asset_name%22%3A%22MONITOR+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
@@ -194,11 +229,11 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (473, '11-28-2025-MONITOR-IK501-048', 'MONITOR #48', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-048%22%2C%22asset_name%22%3A%22MONITOR+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
 (474, '11-28-2025-MONITOR-IK501-049', 'MONITOR #49', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-049%22%2C%22asset_name%22%3A%22MONITOR+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
 (475, '11-28-2025-MONITOR-IK501-050', 'MONITOR #50', 'Hardware', '4', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-MONITOR-IK501-050%22%2C%22asset_name%22%3A%22MONITOR+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 07:25:47', '2025-11-28 07:25:47'),
-(476, '11-28-2025-KEYBOARD-IK501-001', 'KEYBOARD #1', 'Hardware', '5', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-001%22%2C%22asset_name%22%3A%22KEYBOARD+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:29:00'),
-(477, '11-28-2025-KEYBOARD-IK501-002', 'KEYBOARD #2', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-002%22%2C%22asset_name%22%3A%22KEYBOARD+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
-(478, '11-28-2025-KEYBOARD-IK501-003', 'KEYBOARD #3', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-003%22%2C%22asset_name%22%3A%22KEYBOARD+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
-(479, '11-28-2025-KEYBOARD-IK501-004', 'KEYBOARD #4', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-004%22%2C%22asset_name%22%3A%22KEYBOARD+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
-(480, '11-28-2025-KEYBOARD-IK501-005', 'KEYBOARD #5', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-005%22%2C%22asset_name%22%3A%22KEYBOARD+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
+(476, '11-28-2025-KEYBOARD-IK501-001', 'KEYBOARD #1', 'Hardware', '5', '', '', NULL, NULL, 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-001%22%2C%22asset_name%22%3A%22KEYBOARD+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-29 03:28:57'),
+(477, '11-28-2025-KEYBOARD-IK501-002', 'KEYBOARD #2', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-002%22%2C%22asset_name%22%3A%22KEYBOARD+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-29 02:47:40'),
+(478, '11-28-2025-KEYBOARD-IK501-003', 'KEYBOARD #3', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-003%22%2C%22asset_name%22%3A%22KEYBOARD+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-29 02:47:40'),
+(479, '11-28-2025-KEYBOARD-IK501-004', 'KEYBOARD #4', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-004%22%2C%22asset_name%22%3A%22KEYBOARD+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-29 02:47:40'),
+(480, '11-28-2025-KEYBOARD-IK501-005', 'KEYBOARD #5', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-005%22%2C%22asset_name%22%3A%22KEYBOARD+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-29 02:47:40'),
 (481, '11-28-2025-KEYBOARD-IK501-006', 'KEYBOARD #6', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-006%22%2C%22asset_name%22%3A%22KEYBOARD+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
 (482, '11-28-2025-KEYBOARD-IK501-007', 'KEYBOARD #7', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-007%22%2C%22asset_name%22%3A%22KEYBOARD+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
 (483, '11-28-2025-KEYBOARD-IK501-008', 'KEYBOARD #8', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-008%22%2C%22asset_name%22%3A%22KEYBOARD+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22br', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
@@ -244,8 +279,8 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (523, '11-28-2025-KEYBOARD-IK501-048', 'KEYBOARD #48', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-048%22%2C%22asset_name%22%3A%22KEYBOARD+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22b', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
 (524, '11-28-2025-KEYBOARD-IK501-049', 'KEYBOARD #49', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-049%22%2C%22asset_name%22%3A%22KEYBOARD+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22b', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
 (525, '11-28-2025-KEYBOARD-IK501-050', 'KEYBOARD #50', 'Hardware', '5', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-KEYBOARD-IK501-050%22%2C%22asset_name%22%3A%22KEYBOARD+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22b', NULL, 3, NULL, '2025-11-28 07:26:19', '2025-11-28 07:26:19'),
-(526, '11-28-2025-RAM-IK501-001', 'RAM #1', 'Hardware', '3', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-001%22%2C%22asset_name%22%3A%22RAM+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:29:33'),
-(527, '11-28-2025-RAM-IK501-002', 'RAM #2', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-002%22%2C%22asset_name%22%3A%22RAM+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
+(526, '11-28-2025-RAM-IK501-001', 'RAM #1', 'Hardware', '3', '', '', NULL, NULL, 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-001%22%2C%22asset_name%22%3A%22RAM+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 09:34:51'),
+(527, '11-28-2025-RAM-IK501-002', 'RAM #2', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-002%22%2C%22asset_name%22%3A%22RAM+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, 3, '2025-11-28 07:26:49', '2025-11-28 08:15:15'),
 (528, '11-28-2025-RAM-IK501-003', 'RAM #3', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-003%22%2C%22asset_name%22%3A%22RAM+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
 (529, '11-28-2025-RAM-IK501-004', 'RAM #4', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-004%22%2C%22asset_name%22%3A%22RAM+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
 (530, '11-28-2025-RAM-IK501-005', 'RAM #5', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-005%22%2C%22asset_name%22%3A%22RAM+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A%', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
@@ -294,7 +329,111 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (572, '11-28-2025-RAM-IK501-047', 'RAM #47', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-047%22%2C%22asset_name%22%3A%22RAM+%2347%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
 (573, '11-28-2025-RAM-IK501-048', 'RAM #48', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-048%22%2C%22asset_name%22%3A%22RAM+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
 (574, '11-28-2025-RAM-IK501-049', 'RAM #49', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-049%22%2C%22asset_name%22%3A%22RAM+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
-(575, '11-28-2025-RAM-IK501-050', 'RAM #50', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-050%22%2C%22asset_name%22%3A%22RAM+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49');
+(575, '11-28-2025-RAM-IK501-050', 'RAM #50', 'Hardware', '3', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-RAM-IK501-050%22%2C%22asset_name%22%3A%22RAM+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%22%3A', NULL, 3, NULL, '2025-11-28 07:26:49', '2025-11-28 07:26:49'),
+(576, '11-28-2025-ADAPTER-IK501-001', 'ADAPTER #1', 'Hardware', '14', '', '', NULL, NULL, 7, 123, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Fair', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-001%22%2C%22asset_name%22%3A%22ADAPTER+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, 3, '2025-11-28 08:21:34', '2025-11-28 08:45:26'),
+(577, '11-28-2025-ADAPTER-IK501-002', 'ADAPTER #2', 'Hardware', '14', '', '', NULL, NULL, 7, 125, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Fair', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-002%22%2C%22asset_name%22%3A%22ADAPTER+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, 2, '2025-11-28 08:21:34', '2025-11-28 09:30:43'),
+(578, '11-28-2025-ADAPTER-IK501-003', 'ADAPTER #3', 'Hardware', '14', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Excellent', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-003%22%2C%22asset_name%22%3A%22ADAPTER+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, 2, '2025-11-28 08:21:34', '2025-11-28 09:31:22'),
+(579, '11-28-2025-ADAPTER-IK501-004', 'ADAPTER #4', 'Hardware', '14', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-004%22%2C%22asset_name%22%3A%22ADAPTER+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:36:13'),
+(580, '11-28-2025-ADAPTER-IK501-005', 'ADAPTER #5', 'Hardware', '14', '', '', NULL, NULL, 7, 56, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-005%22%2C%22asset_name%22%3A%22ADAPTER+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:38:34'),
+(581, '11-28-2025-ADAPTER-IK501-006', 'ADAPTER #6', 'Hardware', '14', '', '', NULL, NULL, 7, 106, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-006%22%2C%22asset_name%22%3A%22ADAPTER+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:59:00'),
+(582, '11-28-2025-ADAPTER-IK501-007', 'ADAPTER #7', 'Hardware', '14', '', '', NULL, NULL, 7, 114, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-007%22%2C%22asset_name%22%3A%22ADAPTER+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-29 03:30:21'),
+(583, '11-28-2025-ADAPTER-IK501-008', 'ADAPTER #8', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-008%22%2C%22asset_name%22%3A%22ADAPTER+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 09:34:25'),
+(584, '11-28-2025-ADAPTER-IK501-009', 'ADAPTER #9', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-009%22%2C%22asset_name%22%3A%22ADAPTER+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bran', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 09:34:27'),
+(585, '11-28-2025-ADAPTER-IK501-010', 'ADAPTER #10', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-010%22%2C%22asset_name%22%3A%22ADAPTER+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 09:34:20'),
+(586, '11-28-2025-ADAPTER-IK501-011', 'ADAPTER #11', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-011%22%2C%22asset_name%22%3A%22ADAPTER+%2311%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(587, '11-28-2025-ADAPTER-IK501-012', 'ADAPTER #12', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-012%22%2C%22asset_name%22%3A%22ADAPTER+%2312%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(588, '11-28-2025-ADAPTER-IK501-013', 'ADAPTER #13', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-013%22%2C%22asset_name%22%3A%22ADAPTER+%2313%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(589, '11-28-2025-ADAPTER-IK501-014', 'ADAPTER #14', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-014%22%2C%22asset_name%22%3A%22ADAPTER+%2314%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(590, '11-28-2025-ADAPTER-IK501-015', 'ADAPTER #15', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-015%22%2C%22asset_name%22%3A%22ADAPTER+%2315%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(591, '11-28-2025-ADAPTER-IK501-016', 'ADAPTER #16', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-016%22%2C%22asset_name%22%3A%22ADAPTER+%2316%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(592, '11-28-2025-ADAPTER-IK501-017', 'ADAPTER #17', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-017%22%2C%22asset_name%22%3A%22ADAPTER+%2317%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(593, '11-28-2025-ADAPTER-IK501-018', 'ADAPTER #18', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-018%22%2C%22asset_name%22%3A%22ADAPTER+%2318%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(594, '11-28-2025-ADAPTER-IK501-019', 'ADAPTER #19', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-019%22%2C%22asset_name%22%3A%22ADAPTER+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(595, '11-28-2025-ADAPTER-IK501-020', 'ADAPTER #20', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-020%22%2C%22asset_name%22%3A%22ADAPTER+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(596, '11-28-2025-ADAPTER-IK501-021', 'ADAPTER #21', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-021%22%2C%22asset_name%22%3A%22ADAPTER+%2321%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(597, '11-28-2025-ADAPTER-IK501-022', 'ADAPTER #22', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-022%22%2C%22asset_name%22%3A%22ADAPTER+%2322%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(598, '11-28-2025-ADAPTER-IK501-023', 'ADAPTER #23', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-023%22%2C%22asset_name%22%3A%22ADAPTER+%2323%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(599, '11-28-2025-ADAPTER-IK501-024', 'ADAPTER #24', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-024%22%2C%22asset_name%22%3A%22ADAPTER+%2324%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(600, '11-28-2025-ADAPTER-IK501-025', 'ADAPTER #25', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-025%22%2C%22asset_name%22%3A%22ADAPTER+%2325%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(601, '11-28-2025-ADAPTER-IK501-026', 'ADAPTER #26', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-026%22%2C%22asset_name%22%3A%22ADAPTER+%2326%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(602, '11-28-2025-ADAPTER-IK501-027', 'ADAPTER #27', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-027%22%2C%22asset_name%22%3A%22ADAPTER+%2327%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(603, '11-28-2025-ADAPTER-IK501-028', 'ADAPTER #28', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-028%22%2C%22asset_name%22%3A%22ADAPTER+%2328%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(604, '11-28-2025-ADAPTER-IK501-029', 'ADAPTER #29', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-029%22%2C%22asset_name%22%3A%22ADAPTER+%2329%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(605, '11-28-2025-ADAPTER-IK501-030', 'ADAPTER #30', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-030%22%2C%22asset_name%22%3A%22ADAPTER+%2330%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(606, '11-28-2025-ADAPTER-IK501-031', 'ADAPTER #31', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-031%22%2C%22asset_name%22%3A%22ADAPTER+%2331%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(607, '11-28-2025-ADAPTER-IK501-032', 'ADAPTER #32', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-032%22%2C%22asset_name%22%3A%22ADAPTER+%2332%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(608, '11-28-2025-ADAPTER-IK501-033', 'ADAPTER #33', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-033%22%2C%22asset_name%22%3A%22ADAPTER+%2333%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(609, '11-28-2025-ADAPTER-IK501-034', 'ADAPTER #34', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-034%22%2C%22asset_name%22%3A%22ADAPTER+%2334%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(610, '11-28-2025-ADAPTER-IK501-035', 'ADAPTER #35', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-035%22%2C%22asset_name%22%3A%22ADAPTER+%2335%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(611, '11-28-2025-ADAPTER-IK501-036', 'ADAPTER #36', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-036%22%2C%22asset_name%22%3A%22ADAPTER+%2336%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(612, '11-28-2025-ADAPTER-IK501-037', 'ADAPTER #37', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-037%22%2C%22asset_name%22%3A%22ADAPTER+%2337%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(613, '11-28-2025-ADAPTER-IK501-038', 'ADAPTER #38', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-038%22%2C%22asset_name%22%3A%22ADAPTER+%2338%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(614, '11-28-2025-ADAPTER-IK501-039', 'ADAPTER #39', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-039%22%2C%22asset_name%22%3A%22ADAPTER+%2339%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(615, '11-28-2025-ADAPTER-IK501-040', 'ADAPTER #40', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-040%22%2C%22asset_name%22%3A%22ADAPTER+%2340%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(616, '11-28-2025-ADAPTER-IK501-041', 'ADAPTER #41', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-041%22%2C%22asset_name%22%3A%22ADAPTER+%2341%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(617, '11-28-2025-ADAPTER-IK501-042', 'ADAPTER #42', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-042%22%2C%22asset_name%22%3A%22ADAPTER+%2342%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(618, '11-28-2025-ADAPTER-IK501-043', 'ADAPTER #43', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-043%22%2C%22asset_name%22%3A%22ADAPTER+%2343%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(619, '11-28-2025-ADAPTER-IK501-044', 'ADAPTER #44', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-044%22%2C%22asset_name%22%3A%22ADAPTER+%2344%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(620, '11-28-2025-ADAPTER-IK501-045', 'ADAPTER #45', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-045%22%2C%22asset_name%22%3A%22ADAPTER+%2345%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(621, '11-28-2025-ADAPTER-IK501-046', 'ADAPTER #46', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-046%22%2C%22asset_name%22%3A%22ADAPTER+%2346%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(622, '11-28-2025-ADAPTER-IK501-047', 'ADAPTER #47', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-047%22%2C%22asset_name%22%3A%22ADAPTER+%2347%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(623, '11-28-2025-ADAPTER-IK501-048', 'ADAPTER #48', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-048%22%2C%22asset_name%22%3A%22ADAPTER+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(624, '11-28-2025-ADAPTER-IK501-049', 'ADAPTER #49', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-049%22%2C%22asset_name%22%3A%22ADAPTER+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(625, '11-28-2025-ADAPTER-IK501-050', 'ADAPTER #50', 'Hardware', '14', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-ADAPTER-IK501-050%22%2C%22asset_name%22%3A%22ADAPTER+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22bra', NULL, 3, NULL, '2025-11-28 08:21:34', '2025-11-28 08:21:34'),
+(626, '11-28-2025-TABLE-NOROOM-001', 'TABLE #1', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-001%22%2C%22asset_name%22%3A%22TABLE+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(627, '11-28-2025-TABLE-NOROOM-002', 'TABLE #2', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-002%22%2C%22asset_name%22%3A%22TABLE+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(628, '11-28-2025-TABLE-NOROOM-003', 'TABLE #3', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-003%22%2C%22asset_name%22%3A%22TABLE+%233%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(629, '11-28-2025-TABLE-NOROOM-004', 'TABLE #4', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-004%22%2C%22asset_name%22%3A%22TABLE+%234%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(630, '11-28-2025-TABLE-NOROOM-005', 'TABLE #5', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-005%22%2C%22asset_name%22%3A%22TABLE+%235%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(631, '11-28-2025-TABLE-NOROOM-006', 'TABLE #6', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-006%22%2C%22asset_name%22%3A%22TABLE+%236%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(632, '11-28-2025-TABLE-NOROOM-007', 'TABLE #7', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-007%22%2C%22asset_name%22%3A%22TABLE+%237%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(633, '11-28-2025-TABLE-NOROOM-008', 'TABLE #8', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-008%22%2C%22asset_name%22%3A%22TABLE+%238%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(634, '11-28-2025-TABLE-NOROOM-009', 'TABLE #9', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-009%22%2C%22asset_name%22%3A%22TABLE+%239%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%2', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(635, '11-28-2025-TABLE-NOROOM-010', 'TABLE #10', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-010%22%2C%22asset_name%22%3A%22TABLE+%2310%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(636, '11-28-2025-TABLE-NOROOM-011', 'TABLE #11', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-011%22%2C%22asset_name%22%3A%22TABLE+%2311%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(637, '11-28-2025-TABLE-NOROOM-012', 'TABLE #12', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-012%22%2C%22asset_name%22%3A%22TABLE+%2312%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(638, '11-28-2025-TABLE-NOROOM-013', 'TABLE #13', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-013%22%2C%22asset_name%22%3A%22TABLE+%2313%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(639, '11-28-2025-TABLE-NOROOM-014', 'TABLE #14', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-014%22%2C%22asset_name%22%3A%22TABLE+%2314%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(640, '11-28-2025-TABLE-NOROOM-015', 'TABLE #15', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-015%22%2C%22asset_name%22%3A%22TABLE+%2315%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(641, '11-28-2025-TABLE-NOROOM-016', 'TABLE #16', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-016%22%2C%22asset_name%22%3A%22TABLE+%2316%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(642, '11-28-2025-TABLE-NOROOM-017', 'TABLE #17', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-017%22%2C%22asset_name%22%3A%22TABLE+%2317%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(643, '11-28-2025-TABLE-NOROOM-018', 'TABLE #18', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-018%22%2C%22asset_name%22%3A%22TABLE+%2318%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(644, '11-28-2025-TABLE-NOROOM-019', 'TABLE #19', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-019%22%2C%22asset_name%22%3A%22TABLE+%2319%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(645, '11-28-2025-TABLE-NOROOM-020', 'TABLE #20', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-020%22%2C%22asset_name%22%3A%22TABLE+%2320%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(646, '11-28-2025-TABLE-NOROOM-021', 'TABLE #21', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-021%22%2C%22asset_name%22%3A%22TABLE+%2321%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(647, '11-28-2025-TABLE-NOROOM-022', 'TABLE #22', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-022%22%2C%22asset_name%22%3A%22TABLE+%2322%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(648, '11-28-2025-TABLE-NOROOM-023', 'TABLE #23', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-023%22%2C%22asset_name%22%3A%22TABLE+%2323%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(649, '11-28-2025-TABLE-NOROOM-024', 'TABLE #24', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-024%22%2C%22asset_name%22%3A%22TABLE+%2324%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(650, '11-28-2025-TABLE-NOROOM-025', 'TABLE #25', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-025%22%2C%22asset_name%22%3A%22TABLE+%2325%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(651, '11-28-2025-TABLE-NOROOM-026', 'TABLE #26', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-026%22%2C%22asset_name%22%3A%22TABLE+%2326%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(652, '11-28-2025-TABLE-NOROOM-027', 'TABLE #27', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-027%22%2C%22asset_name%22%3A%22TABLE+%2327%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(653, '11-28-2025-TABLE-NOROOM-028', 'TABLE #28', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-028%22%2C%22asset_name%22%3A%22TABLE+%2328%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(654, '11-28-2025-TABLE-NOROOM-029', 'TABLE #29', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-029%22%2C%22asset_name%22%3A%22TABLE+%2329%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(655, '11-28-2025-TABLE-NOROOM-030', 'TABLE #30', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-030%22%2C%22asset_name%22%3A%22TABLE+%2330%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(656, '11-28-2025-TABLE-NOROOM-031', 'TABLE #31', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-031%22%2C%22asset_name%22%3A%22TABLE+%2331%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(657, '11-28-2025-TABLE-NOROOM-032', 'TABLE #32', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-032%22%2C%22asset_name%22%3A%22TABLE+%2332%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(658, '11-28-2025-TABLE-NOROOM-033', 'TABLE #33', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-033%22%2C%22asset_name%22%3A%22TABLE+%2333%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(659, '11-28-2025-TABLE-NOROOM-034', 'TABLE #34', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-034%22%2C%22asset_name%22%3A%22TABLE+%2334%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(660, '11-28-2025-TABLE-NOROOM-035', 'TABLE #35', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-035%22%2C%22asset_name%22%3A%22TABLE+%2335%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19');
+INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`, `brand`, `model`, `serial_number`, `specifications`, `room_id`, `pc_unit_id`, `location`, `terminal_number`, `purchase_date`, `purchase_cost`, `supplier`, `warranty_expiry`, `status`, `condition`, `is_borrowable`, `assigned_to`, `assigned_date`, `assigned_by`, `last_maintenance_date`, `next_maintenance_date`, `maintenance_notes`, `notes`, `qr_code`, `image`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
+(661, '11-28-2025-TABLE-NOROOM-036', 'TABLE #36', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-036%22%2C%22asset_name%22%3A%22TABLE+%2336%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(662, '11-28-2025-TABLE-NOROOM-037', 'TABLE #37', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-037%22%2C%22asset_name%22%3A%22TABLE+%2337%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(663, '11-28-2025-TABLE-NOROOM-038', 'TABLE #38', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-038%22%2C%22asset_name%22%3A%22TABLE+%2338%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(664, '11-28-2025-TABLE-NOROOM-039', 'TABLE #39', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-039%22%2C%22asset_name%22%3A%22TABLE+%2339%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(665, '11-28-2025-TABLE-NOROOM-040', 'TABLE #40', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-040%22%2C%22asset_name%22%3A%22TABLE+%2340%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(666, '11-28-2025-TABLE-NOROOM-041', 'TABLE #41', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-041%22%2C%22asset_name%22%3A%22TABLE+%2341%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(667, '11-28-2025-TABLE-NOROOM-042', 'TABLE #42', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-042%22%2C%22asset_name%22%3A%22TABLE+%2342%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(668, '11-28-2025-TABLE-NOROOM-043', 'TABLE #43', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-043%22%2C%22asset_name%22%3A%22TABLE+%2343%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(669, '11-28-2025-TABLE-NOROOM-044', 'TABLE #44', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-044%22%2C%22asset_name%22%3A%22TABLE+%2344%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(670, '11-28-2025-TABLE-NOROOM-045', 'TABLE #45', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-045%22%2C%22asset_name%22%3A%22TABLE+%2345%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(671, '11-28-2025-TABLE-NOROOM-046', 'TABLE #46', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-046%22%2C%22asset_name%22%3A%22TABLE+%2346%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(672, '11-28-2025-TABLE-NOROOM-047', 'TABLE #47', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-047%22%2C%22asset_name%22%3A%22TABLE+%2347%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(673, '11-28-2025-TABLE-NOROOM-048', 'TABLE #48', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-048%22%2C%22asset_name%22%3A%22TABLE+%2348%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(674, '11-28-2025-TABLE-NOROOM-049', 'TABLE #49', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-049%22%2C%22asset_name%22%3A%22TABLE+%2349%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(675, '11-28-2025-TABLE-NOROOM-050', 'TABLE #50', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-28-2025-TABLE-NOROOM-050%22%2C%22asset_name%22%3A%22TABLE+%2350%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3A%', NULL, 3, NULL, '2025-11-28 09:39:19', '2025-11-28 09:39:19'),
+(676, '11-29-2025-LAPTOP-NO-ROOM-001', 'LAPTOP #1', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-29-2025-LAPTOP-NO-ROOM-001%22%2C%22asset_name%22%3A%22LAPTOP+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-29 02:27:48', '2025-11-29 02:27:48'),
+(677, '11-29-2025-LAPTOP-NO-ROOM-002', 'LAPTOP #2', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-29-2025-LAPTOP-NO-ROOM-002%22%2C%22asset_name%22%3A%22LAPTOP+%232%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%2C%22brand%22%3A%22%22%2C%22model%22%3', NULL, 3, NULL, '2025-11-29 02:34:12', '2025-11-29 02:34:12'),
+(678, '11-29-2025-LAPTOP-IK501-001', 'LAPTOP #1', 'Hardware', '1', '', '', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Excellent', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2211-29-2025-LAPTOP-IK501-001%22%2C%22asset_name%22%3A%22LAPTOP+%231%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK501%22%2C%22brand%', NULL, 3, 2, '2025-11-29 02:35:55', '2025-11-29 02:44:32');
 
 -- --------------------------------------------------------
 
@@ -325,7 +464,8 @@ CREATE TABLE `asset_borrowing` (
 --
 
 INSERT INTO `asset_borrowing` (`id`, `asset_id`, `borrower_id`, `borrower_name`, `borrowed_date`, `expected_return_date`, `actual_return_date`, `purpose`, `status`, `approved_by`, `approved_date`, `returned_condition`, `return_notes`, `created_at`, `updated_at`) VALUES
-(1, 4, 5, 'Student One', '2025-11-04 00:00:00', '2025-11-05 00:00:00', '2025-11-19 14:47:20', 'dasdsa', 'Returned', 3, '2025-11-19 14:47:02', 'Excellent', '', '2025-11-02 04:03:48', '2025-11-19 06:47:20');
+(1, 4, 5, 'Student One', '2025-11-04 00:00:00', '2025-11-05 00:00:00', '2025-11-19 14:47:20', 'dasdsa', 'Returned', 3, '2025-11-19 14:47:02', 'Excellent', '', '2025-11-02 04:03:48', '2025-11-19 06:47:20'),
+(2, 476, 5, 'Student One', '2025-11-29 00:00:00', '2025-11-30 00:00:00', '2025-11-29 11:28:57', 'asdsada', 'Returned', 3, '2025-11-29 11:28:51', 'Excellent', 'dsada', '2025-11-29 03:19:25', '2025-11-29 03:28:57');
 
 -- --------------------------------------------------------
 
@@ -359,7 +499,8 @@ INSERT INTO `asset_categories` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (12, 'STORAGE', '2025-11-28 03:37:54', '2025-11-28 03:37:54'),
 (13, 'CABLE', '2025-11-28 03:37:54', '2025-11-28 03:37:54'),
 (14, 'ADAPTER', '2025-11-28 03:37:54', '2025-11-28 03:37:54'),
-(15, 'OTHER', '2025-11-28 03:37:54', '2025-11-28 03:37:54');
+(15, 'OTHER', '2025-11-28 03:37:54', '2025-11-28 03:37:54'),
+(66, 'TABLE', '2025-11-28 09:38:30', '2025-11-28 09:38:30');
 
 -- --------------------------------------------------------
 
@@ -418,8 +559,8 @@ CREATE TABLE `issues` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
   `category` enum('hardware','software','network','laboratory','other') NOT NULL,
-  `room` varchar(64) NOT NULL,
-  `terminal` varchar(16) NOT NULL,
+  `room_id` int(11) DEFAULT NULL,
+  `pc_id` int(11) DEFAULT NULL,
   `hardware_component` varchar(255) DEFAULT NULL,
   `hardware_component_other` varchar(255) DEFAULT NULL,
   `software_name` varchar(255) DEFAULT NULL,
@@ -439,33 +580,20 @@ CREATE TABLE `issues` (
   `submitted_by` varchar(255) DEFAULT NULL,
   `assigned_group` varchar(100) DEFAULT NULL,
   `is_archived` tinyint(1) DEFAULT 0,
-  `archived_at` datetime DEFAULT NULL
+  `archived_at` datetime DEFAULT NULL,
+  `building_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `issues`
 --
 
-INSERT INTO `issues` (`id`, `user_id`, `category`, `room`, `terminal`, `hardware_component`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `assigned_group`, `is_archived`, `archived_at`) VALUES
-(1, 5, 'hardware', 'IK501', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Not working', 'May kagat yung keycaps!', '', 'Open', '2025-11-03 05:52:52', '2025-11-07 06:17:45', NULL, NULL, 'John Technician', 0, NULL),
-(2, 5, 'hardware', 'IK502', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'May kagat yung keycaps', 'May kulangot yung letter M!', '', 'Open', '2025-11-03 05:53:19', '2025-11-19 04:21:15', NULL, NULL, 'John Technician', 0, NULL),
-(3, 5, 'software', 'IK501', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'May google', 'Google tate', '', 'Resolved', '2025-11-03 05:54:36', '2025-11-19 03:55:26', NULL, NULL, 'John Technician', 1, NULL),
-(4, 5, 'software', 'IK502', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'q', '', 'Open', '2025-11-19 03:48:51', '2025-11-19 06:57:41', NULL, NULL, 'John Technician', 0, NULL),
-(5, 5, 'hardware', 'IK501', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'w', 'w', '', 'Open', '2025-11-19 03:49:02', '2025-11-19 06:57:36', NULL, NULL, 'John Technician', 0, NULL),
-(6, 5, 'hardware', 'IK502', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ISSE', 'qweqwe', '', 'Resolved', '2025-11-19 04:44:55', '2025-11-19 04:57:19', NULL, NULL, 'John Technician', 1, '2025-11-19 12:57:19'),
-(7, 5, 'hardware', 'IK503', '5', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'q', '', 'Open', '2025-11-19 04:58:29', '2025-11-19 06:57:33', NULL, NULL, 'John Technician', 0, NULL),
-(8, 5, 'hardware', 'IK501', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'q', '', 'Open', '2025-11-19 05:02:00', '2025-11-19 06:57:29', NULL, NULL, 'John Technician', 0, NULL),
-(9, 5, 'hardware', 'IK501', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'q', '', 'Open', '2025-11-19 05:11:39', '2025-11-19 06:57:26', NULL, NULL, 'John Technician', 0, NULL),
-(10, 5, 'hardware', 'IK502', '3', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'q', '', 'Open', '2025-11-19 05:15:45', '2025-11-19 06:57:23', NULL, NULL, 'John Technician', 0, NULL),
-(11, 5, 'hardware', 'IK501', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qwe', 'qr', '', 'Open', '2025-11-19 05:57:11', '2025-11-19 06:57:21', NULL, NULL, 'John Technician', 0, NULL),
-(12, 5, 'hardware', 'IK502', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qzxzxc', 'qwewe', '', 'Open', '2025-11-19 05:58:06', '2025-11-19 06:57:19', NULL, NULL, 'John Technician', 0, NULL),
-(13, 5, 'hardware', 'IK502', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qweqwezxc', 'qwezxc', '', 'Open', '2025-11-19 05:58:51', '2025-11-19 06:57:16', NULL, NULL, 'John Technician', 0, NULL),
-(14, 5, 'hardware', 'IK503', '3', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qbsfdghsf', 'qdhgsfgh', '', 'Open', '2025-11-19 05:59:43', '2025-11-19 06:11:17', NULL, NULL, 'John Technician', 0, NULL),
-(15, 5, 'hardware', 'IK502', '3', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qweqwewq', 'eqweqwewqeqwe', '', 'Open', '2025-11-19 06:00:06', '2025-11-19 06:02:12', NULL, NULL, 'John Technician', 0, NULL),
-(16, 5, 'hardware', 'IK502', '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qw', 'qwe', '', 'Open', '2025-11-19 06:58:47', '2025-11-19 07:02:40', NULL, NULL, 'John Technician', 0, NULL),
-(17, 5, 'hardware', 'IK501', '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qwr', 'qwr', '', 'Open', '2025-11-19 07:05:36', '2025-11-19 07:06:00', NULL, NULL, 'John Technician', 0, NULL),
-(18, 5, 'hardware', 'IK503', '3', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'q', 'weqwe', '', 'Open', '2025-11-19 07:06:10', '2025-11-24 13:29:18', 'John Technician', NULL, NULL, 0, NULL),
-(19, 5, 'software', 'IK503', '4', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'qwe', 'qwe', '', 'In Progress', '2025-11-19 07:06:16', '2025-11-24 13:08:45', 'John Technician', NULL, NULL, 0, NULL);
+INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `assigned_group`, `is_archived`, `archived_at`, `building_id`) VALUES
+(23, 5, 'hardware', 7, 62, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dsadsadsa', 'Medium', 'Open', '2025-11-28 14:22:14', '2025-11-28 14:22:14', NULL, NULL, NULL, 0, NULL, 1),
+(24, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dasddsa', 'Medium', 'Open', '2025-11-28 14:24:25', '2025-11-28 14:24:25', NULL, NULL, NULL, 0, NULL, 1),
+(25, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsad', 'Medium', 'Open', '2025-11-28 14:24:43', '2025-11-28 14:24:43', NULL, NULL, NULL, 0, NULL, 1),
+(26, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsad', 'Medium', 'Open', '2025-11-28 14:28:10', '2025-11-28 14:28:10', NULL, NULL, NULL, 0, NULL, 1),
+(27, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsa', 'Medium', 'In Progress', '2025-11-28 14:28:39', '2025-11-29 02:44:18', 'John Technician', NULL, NULL, 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -527,7 +655,33 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (15, 5, '2025-11-27 03:50:24', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (16, 3, '2025-11-27 03:51:32', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (17, 3, '2025-11-28 03:20:29', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
-(18, 3, '2025-11-28 06:06:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
+(18, 3, '2025-11-28 06:06:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(19, 1, '2025-11-28 08:12:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(20, 1, '2025-11-28 08:13:49', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(21, 3, '2025-11-28 08:14:37', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(22, 5, '2025-11-28 08:17:52', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(23, 3, '2025-11-28 08:18:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(24, 1, '2025-11-28 08:36:51', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(25, 2, '2025-11-28 08:37:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(26, 3, '2025-11-28 08:38:21', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(27, 3, '2025-11-28 09:17:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(28, 5, '2025-11-28 09:26:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(29, 1, '2025-11-28 09:27:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(30, 1, '2025-11-28 09:29:58', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(31, 2, '2025-11-28 09:30:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(32, 3, '2025-11-28 09:34:08', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(33, 5, '2025-11-28 13:42:35', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(34, 1, '2025-11-28 19:59:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(35, 3, '2025-11-28 20:01:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(36, 2, '2025-11-28 20:03:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(37, 5, '2025-11-29 02:18:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(38, 3, '2025-11-29 02:22:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(39, 5, '2025-11-29 02:28:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(40, 5, '2025-11-29 02:42:58', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(41, 1, '2025-11-29 02:43:06', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(42, 2, '2025-11-29 02:44:12', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(43, 3, '2025-11-29 03:07:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(44, 5, '2025-11-29 03:24:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -552,11 +706,8 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `related_type`, `related_id`, `is_read`, `created_at`) VALUES
-(1, 5, 'Ticket #19 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 19, 0, '2025-11-22 14:40:17'),
-(2, 2, 'New Ticket Assigned #19', 'You have been assigned to a software ticket: \"qwe\". Please review and take action.', 'info', 'issue', 19, 0, '2025-11-22 14:40:17'),
-(3, 5, 'Ticket #19 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 19, 0, '2025-11-24 13:08:45'),
-(4, 5, 'Ticket #18 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 18, 0, '2025-11-24 13:29:18'),
-(5, 2, 'New Ticket Assigned #18', 'You have been assigned to a hardware ticket: \"q\". Please review and take action.', 'info', 'issue', 18, 0, '2025-11-24 13:29:18');
+(42, 5, 'Borrowing Request #2 Approved', 'Your borrowing request has been approved. You can now pick up the asset.', 'success', 'borrowing', 2, 0, '2025-11-29 03:28:51'),
+(43, 5, 'Asset Returned - Request #2', 'Your borrowed asset has been returned and marked as \'Excellent\'. Thank you!', 'success', 'borrowing', 2, 0, '2025-11-29 03:28:57');
 
 -- --------------------------------------------------------
 
@@ -631,12 +782,12 @@ INSERT INTO `pc_units` (`id`, `room_id`, `building_id`, `terminal_number`, `stat
 (53, NULL, 1, 'TH-48', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
 (54, NULL, 1, 'TH-49', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
 (55, NULL, 1, 'TH-50', 'Active', 'Good', '', '2025-11-23 12:35:19', '2025-11-23 12:35:19'),
-(56, 7, 1, 'TH-01', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(57, 7, 1, 'TH-02', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(58, 7, 1, 'TH-03', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(59, 7, 1, 'TH-04', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(60, 7, 1, 'TH-05', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(61, 7, 1, 'TH-06', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
+(56, 7, 1, 'TH-01', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
+(57, 7, 1, 'TH-02', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
+(58, 7, 1, 'TH-03', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
+(59, 7, 1, 'TH-04', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
+(60, 7, 1, 'TH-05', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
+(61, 7, 1, 'TH-06', 'Archive', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 08:43:15'),
 (62, 7, 1, 'TH-07', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
 (63, 7, 1, 'TH-08', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
 (64, 7, 1, 'TH-09', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
@@ -680,7 +831,157 @@ INSERT INTO `pc_units` (`id`, `room_id`, `building_id`, `terminal_number`, `stat
 (102, 7, 1, 'TH-47', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
 (103, 7, 1, 'TH-48', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
 (104, 7, 1, 'TH-49', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
-(105, 7, 1, 'TH-50', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32');
+(105, 7, 1, 'TH-50', 'Active', 'Good', '', '2025-11-28 06:54:32', '2025-11-28 06:54:32'),
+(106, 7, 1, 'PC-01', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 09:14:03'),
+(107, 7, 1, 'PC-02', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 09:14:53'),
+(108, 7, 1, 'PC-03', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(109, 7, 1, 'PC-04', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(110, 7, 1, 'PC-05', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(111, 7, 1, 'PC-06', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(112, 7, 1, 'PC-07', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(113, 7, 1, 'PC-08', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 20:02:08'),
+(114, 7, 1, 'PC-09', 'Active', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:43:26'),
+(115, 7, 1, 'PC-10', 'Active', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:43:26'),
+(116, 7, 1, 'PC-11', 'Active', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 09:00:30'),
+(117, 7, 1, 'PC-12', 'Active', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 09:13:58'),
+(118, 7, 1, 'PC-13', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:27:48'),
+(119, 7, 1, 'PC-14', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:27:48'),
+(120, 7, 1, 'PC-15', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:27:48'),
+(121, 7, 1, 'PC-16', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:27:48'),
+(122, 7, 1, 'PC-17', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:27:54'),
+(123, 7, 1, 'PC-18', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:30:28'),
+(124, 7, 1, 'PC-19', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:30:36'),
+(125, 7, 1, 'PC-20', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(126, 7, 1, 'PC-21', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(127, 7, 1, 'PC-22', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(128, 7, 1, 'PC-23', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(129, 7, 1, 'PC-24', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(130, 7, 1, 'PC-25', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:33:55'),
+(131, 7, 1, 'PC-26', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(132, 7, 1, 'PC-27', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(133, 7, 1, 'PC-28', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(134, 7, 1, 'PC-29', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(135, 7, 1, 'PC-30', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(136, 7, 1, 'PC-31', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:00'),
+(137, 7, 1, 'PC-32', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(138, 7, 1, 'PC-33', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(139, 7, 1, 'PC-34', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(140, 7, 1, 'PC-35', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(141, 7, 1, 'PC-36', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(142, 7, 1, 'PC-37', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:03'),
+(143, 7, 1, 'PC-38', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(144, 7, 1, 'PC-39', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(145, 7, 1, 'PC-40', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(146, 7, 1, 'PC-41', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(147, 7, 1, 'PC-42', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(148, 7, 1, 'PC-43', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:06'),
+(149, 7, 1, 'PC-44', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(150, 7, 1, 'PC-45', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(151, 7, 1, 'PC-46', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(152, 7, 1, 'PC-47', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(153, 7, 1, 'PC-48', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(154, 7, 1, 'PC-49', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:10'),
+(155, 7, 1, 'PC-50', 'Archive', 'Good', '', '2025-11-28 08:16:25', '2025-11-28 08:34:14'),
+(156, 9, 1, 'PC-01', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(157, 9, 1, 'PC-02', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(158, 9, 1, 'PC-03', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(159, 9, 1, 'PC-04', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(160, 9, 1, 'PC-05', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(161, 9, 1, 'PC-06', 'Archive', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:32:47'),
+(162, 9, 1, 'PC-07', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(163, 9, 1, 'PC-08', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(164, 9, 1, 'PC-09', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(165, 9, 1, 'PC-10', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(166, 9, 1, 'PC-11', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(167, 9, 1, 'PC-12', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(168, 9, 1, 'PC-13', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(169, 9, 1, 'PC-14', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(170, 9, 1, 'PC-15', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(171, 9, 1, 'PC-16', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(172, 9, 1, 'PC-17', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(173, 9, 1, 'PC-18', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(174, 9, 1, 'PC-19', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(175, 9, 1, 'PC-20', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(176, 9, 1, 'PC-21', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(177, 9, 1, 'PC-22', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(178, 9, 1, 'PC-23', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(179, 9, 1, 'PC-24', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(180, 9, 1, 'PC-25', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(181, 9, 1, 'PC-26', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(182, 9, 1, 'PC-27', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(183, 9, 1, 'PC-28', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(184, 9, 1, 'PC-29', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(185, 9, 1, 'PC-30', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(186, 9, 1, 'PC-31', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(187, 9, 1, 'PC-32', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(188, 9, 1, 'PC-33', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(189, 9, 1, 'PC-34', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(190, 9, 1, 'PC-35', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(191, 9, 1, 'PC-36', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(192, 9, 1, 'PC-37', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(193, 9, 1, 'PC-38', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(194, 9, 1, 'PC-39', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(195, 9, 1, 'PC-40', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(196, 9, 1, 'PC-41', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(197, 9, 1, 'PC-42', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(198, 9, 1, 'PC-43', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(199, 9, 1, 'PC-44', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(200, 9, 1, 'PC-45', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(201, 9, 1, 'PC-46', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(202, 9, 1, 'PC-47', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(203, 9, 1, 'PC-48', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(204, 9, 1, 'PC-49', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(205, 9, 1, 'PC-50', 'Active', 'Good', '', '2025-11-28 08:31:27', '2025-11-28 08:31:27'),
+(206, 8, 1, 'PC-01', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(207, 8, 1, 'PC-02', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(208, 8, 1, 'PC-03', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(209, 8, 1, 'PC-04', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(210, 8, 1, 'PC-05', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(211, 8, 1, 'PC-06', 'Archive', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:45'),
+(212, 8, 1, 'PC-07', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(213, 8, 1, 'PC-08', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(214, 8, 1, 'PC-09', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(215, 8, 1, 'PC-10', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(216, 8, 1, 'PC-11', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(217, 8, 1, 'PC-12', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(218, 8, 1, 'PC-13', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(219, 8, 1, 'PC-14', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(220, 8, 1, 'PC-15', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(221, 8, 1, 'PC-16', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(222, 8, 1, 'PC-17', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(223, 8, 1, 'PC-18', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(224, 8, 1, 'PC-19', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(225, 8, 1, 'PC-20', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(226, 8, 1, 'PC-21', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(227, 8, 1, 'PC-22', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(228, 8, 1, 'PC-23', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(229, 8, 1, 'PC-24', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(230, 8, 1, 'PC-25', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(231, 8, 1, 'PC-26', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(232, 8, 1, 'PC-27', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(233, 8, 1, 'PC-28', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(234, 8, 1, 'PC-29', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(235, 8, 1, 'PC-30', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(236, 8, 1, 'PC-31', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(237, 8, 1, 'PC-32', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(238, 8, 1, 'PC-33', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(239, 8, 1, 'PC-34', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(240, 8, 1, 'PC-35', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(241, 8, 1, 'PC-36', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(242, 8, 1, 'PC-37', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(243, 8, 1, 'PC-38', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(244, 8, 1, 'PC-39', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(245, 8, 1, 'PC-40', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(246, 8, 1, 'PC-41', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(247, 8, 1, 'PC-42', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(248, 8, 1, 'PC-43', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(249, 8, 1, 'PC-44', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(250, 8, 1, 'PC-45', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(251, 8, 1, 'PC-46', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(252, 8, 1, 'PC-47', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(253, 8, 1, 'PC-48', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(254, 8, 1, 'PC-49', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12'),
+(255, 8, 1, 'PC-50', 'Active', 'Good', '', '2025-11-28 08:47:12', '2025-11-28 08:47:12');
 
 -- --------------------------------------------------------
 
@@ -702,7 +1003,8 @@ CREATE TABLE `rooms` (
 INSERT INTO `rooms` (`id`, `building_id`, `name`, `created_at`) VALUES
 (6, 2, 'IL501', '2025-11-22 14:36:23'),
 (7, 1, 'IK501', '2025-11-28 06:54:16'),
-(8, 1, 'IK502', '2025-11-28 06:55:02');
+(8, 1, 'IK502', '2025-11-28 06:55:02'),
+(9, 1, 'IK503', '2025-11-28 08:31:20');
 
 -- --------------------------------------------------------
 
@@ -720,21 +1022,22 @@ CREATE TABLE `users` (
   `status` enum('Active','Inactive','Suspended','Deactivated') DEFAULT 'Active',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
-  `last_login` datetime DEFAULT NULL
+  `last_login` datetime DEFAULT NULL,
+  `e_signature` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-11-26 21:28:32', '2025-11-26 21:28:32'),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-11-26 21:14:12', '2025-11-26 21:14:12'),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-11-28 14:06:05', '2025-11-28 14:06:05'),
-(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-27 11:50:24', '2025-11-27 11:50:24'),
-(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL),
-(29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL);
+INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`) VALUES
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-11-29 10:43:06', '2025-11-29 10:43:06', NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-11-29 10:44:12', '2025-11-29 10:44:12', NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-11-29 11:07:31', '2025-11-29 11:07:31', NULL),
+(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-29 11:24:28', '2025-11-29 11:24:28', 'signature_5_1764382897.png'),
+(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL),
+(29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -758,6 +1061,12 @@ ALTER TABLE `assets`
   ADD KEY `pc_unit_id` (`pc_unit_id`);
 
 --
+-- Indexes for table `asset_borrowing`
+--
+ALTER TABLE `asset_borrowing`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `asset_categories`
 --
 ALTER TABLE `asset_categories`
@@ -774,7 +1083,10 @@ ALTER TABLE `buildings`
 -- Indexes for table `issues`
 --
 ALTER TABLE `issues`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_issues_building` (`building_id`),
+  ADD KEY `fk_issues_room` (`room_id`),
+  ADD KEY `fk_issues_pc` (`pc_id`);
 
 --
 -- Indexes for table `login_history`
@@ -827,55 +1139,61 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=576;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=679;
+
+--
+-- AUTO_INCREMENT for table `asset_borrowing`
+--
+ALTER TABLE `asset_borrowing`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `asset_categories`
 --
 ALTER TABLE `asset_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `buildings`
 --
 ALTER TABLE `buildings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `issues`
 --
 ALTER TABLE `issues`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `pc_units`
 --
 ALTER TABLE `pc_units`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -892,6 +1210,14 @@ ALTER TABLE `users`
 --
 ALTER TABLE `assets`
   ADD CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`pc_unit_id`) REFERENCES `pc_units` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `issues`
+--
+ALTER TABLE `issues`
+  ADD CONSTRAINT `fk_issues_building` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`),
+  ADD CONSTRAINT `fk_issues_pc` FOREIGN KEY (`pc_id`) REFERENCES `pc_units` (`id`),
+  ADD CONSTRAINT `fk_issues_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`);
 
 --
 -- Constraints for table `pc_units`
