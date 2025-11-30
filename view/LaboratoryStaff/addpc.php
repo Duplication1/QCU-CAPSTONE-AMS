@@ -1,0 +1,809 @@
+<?php
+// Prevent page caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+session_start();
+
+// Check if user is logged in and has Laboratory Staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
+    header("Location: ../login.php");
+    exit();
+}
+
+require_once '../../config/config.php';
+
+// Create database connection
+if (!isset($conn)) {
+    $conn = new mysqli('localhost', 'root', '', 'ams_database');
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+}
+
+// Get room_id from URL
+$room_id = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
+
+if ($room_id <= 0) {
+    header("Location: buildings.php");
+    exit();
+}
+
+// Get room and building details
+$room_query = $conn->prepare("SELECT r.*, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id WHERE r.id = ?");
+$room_query->bind_param('i', $room_id);
+$room_query->execute();
+$room_result = $room_query->get_result();
+$room = $room_result->fetch_assoc();
+$room_query->close();
+
+if (!$room) {
+    header("Location: buildings.php");
+    exit();
+}
+
+// Handle AJAX requests for PC components
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+    header('Content-Type: application/json');
+    $action = $_POST['action'] ?? '';
+
+    if ($action === 'get_pc_categories') {
+        $pc_categories_stmt = $conn->prepare("SELECT id, name FROM asset_categories WHERE is_pc_category = 1 ORDER BY name");
+        $pc_categories_stmt->execute();
+        $pc_categories_result = $pc_categories_stmt->get_result();
+
+        $categories = [];
+        while ($category = $pc_categories_result->fetch_assoc()) {
+            $categories[] = $category;
+        }
+        $pc_categories_stmt->close();
+
+        echo json_encode(['success' => true, 'categories' => $categories]);
+        exit();
+    }
+
+    if ($action === 'create_pc_unit') {
+        $bulk_mode = $_POST['bulk_mode'] ?? 'single';
+
+        if ($bulk_mode === 'bulk') {
+            // Bulk creation logic
+            $prefix = trim($_POST['prefix'] ?? '');
+            $range_start = intval($_POST['range_start'] ?? 1);
+            $range_end = intval($_POST['range_end'] ?? 1);
+            $status = $_POST['status'] ?? 'Active';
+            $notes = trim($_POST['notes'] ?? '');
+            $selected_components = $_POST['selected_components'] ?? [];
+
+            if (empty($prefix) || $range_start < 1 || $range_end < $range_start) {
+                echo json_encode(['success' => false, 'message' => 'Invalid bulk creation parameters']);
+                exit();
+            }
+
+            if ($range_end - $range_start > 100) {
+                echo json_encode(['success' => false, 'message' => 'Maximum 100 units can be created at once']);
+                exit();
+            }
+
+            $created_count = 0;
+            $errors = [];
+
+            for ($i = $range_start; $i <= $range_end; $i++) {
+                $terminal_number = $prefix . str_pad($i, 2, '0', STR_PAD_LEFT);
+
+                // Check if terminal number already exists
+                $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
+                $check_stmt->bind_param('s', $terminal_number);
+                $check_stmt->execute();
+                $check_stmt->store_result();
+
+                if ($check_stmt->num_rows > 0) {
+                    $check_stmt->close();
+                    $errors[] = "Terminal number $terminal_number already exists";
+                    continue;
+                }
+                $check_stmt->close();
+
+                // Insert PC unit
+                $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?)");
+                $created_by = $_SESSION['user_id'];
+                $insert_stmt->bind_param('sisss', $terminal_number, $room_id, $status, $notes, $created_by);
+
+                if ($insert_stmt->execute()) {
+                    $new_id = $conn->insert_id;
+                    $created_count++;
+
+                    // Automatically create assets for selected PC components
+                    if (!empty($selected_components)) {
+                        foreach ($selected_components as $category_id) {
+                            // Get category name
+                            $cat_stmt = $conn->prepare("SELECT name FROM asset_categories WHERE id = ?");
+                            $cat_stmt->bind_param('i', $category_id);
+                            $cat_stmt->execute();
+                            $cat_result = $cat_stmt->get_result();
+                            $category = $cat_result->fetch_assoc();
+                            $cat_stmt->close();
+
+                            if (!$category) continue;
+
+                            // Get specifications from form
+                            $brand = trim($_POST["component_brand_{$category_id}"] ?? '');
+                            $model = trim($_POST["component_model_{$category_id}"] ?? '');
+                            $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
+                            $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
+
+                            // Generate asset tag: PC-{PC_ID}-{CATEGORY}-001
+                            $asset_tag = "PC-{$new_id}-{$category['name']}-001";
+                            $asset_name = $category['name'] . ' for PC-' . $new_id;
+
+                            // Check if asset tag already exists
+                            $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                            $check_asset->bind_param('s', $asset_tag);
+                            $check_asset->execute();
+                            $check_asset->store_result();
+
+                            if ($check_asset->num_rows > 0) {
+                                $check_asset->close();
+                                continue; // Skip if asset already exists
+                            }
+                            $check_asset->close();
+
+                            // Generate QR code data
+                            $qr_data = json_encode([
+                                'asset_tag' => $asset_tag,
+                                'asset_name' => $asset_name,
+                                'asset_type' => 'Hardware',
+                                'room_id' => $room_id,
+                                'room_name' => $room['name'],
+                                'pc_unit_id' => $new_id
+                            ]);
+                            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+
+                            // Insert asset
+                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
+                            $asset_stmt->bind_param('sssssiissi', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $qr_code_url, $created_by, $category_id);
+
+                            if (!$asset_stmt->execute()) {
+                                $errors[] = "Failed to create asset for PC-$new_id: " . $asset_stmt->error;
+                            }
+                            $asset_stmt->close();
+                        }
+                    }
+                } else {
+                    $errors[] = "Failed to create PC unit $terminal_number: " . $insert_stmt->error;
+                }
+                $insert_stmt->close();
+            }
+
+            if ($created_count > 0) {
+                $message = "Successfully created $created_count PC unit(s)";
+                $selected_components = $_POST['selected_components'] ?? [];
+                if (!empty($selected_components)) {
+                    $message .= " with selected components";
+                }
+                if (!empty($errors)) {
+                    $message .= ". Errors: " . implode(', ', $errors);
+                }
+                echo json_encode(['success' => true, 'message' => $message, 'created' => $created_count]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to create any PC units. Errors: ' . implode(', ', $errors)]);
+            }
+        } else {
+            // Single PC creation logic
+            $terminal_number = trim($_POST['terminal_number'] ?? '');
+            $status = $_POST['status'] ?? 'Active';
+            $notes = trim($_POST['notes'] ?? '');
+
+            if (empty($terminal_number)) {
+                echo json_encode(['success' => false, 'message' => 'Terminal number is required']);
+                exit();
+            }
+
+            // Check if terminal number already exists
+            $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
+            $check_stmt->bind_param('s', $terminal_number);
+            $check_stmt->execute();
+            $check_stmt->store_result();
+
+            if ($check_stmt->num_rows > 0) {
+                $check_stmt->close();
+                echo json_encode(['success' => false, 'message' => 'Terminal number already exists']);
+                exit();
+            }
+            $check_stmt->close();
+
+            // Insert PC unit
+            $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?)");
+            $created_by = $_SESSION['user_id'];
+            $insert_stmt->bind_param('sisss', $terminal_number, $room_id, $status, $notes, $created_by);
+
+            if ($insert_stmt->execute()) {
+                $new_id = $conn->insert_id;
+
+                // Automatically create assets for selected PC components
+                $selected_components = $_POST['selected_components'] ?? [];
+
+                if (!empty($selected_components)) {
+                    $assets_created = 0;
+                    $asset_failed = [];
+
+                    foreach ($selected_components as $category_id) {
+                        // Get category name
+                        $cat_stmt = $conn->prepare("SELECT name FROM asset_categories WHERE id = ?");
+                        $cat_stmt->bind_param('i', $category_id);
+                        $cat_stmt->execute();
+                        $cat_result = $cat_stmt->get_result();
+                        $category = $cat_result->fetch_assoc();
+                        $cat_stmt->close();
+
+                        if (!$category) continue;
+
+                        // Get specifications from form
+                        $brand = trim($_POST["component_brand_{$category_id}"] ?? '');
+                        $model = trim($_POST["component_model_{$category_id}"] ?? '');
+                        $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
+                        $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
+
+                        // Generate asset tag: PC-{PC_ID}-{CATEGORY}-001
+                        $asset_tag = "PC-{$new_id}-{$category['name']}-001";
+                        $asset_name = $category['name'] . ' for PC-' . $new_id;
+
+                        // Check if asset tag already exists
+                        $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                        $check_asset->bind_param('s', $asset_tag);
+                        $check_asset->execute();
+                        $check_asset->store_result();
+
+                        if ($check_asset->num_rows > 0) {
+                            $check_asset->close();
+                            continue; // Skip if asset already exists
+                        }
+                        $check_asset->close();
+
+                        // Generate QR code data
+                        $qr_data = json_encode([
+                            'asset_tag' => $asset_tag,
+                            'asset_name' => $asset_name,
+                            'asset_type' => 'Hardware',
+                            'room_id' => $room_id,
+                            'room_name' => $room['name'],
+                            'pc_unit_id' => $new_id
+                        ]);
+                        $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+
+                        // Insert asset
+                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
+                        $asset_stmt->bind_param('sssssiissi', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $qr_code_url, $created_by, $category_id);
+
+                        if ($asset_stmt->execute()) {
+                            $assets_created++;
+                        } else {
+                            $asset_failed[] = $asset_tag;
+                        }
+                        $asset_stmt->close();
+                    }
+
+                    $message = 'PC Unit created successfully';
+                    if ($assets_created > 0) {
+                        $message .= ". Automatically created $assets_created assets from selected components";
+                    }
+                    if (!empty($asset_failed)) {
+                        $message .= ". Failed to create assets: " . implode(', ', $asset_failed);
+                    }
+
+                    echo json_encode(['success' => true, 'message' => $message, 'id' => $new_id]);
+                } else {
+                    echo json_encode(['success' => true, 'message' => 'PC Unit created successfully', 'id' => $new_id]);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to create PC unit']);
+            }
+            $insert_stmt->close();
+        }
+        exit();
+    }
+}
+
+include '../components/layout_header.php';
+?>
+
+<style>
+.content-container {
+    padding: 0.5rem;
+}
+</style>
+
+<main>
+    <div class="content-container">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <!-- Breadcrumb Navigation -->
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 mb-4">
+                <li class="inline-flex items-center">
+                    <a href="buildings.php" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                        <i class="fa-solid fa-building mr-2"></i>
+                        Buildings
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-chevron-right text-gray-400 mx-2"></i>
+                        <a href="rooms.php?building_id=1" class="text-sm font-medium text-gray-700 hover:text-blue-600">
+                            IK                        </a>
+                    </div>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-chevron-right text-gray-400 mx-2"></i>
+                        <a href="roomassets.php?room_id=<?php echo $room_id; ?>" class="text-sm font-medium text-gray-700 hover:text-blue-600">
+                            <?php echo htmlspecialchars($room['name']); ?>
+                        </a>
+                    </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-chevron-right text-gray-400 mx-2"></i>
+                        <span class="text-sm font-medium text-gray-500">Add PC Unit</span>
+                    </div>
+                </li>
+            </ol>
+
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-[#1E3A8A] to-[#153570] px-4 py-3 rounded-lg mb-4">
+                <h1 class="text-lg font-semibold text-white flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i>
+                    Add New PC Unit(s)
+                </h1>
+                <p class="text-blue-100 mt-1 text-sm">Create new PC units for <?php echo htmlspecialchars($room['name']); ?> in <?php echo htmlspecialchars($room['building_name']); ?></p>
+            </div>
+
+            <!-- Main Form -->
+            <form id="pcUnitForm" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+
+                <!-- Left Column -->
+                <div class="space-y-4">
+                    <!-- Mode Selection -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Creation Mode</label>
+                        <div class="flex gap-6">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="bulk_mode" value="single" checked onchange="toggleBulkMode()"
+                                       class="mr-2 text-[#1E3A8A] focus:ring-[#1E3A8A] w-4 h-4">
+                                <span class="text-sm font-medium">Single PC</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="bulk_mode" value="bulk" onchange="toggleBulkMode()"
+                                       class="mr-2 text-[#1E3A8A] focus:ring-[#1E3A8A] w-4 h-4">
+                                <span class="text-sm font-medium">Bulk (Identical PCs)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Single Mode Fields -->
+                    <div id="singleModeFields" class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 mb-3">PC Unit Details</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Terminal Number <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="terminal_number" id="singleTerminalNumber"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       placeholder="e.g., PC-001">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Mode Fields -->
+                    <div id="bulkModeFields" class="bg-white border border-gray-200 rounded-lg p-4 hidden">
+                        <h3 class="text-sm font-medium text-gray-900 mb-3">Bulk Creation</h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-info-circle text-[#1E3A8A] mt-1"></i>
+                                <div class="text-sm text-blue-900">
+                                    <p class="font-medium mb-1">Bulk Creation</p>
+                                    <p>Create multiple PC units with sequential numbering. Example: PC-01 to PC-50</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Prefix <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="prefix" value="PC-"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       placeholder="e.g., PC-">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Start Number <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" name="range_start" value="1" min="1" max="999"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        End Number <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" name="range_end" value="50" min="1" max="999"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                </div>
+                            </div>
+
+                            <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
+                                <i class="fa-solid fa-lightbulb mr-2 text-yellow-500"></i>
+                                Maximum 100 units can be created at once. Numbers will be zero-padded (e.g., 01, 02, 03...)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Fields -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 mb-3">Additional Settings</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select name="status"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Archive">Archive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                                <textarea name="notes" rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                          placeholder="Additional information about this PC unit..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-4">
+                    <!-- PC Components Selection -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fa-solid fa-microchip text-[#1E3A8A] mr-2"></i>
+                            PC Components (Optional)
+                        </h3>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
+                            <p class="text-sm text-gray-700 mb-2">
+                                Select which components to automatically create assets for this PC unit. You can customize specifications for each selected component.
+                            </p>
+
+                            <div id="pcComponentsContainer" class="space-y-3">
+                                <!-- Components will be loaded here -->
+                            </div>
+
+                            <div class="mt-3 text-sm text-gray-600 bg-blue-50 p-2 rounded-md">
+                                <i class="fa-solid fa-info-circle mr-2 text-blue-600"></i>
+                                Assets will be created with format: PC-{PC_ID}-{COMPONENT}-001
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Tag Preview -->
+                <div class="col-span-1 lg:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h3 class="text-sm font-medium text-blue-900 mb-3 flex items-center">
+                        <i class="fa-solid fa-eye mr-2"></i>
+                        Asset Tag Preview
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-blue-800 mb-1">PC Unit Asset Tag</label>
+                            <div id="pcUnitTagPreview" class="bg-white px-3 py-2 border border-blue-300 rounded-md text-sm font-mono text-blue-700">
+                                PC-001
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-blue-800 mb-2">Component Asset Tags</label>
+                            <div id="componentTagsPreview" class="space-y-2">
+                                <div class="text-sm text-blue-600 italic">Select components to see asset tag previews</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons (Full Width) -->
+                <div class="col-span-1 lg:col-span-2 flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <a href="roomassets.php?room_id=<?php echo $room_id; ?>"
+                       class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Room
+                    </a>
+                    <button type="button" onclick="submitPCUnit()"
+                            class="px-4 py-2 bg-[#1E3A8A] text-white rounded-md hover:bg-[#153570] transition-colors text-sm font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i><span id="submitButtonText">Add PC Unit</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+// Load PC Components for selection
+async function loadPCComponents() {
+    try {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_pc_categories');
+
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.categories) {
+            const container = document.getElementById('pcComponentsContainer');
+            container.innerHTML = '';
+
+            result.categories.forEach(category => {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component-item bg-white border border-gray-200 rounded-lg p-4';
+                componentDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="flex items-center flex-shrink-0 w-48">
+                            <input type="checkbox"
+                                   id="component_${category.id}"
+                                   name="selected_components[]"
+                                   value="${category.id}"
+                                   onchange="toggleComponentSpecs(${category.id})"
+                                   class="mr-2 text-[#1E3A8A] focus:ring-[#1E3A8A] w-4 h-4">
+                            <label for="component_${category.id}" class="text-sm font-medium text-gray-800 cursor-pointer">
+                                ${category.name}
+                            </label>
+                        </div>
+                        <div id="specs_${category.id}" class="component-specs hidden ml-4 flex-1 grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <input type="text"
+                                       name="component_brand_${category.id}"
+                                       class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       placeholder="e.g., Dell">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                                <input type="text"
+                                       name="component_model_${category.id}"
+                                       class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       placeholder="e.g., DDR4-8GB">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
+                                <input type="text"
+                                       name="component_serial_${category.id}"
+                                       class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       placeholder="Optional">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                                <select name="component_condition_${category.id}"
+                                        class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                    <option value="Good">Good</option>
+                                    <option value="Excellent">Excellent</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Poor">Poor</option>
+                                    <option value="Non-Functional">Non-Functional</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(componentDiv);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading PC components:', error);
+    }
+}
+
+// Toggle component specifications visibility
+function toggleComponentSpecs(categoryId) {
+    const checkbox = document.getElementById(`component_${categoryId}`);
+    const specsDiv = document.getElementById(`specs_${categoryId}`);
+
+    if (checkbox.checked) {
+        specsDiv.classList.remove('hidden');
+    } else {
+        specsDiv.classList.add('hidden');
+        // Clear the specification fields when unchecked
+        const inputs = specsDiv.querySelectorAll('input, select');
+        inputs.forEach(input => input.value = '');
+    }
+}
+
+// Toggle Bulk Mode
+function toggleBulkMode() {
+    const bulkMode = document.querySelector('input[name="bulk_mode"]:checked').value;
+    const singleFields = document.getElementById('singleModeFields');
+    const bulkFields = document.getElementById('bulkModeFields');
+    const singleTerminal = document.getElementById('singleTerminalNumber');
+    const submitButton = document.getElementById('submitButtonText');
+
+    if (bulkMode === 'bulk') {
+        singleFields.classList.add('hidden');
+        bulkFields.classList.remove('hidden');
+        singleTerminal.removeAttribute('required');
+        submitButton.textContent = 'Create Identical PCs';
+    } else {
+        singleFields.classList.remove('hidden');
+        bulkFields.classList.add('hidden');
+        singleTerminal.setAttribute('required', 'required');
+        submitButton.textContent = 'Add PC Unit';
+    }
+}
+
+// Submit PC Unit Form
+function submitPCUnit() {
+    const form = document.getElementById('pcUnitForm');
+    const bulkMode = document.querySelector('input[name="bulk_mode"]:checked').value;
+
+    // Validation
+    if (bulkMode === 'single') {
+        const terminalNumber = document.getElementById('singleTerminalNumber').value.trim();
+        if (!terminalNumber) {
+            showAlert('error', 'Terminal number is required');
+            return;
+        }
+    } else {
+        const prefix = form.querySelector('input[name="prefix"]').value.trim();
+        const rangeStart = parseInt(form.querySelector('input[name="range_start"]').value);
+        const rangeEnd = parseInt(form.querySelector('input[name="range_end"]').value);
+
+        if (!prefix) {
+            showAlert('error', 'Prefix is required for bulk creation');
+            return;
+        }
+
+        if (rangeStart < 1 || rangeEnd < rangeStart) {
+            showAlert('error', 'Invalid range. End number must be greater than start number');
+            return;
+        }
+
+        if (rangeEnd - rangeStart > 100) {
+            showAlert('error', 'Maximum 100 units can be created at once');
+            return;
+        }
+
+        // Show bulk creation confirmation modal
+        const count = rangeEnd - rangeStart + 1;
+        const range = `${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`;
+        openBulkCreatePCModal(count, range, form);
+        return;
+    }
+
+    // For single mode, proceed directly
+    proceedWithPCCreation(form);
+}
+
+// Bulk Create PC Modal Functions
+let currentBulkCreateForm = null;
+
+function openBulkCreatePCModal(count, range, form) {
+    currentBulkCreateForm = form;
+    const modal = document.getElementById('bulkCreatePCModal');
+    document.getElementById('bulkCreateCount').textContent = count;
+    document.getElementById('bulkCreateRange').textContent = range;
+    modal.classList.remove('hidden');
+}
+
+function closeBulkCreatePCModal() {
+    const modal = document.getElementById('bulkCreatePCModal');
+    modal.classList.add('hidden');
+    currentBulkCreateForm = null;
+}
+
+function confirmBulkCreatePC() {
+    if (!currentBulkCreateForm) return;
+    closeBulkCreatePCModal();
+    proceedWithPCCreation(currentBulkCreateForm);
+}
+
+// Close modal when clicking outside
+document.getElementById('bulkCreatePCModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkCreatePCModal();
+    }
+});
+
+function proceedWithPCCreation(form) {
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+    formData.append('action', 'create_pc_unit');
+
+    // Disable submit button
+    const submitBtn = document.querySelector('button[onclick="submitPCUnit()"]');
+    const originalText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Creating...';
+    }
+
+    fetch(location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (bulkMode === 'bulk' && data.created) {
+                showAlert('success', `Successfully created ${data.created} PC units!`);
+            } else {
+                showAlert('success', data.message);
+            }
+            setTimeout(() => window.location.href = `roomassets.php?room_id=<?php echo $room_id; ?>`, 1500);
+        } else {
+            showAlert('error', data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while creating the PC unit(s)');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-medium text-lg`;
+    alertDiv.textContent = message;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPCComponents();
+    toggleBulkMode(); // Initialize form state
+});
+</script>
+
+<!-- Bulk Create PC Units Confirmation Modal -->
+<div id="bulkCreatePCModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                <i class="fa-solid fa-desktop text-blue-600 text-xl"></i>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Confirm Bulk PC Creation</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 mb-4">
+                    You are about to create <span id="bulkCreateCount" class="font-semibold text-gray-900"></span> PC units with the following range:
+                </p>
+                <div class="bg-gray-50 p-3 rounded-lg border">
+                    <strong>Terminal Numbers:</strong> <span id="bulkCreateRange" class="text-blue-600 font-mono"></span>
+                </div>
+            </div>
+            <div class="flex items-center px-4 py-3 gap-3">
+                <button id="confirmBulkCreatePCBtn" onclick="confirmBulkCreatePC()"
+                        class="flex-1 px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa-solid fa-plus mr-2"></i>Create PCs
+                </button>
+                <button onclick="closeBulkCreatePCModal()"
+                        class="flex-1 px-4 py-2 bg-gray-300 text-gray-900 text-base font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include '../components/layout_footer.php'; ?>
