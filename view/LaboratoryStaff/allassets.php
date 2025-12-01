@@ -148,6 +148,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_asset_number') {
+        $asset_name = trim($_POST['asset_name'] ?? '');
+        
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
+            exit;
+        }
+        
+        // Create asset name prefix
+        $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+        $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+        
+        // Find the highest existing number for this asset name (regardless of room)
+        $pattern = "%-{$asset_name_prefix}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last segment after last dash
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'get_next_start_number') {
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
         $room_number = trim($_POST['room_number'] ?? '');
@@ -729,7 +770,6 @@ main {
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
                 </button>
-                    <i class="fa-solid fa-search"></i>
                 </button>
                 <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type) || !empty($filter_building) || !empty($filter_room) || $show_standby || $show_archived): ?>
                     <a href="allassets.php" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
@@ -1004,6 +1044,62 @@ main {
     </div>
 </div>
 
+<!-- Bulk Archive Confirmation Modal -->
+<div id="bulkArchiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-orange-100 rounded-full mb-4">
+                <i class="fa-solid fa-box-archive text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Archive Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to archive <strong id="bulkArchiveCount">0</strong> asset(s)?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The assets will be moved to archived assets.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkArchiveModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkArchiveBtn" onclick="confirmBulkArchive()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-box-archive mr-1"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Dispose Confirmation Modal -->
+<div id="bulkDisposeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Dispose Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to dispose <strong id="bulkDisposeCount">0</strong> asset(s)?
+            </p>
+            <p class="text-xs text-red-600 text-center mb-6">
+                <i class="fa-solid fa-exclamation-triangle mr-1"></i>This action cannot be undone!
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkDisposeModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkDisposeBtn" onclick="confirmBulkDispose()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-trash mr-1"></i>Dispose
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -1023,7 +1119,7 @@ main {
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="asset_bulk_mode" value="bulk" onchange="toggleAssetBulkMode()" 
                                class="mr-2 text-blue-600 focus:ring-blue-500">
-                        <span class="text-sm">Bulk (Multiple Assets)</span>
+                        <span class="text-sm">Identical (Bulk Assets)</span>
                     </label>
                 </div>
             </div>
@@ -1032,9 +1128,10 @@ main {
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
-                    <input type="text" id="assetTag" name="asset_tag"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., COMP-001">
+                    <input type="text" id="assetTag" name="asset_tag" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Auto-generated">
+                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -1689,33 +1786,12 @@ async function bulkArchive() {
     
     const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
     
-    if (!confirm(`Are you sure you want to archive ${assetIds.length} asset(s)?`)) {
-        return;
-    }
+    // Open modal instead of confirm dialog
+    document.getElementById('bulkArchiveCount').textContent = assetIds.length;
+    document.getElementById('bulkArchiveModal').classList.remove('hidden');
     
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'bulk_archive');
-        formData.append('asset_ids', JSON.stringify(assetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while archiving assets');
-    }
+    // Store asset IDs for later use
+    window.bulkArchiveAssetIds = assetIds;
 }
 
 async function bulkDispose() {
@@ -1727,39 +1803,18 @@ async function bulkDispose() {
     
     const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
     
-    if (!confirm(`Are you sure you want to dispose ${assetIds.length} asset(s)? This action cannot be undone.`)) {
-        return;
-    }
+    // Open modal instead of confirm dialog
+    document.getElementById('bulkDisposeCount').textContent = assetIds.length;
+    document.getElementById('bulkDisposeModal').classList.remove('hidden');
     
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'bulk_dispose');
-        formData.append('asset_ids', JSON.stringify(assetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while disposing assets');
-    }
+    // Store asset IDs for later use
+    window.bulkDisposeAssetIds = assetIds;
 }
 
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
-    document.getElementById('assetTag').focus();
+    document.getElementById('assetName').focus();
 }
 
 function closeAddAssetModal() {
@@ -1834,6 +1889,80 @@ function toggleAssetBulkMode() {
         singleFields.classList.remove('hidden');
         bulkFields.classList.add('hidden');
         submitBtn.textContent = 'Create Asset';
+    }
+}
+
+// Auto-generate asset tag for single asset mode
+async function generateAssetTag() {
+    const assetName = document.getElementById('assetName')?.value?.trim();
+    const roomId = document.getElementById('roomId')?.value;
+    const assetTagField = document.getElementById('assetTag');
+    
+    if (!assetName || !assetTagField) {
+        if (assetTagField) assetTagField.value = '';
+        return;
+    }
+    
+    // Get room name from select option
+    const roomSelect = document.getElementById('roomId');
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomName = selectedOption?.text || 'No Room';
+    
+    // Extract room number or use 'NOROOM' if no room selected
+    let roomNumber = 'NOROOM';
+    if (roomId && roomName && roomName !== 'No Room') {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+        }
+    }
+    
+    try {
+        // Get current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        
+        // Create asset name prefix (first few letters)
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        
+        // Get next sequential number for this asset name only
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_asset_number');
+        formData.append('asset_name', assetName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const nextNumber = String(result.next_number).padStart(3, '0');
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            assetTagField.value = assetTag;
+        } else {
+            // Fallback to basic format if server request fails
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            assetTagField.value = assetTag;
+        }
+    } catch (error) {
+        console.error('Error generating asset tag:', error);
+        // Fallback generation
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        const roomNumber = roomId ? 'ROOM' : 'NOROOM';
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
@@ -2124,6 +2253,106 @@ document.getElementById('archiveAssetModal')?.addEventListener('click', function
     }
 });
 
+// Bulk Archive Modal Functions
+function closeBulkArchiveModal() {
+    document.getElementById('bulkArchiveModal').classList.add('hidden');
+    window.bulkArchiveAssetIds = null;
+}
+
+async function confirmBulkArchive() {
+    if (!window.bulkArchiveAssetIds) return;
+    
+    const button = document.getElementById('confirmBulkArchiveBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Archiving...';
+    button.disabled = true;
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_archive');
+        formData.append('asset_ids', JSON.stringify(window.bulkArchiveAssetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while archiving assets');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// Close bulk archive modal when clicking outside
+document.getElementById('bulkArchiveModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkArchiveModal();
+    }
+});
+
+// Bulk Dispose Modal Functions
+function closeBulkDisposeModal() {
+    document.getElementById('bulkDisposeModal').classList.add('hidden');
+    window.bulkDisposeAssetIds = null;
+}
+
+async function confirmBulkDispose() {
+    if (!window.bulkDisposeAssetIds) return;
+    
+    const button = document.getElementById('confirmBulkDisposeBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Disposing...';
+    button.disabled = true;
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_dispose');
+        formData.append('asset_ids', JSON.stringify(window.bulkDisposeAssetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while disposing assets');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// Close bulk dispose modal when clicking outside
+document.getElementById('bulkDisposeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkDisposeModal();
+    }
+});
+
 // Delete Asset (now opens modal)
 async function deleteAsset(id, assetTag) {
     openDeleteAssetModal(id, assetTag);
@@ -2246,6 +2475,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Add event listener for room selection to trigger asset tag generation
+    const roomSelect = document.getElementById('roomId');
+    if (roomSelect) {
+        roomSelect.addEventListener('change', function() {
+            const assetName = document.getElementById('assetName')?.value;
+            if (assetName) {
+                generateAssetTag();
+            }
+        });
+    }
 });
 
 // Initialize searchable dropdowns
@@ -2304,6 +2544,11 @@ function initializeSearchableDropdowns() {
                 
                 // Trigger change event for compatibility
                 selectElement.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (selectElement.id === 'assetName') {
+                    generateAssetTag();
+                }
                 
                 // Clear search
                 searchInput.value = '';
@@ -2416,6 +2661,11 @@ async function updateSearchableDropdownOptions(selectId) {
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
                     
+                    // Trigger asset tag generation if this is the asset name field in single mode
+                    if (select.id === 'assetName') {
+                        generateAssetTag();
+                    }
+                    
                     // Clear search
                     const searchInput = dropdown.querySelector('.dropdown-search');
                     searchInput.value = '';
@@ -2488,6 +2738,12 @@ async function addNewCategory() {
                 const options = dropdown.querySelector('.dropdown-options');
                 options.classList.add('hidden');
                 select.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (select.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 const searchInput = dropdown.querySelector('.dropdown-search');
                 searchInput.value = '';
             });

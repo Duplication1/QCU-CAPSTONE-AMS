@@ -683,6 +683,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_asset_number') {
+        $asset_name = trim($_POST['asset_name'] ?? '');
+        
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
+            exit;
+        }
+        
+        // Create asset name prefix
+        $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+        $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+        
+        // Find the highest existing number for this asset name (regardless of room)
+        $pattern = "%-{$asset_name_prefix}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last segment after last dash
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'get_next_start_number') {
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
         $room_number = trim($_POST['room_number'] ?? '');
@@ -1821,9 +1862,10 @@ main {
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
-                    <input type="text" id="assetTag" name="asset_tag"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., COMP-IK501-001">
+                    <input type="text" id="assetTag" name="asset_tag" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Auto-generated">
+                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -2412,7 +2454,7 @@ function switchTab(tabName) {
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
-    document.getElementById('assetTag').focus();
+    document.getElementById('assetName').focus();
 }
 
 function closeAddAssetModal() {
@@ -2624,6 +2666,74 @@ function toggleAssetBulkMode() {
             updateSearchableDropdownDisplay('assetName', bulkCategory);
             document.getElementById('assetName').dispatchEvent(new Event('change'));
         }
+    }
+}
+
+// Auto-generate asset tag for single asset mode
+async function generateAssetTag() {
+    const assetName = document.getElementById('assetName')?.value?.trim();
+    const assetTagField = document.getElementById('assetTag');
+    
+    if (!assetName || !assetTagField) {
+        if (assetTagField) assetTagField.value = '';
+        return;
+    }
+    
+    // Get room name from the current room
+    const roomName = '<?php echo addslashes($room['name']); ?>';
+    let roomNumber = 'NOROOM';
+    if (roomName) {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\\s+/g, '').toUpperCase();
+        }
+    }
+    
+    try {
+        // Get current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        
+        // Create asset name prefix (first few letters)
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
+        
+        // Get next sequential number for this asset name only
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_asset_number');
+        formData.append('asset_name', assetName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const nextNumber = String(result.next_number).padStart(3, '0');
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            assetTagField.value = assetTag;
+        } else {
+            // Fallback to basic format if server request fails
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            assetTagField.value = assetTag;
+        }
+    } catch (error) {
+        console.error('Error generating asset tag:', error);
+        // Fallback generation
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
@@ -3254,6 +3364,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Note: Room is fixed in this view, so no room change listener needed
+    // Asset tag will be generated when category is selected
 });
 
 // Select All functionality
@@ -3746,6 +3859,11 @@ function initializeSearchableDropdowns() {
                 // Trigger change event for compatibility
                 selectElement.dispatchEvent(new Event('change'));
                 
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (selectElement.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 // Clear search
                 if (searchInput) searchInput.value = '';
             });
@@ -3862,6 +3980,11 @@ async function updateSearchableDropdownOptions(selectId) {
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
                     
+                    // Trigger asset tag generation if this is the asset name field in single mode
+                    if (select.id === 'assetName') {
+                        generateAssetTag();
+                    }
+                    
                     // Clear search
                     const searchInput = dropdown.querySelector('.dropdown-search');
                     if (searchInput) searchInput.value = '';
@@ -3934,6 +4057,12 @@ async function addNewCategory() {
                 const options = dropdown.querySelector('.dropdown-options');
                 options.classList.add('hidden');
                 select.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field
+                if (select.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 const searchInput = dropdown.querySelector('.dropdown-search');
                 if (searchInput) searchInput.value = '';
             });
@@ -3954,6 +4083,11 @@ async function addNewCategory() {
             
             // Dispatch change event to trigger preview updates
             select.dispatchEvent(new Event('change'));
+            
+            // Trigger asset tag generation if this is the asset name field
+            if (window.currentCategorySource === 'assetName') {
+                generateAssetTag();
+            }
         }
     }
     
