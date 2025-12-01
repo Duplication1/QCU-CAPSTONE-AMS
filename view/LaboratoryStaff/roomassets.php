@@ -987,6 +987,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+
+    if ($action === 'import_pc_units_rows') {
+        $headers = json_decode($_POST['headers'] ?? '[]', true);
+        $rows = json_decode($_POST['rows'] ?? '[]', true);
+        $created = [];
+        $errors = [];
+        try {
+            foreach ($rows as $idx => $row) {
+                $terminal = trim($row['Terminal'] ?? '');
+                $condition = trim($row['Condition'] ?? 'Good');
+                if ($terminal === '') { $errors[] = "Row ".($idx+1).": Missing Terminal"; continue; }
+                $stmt = $conn->prepare("SELECT id FROM pc_units WHERE room_id = ? AND terminal_number = ?");
+                $stmt->bind_param('is', $room_id, $terminal);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows > 0) { $stmt->close(); $errors[] = "Row ".($idx+1).": Duplicate terminal"; continue; }
+                $stmt->close();
+                $status = 'Active';
+                $notes = '';
+                $building_id = $room['building_id'] ?? null;
+                $ins = $conn->prepare("INSERT INTO pc_units (room_id, building_id, terminal_number, status, notes) VALUES (?, ?, ?, ?, ?)");
+                $ins->bind_param('iisss', $room_id, $building_id, $terminal, $status, $notes);
+                if ($ins->execute()) {
+                    $created[] = [
+                        'id' => $conn->insert_id,
+                        'terminal_number' => $terminal,
+                        'condition' => $condition
+                    ];
+                } else {
+                    $errors[] = "Row ".($idx+1).": Insert failed";
+                }
+                $ins->close();
+            }
+            echo json_encode(['success' => true, 'created' => $created, 'errors' => $errors]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'import_room_assets_rows') {
+        $headers = json_decode($_POST['headers'] ?? '[]', true);
+        $rows = json_decode($_POST['rows'] ?? '[]', true);
+        $created = [];
+        $errors = [];
+        try {
+            foreach ($rows as $idx => $row) {
+                $asset_tag = trim($row['Asset Tag'] ?? '');
+                $asset_name = trim($row['Asset Name'] ?? '');
+                $asset_type = trim($row['Type'] ?? 'Hardware');
+                $brandModel = trim($row['Brand/Model'] ?? '');
+                $assignedTerminal = trim($row['Assigned To Pc'] ?? '');
+                $condition = trim($row['Condition'] ?? 'Good');
+                if ($asset_tag === '' || $asset_name === '') { $errors[] = "Row ".($idx+1).": Missing Asset Tag/Name"; continue; }
+                $chk = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                $chk->bind_param('s', $asset_tag);
+                $chk->execute();
+                $chk->store_result();
+                if ($chk->num_rows > 0) { $chk->close(); $errors[] = "Row ".($idx+1).": Duplicate asset tag"; continue; }
+                $chk->close();
+                $brand = '';
+                $model = '';
+                if ($brandModel !== '') {
+                    $parts = explode('/', $brandModel);
+                    $brand = trim($parts[0]);
+                    if (count($parts) > 1) { $model = trim($parts[1]); }
+                }
+                $pc_unit_id = null;
+                if ($assignedTerminal !== '') {
+                    $ps = $conn->prepare("SELECT id FROM pc_units WHERE room_id = ? AND terminal_number = ?");
+                    $ps->bind_param('is', $room_id, $assignedTerminal);
+                    $ps->execute();
+                    $res = $ps->get_result();
+                    if ($res && $res->num_rows > 0) { $pc_unit_id = $res->fetch_assoc()['id']; }
+                    $ps->close();
+                }
+                $status = 'Available';
+                $qr_data = json_encode([
+                    'asset_tag' => $asset_tag,
+                    'asset_name' => $asset_name,
+                    'asset_type' => $asset_type,
+                    'room_id' => $room_id,
+                    'room_name' => $room['name']
+                ]);
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+                // Lookup category by name
+                $category_id = null;
+                $cat = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+                $cat->bind_param('s', $asset_name);
+                $cat->execute();
+                $catRes = $cat->get_result();
+                if ($catRes && $catRes->num_rows > 0) { $category_id = $catRes->fetch_assoc()['id']; }
+                $cat->close();
+                $created_by = $_SESSION['user_id'];
+                $ins = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, pc_unit_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $ins->bind_param('sssssissssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $pc_unit_id, $status, $condition, $qr_code_url, $created_by, $category_id);
+                if ($ins->execute()) {
+                    $created[] = [
+                        'id' => $conn->insert_id,
+                        'asset_tag' => $asset_tag,
+                        'asset_name' => $asset_name,
+                        'asset_type' => $asset_type,
+                        'brand' => $brand,
+                        'model' => $model,
+                        'pc_unit_id' => $pc_unit_id,
+                        'condition' => $condition
+                    ];
+                } else {
+                    $errors[] = "Row ".($idx+1).": Insert failed";
+                }
+                $ins->close();
+            }
+            echo json_encode(['success' => true, 'created' => $created, 'errors' => $errors]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
     
     if ($action === 'bulk_archive_pc_units') {
         $ids = json_decode($_POST['ids'] ?? '[]', true);
@@ -1383,6 +1501,9 @@ main {
                             <i class="fa-solid fa-archive mr-1"></i>Archive Selected
                         </button>
                     </div>
+                    <button onclick="openImportPcUnitsModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors">
+                        <i class="fa-solid fa-file-import mr-1"></i>Import PC Units
+                    </button>
                     <a href="addpc.php?room_id=<?php echo $room_id; ?>" class="px-3 py-1.5 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#153570] rounded transition-colors">
                         <i class="fa-solid fa-plus mr-1"></i>Add PC Unit
                     </a>
@@ -1557,6 +1678,9 @@ main {
                             <i class="fa-solid fa-archive mr-1"></i>Archive Selected
                         </button>
                     </div>
+                    <button onclick="openImportRoomAssetsModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors">
+                        <i class="fa-solid fa-file-import mr-1"></i>Import Room Assets
+                    </button>
                     <button onclick="openAddAssetModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors">
                         <i class="fa-solid fa-plus mr-1"></i>Add Asset
                     </button>
@@ -1748,6 +1872,57 @@ main {
 
 
 <!-- Restore PC Unit Confirmation Modal -->
+<!-- Import PC Units Modal -->
+<div id="importPcUnitsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Import PC Units (Excel/CSV)</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="text-sm text-gray-700">
+                <p class="mb-2">Expected columns:</p>
+                <ul class="list-disc list-inside">
+                    <li>Terminal</li>
+                    <li>Pc Name (optional)</li>
+                    <li>Asset Tag (optional)</li>
+                    <li>Condition (Excellent/Good/Fair/Poor/Non-Functional)</li>
+                </ul>
+            </div>
+            <input type="file" id="importPcUnitsFile" accept=".xlsx,.xls,.csv" class="w-full border border-gray-300 rounded px-3 py-2">
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportPcUnitsModal()" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button onclick="processImportPcUnits()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Room Assets Modal -->
+<div id="importRoomAssetsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Import Room Assets (Excel/CSV)</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="text-sm text-gray-700">
+                <p class="mb-2">Expected columns:</p>
+                <ul class="list-disc list-inside">
+                    <li>Asset Tag</li>
+                    <li>Asset Name</li>
+                    <li>Type</li>
+                    <li>Brand/Model</li>
+                    <li>Assigned To Pc (Terminal)</li>
+                    <li>Condition</li>
+                </ul>
+            </div>
+            <input type="file" id="importRoomAssetsFile" accept=".xlsx,.xls,.csv" class="w-full border border-gray-300 rounded px-3 py-2">
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportRoomAssetsModal()" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button onclick="processImportRoomAssets()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="restorePCUnitModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
     <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
@@ -2955,6 +3130,96 @@ function showAlert(type, message) {
     setTimeout(() => alertDiv.remove(), 3000);
 }
 
+// Import: open/close modals
+function openImportPcUnitsModal() { document.getElementById('importPcUnitsModal').classList.remove('hidden'); }
+function closeImportPcUnitsModal() { document.getElementById('importPcUnitsModal').classList.add('hidden'); const f=document.getElementById('importPcUnitsFile'); if(f) f.value=''; }
+function openImportRoomAssetsModal() { document.getElementById('importRoomAssetsModal').classList.remove('hidden'); }
+function closeImportRoomAssetsModal() { document.getElementById('importRoomAssetsModal').classList.add('hidden'); const f=document.getElementById('importRoomAssetsFile'); if(f) f.value=''; }
+
+// Ensure SheetJS is available
+function ensureSheetJSLoaded() {
+    return new Promise((resolve) => {
+        if (window.XLSX) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+    });
+}
+
+// Parse file to headers + rows
+async function parseFileToRows(file) {
+    await ensureSheetJSLoaded();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const headers = Object.keys(json[0] || {});
+                resolve({ headers, rows: json });
+            } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Import PC Units
+async function processImportPcUnits() {
+    const fileInput = document.getElementById('importPcUnitsFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { showAlert('error', 'Please select a file'); return; }
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_pc_units_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('success', `Imported ${result.created.length} PC unit(s)`);
+            closeImportPcUnitsModal();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
+
+// Import Room Assets
+async function processImportRoomAssets() {
+    const fileInput = document.getElementById('importRoomAssetsFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { showAlert('error', 'Please select a file'); return; }
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_room_assets_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('success', `Imported ${result.created.length} asset(s)`);
+            closeImportRoomAssetsModal();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
 // Toggle three-dot menu
 function toggleMenu(id) {
     const button = event.target.closest('button');
