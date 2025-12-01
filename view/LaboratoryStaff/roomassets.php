@@ -380,6 +380,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_asset_number') {
+        $asset_name = trim($_POST['asset_name'] ?? '');
+        
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
+            exit;
+        }
+        
+        // Create asset name prefix
+        $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+        $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+        
+        // Find the highest existing number for this asset name (regardless of room)
+        $pattern = "%-{$asset_name_prefix}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last segment after last dash
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'get_next_start_number') {
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
         $room_number = trim($_POST['room_number'] ?? '');
@@ -1000,6 +1041,9 @@ main {
                             <i class="fa-solid fa-archive mr-1"></i>Archive Selected
                         </button>
                     </div>
+                    <button onclick="openImportRoomAssetsModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors">
+                        <i class="fa-solid fa-file-import mr-1"></i>Import Room Assets
+                    </button>
                     <button onclick="openAddAssetModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors">
                         <i class="fa-solid fa-plus mr-1"></i>Add Asset
                     </button>
@@ -1218,9 +1262,10 @@ main {
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
-                    <input type="text" id="assetTag" name="asset_tag"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., COMP-IK501-001">
+                    <input type="text" id="assetTag" name="asset_tag" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Auto-generated">
+                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -1727,7 +1772,7 @@ main {
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
-    document.getElementById('assetTag').focus();
+    document.getElementById('assetName').focus();
 }
 
 function closeAddAssetModal() {
@@ -1944,6 +1989,74 @@ function toggleAssetBulkMode() {
             updateSearchableDropdownDisplay('assetName', bulkCategory);
             document.getElementById('assetName').dispatchEvent(new Event('change'));
         }
+    }
+}
+
+// Auto-generate asset tag for single asset mode
+async function generateAssetTag() {
+    const assetName = document.getElementById('assetName')?.value?.trim();
+    const assetTagField = document.getElementById('assetTag');
+    
+    if (!assetName || !assetTagField) {
+        if (assetTagField) assetTagField.value = '';
+        return;
+    }
+    
+    // Get room name from the current room
+    const roomName = '<?php echo addslashes($room['name']); ?>';
+    let roomNumber = 'NOROOM';
+    if (roomName) {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\\s+/g, '').toUpperCase();
+        }
+    }
+    
+    try {
+        // Get current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        
+        // Create asset name prefix (first few letters)
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
+        
+        // Get next sequential number for this asset name only
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_asset_number');
+        formData.append('asset_name', assetName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const nextNumber = String(result.next_number).padStart(3, '0');
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            assetTagField.value = assetTag;
+        } else {
+            // Fallback to basic format if server request fails
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            assetTagField.value = assetTag;
+        }
+    } catch (error) {
+        console.error('Error generating asset tag:', error);
+        // Fallback generation
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
@@ -2170,6 +2283,96 @@ function showAlert(type, message) {
     setTimeout(() => alertDiv.remove(), 3000);
 }
 
+// Import: open/close modals
+function openImportPcUnitsModal() { document.getElementById('importPcUnitsModal').classList.remove('hidden'); }
+function closeImportPcUnitsModal() { document.getElementById('importPcUnitsModal').classList.add('hidden'); const f=document.getElementById('importPcUnitsFile'); if(f) f.value=''; }
+function openImportRoomAssetsModal() { document.getElementById('importRoomAssetsModal').classList.remove('hidden'); }
+function closeImportRoomAssetsModal() { document.getElementById('importRoomAssetsModal').classList.add('hidden'); const f=document.getElementById('importRoomAssetsFile'); if(f) f.value=''; }
+
+// Ensure SheetJS is available
+function ensureSheetJSLoaded() {
+    return new Promise((resolve) => {
+        if (window.XLSX) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+    });
+}
+
+// Parse file to headers + rows
+async function parseFileToRows(file) {
+    await ensureSheetJSLoaded();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const headers = Object.keys(json[0] || {});
+                resolve({ headers, rows: json });
+            } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Import PC Units
+async function processImportPcUnits() {
+    const fileInput = document.getElementById('importPcUnitsFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { showAlert('error', 'Please select a file'); return; }
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_pc_units_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('success', `Imported ${result.created.length} PC unit(s)`);
+            closeImportPcUnitsModal();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
+
+// Import Room Assets
+async function processImportRoomAssets() {
+    const fileInput = document.getElementById('importRoomAssetsFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { showAlert('error', 'Please select a file'); return; }
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_room_assets_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('success', `Imported ${result.created.length} asset(s)`);
+            closeImportRoomAssetsModal();
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
 // Toggle three-dot menu
 function toggleMenu(id) {
     const button = event.target.closest('button');
@@ -2389,6 +2592,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Note: Room is fixed in this view, so no room change listener needed
+    // Asset tag will be generated when category is selected
 });
 
 // Select All functionality
@@ -2530,6 +2736,11 @@ function initializeSearchableDropdowns() {
                 // Trigger change event for compatibility
                 selectElement.dispatchEvent(new Event('change'));
                 
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (selectElement.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 // Clear search
                 if (searchInput) searchInput.value = '';
             });
@@ -2646,6 +2857,11 @@ async function updateSearchableDropdownOptions(selectId) {
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
                     
+                    // Trigger asset tag generation if this is the asset name field in single mode
+                    if (select.id === 'assetName') {
+                        generateAssetTag();
+                    }
+                    
                     // Clear search
                     const searchInput = dropdown.querySelector('.dropdown-search');
                     if (searchInput) searchInput.value = '';
@@ -2718,6 +2934,12 @@ async function addNewCategory() {
                 const options = dropdown.querySelector('.dropdown-options');
                 options.classList.add('hidden');
                 select.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field
+                if (select.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 const searchInput = dropdown.querySelector('.dropdown-search');
                 if (searchInput) searchInput.value = '';
             });
@@ -2738,6 +2960,11 @@ async function addNewCategory() {
             
             // Dispatch change event to trigger preview updates
             select.dispatchEvent(new Event('change'));
+            
+            // Trigger asset tag generation if this is the asset name field
+            if (window.currentCategorySource === 'assetName') {
+                generateAssetTag();
+            }
         }
     }
     

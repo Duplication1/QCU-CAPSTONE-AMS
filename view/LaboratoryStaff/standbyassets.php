@@ -81,6 +81,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_asset_number') {
+        $asset_name = trim($_POST['asset_name'] ?? '');
+        
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
+            exit;
+        }
+        
+        // Create asset name prefix
+        $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+        $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+        
+        // Find the highest existing number for this asset name (regardless of room)
+        $pattern = "%-{$asset_name_prefix}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last segment after last dash
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'get_next_start_number') {
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
         $room_number = trim($_POST['room_number'] ?? '');
@@ -422,6 +463,244 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'import_excel_rows') {
+        $headers = json_decode($_POST['headers'] ?? '[]', true);
+        $rows = json_decode($_POST['rows'] ?? '[]', true);
+        $created = [];
+        $errors = [];
+        
+        try {
+            foreach ($rows as $idx => $row) {
+                $asset_tag = trim($row['Asset Tag'] ?? $row['asset tag'] ?? '');
+                $asset_name = trim($row['Asset Name'] ?? $row['asset name'] ?? '');
+                $asset_type = trim($row['Type'] ?? $row['type'] ?? 'Hardware');
+                $brandModel = trim($row['Brand/Model'] ?? $row['brand/model'] ?? '');
+                $serial_number = trim($row['Serial Number'] ?? $row['serial number'] ?? '');
+                $room_name = trim($row['Room'] ?? $row['room'] ?? '');
+                $status = trim($row['Status'] ?? $row['status'] ?? 'Available');
+                $condition = trim($row['Condition'] ?? $row['condition'] ?? 'Good');
+                
+                if ($asset_tag === '' || $asset_name === '') {
+                    $errors[] = "Row ".($idx+1).": Missing Asset Tag or Name";
+                    continue;
+                }
+                
+                // Check for duplicate asset tag
+                $chk = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                $chk->bind_param('s', $asset_tag);
+                $chk->execute();
+                $chk->store_result();
+                if ($chk->num_rows > 0) {
+                    $chk->close();
+                    $errors[] = "Row ".($idx+1).": Duplicate asset tag";
+                    continue;
+                }
+                $chk->close();
+                
+                // Split brand/model
+                $brand = '';
+                $model = '';
+                if ($brandModel !== '') {
+                    $parts = explode('/', $brandModel);
+                    $brand = trim($parts[0]);
+                    if (count($parts) > 1) { $model = trim($parts[1]); }
+                }
+                
+                // Normalize status
+                $status_map = [
+                    'active' => 'Active',
+                    'available' => 'Available',
+                    'in use' => 'In Use',
+                    'maintenance' => 'Under Maintenance',
+                    'under maintenance' => 'Under Maintenance',
+                    'retired' => 'Retired',
+                    'disposed' => 'Disposed',
+                    'lost' => 'Lost',
+                    'damaged' => 'Damaged'
+                ];
+                $status_lower = strtolower($status);
+                $status = $status_map[$status_lower] ?? 'Available';
+                
+                // Normalize condition
+                $condition_map = [
+                    'excellent' => 'Excellent',
+                    'good' => 'Good',
+                    'fair' => 'Fair',
+                    'poor' => 'Poor',
+                    'non-functional' => 'Non-Functional',
+                    'nonfunctional' => 'Non-Functional'
+                ];
+                $condition_lower = strtolower($condition);
+                $condition = $condition_map[$condition_lower] ?? 'Good';
+                
+                // Lookup room by name
+                $room_id = null;
+                if ($room_name !== '') {
+                    $rm = $conn->prepare("SELECT id FROM rooms WHERE name = ?");
+                    $rm->bind_param('s', $room_name);
+                    $rm->execute();
+                    $res = $rm->get_result();
+                    if ($res && $res->num_rows > 0) {
+                        $room_id = $res->fetch_assoc()['id'];
+                    }
+                    $rm->close();
+                }
+                
+                // Generate QR code
+                $qr_data = json_encode([
+                    'asset_tag' => $asset_tag,
+                    'asset_name' => $asset_name,
+                    'asset_type' => $asset_type,
+                    'room_id' => $room_id
+                ]);
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+                
+                $created_by = $_SESSION['user_id'];
+                $ins = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $ins->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by);
+                
+                if ($ins->execute()) {
+                    $created[] = [
+                        'id' => $conn->insert_id,
+                        'asset_tag' => $asset_tag,
+                        'asset_name' => $asset_name,
+                        'asset_type' => $asset_type,
+                        'brand' => $brand,
+                        'model' => $model,
+                        'serial_number' => $serial_number,
+                        'room_id' => $room_id,
+                        'status' => $status,
+                        'condition' => $condition
+                    ];
+                } else {
+                    $errors[] = "Row ".($idx+1).": Insert failed";
+                }
+                $ins->close();
+            }
+            
+            echo json_encode(['success' => true, 'created' => $created, 'errors' => $errors]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'import_excel_rows') {
+        $headers = json_decode($_POST['headers'] ?? '[]', true);
+        $rows = json_decode($_POST['rows'] ?? '[]', true);
+        $created = [];
+        $errors = [];
+        
+        try {
+            foreach ($rows as $idx => $row) {
+                $asset_tag = trim($row['Asset Tag'] ?? $row['asset tag'] ?? '');
+                $asset_name = trim($row['Asset Name'] ?? $row['asset name'] ?? '');
+                $asset_type = trim($row['Type'] ?? $row['type'] ?? 'Hardware');
+                $brandModel = trim($row['Brand/Model'] ?? $row['brand/model'] ?? '');
+                $serial_number = trim($row['Serial Number'] ?? $row['serial number'] ?? '');
+                $room_name = trim($row['Room'] ?? $row['room'] ?? '');
+                $status = trim($row['Status'] ?? $row['status'] ?? 'Available');
+                $condition = trim($row['Condition'] ?? $row['condition'] ?? 'Good');
+                
+                if ($asset_tag === '' || $asset_name === '') {
+                    $errors[] = "Row ".($idx+1).": Missing Asset Tag or Name";
+                    continue;
+                }
+                
+                $chk = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                $chk->bind_param('s', $asset_tag);
+                $chk->execute();
+                $chk->store_result();
+                if ($chk->num_rows > 0) {
+                    $chk->close();
+                    $errors[] = "Row ".($idx+1).": Duplicate asset tag";
+                    continue;
+                }
+                $chk->close();
+                
+                $brand = '';
+                $model = '';
+                if ($brandModel !== '') {
+                    $parts = explode('/', $brandModel);
+                    $brand = trim($parts[0]);
+                    if (count($parts) > 1) { $model = trim($parts[1]); }
+                }
+                
+                $status_map = [
+                    'active' => 'Active',
+                    'available' => 'Available',
+                    'in use' => 'In Use',
+                    'maintenance' => 'Under Maintenance',
+                    'under maintenance' => 'Under Maintenance',
+                    'retired' => 'Retired',
+                    'disposed' => 'Disposed',
+                    'lost' => 'Lost',
+                    'damaged' => 'Damaged'
+                ];
+                $status_lower = strtolower($status);
+                $status = $status_map[$status_lower] ?? 'Available';
+                
+                $condition_map = [
+                    'excellent' => 'Excellent',
+                    'good' => 'Good',
+                    'fair' => 'Fair',
+                    'poor' => 'Poor',
+                    'non-functional' => 'Non-Functional',
+                    'nonfunctional' => 'Non-Functional'
+                ];
+                $condition_lower = strtolower($condition);
+                $condition = $condition_map[$condition_lower] ?? 'Good';
+                
+                $room_id = null;
+                if ($room_name !== '') {
+                    $rm = $conn->prepare("SELECT id FROM rooms WHERE name = ?");
+                    $rm->bind_param('s', $room_name);
+                    $rm->execute();
+                    $res = $rm->get_result();
+                    if ($res && $res->num_rows > 0) {
+                        $room_id = $res->fetch_assoc()['id'];
+                    }
+                    $rm->close();
+                }
+                
+                $qr_data = json_encode([
+                    'asset_tag' => $asset_tag,
+                    'asset_name' => $asset_name,
+                    'asset_type' => $asset_type,
+                    'room_id' => $room_id
+                ]);
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+                
+                $created_by = $_SESSION['user_id'];
+                $ins = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $ins->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by);
+                
+                if ($ins->execute()) {
+                    $created[] = [
+                        'id' => $conn->insert_id,
+                        'asset_tag' => $asset_tag,
+                        'asset_name' => $asset_name,
+                        'asset_type' => $asset_type,
+                        'brand' => $brand,
+                        'model' => $model,
+                        'serial_number' => $serial_number,
+                        'room_id' => $room_id,
+                        'status' => $status,
+                        'condition' => $condition
+                    ];
+                } else {
+                    $errors[] = "Row ".($idx+1).": Insert failed";
+                }
+                $ins->close();
+            }
+            
+            echo json_encode(['success' => true, 'created' => $created, 'errors' => $errors]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -584,11 +863,18 @@ main {
                 <p class="text-xs text-gray-500 mt-0.5">Assets not assigned to any room • Total: <?php echo $total_assets; ?> asset(s)</p>
             </div>
             
-            <button onclick="openAddAssetModal()" 
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Asset</span>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="openImportExcelModal()" 
+                        class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Import Excel</span>
+                </button>
+                <button onclick="openAddAssetModal()" 
+                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Asset</span>
+                </button>
+            </div>
         </div>
 
         <!-- Search and Filters -->
@@ -844,6 +1130,39 @@ main {
     </div>
 </main>
 
+<!-- Import Excel Modal -->
+<div id="importExcelModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Import Assets from Excel</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="text-sm text-gray-700">
+                <p class="mb-2 font-medium">Expected columns:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Asset Tag</li>
+                    <li>Asset Name</li>
+                    <li>Type</li>
+                    <li>Brand/Model</li>
+                    <li>Serial Number</li>
+                    <li>Room (name)</li>
+                    <li>Status</li>
+                    <li>Condition</li>
+                </ul>
+                <p class="mt-3 text-xs text-gray-600">
+                    <i class="fa-solid fa-info-circle mr-1"></i>
+                    Leave Room empty for standby assets. Brand/Model can be split with "/".
+                </p>
+            </div>
+            <input type="file" id="importExcelFile" accept=".xlsx,.xls,.csv" class="w-full border border-gray-300 rounded px-3 py-2">
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportExcelModal()" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button onclick="processImportExcel()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -872,9 +1191,10 @@ main {
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
-                    <input type="text" id="assetTag" name="asset_tag"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., COMP-001">
+                    <input type="text" id="assetTag" name="asset_tag" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Auto-generated">
+                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -1365,6 +1685,39 @@ main {
     </div>
 </div>
 
+<!-- Import Excel Modal -->
+<div id="importExcelModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Import Assets from Excel</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="text-sm text-gray-700">
+                <p class="mb-2 font-medium">Expected columns:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Asset Tag</li>
+                    <li>Asset Name</li>
+                    <li>Type</li>
+                    <li>Brand/Model</li>
+                    <li>Serial Number</li>
+                    <li>Room (name)</li>
+                    <li>Status</li>
+                    <li>Condition</li>
+                </ul>
+                <p class="mt-3 text-xs text-gray-600">
+                    <i class="fa-solid fa-info-circle mr-1"></i>
+                    Leave Room empty for standby assets. Brand/Model can be split with "/".
+                </p>
+            </div>
+            <input type="file" id="importExcelFile" accept=".xlsx,.xls,.csv" class="w-full border border-gray-300 rounded px-3 py-2">
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportExcelModal()" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button onclick="processImportExcel()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
@@ -1666,7 +2019,7 @@ function applyFilters() {
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
-    document.getElementById('assetTag').focus();
+    document.getElementById('assetName').focus();
 }
 
 function closeAddAssetModal() {
@@ -1741,6 +2094,80 @@ function toggleAssetBulkMode() {
         singleFields.classList.remove('hidden');
         bulkFields.classList.add('hidden');
         submitBtn.textContent = 'Create Asset';
+    }
+}
+
+// Auto-generate asset tag for single asset mode
+async function generateAssetTag() {
+    const assetName = document.getElementById('assetName')?.value?.trim();
+    const roomId = document.getElementById('roomId')?.value;
+    const assetTagField = document.getElementById('assetTag');
+    
+    if (!assetName || !assetTagField) {
+        if (assetTagField) assetTagField.value = '';
+        return;
+    }
+    
+    // Get room name from select option
+    const roomSelect = document.getElementById('roomId');
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomName = selectedOption?.text || 'No Room';
+    
+    // Extract room number or use 'NOROOM' if no room selected
+    let roomNumber = 'NOROOM';
+    if (roomId && roomName && roomName !== 'No Room') {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+        }
+    }
+    
+    try {
+        // Get current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        
+        // Create asset name prefix (first few letters)
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        
+        // Get next sequential number for this asset name only
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_asset_number');
+        formData.append('asset_name', assetName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const nextNumber = String(result.next_number).padStart(3, '0');
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            assetTagField.value = assetTag;
+        } else {
+            // Fallback to basic format if server request fails
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            assetTagField.value = assetTag;
+        }
+    } catch (error) {
+        console.error('Error generating asset tag:', error);
+        // Fallback generation
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        const roomNumber = roomId ? 'ROOM' : 'NOROOM';
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
@@ -2115,6 +2542,175 @@ function showAlert(type, message) {
     setTimeout(() => alertDiv.remove(), 3000);
 }
 
+// Import Excel functions
+function openImportExcelModal() { 
+    document.getElementById('importExcelModal').classList.remove('hidden'); 
+}
+
+function closeImportExcelModal() { 
+    document.getElementById('importExcelModal').classList.add('hidden'); 
+    const f = document.getElementById('importExcelFile'); 
+    if (f) f.value = ''; 
+}
+
+function ensureSheetJSLoaded() {
+    return new Promise((resolve) => {
+        if (window.XLSX) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+    });
+}
+
+async function parseFileToRows(file) {
+    await ensureSheetJSLoaded();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const headers = Object.keys(json[0] || {});
+                resolve({ headers, rows: json });
+            } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+async function processImportExcel() {
+    const fileInput = document.getElementById('importExcelFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { 
+        showAlert('error', 'Please select a file'); 
+        return; 
+    }
+    
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        
+        if (rows.length === 0) {
+            showAlert('error', 'No data found in file');
+            return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_excel_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        
+        if (result.success) {
+            let message = `Successfully imported ${result.created.length} asset(s)`;
+            if (result.errors && result.errors.length > 0) {
+                message += `. Errors: ${result.errors.length}`;
+                console.log('Import errors:', result.errors);
+            }
+            showAlert('success', message);
+            closeImportExcelModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
+
+// Import Excel functions
+function openImportExcelModal() { 
+    document.getElementById('importExcelModal').classList.remove('hidden'); 
+}
+
+function closeImportExcelModal() { 
+    document.getElementById('importExcelModal').classList.add('hidden'); 
+    const f = document.getElementById('importExcelFile'); 
+    if (f) f.value = ''; 
+}
+
+// Ensure SheetJS is loaded
+function ensureSheetJSLoaded() {
+    return new Promise((resolve) => {
+        if (window.XLSX) return resolve();
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+    });
+}
+
+// Parse Excel file
+async function parseFileToRows(file) {
+    await ensureSheetJSLoaded();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const headers = Object.keys(json[0] || {});
+                resolve({ headers, rows: json });
+            } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Process import
+async function processImportExcel() {
+    const fileInput = document.getElementById('importExcelFile');
+    const file = fileInput && fileInput.files[0];
+    if (!file) { 
+        showAlert('error', 'Please select a file'); 
+        return; 
+    }
+    
+    try {
+        const { headers, rows } = await parseFileToRows(file);
+        
+        if (rows.length === 0) {
+            showAlert('error', 'No data found in file');
+            return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'import_excel_rows');
+        formData.append('headers', JSON.stringify(headers));
+        formData.append('rows', JSON.stringify(rows));
+        
+        const res = await fetch(location.href, { method: 'POST', body: formData });
+        const result = await res.json();
+        
+        if (result.success) {
+            let message = `Successfully imported ${result.created.length} asset(s)`;
+            if (result.errors && result.errors.length > 0) {
+                message += `. Errors: ${result.errors.length}`;
+                console.log('Import errors:', result.errors);
+            }
+            showAlert('success', message);
+            closeImportExcelModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch (e) {
+        console.error(e);
+        showAlert('error', 'Failed to parse or import file');
+    }
+}
+
 // Close menus when clicking outside
 document.addEventListener('click', function(e) {
     if (!e.target.closest('[id^="menu-"]') && !e.target.closest('button')) {
@@ -2144,6 +2740,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Add event listener for room selection to trigger asset tag generation
+    const roomSelect = document.getElementById('roomId');
+    if (roomSelect) {
+        roomSelect.addEventListener('change', function() {
+            const assetName = document.getElementById('assetName')?.value;
+            if (assetName) {
+                generateAssetTag();
+            }
+        });
+    }
 });
 
 // Initialize searchable dropdowns
@@ -2202,6 +2809,11 @@ function initializeSearchableDropdowns() {
                 
                 // Trigger change event for compatibility
                 selectElement.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (selectElement.id === 'assetName') {
+                    generateAssetTag();
+                }
                 
                 // Clear search
                 searchInput.value = '';
@@ -2311,6 +2923,11 @@ async function addNewCategory() {
                 const select = document.getElementById(triggeredBy);
                 if (select) {
                     select.value = categoryName;
+                    
+                    // Trigger asset tag generation if this is the asset name field
+                    if (triggeredBy === 'assetName') {
+                        generateAssetTag();
+                    }
                 }
             }
         } else {

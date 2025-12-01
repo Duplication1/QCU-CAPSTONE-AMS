@@ -148,6 +148,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         exit;
     }
     
+    if ($action === 'get_next_asset_number') {
+        $asset_name = trim($_POST['asset_name'] ?? '');
+        
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
+            exit;
+        }
+        
+        // Create asset name prefix
+        $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+        $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+        
+        // Find the highest existing number for this asset name (regardless of room)
+        $pattern = "%-{$asset_name_prefix}-%";
+        $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+        $query->bind_param('s', $pattern);
+        $query->execute();
+        $result = $query->get_result();
+        
+        $max_number = 0;
+        while ($row = $result->fetch_assoc()) {
+            $asset_tag = $row['asset_tag'];
+            // Extract the number part: last segment after last dash
+            $parts = explode('-', $asset_tag);
+            if (count($parts) >= 4) {
+                $number_part = end($parts);
+                if (is_numeric($number_part)) {
+                    $number = intval($number_part);
+                    if ($number > $max_number) {
+                        $max_number = $number;
+                    }
+                }
+            }
+        }
+        $query->close();
+        
+        $next_number = $max_number + 1;
+        echo json_encode(['success' => true, 'next_number' => $next_number]);
+        exit;
+    }
+    
     if ($action === 'get_next_start_number') {
         $asset_name_prefix = trim($_POST['asset_name'] ?? '');
         $room_number = trim($_POST['room_number'] ?? '');
@@ -300,6 +341,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Check for duplicate asset_tag on a different asset
+            $dup = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ? AND id <> ? LIMIT 1");
+            $dup->bind_param('si', $asset_tag, $id);
+            $dup->execute();
+            $dup->store_result();
+            if ($dup->num_rows > 0) {
+                $dup->close();
+                echo json_encode(['success' => false, 'message' => 'Asset tag already exists on another asset']);
+                exit;
+            }
+            $dup->close();
+
             $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, room_id = ?, status = ?, `condition` = ?, is_borrowable = ?, updated_by = ? WHERE id = ?");
             $updated_by = $_SESSION['user_id'];
             $stmt->bind_param('ssssssissiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $is_borrowable, $updated_by, $id);
@@ -309,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             if ($success) {
                 echo json_encode(['success' => true, 'message' => 'Asset updated successfully']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update asset']);
+                echo json_encode(['success' => false, 'message' => 'Failed to update asset: ' . $conn->error]);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -394,6 +447,185 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+        exit;
+    }
+
+    // Import Excel/CSV parsed rows (client sends JSON after parsing)
+    if ($action === 'import_excel_rows') {
+        $headers = json_decode($_POST['headers_json'] ?? '[]', true);
+        $rows = json_decode($_POST['rows_json'] ?? '[]', true);
+        if (empty($headers) || empty($rows)) {
+            echo json_encode(['success' => false, 'message' => 'No data received for import']);
+            exit;
+        }
+        // Normalize headers map
+        $headerMap = [];
+        foreach ($headers as $idx => $h) {
+            $key = strtolower(trim($h));
+            if ($key !== '') {
+                $headerMap[$key] = $idx;
+            }
+        }
+
+        // Helper to get value by candidate header names
+        $getVal = function($row, $candidates, $default='') use ($headerMap) {
+            foreach ($candidates as $c) {
+                $k = strtolower($c);
+                if (isset($headerMap[$k])) {
+                    $v = $row[$headerMap[$k]] ?? '';
+                    if (is_string($v)) { $v = trim($v); }
+                    if ($v !== '') return $v;
+                }
+            }
+            return $default;
+        };
+
+        // Normalizers
+        $normalize_status = function($val){
+            $v = trim(strtolower((string)$val));
+            $v = str_replace(['-', '_', ' '], '', $v);
+            $map = [
+                'active' => 'Active',
+                'available' => 'Available',
+                'inuse' => 'In Use',
+                'undermaintenance' => 'Under Maintenance',
+                'retired' => 'Retired',
+                'disposed' => 'Disposed',
+                'lost' => 'Lost',
+                'damaged' => 'Damaged',
+                'archived' => 'Archived'
+            ];
+            return $map[$v] ?? 'Available';
+        };
+        $normalize_condition = function($val){
+            $v = trim(strtolower((string)$val));
+            $v = str_replace(['-', '_'], ' ', $v);
+            $v = preg_replace('/\s+/', ' ', $v);
+            $map = [
+                'excellent' => 'Excellent',
+                'good' => 'Good',
+                'fair' => 'Fair',
+                'poor' => 'Poor',
+                'non functional' => 'Non-Functional',
+                'non-functional' => 'Non-Functional',
+            ];
+            return $map[$v] ?? 'Good';
+        };
+
+        $inserted = 0;
+        $skipped = [];
+        $created_assets = [];
+        $today = date('m-d-Y');
+        $user_id = $_SESSION['user_id'];
+
+        // Prepare duplicate check statement
+        $checkStmt = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+        $insertStmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        foreach ($rows as $i => $row) {
+            if (!is_array($row)) continue;
+            // Extract columns
+            $asset_tag = $getVal($row, ['asset tag','asset_tag','tag']);
+            $asset_name = $getVal($row, ['asset name','asset_name','name'], 'Imported Asset');
+            $asset_type = $getVal($row, ['type','asset type','asset_type'], 'Hardware');
+            $brand = $getVal($row, ['brand'], '');
+            $model = $getVal($row, ['model'], '');
+            $serial_number = $getVal($row, ['serial number','serial_number','serial'], '');
+            $room_identifier = $getVal($row, ['room','room name','room_name'], '');
+            $status = $getVal($row, ['status','asset status','current status','equipment status'], 'Available');
+            $condition = $getVal($row, ['condition','asset condition','state'], 'Good');
+            $status = $normalize_status($status);
+            $condition = $normalize_condition($condition);
+
+            // Generate asset_tag if missing
+            if ($asset_tag === '') {
+                $prefix = strtoupper(preg_replace('/\s+/', '', substr($asset_name, 0, 10))); // first 10 chars no spaces
+                $asset_tag = $today . '-' . $prefix . '-IMPORT-' . str_pad($i+1, 3, '0', STR_PAD_LEFT);
+            }
+
+            // Check duplicate
+            $checkStmt->bind_param('s', $asset_tag);
+            $checkStmt->execute();
+            $checkStmt->store_result();
+            if ($checkStmt->num_rows > 0) {
+                $skipped[] = $asset_tag . ' (duplicate)';
+                continue;
+            }
+            $checkStmt->free_result();
+
+            // Resolve room_id (lookup by name if provided)
+            $room_id = null;
+            if ($room_identifier !== '') {
+                $roomLookup = $conn->prepare("SELECT id FROM rooms WHERE name = ? LIMIT 1");
+                $roomLookup->bind_param('s', $room_identifier);
+                $roomLookup->execute();
+                $roomResult = $roomLookup->get_result();
+                if ($roomResult && $roomResult->num_rows > 0) {
+                    $room_id = $roomResult->fetch_assoc()['id'];
+                }
+                $roomLookup->close();
+            }
+
+            // QR code generation data
+            $qr_data = json_encode([
+                'asset_tag' => $asset_tag,
+                'asset_name' => $asset_name,
+                'asset_type' => $asset_type,
+                'room_id' => $room_id,
+                'brand' => $brand,
+                'model' => $model
+            ]);
+            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+
+            $insertStmt->bind_param(
+                'ssssssisssi',
+                $asset_tag,
+                $asset_name,
+                $asset_type,
+                $brand,
+                $model,
+                $serial_number,
+                $room_id,
+                $status,
+                $condition,
+                $qr_code_url,
+                $user_id
+            );
+
+            if ($insertStmt->execute()) {
+                $inserted++;
+                $created_assets[] = [
+                    'id' => $conn->insert_id,
+                    'asset_tag' => $asset_tag,
+                    'asset_name' => $asset_name,
+                    'asset_type' => $asset_type,
+                    'brand' => $brand,
+                    'model' => $model,
+                    'serial_number' => $serial_number,
+                    'room_id' => $room_id,
+                    'room_name' => $room_identifier ?: null,
+                    'status' => $status,
+                    'condition' => $condition
+                ];
+            } else {
+                $skipped[] = $asset_tag . ' (insert failed)';
+            }
+        }
+
+        $checkStmt->close();
+        $insertStmt->close();
+
+        $message = "Imported $inserted asset(s)";
+        if (!empty($skipped)) {
+            $message .= '. Skipped: ' . implode(', ', $skipped);
+        }
+        echo json_encode([
+            'success' => $inserted > 0,
+            'message' => $message,
+            'inserted' => $inserted,
+            'skipped_count' => count($skipped),
+            'assets' => $created_assets
+        ]);
         exit;
     }
     
@@ -668,12 +900,18 @@ main {
                 <h3 class="text-lg font-semibold text-gray-800">All Assets</h3>
                 <p class="text-xs text-gray-500 mt-0.5">Total: <?php echo $total_assets; ?> asset(s)</p>
             </div>
-            
-            <button onclick="openAddAssetModal()" 
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Asset</span>
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="openImportExcelModal()" 
+                        class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Import Excel</span>
+                </button>
+                <button onclick="openAddAssetModal()" 
+                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Asset</span>
+                </button>
+            </div>
         </div>
 
         <!-- Search and Filters -->
@@ -729,7 +967,6 @@ main {
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
                 </button>
-                    <i class="fa-solid fa-search"></i>
                 </button>
                 <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type) || !empty($filter_building) || !empty($filter_room) || $show_standby || $show_archived): ?>
                     <a href="allassets.php" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
@@ -780,7 +1017,7 @@ main {
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="assetsTableBody" class="bg-white divide-y divide-gray-200">
                     <?php if (empty($assets)): ?>
                         <tr>
                             <td colspan="11" class="px-6 py-12 text-center text-gray-500">
@@ -839,10 +1076,11 @@ main {
                                         'Damaged' => 'bg-orange-100 text-orange-700',
                                         'Archived' => 'bg-purple-100 text-purple-700'
                                     ];
-                                    $status_class = $status_colors[$asset['status']] ?? 'bg-gray-100 text-gray-700';
+                                    $status_value = isset($asset['status']) && trim($asset['status']) !== '' ? $asset['status'] : 'Available';
+                                    $status_class = $status_colors[$status_value] ?? 'bg-gray-100 text-gray-700';
                                     ?>
                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
-                                        <?php echo htmlspecialchars($asset['status']); ?>
+                                        <?php echo htmlspecialchars($status_value); ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -948,6 +1186,49 @@ main {
     </div>
 </main>
 
+    <!-- Import Excel Modal -->
+    <div id="importExcelModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fa-solid fa-file-excel text-green-600 mr-2"></i>
+                    Import Excel / CSV
+                </h3>
+                <button onclick="closeImportExcelModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select file</label>
+                    <input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv" 
+                           class="block w-full text-sm text-gray-700 border border-gray-300 rounded-md p-2" />
+                    <p class="text-xs text-gray-500 mt-1">Accepted formats: .xlsx, .xls, .csv</p>
+                </div>
+                <div id="importPreviewContainer" class="hidden">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-2">Preview</h4>
+                    <div class="overflow-auto max-h-[50vh] border rounded">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50" id="importPreviewHead"></thead>
+                            <tbody id="importPreviewBody" class="divide-y divide-gray-200 bg-white"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-3">
+                        <button onclick="importPreviewToDatabase()" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm" id="importAndDisplayBtn">
+                            Import & Display
+                        </button>
+                        <button onclick="closeImportExcelModal()" 
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    </div>
+
 <!-- Delete Confirmation Modal -->
 <div id="deleteAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
     <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -1004,6 +1285,62 @@ main {
     </div>
 </div>
 
+<!-- Bulk Archive Confirmation Modal -->
+<div id="bulkArchiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-orange-100 rounded-full mb-4">
+                <i class="fa-solid fa-box-archive text-orange-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Archive Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to archive <strong id="bulkArchiveCount">0</strong> asset(s)?
+            </p>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The assets will be moved to archived assets.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkArchiveModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkArchiveBtn" onclick="confirmBulkArchive()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-box-archive mr-1"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Dispose Confirmation Modal -->
+<div id="bulkDisposeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Dispose Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to dispose <strong id="bulkDisposeCount">0</strong> asset(s)?
+            </p>
+            <p class="text-xs text-red-600 text-center mb-6">
+                <i class="fa-solid fa-exclamation-triangle mr-1"></i>This action cannot be undone!
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkDisposeModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkDisposeBtn" onclick="confirmBulkDispose()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-trash mr-1"></i>Dispose
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -1023,7 +1360,7 @@ main {
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="asset_bulk_mode" value="bulk" onchange="toggleAssetBulkMode()" 
                                class="mr-2 text-blue-600 focus:ring-blue-500">
-                        <span class="text-sm">Bulk (Multiple Assets)</span>
+                        <span class="text-sm">Identical (Bulk Assets)</span>
                     </label>
                 </div>
             </div>
@@ -1032,9 +1369,10 @@ main {
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
-                    <input type="text" id="assetTag" name="asset_tag"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., COMP-001">
+                    <input type="text" id="assetTag" name="asset_tag" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Auto-generated">
+                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -1326,7 +1664,7 @@ main {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
                     <div class="relative">
-                        <select id="editAssetName" name="asset_name" required class="hidden">
+                        <select id="editAssetName" name="asset_name" class="hidden">
                             <option value="">Select Category</option>
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
@@ -1689,33 +2027,12 @@ async function bulkArchive() {
     
     const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
     
-    if (!confirm(`Are you sure you want to archive ${assetIds.length} asset(s)?`)) {
-        return;
-    }
+    // Open modal instead of confirm dialog
+    document.getElementById('bulkArchiveCount').textContent = assetIds.length;
+    document.getElementById('bulkArchiveModal').classList.remove('hidden');
     
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'bulk_archive');
-        formData.append('asset_ids', JSON.stringify(assetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while archiving assets');
-    }
+    // Store asset IDs for later use
+    window.bulkArchiveAssetIds = assetIds;
 }
 
 async function bulkDispose() {
@@ -1727,39 +2044,18 @@ async function bulkDispose() {
     
     const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
     
-    if (!confirm(`Are you sure you want to dispose ${assetIds.length} asset(s)? This action cannot be undone.`)) {
-        return;
-    }
+    // Open modal instead of confirm dialog
+    document.getElementById('bulkDisposeCount').textContent = assetIds.length;
+    document.getElementById('bulkDisposeModal').classList.remove('hidden');
     
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'bulk_dispose');
-        formData.append('asset_ids', JSON.stringify(assetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while disposing assets');
-    }
+    // Store asset IDs for later use
+    window.bulkDisposeAssetIds = assetIds;
 }
 
 // Modal functions
 function openAddAssetModal() {
     document.getElementById('addAssetModal').classList.remove('hidden');
-    document.getElementById('assetTag').focus();
+    document.getElementById('assetName').focus();
 }
 
 function closeAddAssetModal() {
@@ -1834,6 +2130,80 @@ function toggleAssetBulkMode() {
         singleFields.classList.remove('hidden');
         bulkFields.classList.add('hidden');
         submitBtn.textContent = 'Create Asset';
+    }
+}
+
+// Auto-generate asset tag for single asset mode
+async function generateAssetTag() {
+    const assetName = document.getElementById('assetName')?.value?.trim();
+    const roomId = document.getElementById('roomId')?.value;
+    const assetTagField = document.getElementById('assetTag');
+    
+    if (!assetName || !assetTagField) {
+        if (assetTagField) assetTagField.value = '';
+        return;
+    }
+    
+    // Get room name from select option
+    const roomSelect = document.getElementById('roomId');
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomName = selectedOption?.text || 'No Room';
+    
+    // Extract room number or use 'NOROOM' if no room selected
+    let roomNumber = 'NOROOM';
+    if (roomId && roomName && roomName !== 'No Room') {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+        }
+    }
+    
+    try {
+        // Get current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        
+        // Create asset name prefix (first few letters)
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        
+        // Get next sequential number for this asset name only
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_asset_number');
+        formData.append('asset_name', assetName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const nextNumber = String(result.next_number).padStart(3, '0');
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            assetTagField.value = assetTag;
+        } else {
+            // Fallback to basic format if server request fails
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            assetTagField.value = assetTag;
+        }
+    } catch (error) {
+        console.error('Error generating asset tag:', error);
+        // Fallback generation
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${month}-${day}-${year}`;
+        const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
+        const roomNumber = roomId ? 'ROOM' : 'NOROOM';
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
@@ -1961,13 +2331,22 @@ function editAsset(asset) {
 // Edit Asset Form Submit
 document.getElementById('editAssetForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    // Client-side validation to avoid hidden required control errors
+    const nameVal = document.getElementById('editAssetName').value.trim();
+    if (!nameVal) {
+        showAlert('error', 'Please select an Asset Name (Category).');
+        // Try to focus the visible dropdown display
+        const dropdownDisplay = document.querySelector('#editAssetForm .searchable-dropdown .dropdown-display');
+        dropdownDisplay && dropdownDisplay.focus();
+        return;
+    }
     
     const formData = new URLSearchParams();
     formData.append('ajax', '1');
     formData.append('action', 'update_asset');
     formData.append('id', document.getElementById('editAssetId').value);
     formData.append('asset_tag', document.getElementById('editAssetTag').value);
-    formData.append('asset_name', document.getElementById('editAssetName').value);
+    formData.append('asset_name', nameVal);
     formData.append('asset_type', document.getElementById('editAssetType').value);
     formData.append('brand', document.getElementById('editBrand').value);
     formData.append('model', document.getElementById('editModel').value);
@@ -2124,6 +2503,106 @@ document.getElementById('archiveAssetModal')?.addEventListener('click', function
     }
 });
 
+// Bulk Archive Modal Functions
+function closeBulkArchiveModal() {
+    document.getElementById('bulkArchiveModal').classList.add('hidden');
+    window.bulkArchiveAssetIds = null;
+}
+
+async function confirmBulkArchive() {
+    if (!window.bulkArchiveAssetIds) return;
+    
+    const button = document.getElementById('confirmBulkArchiveBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Archiving...';
+    button.disabled = true;
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_archive');
+        formData.append('asset_ids', JSON.stringify(window.bulkArchiveAssetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while archiving assets');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// Close bulk archive modal when clicking outside
+document.getElementById('bulkArchiveModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkArchiveModal();
+    }
+});
+
+// Bulk Dispose Modal Functions
+function closeBulkDisposeModal() {
+    document.getElementById('bulkDisposeModal').classList.add('hidden');
+    window.bulkDisposeAssetIds = null;
+}
+
+async function confirmBulkDispose() {
+    if (!window.bulkDisposeAssetIds) return;
+    
+    const button = document.getElementById('confirmBulkDisposeBtn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Disposing...';
+    button.disabled = true;
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'bulk_dispose');
+        formData.append('asset_ids', JSON.stringify(window.bulkDisposeAssetIds));
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while disposing assets');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// Close bulk dispose modal when clicking outside
+document.getElementById('bulkDisposeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkDisposeModal();
+    }
+});
+
 // Delete Asset (now opens modal)
 async function deleteAsset(id, assetTag) {
     openDeleteAssetModal(id, assetTag);
@@ -2200,6 +2679,355 @@ function toggleMenu(id) {
     menu.classList.toggle('hidden');
 }
 
+// =====================
+// Import Excel / CSV
+// =====================
+// Load SheetJS lazily
+(function ensureSheetJS(){
+    if(!window.XLSX){
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        s.defer=true;
+        document.head.appendChild(s);
+    }
+})();
+
+let parsedImportHeaders = [];
+let parsedImportRows = [];
+let originalTableHTML = null;
+
+function openImportExcelModal(){
+    const modal = document.getElementById('importExcelModal');
+    const input = document.getElementById('excelFileInput');
+    const head = document.getElementById('importPreviewHead');
+    const body = document.getElementById('importPreviewBody');
+    const container = document.getElementById('importPreviewContainer');
+    if(modal){ modal.classList.remove('hidden'); }
+    if(input){ input.value=''; }
+    if(head){ head.innerHTML=''; }
+    if(body){ body.innerHTML=''; }
+    if(container){ container.classList.add('hidden'); }
+    parsedImportHeaders = [];
+    parsedImportRows = [];
+}
+
+function closeImportExcelModal(){
+    const modal = document.getElementById('importExcelModal');
+    if(modal){ modal.classList.add('hidden'); }
+}
+
+// Parse on file select
+document.addEventListener('change', function(e){
+    if(e.target && e.target.id === 'excelFileInput'){
+        const file = e.target.files && e.target.files[0];
+        if(!file){ return; }
+        if(!window.XLSX){
+            alert('Parser not loaded yet. Please try again in a moment.');
+            return;
+        }
+        const reader = new FileReader();
+        const name = file.name.toLowerCase();
+        const isCSV = name.endsWith('.csv');
+
+        reader.onload = function(evt){
+            try{
+                let workbook;
+                if(isCSV){
+                    const text = evt.target.result;
+                    workbook = XLSX.read(text, { type: 'string' });
+                } else {
+                    const data = evt.target.result;
+                    workbook = XLSX.read(data, { type: 'array' });
+                }
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const rows = XLSX.utils.sheet_to_json(worksheet, { header:1, defval:'' });
+                if(!rows || rows.length === 0){
+                    alert('The file appears to be empty.');
+                    return;
+                }
+                parsedImportHeaders = rows[0].map(h => (h||'').toString());
+                parsedImportRows = rows.slice(1).filter(r => r.some(cell => (cell||'').toString().trim() !== ''));
+                renderImportPreview(parsedImportHeaders, parsedImportRows);
+            }catch(err){
+                console.error(err);
+                alert('Failed to parse the file. Please check the format.');
+            }
+        };
+
+        if(isCSV){
+            reader.readAsText(file);
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
+    }
+});
+
+function renderImportPreview(headers, rows){
+    const headEl = document.getElementById('importPreviewHead');
+    const bodyEl = document.getElementById('importPreviewBody');
+    const container = document.getElementById('importPreviewContainer');
+    if(!headEl || !bodyEl || !container){ return; }
+    headEl.innerHTML = '';
+    bodyEl.innerHTML = '';
+
+    const tr = document.createElement('tr');
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.className = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+        th.textContent = h;
+        tr.appendChild(th);
+    });
+    headEl.appendChild(tr);
+
+    const maxRows = Math.min(rows.length, 50);
+    for(let i=0;i<maxRows;i++){
+        const row = rows[i];
+        const trb = document.createElement('tr');
+        trb.className = 'hover:bg-gray-50';
+        headers.forEach((_, idx) => {
+            const td = document.createElement('td');
+            td.className = 'px-4 py-2 text-sm text-gray-700';
+            td.textContent = (row[idx] !== undefined && row[idx] !== null) ? row[idx] : '';
+            trb.appendChild(td);
+        });
+        bodyEl.appendChild(trb);
+    }
+    container.classList.remove('hidden');
+}
+
+function applyImportPreviewToTable(){
+    if(parsedImportHeaders.length === 0 || parsedImportRows.length === 0){
+        alert('No data to display. Please select a valid file.');
+        return;
+    }
+    const tbody = document.getElementById('assetsTableBody');
+    if(!tbody){
+        alert('Table body not found.');
+        return;
+    }
+
+    if(originalTableHTML === null){
+        originalTableHTML = tbody.innerHTML;
+    }
+
+    const headerMap = buildHeaderIndexMap(parsedImportHeaders);
+    const fragment = document.createDocumentFragment();
+    const limit = Math.min(parsedImportRows.length, 500);
+    for(let i=0;i<limit;i++){
+        const r = parsedImportRows[i];
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 transition-colors';
+
+        // Checkbox
+        const tdCheck = document.createElement('td');
+        tdCheck.className = 'px-6 py-4 whitespace-nowrap';
+        tdCheck.innerHTML = '<input type="checkbox" disabled class="asset-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-50 cursor-not-allowed">';
+        tr.appendChild(tdCheck);
+
+        // Index
+        const tdIdx = document.createElement('td');
+        tdIdx.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+        tdIdx.textContent = i + 1;
+        tr.appendChild(tdIdx);
+
+        // Asset Tag
+        tr.appendChild(buildCell(r, headerMap, ['asset tag','asset_tag','tag'], 'px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600'));
+        // Asset Name
+        tr.appendChild(buildCell(r, headerMap, ['asset name','asset_name','name'], 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'));
+        // Type
+        tr.appendChild(buildCell(r, headerMap, ['type','asset type','asset_type'], 'px-6 py-4 whitespace-nowrap text-sm text-gray-500'));
+        // Brand/Model combined
+        const brand = getValue(r, headerMap, ['brand']);
+        const model = getValue(r, headerMap, ['model']);
+        const tdBrandModel = document.createElement('td');
+        tdBrandModel.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+        const combined = [brand, model].filter(Boolean).join(' - ');
+        tdBrandModel.textContent = combined || 'N/A';
+        tr.appendChild(tdBrandModel);
+        // Serial Number
+        tr.appendChild(buildCell(r, headerMap, ['serial number','serial_number','serial'], 'px-6 py-4 whitespace-nowrap text-sm text-gray-500', 'N/A'));
+        // Room
+        tr.appendChild(buildCell(r, headerMap, ['room','room name','room_name'], 'px-6 py-4 whitespace-nowrap text-sm text-gray-500', 'N/A'));
+        // Status
+        tr.appendChild(buildCell(r, headerMap, ['status'], 'px-6 py-4 whitespace-nowrap', 'Available'));
+        // Condition
+        tr.appendChild(buildCell(r, headerMap, ['condition'], 'px-6 py-4 whitespace-nowrap', 'Good'));
+
+        // Actions placeholder
+        const tdActions = document.createElement('td');
+        tdActions.className = 'px-6 py-4 whitespace-nowrap text-center text-sm';
+        tdActions.innerHTML = '<span class="text-xs text-gray-400">Preview</span>';
+        tr.appendChild(tdActions);
+
+        fragment.appendChild(tr);
+    }
+
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+    closeImportExcelModal();
+    showImportPreviewBanner();
+}
+
+// Send parsed preview rows to server for DB import then display
+async function importPreviewToDatabase(){
+    if(parsedImportHeaders.length === 0 || parsedImportRows.length === 0){
+        alert('No parsed data to import.');
+        return;
+    }
+    const btn = document.getElementById('importAndDisplayBtn');
+    if(btn){
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Importing...';
+    }
+    try {
+        // Limit rows sent for performance (you can adjust as needed)
+        const limit = Math.min(parsedImportRows.length, 1000);
+        const rowsToSend = parsedImportRows.slice(0, limit);
+        const formData = new FormData();
+        formData.append('ajax','1');
+        formData.append('action','import_excel_rows');
+        formData.append('headers_json', JSON.stringify(parsedImportHeaders));
+        formData.append('rows_json', JSON.stringify(rowsToSend));
+        const response = await fetch(location.href,{method:'POST', body:formData});
+        const result = await response.json();
+        if(result.success){
+            showAlert('success', result.message);
+            // Replace table with server-confirmed assets (result.assets) for accuracy
+            const tbody = document.getElementById('assetsTableBody');
+            if(tbody && Array.isArray(result.assets)){
+                const fragment = document.createDocumentFragment();
+                result.assets.forEach((asset, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
+                    const statusClass = getStatusClass(asset.status);
+                    const conditionClass = getConditionClass(asset.condition);
+                    tr.innerHTML = `
+                        <td class='px-6 py-4 whitespace-nowrap'><input type='checkbox' disabled class='asset-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-50 cursor-not-allowed'></td>
+                        <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${idx+1}</td>
+                        <td class='px-6 py-4 whitespace-nowrap'><span class='text-sm font-medium text-blue-600'>${escapeHtml(asset.asset_tag)}</span></td>
+                        <td class='px-6 py-4 whitespace-nowrap'><span class='text-sm font-medium text-gray-900'>${escapeHtml(asset.asset_name)}</span></td>
+                        <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${escapeHtml(asset.asset_type)}</td>
+                        <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${escapeHtml([asset.brand, asset.model].filter(Boolean).join(' - ') || 'N/A')}</td>
+                        <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${escapeHtml(asset.serial_number || 'N/A')}</td>
+                        <td class='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${escapeHtml(asset.room_name || 'N/A')}</td>
+                        <td class='px-6 py-4 whitespace-nowrap'><span class='px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}'>${escapeHtml(asset.status || 'Available')}</span></td>
+                        <td class='px-6 py-4 whitespace-nowrap'><span class='px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${conditionClass}'>${escapeHtml(asset.condition || 'Good')}</span></td>
+                        <td class='px-6 py-4 whitespace-nowrap text-center text-sm'><span class='text-xs text-gray-400'>Imported</span></td>`;
+                    fragment.appendChild(tr);
+                });
+                if(originalTableHTML === null){ originalTableHTML = tbody.innerHTML; }
+                tbody.innerHTML='';
+                tbody.appendChild(fragment);
+            }
+            closeImportExcelModal();
+            showImportPreviewBanner();
+        } else {
+            showAlert('error', result.message || 'Import failed');
+        }
+    } catch(err){
+        console.error(err);
+        showAlert('error','Unexpected error during import');
+    } finally {
+        if(btn){
+            btn.disabled = false;
+            btn.innerHTML = 'Import & Display';
+        }
+    }
+}
+
+function escapeHtml(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+
+function getStatusClass(status){
+    const s = String(status || '').toLowerCase();
+    const map = {
+        'active': 'bg-green-100 text-green-700',
+        'available': 'bg-green-100 text-green-700',
+        'in use': 'bg-blue-100 text-blue-700',
+        'under maintenance': 'bg-yellow-100 text-yellow-700',
+        'retired': 'bg-gray-100 text-gray-700',
+        'disposed': 'bg-red-100 text-red-700',
+        'lost': 'bg-red-100 text-red-700',
+        'damaged': 'bg-orange-100 text-orange-700',
+        'archived': 'bg-purple-100 text-purple-700'
+    };
+    return map[s] || 'bg-gray-100 text-gray-700';
+}
+
+function getConditionClass(cond){
+    const c = String(cond || '').toLowerCase();
+    const map = {
+        'excellent': 'bg-green-100 text-green-700',
+        'good': 'bg-blue-100 text-blue-700',
+        'fair': 'bg-yellow-100 text-yellow-700',
+        'poor': 'bg-orange-100 text-orange-700',
+        'non-functional': 'bg-red-100 text-red-700',
+        'non functional': 'bg-red-100 text-red-700'
+    };
+    return map[c] || 'bg-gray-100 text-gray-700';
+}
+
+function buildHeaderIndexMap(headers){
+    const map = {};
+    headers.forEach((h, idx) => {
+        const key = (h||'').toString().trim().toLowerCase();
+        map[key] = idx;
+    });
+    return map;
+}
+
+function getValue(row, map, candidates, fallback=''){
+    for(const c of candidates){
+        const key = c.toLowerCase();
+        if(map[key] !== undefined){
+            const v = row[map[key]];
+            if(v !== undefined && v !== null && String(v).trim() !== ''){
+                return v;
+            }
+        }
+    }
+    return fallback;
+}
+
+function buildCell(row, map, candidates, className, fallback=''){
+    const td = document.createElement('td');
+    td.className = className || 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
+    td.textContent = getValue(row, map, candidates, fallback);
+    return td;
+}
+
+function showImportPreviewBanner(){
+    let banner = document.getElementById('importPreviewBanner');
+    if(!banner){
+        banner = document.createElement('div');
+        banner.id = 'importPreviewBanner';
+        banner.className = 'fixed bottom-4 right-4 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded shadow z-50 flex items-center gap-3';
+        banner.innerHTML = '<span class="text-sm">Imported and saved. Showing preview of imported rows.</span>'+
+                           '<button id="clearImportPreviewBtn" class="text-sm px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded">Restore Table</button>'+
+                           '<button id="reloadPageBtn" class="text-sm px-2 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded">Reload Page</button>';
+        document.body.appendChild(banner);
+        document.getElementById('clearImportPreviewBtn').addEventListener('click', restoreOriginalTableFromPreview);
+        document.getElementById('reloadPageBtn').addEventListener('click', () => window.location.reload());
+    }
+}
+
+function restoreOriginalTableFromPreview(){
+    const tbody = document.getElementById('assetsTableBody');
+    if(tbody && originalTableHTML !== null){
+        tbody.innerHTML = originalTableHTML;
+    }
+    const banner = document.getElementById('importPreviewBanner');
+    if(banner){ banner.remove(); }
+}
+
 // Close all menus
 function closeAllMenus() {
     document.querySelectorAll('[id^="menu-"]').forEach(menu => {
@@ -2246,6 +3074,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Add event listener for room selection to trigger asset tag generation
+    const roomSelect = document.getElementById('roomId');
+    if (roomSelect) {
+        roomSelect.addEventListener('change', function() {
+            const assetName = document.getElementById('assetName')?.value;
+            if (assetName) {
+                generateAssetTag();
+            }
+        });
+    }
 });
 
 // Initialize searchable dropdowns
@@ -2304,6 +3143,11 @@ function initializeSearchableDropdowns() {
                 
                 // Trigger change event for compatibility
                 selectElement.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (selectElement.id === 'assetName') {
+                    generateAssetTag();
+                }
                 
                 // Clear search
                 searchInput.value = '';
@@ -2416,6 +3260,11 @@ async function updateSearchableDropdownOptions(selectId) {
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
                     
+                    // Trigger asset tag generation if this is the asset name field in single mode
+                    if (select.id === 'assetName') {
+                        generateAssetTag();
+                    }
+                    
                     // Clear search
                     const searchInput = dropdown.querySelector('.dropdown-search');
                     searchInput.value = '';
@@ -2488,6 +3337,12 @@ async function addNewCategory() {
                 const options = dropdown.querySelector('.dropdown-options');
                 options.classList.add('hidden');
                 select.dispatchEvent(new Event('change'));
+                
+                // Trigger asset tag generation if this is the asset name field in single mode
+                if (select.id === 'assetName') {
+                    generateAssetTag();
+                }
+                
                 const searchInput = dropdown.querySelector('.dropdown-search');
                 searchInput.value = '';
             });
