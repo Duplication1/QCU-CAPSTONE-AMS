@@ -57,6 +57,18 @@ try {
     }
 
     $update_stmt->close();
+    
+    // Log activity
+    require_once '../model/ActivityLog.php';
+    require_once '../model/Database.php';
+    ActivityLog::record(
+        $_SESSION['user_id'],
+        'restore',
+        'asset',
+        $id,
+        'Restored asset: ' . $asset['asset_tag']
+    );
+    
     $conn->close();
 
     echo json_encode([

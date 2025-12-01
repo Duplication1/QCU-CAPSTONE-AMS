@@ -76,6 +76,19 @@ try {
 
     $affected_rows = $update_stmt->affected_rows;
     $update_stmt->close();
+    
+    // Log activity
+    require_once '../model/ActivityLog.php';
+    require_once '../model/Database.php';
+    $asset_tags = array_map(function($asset) { return $asset['asset_tag']; }, $assets);
+    ActivityLog::record(
+        $_SESSION['user_id'],
+        'restore',
+        'asset',
+        null,
+        'Bulk restored ' . $affected_rows . ' asset(s): ' . implode(', ', $asset_tags)
+    );
+    
     $conn->close();
 
     echo json_encode([

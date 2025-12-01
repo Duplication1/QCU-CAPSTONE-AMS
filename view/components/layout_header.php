@@ -45,13 +45,12 @@ $page_title = "AMS - " . $current_role . " Dashboard";
     <link href="../../assets/css/poppins.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="../../node_modules/datatables.net-dt/css/dataTables.dataTables.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- jQuery (required for DataTables) -->
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
     <!-- DataTables JavaScript -->
     <script src="../../node_modules/datatables.net/js/dataTables.min.js"></script>
-
+     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Dark mode overrides for Student/Faculty (applies when body has .dark-mode) -->
     <style>
         /* Ensure main background and text colors flip to dark/white */

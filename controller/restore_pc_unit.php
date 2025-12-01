@@ -57,6 +57,18 @@ try {
     }
 
     $update_stmt->close();
+    
+    // Log activity
+    require_once '../model/ActivityLog.php';
+    require_once '../model/Database.php';
+    ActivityLog::record(
+        $_SESSION['user_id'],
+        'restore',
+        'pc_unit',
+        $id,
+        'Restored PC unit: ' . $pc_unit['terminal_number']
+    );
+    
     $conn->close();
 
     echo json_encode([

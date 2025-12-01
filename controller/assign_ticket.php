@@ -72,6 +72,21 @@ try {
     $stmt->execute();
     $affected = $stmt->affected_rows;
     $stmt->close();
+    
+    // Log activity for Laboratory Staff
+    if ($affected > 0 && isset($_SESSION['role']) && $_SESSION['role'] === 'Laboratory Staff') {
+        try {
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, ip_address, user_agent) VALUES (?, 'assign', 'ticket', ?, ?, ?, ?)");
+            $description = 'Assigned ticket #' . $ticketId . ' to ' . $technicianName;
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            $logStmt->bind_param('iisss', $_SESSION['user_id'], $ticketId, $description, $ip_address, $user_agent);
+            $logStmt->execute();
+            $logStmt->close();
+        } catch (Exception $logError) {
+            error_log('Failed to log ticket assignment: ' . $logError->getMessage());
+        }
+    }
 
     // Create notification for the student
     if ($affected > 0) {

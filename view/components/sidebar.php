@@ -70,7 +70,13 @@ $navigation_items = [
             'color' => 'blue',
             'href' => 'tickets.php'
         ],
-       
+        [
+            'id' => 'activity-logs',
+            'label' => 'Activity Logs',
+            'icon' => 'fa-solid fa-clock-rotate-left',
+            'color' => 'blue',
+            'href' => 'activity_logs.php'
+        ],
         [
             'id' => 'registry',
             'label' => 'Asset Registry',
@@ -92,6 +98,11 @@ $navigation_items = [
                     'id' => 'standby-assets',
                     'label' => 'Stand By Assets',
                     'href' => 'standbyassets.php'
+                ],
+                [
+                    'id' => 'disposal',
+                    'label' => 'Disposal',
+                    'href' => 'disposal.php'
                 ]
             ]
         ]

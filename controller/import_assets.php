@@ -127,6 +127,18 @@ try {
     
     fclose($handle);
     
+    // Log activity
+    if ($successCount > 0) {
+        require_once '../model/ActivityLog.php';
+        ActivityLog::record(
+            $_SESSION['user_id'],
+            'import',
+            'asset',
+            null,
+            'Imported ' . $successCount . ' asset(s) from CSV file'
+        );
+    }
+    
     // Set success/error message
     if ($successCount > 0) {
         $_SESSION['success_message'] = "Successfully imported $successCount asset(s)";

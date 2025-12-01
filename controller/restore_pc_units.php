@@ -76,6 +76,19 @@ try {
 
     $affected_rows = $update_stmt->affected_rows;
     $update_stmt->close();
+    
+    // Log activity
+    require_once '../model/ActivityLog.php';
+    require_once '../model/Database.php';
+    $terminal_numbers = array_map(function($unit) { return $unit['terminal_number']; }, $pc_units);
+    ActivityLog::record(
+        $_SESSION['user_id'],
+        'restore',
+        'pc_unit',
+        null,
+        'Bulk restored ' . $affected_rows . ' PC unit(s): ' . implode(', ', $terminal_numbers)
+    );
+    
     $conn->close();
 
     echo json_encode([

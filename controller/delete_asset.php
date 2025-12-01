@@ -30,6 +30,16 @@ try {
     $asset = new Asset();
     
     if ($asset->delete($asset_id)) {
+        // Log activity
+        require_once '../model/ActivityLog.php';
+        ActivityLog::record(
+            $_SESSION['user_id'],
+            'archive',
+            'asset',
+            $asset_id,
+            'Archived asset ID: ' . $asset_id
+        );
+        
         echo json_encode([
             'success' => true,
             'message' => 'Asset deleted successfully'

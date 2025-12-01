@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Failed to update last_login for user ' . intval($user['id']) . ': ' . $e->getMessage());
         }
         
-        // Record login history
+        // Record login history and activity log
         try {
             $dbConfig = Config::database();
             $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
@@ -105,6 +105,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('isss', $user['id'], $ip_address, $user_agent, $device_type);
             $stmt->execute();
             $stmt->close();
+            
+            // Log activity for Laboratory Staff
+            if ($user['role'] === 'Laboratory Staff') {
+                $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, entity_type, description, ip_address, user_agent) VALUES (?, 'login', 'user', ?, ?, ?)");
+                $description = 'User logged in to Laboratory Staff panel';
+                $logStmt->bind_param('isss', $user['id'], $description, $ip_address, $user_agent);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+            
             $conn->close();
         } catch (Exception $e) {
             // non-fatal; proceed with login even if login history couldn't be recorded

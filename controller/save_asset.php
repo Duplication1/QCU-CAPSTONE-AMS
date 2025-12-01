@@ -87,6 +87,16 @@ try {
         // Update existing asset
         $asset->id = $asset_id;
         if ($asset->update()) {
+            // Log activity
+            require_once '../model/ActivityLog.php';
+            ActivityLog::record(
+                $_SESSION['user_id'],
+                'update',
+                'asset',
+                $asset_id,
+                'Updated asset: ' . $asset->asset_name . ' (' . $asset->asset_tag . ')'
+            );
+            
             $message = 'Asset updated successfully';
             if ($isAjax) {
                 header('Content-Type: application/json');
@@ -100,6 +110,16 @@ try {
     } else {
         // Create new asset
         if ($asset->create()) {
+            // Log activity
+            require_once '../model/ActivityLog.php';
+            ActivityLog::record(
+                $_SESSION['user_id'],
+                'create',
+                'asset',
+                null,
+                'Created new asset: ' . $asset->asset_name . ' (' . $asset->asset_tag . ')'
+            );
+            
             $message = 'Asset created successfully';
             if ($isAjax) {
                 header('Content-Type: application/json');

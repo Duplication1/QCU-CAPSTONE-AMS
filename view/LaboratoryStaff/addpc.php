@@ -18,6 +18,12 @@ require_once '../../config/config.php';
 if (!isset($conn)) {
     $conn = new mysqli('localhost', 'root', '', 'ams_database');
     if ($conn->connect_error) {
+        // Check if it's an AJAX request
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+            exit();
+        }
         die("Connection failed: " . $conn->connect_error);
     }
 }
@@ -43,25 +49,76 @@ if (!$room) {
     exit();
 }
 
+// Helper function to get next available terminal number
+function getNextAvailableTerminalNumber($conn, $prefix, $start_number = 1) {
+    $current_number = $start_number;
+    $max_attempts = 1000; // Prevent infinite loop
+    $attempts = 0;
+    
+    while ($attempts < $max_attempts) {
+        $terminal_number = $prefix . str_pad($current_number, 2, '0', STR_PAD_LEFT);
+        
+        $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
+        $check_stmt->bind_param('s', $terminal_number);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        
+        if ($check_stmt->num_rows == 0) {
+            $check_stmt->close();
+            return $current_number;
+        }
+        
+        $check_stmt->close();
+        $current_number++;
+        $attempts++;
+    }
+    
+    return null; // No available number found
+}
+
 // Handle AJAX requests for PC components
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+    // Suppress any output before JSON response
+    if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
-    $action = $_POST['action'] ?? '';
+    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    
+    // Enable mysqli exceptions
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    
+    try {
+        $action = $_POST['action'] ?? '';
 
-    if ($action === 'get_pc_categories') {
-        $pc_categories_stmt = $conn->prepare("SELECT id, name FROM asset_categories WHERE is_pc_category = 1 ORDER BY name");
-        $pc_categories_stmt->execute();
-        $pc_categories_result = $pc_categories_stmt->get_result();
+        if ($action === 'get_pc_categories') {
+            $pc_categories_stmt = $conn->prepare("SELECT id, name FROM asset_categories WHERE is_pc_category = 1 ORDER BY name");
+            $pc_categories_stmt->execute();
+            $pc_categories_result = $pc_categories_stmt->get_result();
 
-        $categories = [];
-        while ($category = $pc_categories_result->fetch_assoc()) {
-            $categories[] = $category;
+            $categories = [];
+            while ($category = $pc_categories_result->fetch_assoc()) {
+                $categories[] = $category;
+            }
+            $pc_categories_stmt->close();
+
+            echo json_encode(['success' => true, 'categories' => $categories]);
+            exit();
         }
-        $pc_categories_stmt->close();
 
-        echo json_encode(['success' => true, 'categories' => $categories]);
-        exit();
-    }
+        if ($action === 'get_next_available_number') {
+            $prefix = $_POST['prefix'] ?? 'PC-';
+            $start = intval($_POST['start'] ?? 1);
+            
+            $next_number = getNextAvailableTerminalNumber($conn, $prefix, $start);
+            
+            if ($next_number !== null) {
+                echo json_encode(['success' => true, 'next_number' => $next_number]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No available numbers found']);
+            }
+            exit();
+        }
 
     if ($action === 'create_pc_unit') {
         $bulk_mode = $_POST['bulk_mode'] ?? 'single';
@@ -71,6 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $prefix = trim($_POST['prefix'] ?? '');
             $range_start = intval($_POST['range_start'] ?? 1);
             $range_end = intval($_POST['range_end'] ?? 1);
+            $asset_date = trim($_POST['asset_date'] ?? date('Y-m-d'));
+            $date = date('m-d-Y', strtotime($asset_date));
             $status = $_POST['status'] ?? 'Active';
             $notes = trim($_POST['notes'] ?? '');
             $selected_components = $_POST['selected_components'] ?? [];
@@ -87,11 +146,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
             $created_count = 0;
             $errors = [];
+            $skipped_count = 0;
 
-            for ($i = $range_start; $i <= $range_end; $i++) {
-                $terminal_number = $prefix . str_pad($i, 2, '0', STR_PAD_LEFT);
+            // Find the next available starting number
+            $current_number = getNextAvailableTerminalNumber($conn, $prefix, $range_start);
+            
+            if ($current_number === null) {
+                echo json_encode(['success' => false, 'message' => 'No available terminal numbers found in the specified range']);
+                exit();
+            }
 
-                // Check if terminal number already exists
+            $units_to_create = $range_end - $range_start + 1;
+            $created = 0;
+
+            while ($created < $units_to_create && $current_number <= ($range_start + 1000)) {
+                $terminal_number = $prefix . str_pad($current_number, 2, '0', STR_PAD_LEFT);
+                
+                // Double-check if terminal number exists (shouldn't happen with our helper function)
                 $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
                 $check_stmt->bind_param('s', $terminal_number);
                 $check_stmt->execute();
@@ -99,19 +170,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
                 if ($check_stmt->num_rows > 0) {
                     $check_stmt->close();
-                    $errors[] = "Terminal number $terminal_number already exists";
+                    $current_number++;
+                    $skipped_count++;
                     continue;
                 }
                 $check_stmt->close();
+                
+                // Use the date selected in the form (already formatted above)
+                $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($current_number, 2, '0', STR_PAD_LEFT);
 
                 // Insert PC unit
-                $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?)");
+                $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, asset_tag, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
                 $created_by = $_SESSION['user_id'];
-                $insert_stmt->bind_param('sisss', $terminal_number, $room_id, $status, $notes, $created_by);
+                $insert_stmt->bind_param('ssissi', $terminal_number, $asset_tag, $room_id, $status, $notes, $created_by);
 
                 if ($insert_stmt->execute()) {
                     $new_id = $conn->insert_id;
                     $created_count++;
+                    $created++;
 
                     // Automatically create assets for selected PC components
                     if (!empty($selected_components)) {
@@ -131,9 +207,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             $model = trim($_POST["component_model_{$category_id}"] ?? '');
                             $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
                             $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
+                            $end_of_life = !empty($_POST["component_eol_{$category_id}"]) ? $_POST["component_eol_{$category_id}"] : null;
+                            $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
+                            $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
-                            // Generate asset tag: PC-{PC_ID}-{CATEGORY}-001
-                            $asset_tag = "PC-{$new_id}-{$category['name']}-001";
+                            // Generate asset tag: DATE-TH-ID-ROOM-COMPONENT-001
+                            // Use component-specific date if provided, otherwise use PC unit date
+                            $asset_tag = $component_date_formatted . '-TH-' . str_pad($new_id, 2, '0', STR_PAD_LEFT) . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
                             $asset_name = $category['name'] . ' for PC-' . $new_id;
 
                             // Check if asset tag already exists
@@ -160,8 +240,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
 
                             // Insert asset
-                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                            $asset_stmt->bind_param('sssssiissi', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $qr_code_url, $created_by, $category_id);
+                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
+                            $asset_stmt->bind_param('sssssiiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
 
                             if (!$asset_stmt->execute()) {
                                 $errors[] = "Failed to create asset for PC-$new_id: " . $asset_stmt->error;
@@ -173,10 +253,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     $errors[] = "Failed to create PC unit $terminal_number: " . $insert_stmt->error;
                 }
                 $insert_stmt->close();
+                $current_number++;
             }
 
             if ($created_count > 0) {
                 $message = "Successfully created $created_count PC unit(s)";
+                if ($skipped_count > 0) {
+                    $message .= " (skipped $skipped_count existing units)";
+                }
                 $selected_components = $_POST['selected_components'] ?? [];
                 if (!empty($selected_components)) {
                     $message .= " with selected components";
@@ -191,6 +275,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         } else {
             // Single PC creation logic
             $terminal_number = trim($_POST['terminal_number'] ?? '');
+            $asset_date = trim($_POST['asset_date'] ?? date('Y-m-d'));
+            $date = date('m-d-Y', strtotime($asset_date));
+            // Extract number from terminal (e.g., PC-001 -> 01)
+            $terminal_num = preg_replace('/[^0-9]/', '', $terminal_number);
+            $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($terminal_num, 2, '0', STR_PAD_LEFT);
             $status = $_POST['status'] ?? 'Active';
             $notes = trim($_POST['notes'] ?? '');
 
@@ -213,9 +302,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $check_stmt->close();
 
             // Insert PC unit
-            $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?)");
+            $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, asset_tag, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $insert_stmt->bind_param('sisss', $terminal_number, $room_id, $status, $notes, $created_by);
+            $insert_stmt->bind_param('ssissi', $terminal_number, $asset_tag, $room_id, $status, $notes, $created_by);
 
             if ($insert_stmt->execute()) {
                 $new_id = $conn->insert_id;
@@ -243,9 +332,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         $model = trim($_POST["component_model_{$category_id}"] ?? '');
                         $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
                         $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
+                        $end_of_life = !empty($_POST["component_eol_{$category_id}"]) ? $_POST["component_eol_{$category_id}"] : null;
+                        $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
+                        $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
-                        // Generate asset tag: PC-{PC_ID}-{CATEGORY}-001
-                        $asset_tag = "PC-{$new_id}-{$category['name']}-001";
+                        // Generate asset tag: DATE-TH-ID-ROOM-COMPONENT-001
+                        // Use component-specific date if provided, otherwise use PC unit date
+                        $asset_tag = $component_date_formatted . '-TH-' . str_pad($new_id, 2, '0', STR_PAD_LEFT) . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
                         $asset_name = $category['name'] . ' for PC-' . $new_id;
 
                         // Check if asset tag already exists
@@ -272,8 +365,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
 
                         // Insert asset
-                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                        $asset_stmt->bind_param('sssssiissi', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $qr_code_url, $created_by, $category_id);
+                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
+                        $asset_stmt->bind_param('sssssiiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
 
                         if ($asset_stmt->execute()) {
                             $assets_created++;
@@ -300,8 +393,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             }
             $insert_stmt->close();
         }
-        exit();
     }
+        
+    } catch (mysqli_sql_exception $e) {
+        // Catch mysqli errors
+        echo json_encode(['success' => false, 'message' => 'Database Error: ' . $e->getMessage()]);
+    } catch (Exception $e) {
+        // Catch any other errors
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    } catch (Error $e) {
+        // Catch PHP 7+ errors
+        echo json_encode(['success' => false, 'message' => 'System Error: ' . $e->getMessage()]);
+    }
+    exit();
 }
 
 include '../components/layout_header.php';
@@ -385,11 +489,29 @@ include '../components/layout_header.php';
                         <div class="space-y-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Asset Tag Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="asset_date" id="singleAssetDate" required
+                                       oninput="updateAssetTagPreview()"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Terminal Number <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="terminal_number" id="singleTerminalNumber"
+                                       oninput="updateAssetTagPreview()"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
                                        placeholder="e.g., PC-001">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Asset Tag (Auto-generated)
+                                </label>
+                                <input type="text" id="assetTagPreview" readonly
+                                       class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
+                                       placeholder="<?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-01'; ?>">
                             </div>
                         </div>
                     </div>
@@ -410,9 +532,19 @@ include '../components/layout_header.php';
                         <div class="space-y-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Asset Tag Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="asset_date" id="bulkAssetDate" required
+                                       oninput="updateBulkAssetTagPreview()"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                       value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Prefix <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="prefix" value="PC-"
+                                <input type="text" name="prefix" id="bulkPrefix" value="PC-"
+                                       oninput="updateBulkAssetTagPreview()"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
                                        placeholder="e.g., PC-">
                             </div>
@@ -422,21 +554,42 @@ include '../components/layout_header.php';
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Start Number <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="number" name="range_start" value="1" min="1" max="999"
+                                    <input type="number" name="range_start" id="bulkRangeStart" value="1" min="1" max="999"
+                                           oninput="updateBulkAssetTagPreview()"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         End Number <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="number" name="range_end" value="50" min="1" max="999"
+                                    <input type="number" name="range_end" id="bulkRangeEnd" value="50" min="1" max="999"
+                                           oninput="updateBulkAssetTagPreview()"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Asset Tag Preview (First & Last)
+                                </label>
+                                <div class="space-y-2">
+                                    <input type="text" id="bulkAssetTagPreviewFirst" readonly
+                                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
+                                           placeholder="First: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-01'; ?>">
+                                    <input type="text" id="bulkAssetTagPreviewLast" readonly
+                                           class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
+                                           placeholder="Last: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-50'; ?>">
                                 </div>
                             </div>
 
                             <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
                                 <i class="fa-solid fa-lightbulb mr-2 text-yellow-500"></i>
                                 Maximum 100 units can be created at once. Numbers will be zero-padded (e.g., 01, 02, 03...)
+                            </div>
+                            
+                            <div id="bulkAutoUpdateInfo" class="hidden text-sm text-blue-600 bg-blue-50 p-2 rounded-md">
+                                <i class="fa-solid fa-info-circle mr-2"></i>
+                                <span></span>
                             </div>
                         </div>
                     </div>
@@ -484,29 +637,7 @@ include '../components/layout_header.php';
 
                             <div class="mt-3 text-sm text-gray-600 bg-blue-50 p-2 rounded-md">
                                 <i class="fa-solid fa-info-circle mr-2 text-blue-600"></i>
-                                Assets will be created with format: PC-{PC_ID}-{COMPONENT}-001
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Asset Tag Preview -->
-                <div class="col-span-1 lg:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h3 class="text-sm font-medium text-blue-900 mb-3 flex items-center">
-                        <i class="fa-solid fa-eye mr-2"></i>
-                        Asset Tag Preview
-                    </h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-blue-800 mb-1">PC Unit Asset Tag</label>
-                            <div id="pcUnitTagPreview" class="bg-white px-3 py-2 border border-blue-300 rounded-md text-sm font-mono text-blue-700">
-                                PC-001
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-blue-800 mb-2">Component Asset Tags</label>
-                            <div id="componentTagsPreview" class="space-y-2">
-                                <div class="text-sm text-blue-600 italic">Select components to see asset tag previews</div>
+                                Assets will be created with format: DATE-TH-{ID}-ROOM-{COMPONENT}-001
                             </div>
                         </div>
                     </div>
@@ -529,6 +660,60 @@ include '../components/layout_header.php';
 </main>
 
 <script>
+// Get next available terminal number
+async function getNextAvailableNumber(prefix, startNumber = 1) {
+    try {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_available_number');
+        formData.append('prefix', prefix);
+        formData.append('start', startNumber);
+
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        return result.success ? result.next_number : null;
+    } catch (error) {
+        console.error('Error getting next available number:', error);
+        return null;
+    }
+}
+
+// Auto-suggest terminal number for single mode
+async function autoSuggestTerminalNumber() {
+    const terminalInput = document.getElementById('singleTerminalNumber');
+    if (!terminalInput || terminalInput.value.trim()) return; // Don't override if user already typed
+    
+    const nextNum = await getNextAvailableNumber('PC-', 1);
+    if (nextNum !== null) {
+        terminalInput.value = 'PC-' + String(nextNum).padStart(3, '0');
+        updateAssetTagPreview();
+    }
+}
+
+// Auto-update bulk range when prefix/start changes
+async function autoUpdateBulkRange() {
+    const prefix = document.getElementById('bulkPrefix').value;
+    const rangeStart = parseInt(document.getElementById('bulkRangeStart').value) || 1;
+    
+    const nextNum = await getNextAvailableNumber(prefix, rangeStart);
+    if (nextNum !== null && nextNum !== rangeStart) {
+        document.getElementById('bulkRangeStart').value = nextNum;
+        updateBulkAssetTagPreview();
+        
+        // Show info message
+        const infoDiv = document.getElementById('bulkAutoUpdateInfo');
+        if (infoDiv) {
+            infoDiv.textContent = `Auto-adjusted start number to ${nextNum} (next available)`;
+            infoDiv.classList.remove('hidden');
+            setTimeout(() => infoDiv.classList.add('hidden'), 5000);
+        }
+    }
+}
+
 // Load PC Components for selection
 async function loadPCComponents() {
     try {
@@ -551,8 +736,8 @@ async function loadPCComponents() {
                 const componentDiv = document.createElement('div');
                 componentDiv.className = 'component-item bg-white border border-gray-200 rounded-lg p-4';
                 componentDiv.innerHTML = `
-                    <div class="flex items-start">
-                        <div class="flex items-center flex-shrink-0 w-48">
+                    <div class="space-y-3">
+                        <div class="flex items-center">
                             <input type="checkbox"
                                    id="component_${category.id}"
                                    name="selected_components[]"
@@ -563,38 +748,59 @@ async function loadPCComponents() {
                                 ${category.name}
                             </label>
                         </div>
-                        <div id="specs_${category.id}" class="component-specs hidden ml-4 flex-1 grid grid-cols-2 gap-3">
+                        <div id="specs_${category.id}" class="component-specs hidden ml-6 space-y-3">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                <input type="text"
-                                       name="component_brand_${category.id}"
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Component Asset Tag Date</label>
+                                <input type="date" id="component_date_${category.id}" name="component_date_${category.id}"
                                        class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
-                                       placeholder="e.g., Dell">
+                                       value="<?php echo date('Y-m-d'); ?>"
+                                       oninput="updateComponentAssetTagPreview(${category.id}, '${category.name}')">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                                <input type="text"
-                                       name="component_model_${category.id}"
-                                       class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
-                                       placeholder="e.g., DDR4-8GB">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Asset Tag (Preview)</label>
+                                <input type="text" id="component_tag_${category.id}" readonly
+                                       class="w-full px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 cursor-not-allowed"
+                                       placeholder="DATE-TH-{ID}-<?php echo $room['name']; ?>-${category.name.toUpperCase()}-001">
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
-                                <input type="text"
-                                       name="component_serial_${category.id}"
-                                       class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
-                                       placeholder="Optional">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-                                <select name="component_condition_${category.id}"
-                                        class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
-                                    <option value="Good">Good</option>
-                                    <option value="Excellent">Excellent</option>
-                                    <option value="Fair">Fair</option>
-                                    <option value="Poor">Poor</option>
-                                    <option value="Non-Functional">Non-Functional</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Brand</label>
+                                    <input type="text"
+                                           name="component_brand_${category.id}"
+                                           class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                           placeholder="e.g., Dell">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Model</label>
+                                    <input type="text"
+                                           name="component_model_${category.id}"
+                                           class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                           placeholder="e.g., DDR4-8GB">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Serial Number</label>
+                                    <input type="text"
+                                           name="component_serial_${category.id}"
+                                           class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
+                                           placeholder="Optional">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Condition</label>
+                                    <select name="component_condition_${category.id}"
+                                            class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                        <option value="Good">Good</option>
+                                        <option value="Excellent">Excellent</option>
+                                        <option value="Fair">Fair</option>
+                                        <option value="Poor">Poor</option>
+                                        <option value="Non-Functional">Non-Functional</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">End of Life (Optional)</label>
+                                    <input type="date"
+                                           name="component_eol_${category.id}"
+                                           class="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -604,6 +810,60 @@ async function loadPCComponents() {
         }
     } catch (error) {
         console.error('Error loading PC components:', error);
+    }
+}
+
+// Update asset tag preview
+function updateAssetTagPreview() {
+    const terminalNumber = document.getElementById('singleTerminalNumber').value.trim();
+    const assetDateInput = document.getElementById('singleAssetDate').value;
+    const assetTagPreview = document.getElementById('assetTagPreview');
+    if (terminalNumber && assetDateInput) {
+        // Parse date properly to avoid timezone issues
+        const [year, month, day] = assetDateInput.split('-');
+        const dateStr = month + '-' + day + '-' + year;
+        const roomName = '<?php echo $room['name']; ?>';
+        const terminalNum = terminalNumber.replace(/[^0-9]/g, '').padStart(2, '0');
+        assetTagPreview.value = dateStr + '-' + roomName + '-TH-' + terminalNum;
+    } else {
+        assetTagPreview.value = '';
+    }
+}
+
+// Update bulk asset tag preview
+function updateBulkAssetTagPreview() {
+    const assetDateInput = document.getElementById('bulkAssetDate').value;
+    const rangeStart = document.getElementById('bulkRangeStart').value;
+    const rangeEnd = document.getElementById('bulkRangeEnd').value;
+    const previewFirst = document.getElementById('bulkAssetTagPreviewFirst');
+    const previewLast = document.getElementById('bulkAssetTagPreviewLast');
+    
+    if (assetDateInput && rangeStart && rangeEnd) {
+        const [year, month, day] = assetDateInput.split('-');
+        const dateStr = month + '-' + day + '-' + year;
+        const roomName = '<?php echo $room['name']; ?>';
+        const startNum = String(rangeStart).padStart(2, '0');
+        const endNum = String(rangeEnd).padStart(2, '0');
+        previewFirst.value = dateStr + '-' + roomName + '-TH-' + startNum;
+        previewLast.value = dateStr + '-' + roomName + '-TH-' + endNum;
+    } else {
+        previewFirst.value = '';
+        previewLast.value = '';
+    }
+}
+
+// Update component asset tag preview
+function updateComponentAssetTagPreview(categoryId, categoryName) {
+    const componentDate = document.getElementById('component_date_' + categoryId).value;
+    const componentTag = document.getElementById('component_tag_' + categoryId);
+    
+    if (componentDate) {
+        const [year, month, day] = componentDate.split('-');
+        const dateStr = month + '-' + day + '-' + year;
+        const roomName = '<?php echo $room['name']; ?>';
+        componentTag.value = dateStr + '-TH-{ID}-' + roomName + '-' + categoryName.toUpperCase() + '-001';
+    } else {
+        componentTag.value = '';
     }
 }
 
@@ -683,7 +943,7 @@ function submitPCUnit() {
     }
 
     // For single mode, proceed directly
-    proceedWithPCCreation(form);
+    proceedWithPCCreation();
 }
 
 // Bulk Create PC Modal Functions
@@ -706,7 +966,7 @@ function closeBulkCreatePCModal() {
 function confirmBulkCreatePC() {
     if (!currentBulkCreateForm) return;
     closeBulkCreatePCModal();
-    proceedWithPCCreation(currentBulkCreateForm);
+    proceedWithPCCreation();
 }
 
 // Close modal when clicking outside
@@ -716,7 +976,8 @@ document.getElementById('bulkCreatePCModal')?.addEventListener('click', function
     }
 });
 
-function proceedWithPCCreation(form) {
+function proceedWithPCCreation() {
+    const form = document.getElementById('pcUnitForm');
     const formData = new FormData(form);
     formData.append('ajax', '1');
     formData.append('action', 'create_pc_unit');
@@ -736,6 +997,7 @@ function proceedWithPCCreation(form) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            const bulkMode = document.querySelector('input[name="bulk_mode"]:checked').value;
             if (bulkMode === 'bulk' && data.created) {
                 showAlert('success', `Successfully created ${data.created} PC units!`);
             } else {
@@ -773,6 +1035,20 @@ function showAlert(type, message) {
 document.addEventListener('DOMContentLoaded', function() {
     loadPCComponents();
     toggleBulkMode(); // Initialize form state
+    
+    // Auto-suggest terminal number for single mode on page load
+    setTimeout(autoSuggestTerminalNumber, 500);
+    
+    // Add event listeners for bulk mode auto-update
+    const bulkPrefix = document.getElementById('bulkPrefix');
+    const bulkRangeStart = document.getElementById('bulkRangeStart');
+    
+    if (bulkPrefix) {
+        bulkPrefix.addEventListener('blur', autoUpdateBulkRange);
+    }
+    if (bulkRangeStart) {
+        bulkRangeStart.addEventListener('blur', autoUpdateBulkRange);
+    }
 });
 </script>
 

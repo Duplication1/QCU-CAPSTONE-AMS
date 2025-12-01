@@ -81,6 +81,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("UPDATE users SET e_signature = ? WHERE id = ?");
                 $stmt->execute([$new_filename, $user_id]);
                 
+                // Log activity for Laboratory Staff
+                if ($_SESSION['role'] === 'Laboratory Staff') {
+                    require_once __DIR__ . '/../model/ActivityLog.php';
+                    ActivityLog::record(
+                        $user_id,
+                        'upload',
+                        'signature',
+                        $user_id,
+                        'Uploaded e-signature'
+                    );
+                }
+                
                 $_SESSION['success_message'] = "E-signature uploaded successfully!";
                 header("Location: $redirect_url");
                 exit();
