@@ -190,6 +190,13 @@ $navigation_items = [
             'href' => 'maintenance.php'
         ],
         [
+            'id' => 'activity-logs',
+            'label' => 'Activity Logs',
+            'icon' => 'fa-solid fa-clock-rotate-left',
+            'color' => 'blue',
+            'href' => 'activity_logs.php'
+        ],
+        [
             'id' => 'registry',
             'label' => 'Asset Registry',
             'icon' => 'fa-solid fa-clipboard-list',
