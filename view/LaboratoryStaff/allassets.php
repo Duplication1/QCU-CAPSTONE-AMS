@@ -1367,12 +1367,18 @@ main {
 
             <!-- Single Mode Fields -->
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag Preview</label>
                     <input type="text" id="assetTag" name="asset_tag" readonly
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="Auto-generated">
-                    <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
+                           placeholder="Auto-generated based on acquisition date, asset name and room">
+                    <p class="text-xs text-gray-500 mt-1">This will be automatically generated when you create the asset</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Acquisition Date *</label>
+                    <input type="date" id="acquisitionDate" name="acquisition_date" 
+                           value="<?php echo date('Y-m-d'); ?>"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
@@ -1449,6 +1455,12 @@ main {
                     </select>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End of Life</label>
+                    <input type="date" id="endOfLife" name="end_of_life"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Expected end of life date">
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select id="status" name="status" 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -1489,9 +1501,16 @@ main {
                         <div class="text-sm text-green-900">
                             <p class="font-medium mb-1">Bulk Asset Creation</p>
                             <p>Create multiple assets with sequential numbering and unique QR codes.</p>
-                            <p class="mt-1 text-xs">Example: 11-23-2025-LAPTOP-IK501-001 through 11-23-2025-LAPTOP-IK501-020</p>
                         </div>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag Preview</label>
+                    <input type="text" id="bulkAssetTagPreview" readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
+                           placeholder="Asset tags will be previewed here">
+                    <p class="text-xs text-gray-500 mt-1">Preview of asset tags that will be generated</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -1543,23 +1562,12 @@ main {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Room Number <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" id="bulkRoomNumber" name="bulk_room_number" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., IK501">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
                             Quantity <span class="text-red-500">*</span>
                         </label>
                         <input type="number" id="bulkQuantity" name="bulk_quantity" 
                                min="1" max="100" value="1"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Starting Number <span class="text-red-500">*</span>
@@ -1569,6 +1577,9 @@ main {
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Automatically calculated based on existing assets</p>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
                         <select id="bulkAssetType" name="bulk_asset_type" 
@@ -1608,12 +1619,32 @@ main {
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">End of Life</label>
+                        <input type="date" id="bulkEndOfLife" name="bulk_end_of_life"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Expected end of life date">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                         <select id="bulkStatus" name="bulk_status" 
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="Active">Active</option>
                             <option value="Available" selected>Available</option>
                             <option value="In Use">In Use</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+                        <select id="bulkCondition" name="bulk_condition" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good" selected>Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Non-Functional">Non-Functional</option>
                         </select>
                     </div>
                 </div>
@@ -1625,11 +1656,6 @@ main {
                                class="mr-2 text-blue-600 focus:ring-blue-500">
                         <span class="text-sm text-gray-600">Allow these assets to be borrowed</span>
                     </div>
-                </div>
-
-                <div class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-3">
-                    <i class="fa-solid fa-lightbulb mr-1"></i>
-                    <strong>Preview:</strong> <span id="assetTagPreview">11-23-2025-LAPTOP-IK501-001, 11-23-2025-LAPTOP-IK501-002, ...</span>
                 </div>
             </div>
 
@@ -1949,20 +1975,32 @@ function updateRoomFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     updateRoomFilter();
     
-    const previewFields = ['bulkAcquisitionDate', 'bulkAssetName', 'bulkRoomNumber', 'bulkQuantity', 'bulkStartNumber'];
-    previewFields.forEach(fieldId => {
+    // Update preview for bulk mode
+    const bulkPreviewFields = ['bulkAcquisitionDate', 'bulkAssetName', 'bulkRoomId', 'bulkQuantity', 'bulkStartNumber'];
+    bulkPreviewFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field) {
             field.addEventListener('input', updateAssetTagPreview);
+            field.addEventListener('change', updateAssetTagPreview);
         }
     });
     
     // Add listeners for start number update
-    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomNumber'];
+    const startNumberTriggerFields = ['bulkAssetName', 'bulkRoomId'];
     startNumberTriggerFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field) {
-            field.addEventListener('input', updateBulkStartNumber);
+            field.addEventListener('change', updateBulkStartNumber);
+        }
+    });
+    
+    // Add listeners for single asset mode
+    const singleAssetFields = ['acquisitionDate', 'assetName', 'roomId'];
+    singleAssetFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', generateAssetTag);
+            field.addEventListener('change', generateAssetTag);
         }
     });
     
@@ -2083,11 +2121,27 @@ function closeQRPrintModal() {
 // Update Starting Number for Bulk Assets
 async function updateBulkStartNumber() {
     const assetName = document.getElementById('bulkAssetName')?.value?.trim();
-    const roomNumber = document.getElementById('bulkRoomNumber')?.value?.trim();
+    const roomId = document.getElementById('bulkRoomId')?.value;
     const startNumberField = document.getElementById('bulkStartNumber');
     
-    if (!assetName || !roomNumber || !startNumberField) {
+    if (!assetName || !roomId || !startNumberField) {
         return;
+    }
+    
+    // Get room name from select
+    const roomSelect = document.getElementById('bulkRoomId');
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomName = selectedOption?.text || '';
+    
+    // Extract room number
+    let roomNumber = 'NOROOM';
+    if (roomId && roomName && roomName !== 'No Room') {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+        }
     }
     
     try {
@@ -2137,6 +2191,7 @@ function toggleAssetBulkMode() {
 async function generateAssetTag() {
     const assetName = document.getElementById('assetName')?.value?.trim();
     const roomId = document.getElementById('roomId')?.value;
+    const acquisitionDate = document.getElementById('acquisitionDate')?.value;
     const assetTagField = document.getElementById('assetTag');
     
     if (!assetName || !assetTagField) {
@@ -2161,12 +2216,18 @@ async function generateAssetTag() {
     }
     
     try {
-        // Get current date
-        const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const year = today.getFullYear();
-        const formattedDate = `${month}-${day}-${year}`;
+        // Get date from acquisition date field or use current date
+        let formattedDate;
+        if (acquisitionDate) {
+            const dateParts = acquisitionDate.split('-');
+            formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
+        } else {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const year = today.getFullYear();
+            formattedDate = `${month}-${day}-${year}`;
+        }
         
         // Create asset name prefix (first few letters)
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
@@ -2207,31 +2268,53 @@ async function generateAssetTag() {
     }
 }
 
-// Update Asset Tag Preview
+// Update Asset Tag Preview for bulk mode
 function updateAssetTagPreview() {
     const date = document.getElementById('bulkAcquisitionDate')?.value || '<?php echo date('Y-m-d'); ?>';
-    const assetName = document.getElementById('bulkAssetName')?.value || 'LAPTOP';
-    const roomNumber = document.getElementById('bulkRoomNumber')?.value || 'IK501';
+    const assetName = document.getElementById('bulkAssetName')?.value || '';
+    const roomId = document.getElementById('bulkRoomId')?.value;
     const quantity = parseInt(document.getElementById('bulkQuantity')?.value || 1);
     const startNumber = parseInt(document.getElementById('bulkStartNumber')?.value || 1);
     
+    const previewField = document.getElementById('bulkAssetTagPreview');
+    if (!previewField) return;
+    
+    if (!assetName || !roomId) {
+        previewField.value = 'Please select asset name and room';
+        return;
+    }
+    
+    // Get room name from select
+    const roomSelect = document.getElementById('bulkRoomId');
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomName = selectedOption?.text || '';
+    
+    // Extract room number
+    let roomNumber = 'NOROOM';
+    if (roomId && roomName && roomName !== 'No Room') {
+        const roomMatch = roomName.match(/([A-Z0-9]+)/);
+        if (roomMatch) {
+            roomNumber = roomMatch[1];
+        } else {
+            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+        }
+    }
+    
     const dateParts = date.split('-');
     const formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
+    const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
     
-    const preview = document.getElementById('assetTagPreview');
-    if (preview) {
-        if (quantity <= 3) {
-            const tags = [];
-            for (let i = 0; i < quantity; i++) {
-                const num = String(startNumber + i).padStart(3, '0');
-                tags.push(`${formattedDate}-${assetName}-${roomNumber}-${num}`);
-            }
-            preview.textContent = tags.join(', ');
-        } else {
-            const firstNum = String(startNumber).padStart(3, '0');
-            const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
-            preview.textContent = `${formattedDate}-${assetName}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetName}-${roomNumber}-${lastNum}`;
+    if (quantity <= 3) {
+        const tags = [];
+        for (let i = 0; i < quantity; i++) {
+            const num = String(startNumber + i).padStart(3, '0');
+            tags.push(`${formattedDate}-${assetNamePrefix}-${roomNumber}-${num}`);
         }
+        previewField.value = tags.join(', ');
+    } else {
+        const firstNum = String(startNumber).padStart(3, '0');
+        const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
+        previewField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${roomNumber}-${lastNum}`;
     }
 }
 
@@ -2247,16 +2330,33 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('action', 'bulk_create_assets');
         formData.append('acquisition_date', document.getElementById('bulkAcquisitionDate').value);
         formData.append('asset_name', document.getElementById('bulkAssetName').value);
-        formData.append('room_number', document.getElementById('bulkRoomNumber').value);
+        
+        // Get room number from selected room
+        const roomId = document.getElementById('bulkRoomId').value;
+        const roomSelect = document.getElementById('bulkRoomId');
+        const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+        const roomName = selectedOption?.text || '';
+        let roomNumber = 'NOROOM';
+        if (roomId && roomName && roomName !== 'No Room') {
+            const roomMatch = roomName.match(/([A-Z0-9]+)/);
+            if (roomMatch) {
+                roomNumber = roomMatch[1];
+            } else {
+                roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
+            }
+        }
+        
+        formData.append('room_number', roomNumber);
         formData.append('quantity', document.getElementById('bulkQuantity').value);
         formData.append('start_number', document.getElementById('bulkStartNumber').value);
         formData.append('asset_type', document.getElementById('bulkAssetType').value);
         formData.append('brand', document.getElementById('bulkBrand').value);
         formData.append('model', document.getElementById('bulkModel').value);
-        formData.append('room_id', document.getElementById('bulkRoomId').value);
+        formData.append('room_id', roomId);
         formData.append('status', document.getElementById('bulkStatus').value);
-        formData.append('condition', 'Good');
+        formData.append('condition', document.getElementById('bulkCondition').value);
         formData.append('is_borrowable', document.getElementById('bulkIsBorrowable').checked ? '1' : '0');
+        formData.append('end_of_life', document.getElementById('bulkEndOfLife').value);
     } else {
         formData.append('action', 'create_asset');
         formData.append('asset_tag', document.getElementById('assetTag').value);
@@ -2269,6 +2369,8 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('status', document.getElementById('status').value);
         formData.append('condition', document.getElementById('condition').value);
         formData.append('is_borrowable', document.getElementById('isBorrowable').checked ? '1' : '0');
+        formData.append('acquisition_date', document.getElementById('acquisitionDate').value);
+        formData.append('end_of_life', document.getElementById('endOfLife').value);
     }
     
     try {

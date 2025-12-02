@@ -33,7 +33,7 @@ unset($_SESSION['error_message']);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-[#0b1220] font-[Poppins]">
+<body class="min-h-screen flex items-center justify-center p-6 bg-gray-100 font-[Poppins]" style="background-image: url('../assets/images/image 7.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
   <div class="relative w-full max-w-sm">
     <!-- Logo (fixed, no animation) -->
@@ -43,11 +43,11 @@ unset($_SESSION['error_message']);
     </div>
 
     <!-- Login Card -->
-    <div class="bg-white dark:bg-[#071127] rounded-xl shadow-2xl p-6 pt-14">
+    <div class="bg-white rounded-xl shadow-2xl p-6 pt-14">
       <!-- Header -->
       <div class="text-center mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1E3A8A] dark:text-yellow-400">Student Login</h1>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-300">Access your student portal</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-[#1E3A8A]">Student Login</h1>
+        <p class="text-sm font-normal text-black">Access your student portal</p>
       </div>
 
       <!-- Login Form -->
@@ -64,22 +64,22 @@ unset($_SESSION['error_message']);
 
         <!-- Student Number -->
         <div>
-          <label for="id_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="id_number" class="block text-sm font-medium text-black mb-2">
             Student Number <span class="text-red-500">*</span>
           </label>
           <input type="text" id="id_number" name="id_number" required autocomplete="off"
                  placeholder="Enter your student number"
-                 class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#0b1220] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
+                 class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
         </div>
 
         <!-- Password -->
         <div class="relative">
-          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="password" class="block text-sm font-medium text-black mb-2">
             Password <span class="text-red-500">*</span>
           </label>
           <input type="password" id="password" name="password" required
                  placeholder="Enter your password"
-                 class="w-full px-4 py-2.5 pr-10 text-base font-normal rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#0b1220] text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
+                 class="w-full px-4 py-2.5 pr-10 text-base font-normal rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
           <button type="button" onclick="togglePassword()" class="absolute right-3 top-[42px] text-gray-500 dark:text-gray-400">
             <i id="toggleIcon" class="fa-solid fa-eye"></i>
           </button>
@@ -101,7 +101,7 @@ unset($_SESSION['error_message']);
 
   <!-- Success Modal -->
   <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 <?php echo $showSuccessModal ? '' : 'hidden'; ?>">
-    <div class="bg-white dark:bg-[#071127] rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
       <div class="mb-4">
         <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30">
           <i class="fa-solid fa-check text-3xl text-green-600 dark:text-green-400"></i>
