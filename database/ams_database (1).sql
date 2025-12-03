@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 01, 2025 at 11:12 PM
+-- Generation Time: Dec 03, 2025 at 02:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -83,7 +83,63 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (37, 3, 'export', 'disposal_list', NULL, 'Exported disposal list with 0 assets', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-01 12:18:58'),
 (38, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-01 13:30:48'),
 (39, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-01 16:10:24'),
-(40, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-01 22:03:01');
+(40, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-01 22:03:01'),
+(41, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:13:04'),
+(42, 3, 'assign', 'ticket', 26, 'Assigned ticket #26 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:34:23'),
+(43, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:26'),
+(44, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-02 to 2025-12-01)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:30'),
+(45, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-01 to 2025-12-01)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:35'),
+(46, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-01)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:44'),
+(47, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:51'),
+(48, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 03:55:52'),
+(49, 2, 'update', 'ticket', 26, 'Changed ticket #26 status to In Progress', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:09:49'),
+(50, 2, 'update', 'ticket', 25, 'Changed ticket #25 status to In Progress', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:09:55'),
+(51, 2, 'update', 'ticket', 24, 'Changed ticket #24 status to In Progress', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:09:57'),
+(52, 2, 'update', 'ticket', 23, 'Changed ticket #23 status to In Progress', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:09:59'),
+(53, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:27:03'),
+(54, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:27:11'),
+(55, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:29:23'),
+(56, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:34:38'),
+(57, 3, 'assign', 'ticket', 27, 'Assigned ticket #27 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 04:35:55'),
+(58, 3, 'dispose', 'asset', 682, 'Disposed asset: 12-01-2025-TH-272-IK501-KEYBOARD-001 - KEYBOARD for PC-272', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 07:27:47'),
+(59, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 07:29:28'),
+(60, 2, 'update_condition', NULL, NULL, 'Updated asset condition: 12-01-2025-TH-272-IK501-KEYBOARD-001 (KEYBOARD for PC-272) from \'Good\' to \'Poor\'', NULL, NULL, '2025-12-02 07:54:52'),
+(61, 2, 'update_condition', NULL, NULL, 'Updated asset condition: 12-01-2025-TH-269-IK501-KEYBOARD-001 (ADAPTER) from \'Good\' to \'Poor\'', NULL, NULL, '2025-12-02 07:56:33'),
+(62, 2, 'bulk_update_condition', NULL, NULL, 'Bulk updated 12 asset(s) condition to \'Poor\': 12-01-2025-TH-269-IK501-KEYBOARD-001 (ADAPTER), 12-01-2025-TH-270-IK501-KEYBOARD-001 (KEYBOARD for PC-270), 12-01-2025-TH-271-IK501-KEYBOARD-001 (KEYBOARD for PC-271), 12-01-2025-TH-272-IK501-KEYBOARD-001 (KEYBOARD for PC-272), 12-01-2025-TH-273-IK501-KEYBOARD-001 (KEYBOARD for PC-273) and 7 more', NULL, NULL, '2025-12-02 07:56:40'),
+(63, 2, 'update_condition', NULL, NULL, 'Updated asset condition: 12-02-2025-LAPTOP-NOROOM-002 (LAPTOP) from \'Good\' to \'Fair\'', NULL, NULL, '2025-12-02 07:58:00'),
+(64, 2, 'bulk_update_condition', NULL, NULL, 'Bulk updated 12 asset(s) condition to \'Damaged\': 12-02-2025-LAPTOP-NOROOM-002 (LAPTOP), 12-02-2025-LAPTOP-IK501-001 (LAPTOP), 12-02-2025-ADAPTER-NOROOM-001 (ADAPTER), 12-01-2025-TH-269-IK501-KEYBOARD-001 (ADAPTER), 12-01-2025-TH-270-IK501-KEYBOARD-001 (KEYBOARD for PC-270) and 7 more', NULL, NULL, '2025-12-02 07:58:24'),
+(65, 2, 'update_condition', NULL, NULL, 'Updated asset condition: 12-02-2025-LAPTOP-NOROOM-002 (LAPTOP) from \'\' to \'Poor\'', NULL, NULL, '2025-12-02 07:59:30'),
+(66, 2, 'bulk_update_condition', NULL, NULL, 'Bulk updated 12 asset(s) condition to \'Poor\': 12-02-2025-LAPTOP-NOROOM-002 (LAPTOP), 12-02-2025-LAPTOP-IK501-001 (LAPTOP), 12-02-2025-ADAPTER-NOROOM-001 (ADAPTER), 12-01-2025-TH-269-IK501-KEYBOARD-001 (ADAPTER), 12-01-2025-TH-270-IK501-KEYBOARD-001 (KEYBOARD for PC-270) and 7 more', NULL, NULL, '2025-12-02 07:59:45'),
+(67, 3, 'assign', 'ticket', 27, 'Assigned ticket #27 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 08:18:28'),
+(68, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:28:19'),
+(69, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:30:50'),
+(70, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:30:55'),
+(71, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:30:57'),
+(72, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:05'),
+(73, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:07'),
+(74, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:09'),
+(75, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:20'),
+(76, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:25'),
+(77, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:29'),
+(78, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-01 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:31:31'),
+(79, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:32:26'),
+(80, 1, 'view', 'report', NULL, 'Previewed assets report (2025-11-02 to 2025-12-02)', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36', '2025-12-02 09:32:39'),
+(81, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:34:27'),
+(82, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 09:50:23'),
+(83, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:37:40'),
+(84, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:37:51'),
+(85, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:38:20'),
+(86, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:38:25'),
+(87, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:39:24'),
+(88, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:39:28'),
+(89, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:39:52'),
+(90, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:39:58'),
+(91, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:41:31'),
+(92, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:43:01'),
+(93, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:50:15'),
+(94, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:50:30'),
+(95, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 10:56:40'),
+(96, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-02 11:27:42');
 
 -- --------------------------------------------------------
 
@@ -133,18 +189,18 @@ CREATE TABLE `assets` (
 --
 
 INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`, `brand`, `model`, `serial_number`, `specifications`, `room_id`, `pc_unit_id`, `location`, `terminal_number`, `purchase_date`, `purchase_cost`, `supplier`, `warranty_expiry`, `end_of_life`, `status`, `condition`, `is_borrowable`, `assigned_to`, `assigned_date`, `assigned_by`, `last_maintenance_date`, `next_maintenance_date`, `maintenance_notes`, `notes`, `qr_code`, `image`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
-(679, '12-01-2025-TH-269-IK501-KEYBOARD-001', 'KEYBOARD for PC-269', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 269, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-269-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-269%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:29:56'),
-(680, '12-01-2025-TH-270-IK501-KEYBOARD-001', 'KEYBOARD for PC-270', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 270, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-270-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-270%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(681, '12-01-2025-TH-271-IK501-KEYBOARD-001', 'KEYBOARD for PC-271', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 271, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-271-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-271%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(682, '12-01-2025-TH-272-IK501-KEYBOARD-001', 'KEYBOARD for PC-272', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 272, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-272-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-272%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(683, '12-01-2025-TH-273-IK501-KEYBOARD-001', 'KEYBOARD for PC-273', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 273, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-273-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-273%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(684, '12-01-2025-TH-274-IK501-KEYBOARD-001', 'KEYBOARD for PC-274', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 274, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-274-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-274%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(685, '12-01-2025-TH-275-IK501-KEYBOARD-001', 'KEYBOARD for PC-275', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 275, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-275-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-275%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(686, '12-01-2025-TH-276-IK501-KEYBOARD-001', 'KEYBOARD for PC-276', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 276, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-276-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-276%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(687, '12-01-2025-TH-277-IK501-KEYBOARD-001', 'KEYBOARD for PC-277', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 277, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-277-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-277%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(688, '12-01-2025-TH-278-IK501-KEYBOARD-001', 'KEYBOARD for PC-278', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 278, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-278-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-278%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(689, '12-01-2025-TH-279-IK501-KEYBOARD-001', 'KEYBOARD for PC-279', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 279, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-279-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-279%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(690, '12-01-2025-TH-280-IK501-KEYBOARD-001', 'KEYBOARD for PC-280', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 280, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-280-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-280%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
+(679, '12-01-2025-TH-269-IK501-KEYBOARD-001', 'ADAPTER', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 269, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Archive', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-269-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-269%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 3, '2025-12-01 16:25:16', '2025-12-02 09:59:05'),
+(680, '12-01-2025-TH-270-IK501-KEYBOARD-001', 'KEYBOARD for PC-270', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 270, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-270-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-270%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(681, '12-01-2025-TH-271-IK501-KEYBOARD-001', 'KEYBOARD for PC-271', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 271, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-271-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-271%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(682, '12-01-2025-TH-272-IK501-KEYBOARD-001', 'KEYBOARD for PC-272', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 272, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Disposed', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, '\n\n[DISPOSAL - 2025-12-02 15:27:47]\nAsset marked for disposal by  ', 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-272-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-272%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(683, '12-01-2025-TH-273-IK501-KEYBOARD-001', 'KEYBOARD for PC-273', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 273, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-273-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-273%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(684, '12-01-2025-TH-274-IK501-KEYBOARD-001', 'KEYBOARD for PC-274', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 274, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-274-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-274%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(685, '12-01-2025-TH-275-IK501-KEYBOARD-001', 'KEYBOARD for PC-275', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 275, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-275-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-275%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(686, '12-01-2025-TH-276-IK501-KEYBOARD-001', 'KEYBOARD for PC-276', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 276, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-276-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-276%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(687, '12-01-2025-TH-277-IK501-KEYBOARD-001', 'KEYBOARD for PC-277', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 277, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-277-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-277%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:59:45'),
+(688, '12-01-2025-TH-278-IK501-KEYBOARD-001', 'KEYBOARD for PC-278', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 278, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-278-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-278%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:56:40'),
+(689, '12-01-2025-TH-279-IK501-KEYBOARD-001', 'KEYBOARD for PC-279', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 279, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-279-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-279%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:56:40'),
+(690, '12-01-2025-TH-280-IK501-KEYBOARD-001', 'KEYBOARD for PC-280', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 280, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-280-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-280%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, 2, '2025-12-01 16:25:16', '2025-12-02 07:56:40'),
 (691, '12-01-2025-TH-281-IK501-KEYBOARD-001', 'KEYBOARD for PC-281', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 281, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-281-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-281%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
 (692, '12-01-2025-TH-282-IK501-KEYBOARD-001', 'KEYBOARD for PC-282', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 282, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-282-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-282%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
 (693, '12-01-2025-TH-283-IK501-KEYBOARD-001', 'KEYBOARD for PC-283', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 283, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-283-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-283%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
@@ -182,7 +238,10 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (725, '12-01-2025-TH-315-IK501-KEYBOARD-001', 'KEYBOARD for PC-315', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 315, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-315-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-315%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
 (726, '12-01-2025-TH-316-IK501-KEYBOARD-001', 'KEYBOARD for PC-316', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 316, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-316-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-316%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
 (727, '12-01-2025-TH-317-IK501-KEYBOARD-001', 'KEYBOARD for PC-317', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 317, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-317-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-317%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
-(728, '12-01-2025-TH-318-IK501-KEYBOARD-001', 'KEYBOARD for PC-318', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 318, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-318-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-318%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16');
+(728, '12-01-2025-TH-318-IK501-KEYBOARD-001', 'KEYBOARD for PC-318', 'Hardware', '5', 'DSA', 'SDA', 'DSADSA', NULL, 7, 318, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', '', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-01-2025-TH-318-IK501-KEYBOARD-001%22%2C%22asset_name%22%3A%22KEYBOARD+for+PC-318%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%2C%22room_name%22%3A%22IK5', NULL, 3, NULL, '2025-12-01 16:25:16', '2025-12-01 16:25:16'),
+(729, '12-02-2025-ADAPTER-NOROOM-001', 'ADAPTER', 'Hardware', NULL, '', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-02-2025-ADAPTER-NOROOM-001%22%2C%22asset_name%22%3A%22ADAPTER%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%7D', NULL, 3, 2, '2025-12-02 04:28:49', '2025-12-02 07:59:45'),
+(730, '12-02-2025-LAPTOP-IK501-001', 'LAPTOP', 'Hardware', NULL, '', '', '', NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-02-2025-LAPTOP-IK501-001%22%2C%22asset_name%22%3A%22LAPTOP%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3A7%7D', NULL, 3, 2, '2025-12-02 04:38:55', '2025-12-02 07:59:45'),
+(731, '12-02-2025-LAPTOP-NOROOM-002', 'LAPTOP', 'Hardware', NULL, 'asd', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2212-02-2025-LAPTOP-NOROOM-002%22%2C%22asset_name%22%3A%22LAPTOP%22%2C%22asset_type%22%3A%22Hardware%22%2C%22room_id%22%3Anull%7D', NULL, 3, 2, '2025-12-02 04:40:43', '2025-12-02 07:59:45');
 
 -- --------------------------------------------------------
 
@@ -240,17 +299,21 @@ INSERT INTO `asset_categories` (`id`, `name`, `created_at`, `updated_at`, `is_pc
 (3, 'RAM', '2025-11-28 03:37:54', '2025-11-30 10:10:53', 1),
 (4, 'MONITOR', '2025-11-28 03:37:54', '2025-11-30 10:10:53', 1),
 (5, 'KEYBOARD', '2025-11-28 03:37:54', '2025-11-30 10:10:53', 1),
-(6, 'MOUSE', '2025-11-28 03:37:54', '2025-11-30 10:10:53', 1),
+(6, 'MOUSE', '2025-11-28 03:37:54', '2025-12-02 10:04:59', 0),
 (7, 'PRINTER', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
 (8, 'PROJECTOR', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
 (9, 'ROUTER', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
 (10, 'SWITCH', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
 (11, 'SERVER', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
-(12, 'STORAGE', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
+(12, 'STORAGE', '2025-11-28 03:37:54', '2025-12-02 09:24:10', 1),
 (13, 'CABLE', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
-(14, 'ADAPTER', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
+(14, 'ADAPTER', '2025-11-28 03:37:54', '2025-12-02 09:27:41', 0),
 (15, 'OTHER', '2025-11-28 03:37:54', '2025-11-28 03:37:54', 0),
-(66, 'TABLE', '2025-11-28 09:38:30', '2025-11-28 09:38:30', 0);
+(66, 'TABLE', '2025-11-28 09:38:30', '2025-11-28 09:38:30', 0),
+(68, 'MOTHERBOARD', '2025-12-02 10:05:50', '2025-12-02 10:05:50', 1),
+(69, 'POWERSUPPLY', '2025-12-02 10:05:58', '2025-12-02 10:05:58', 1),
+(70, 'VGA', '2025-12-02 10:06:10', '2025-12-02 10:06:10', 1),
+(71, 'HDMI', '2025-12-02 10:06:15', '2025-12-02 10:06:15', 1);
 
 -- --------------------------------------------------------
 
@@ -336,11 +399,11 @@ CREATE TABLE `issues` (
 --
 
 INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `assigned_group`, `is_archived`, `archived_at`, `building_id`) VALUES
-(23, 5, 'hardware', 7, 62, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dsadsadsa', 'Medium', 'Open', '2025-11-28 14:22:14', '2025-11-30 11:39:54', 'John Technician', NULL, NULL, 0, NULL, 1),
-(24, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dasddsa', 'Medium', 'Open', '2025-11-28 14:24:25', '2025-11-30 11:38:53', 'John Technician', NULL, NULL, 0, NULL, 1),
-(25, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsad', 'Medium', 'Open', '2025-11-28 14:24:43', '2025-11-30 11:38:48', 'John Technician', NULL, NULL, 0, NULL, 1),
-(26, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsad', 'Medium', 'Open', '2025-11-28 14:28:10', '2025-11-30 09:10:34', 'John Technician', NULL, NULL, 0, NULL, 1),
-(27, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsa', 'Medium', 'In Progress', '2025-11-28 14:28:39', '2025-11-30 11:51:28', 'John Technician', NULL, NULL, 0, NULL, 1);
+(23, 5, 'hardware', 7, 62, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dsadsadsa', 'Medium', 'In Progress', '2025-11-28 14:22:14', '2025-12-02 04:09:59', 'John Technician', NULL, NULL, 0, NULL, 1),
+(24, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsa', 'dasddsa', 'Medium', 'In Progress', '2025-11-28 14:24:25', '2025-12-02 04:09:57', 'John Technician', NULL, NULL, 0, NULL, 1),
+(25, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsad', 'Medium', 'In Progress', '2025-11-28 14:24:43', '2025-12-02 04:09:55', 'John Technician', NULL, NULL, 0, NULL, 1),
+(26, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsad', 'Medium', 'In Progress', '2025-11-28 14:28:10', '2025-12-02 04:09:49', 'John Technician', NULL, NULL, 0, NULL, 1),
+(27, 5, 'hardware', 7, 108, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dsadsa', 'dsadsa', 'Medium', 'In Progress', '2025-11-28 14:28:39', '2025-12-02 08:18:28', 'John Technician', NULL, NULL, 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -433,7 +496,32 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (46, 3, '2025-12-01 12:00:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (47, 3, '2025-12-01 13:30:48', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
 (48, 3, '2025-12-01 16:10:24', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
-(49, 3, '2025-12-01 22:03:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
+(49, 3, '2025-12-01 22:03:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(50, 3, '2025-12-02 03:13:04', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(51, 1, '2025-12-02 03:54:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(52, 2, '2025-12-02 04:06:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(53, 5, '2025-12-02 04:19:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(54, 3, '2025-12-02 04:27:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(55, 5, '2025-12-02 04:31:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(56, 5, '2025-12-02 04:34:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(57, 3, '2025-12-02 04:34:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(58, 5, '2025-12-02 04:39:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(59, 2, '2025-12-02 07:29:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(60, 1, '2025-12-02 09:28:29', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(61, 3, '2025-12-02 09:34:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(62, 3, '2025-12-02 09:50:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(63, 2, '2025-12-02 10:37:51', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(64, 2, '2025-12-02 10:38:25', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(65, 2, '2025-12-02 10:39:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(66, 3, '2025-12-02 10:39:58', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(67, 3, '2025-12-02 10:43:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(68, 3, '2025-12-02 10:50:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(69, 1, '2025-12-02 10:56:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(70, 0, '2025-12-02 10:59:21', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(71, 1, '2025-12-02 11:03:08', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(72, 5, '2025-12-02 11:04:04', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(73, 5, '2025-12-02 11:21:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop'),
+(74, 3, '2025-12-02 11:27:42', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -479,7 +567,17 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `relat
 (60, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:50:18'),
 (61, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 0, '2025-11-30 11:50:18'),
 (62, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:51:28'),
-(63, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 0, '2025-11-30 11:51:28');
+(63, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 0, '2025-11-30 11:51:28'),
+(64, 5, 'Ticket #26 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 26, 0, '2025-12-02 03:34:23'),
+(65, 2, 'New Ticket Assigned #26', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 26, 0, '2025-12-02 03:34:23'),
+(66, 5, 'Ticket #26 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 26, 0, '2025-12-02 04:09:49'),
+(67, 5, 'Ticket #25 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 25, 0, '2025-12-02 04:09:55'),
+(68, 5, 'Ticket #24 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 24, 0, '2025-12-02 04:09:57'),
+(69, 5, 'Ticket #23 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 23, 0, '2025-12-02 04:09:59'),
+(70, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-12-02 04:35:55'),
+(71, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 0, '2025-12-02 04:35:55'),
+(72, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-12-02 08:18:28'),
+(73, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 0, '2025-12-02 08:18:28');
 
 -- --------------------------------------------------------
 
@@ -575,6 +673,7 @@ CREATE TABLE `rooms` (
 --
 
 INSERT INTO `rooms` (`id`, `building_id`, `name`, `created_at`) VALUES
+(0, 1, 'IK601', '2025-12-02 10:55:47'),
 (6, 2, 'IL501', '2025-11-22 14:36:23'),
 (7, 1, 'IK501', '2025-11-28 06:54:16'),
 (8, 1, 'IK502', '2025-11-28 06:55:02'),
@@ -605,11 +704,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-11-29 10:43:06', '2025-11-29 10:43:06', NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-11-29 10:44:12', '2025-11-29 10:44:12', NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-12-02 06:03:01', '2025-12-02 06:03:01', NULL),
+(0, '22-0310', '$2y$10$uFCacUgr5bnbkzONa4XVF.zuUtfz80srvoF6ImEqtAYQBldBm5h9u', 'Kim  Gamot', 'uhugamot@gmail.com', 'Administrator', 'Active', '2025-12-02 18:58:11', '2025-12-02 18:59:21', '2025-12-02 18:59:21', NULL),
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-12-02 19:03:08', '2025-12-02 19:03:08', NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-12-02 18:39:28', '2025-12-02 18:39:28', NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-12-02 19:27:42', '2025-12-02 19:27:42', NULL),
 (4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-29 11:24:28', '2025-11-29 11:24:28', 'signature_5_1764382897.png'),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-12-02 19:21:31', '2025-12-02 19:21:31', 'signature_5_1764382897.png'),
 (6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL),
 (29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL);
 
@@ -716,13 +816,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=729;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=732;
 
 --
 -- AUTO_INCREMENT for table `asset_borrowing`
@@ -734,13 +834,13 @@ ALTER TABLE `asset_borrowing`
 -- AUTO_INCREMENT for table `asset_categories`
 --
 ALTER TABLE `asset_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT for table `buildings`
 --
 ALTER TABLE `buildings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `issues`
@@ -752,62 +852,19 @@ ALTER TABLE `issues`
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `pc_units`
 --
 ALTER TABLE `pc_units`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=319;
-
---
--- AUTO_INCREMENT for table `rooms`
---
-ALTER TABLE `rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `assets`
---
-ALTER TABLE `assets`
-  ADD CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`pc_unit_id`) REFERENCES `pc_units` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `issues`
---
-ALTER TABLE `issues`
-  ADD CONSTRAINT `fk_issues_building` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`),
-  ADD CONSTRAINT `fk_issues_pc` FOREIGN KEY (`pc_id`) REFERENCES `pc_units` (`id`),
-  ADD CONSTRAINT `fk_issues_room` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`);
-
---
--- Constraints for table `pc_units`
---
-ALTER TABLE `pc_units`
-  ADD CONSTRAINT `pc_units_ibfk_1` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `pc_units_ibfk_2` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `rooms`
---
-ALTER TABLE `rooms`
-  ADD CONSTRAINT `fk_rooms_building` FOREIGN KEY (`building_id`) REFERENCES `buildings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
