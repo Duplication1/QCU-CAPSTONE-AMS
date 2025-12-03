@@ -57,12 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Check for duplicate room name (case-insensitive) within the same building
+            $check = $conn->prepare("SELECT COUNT(*) as cnt FROM rooms WHERE building_id = ? AND LOWER(name) = LOWER(?)");
+            $check->bind_param('is', $building_id, $name);
+            $check->execute();
+            $res = $check->get_result();
+            $exists = $res->fetch_assoc()['cnt'] > 0;
+            $check->close();
+
+            if ($exists) {
+                echo json_encode(['success' => false, 'message' => 'A room with that name already exists in this building']);
+                exit;
+            }
+
             $stmt = $conn->prepare("INSERT INTO rooms (building_id, name) VALUES (?, ?)");
             $stmt->bind_param('is', $building_id, $name);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
-            
+
             if ($success) {
                 echo json_encode(['success' => true, 'message' => 'Room created successfully', 'id' => $new_id, 'name' => $name]);
             } else {
@@ -84,11 +97,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Check for duplicate name in other rooms within the same building (case-insensitive)
+            $check = $conn->prepare("SELECT COUNT(*) as cnt FROM rooms WHERE building_id = ? AND LOWER(name) = LOWER(?) AND id != ?");
+            $check->bind_param('isi', $building_id, $name, $id);
+            $check->execute();
+            $res = $check->get_result();
+            $exists = $res->fetch_assoc()['cnt'] > 0;
+            $check->close();
+
+            if ($exists) {
+                echo json_encode(['success' => false, 'message' => 'Another room with that name already exists in this building']);
+                exit;
+            }
+
             $stmt = $conn->prepare("UPDATE rooms SET name = ? WHERE id = ? AND building_id = ?");
             $stmt->bind_param('sii', $name, $id, $building_id);
             $success = $stmt->execute();
             $stmt->close();
-            
+
             if ($success) {
                 echo json_encode(['success' => true, 'message' => 'Room updated successfully']);
             } else {

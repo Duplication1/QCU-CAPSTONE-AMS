@@ -256,7 +256,7 @@ $pcStmt->close();
 <!-- Single Dynamic Issue Modal -->
 <div id="issueModal" class="hidden fixed inset-0 z-50">
     <div class="absolute inset-0 bg-black opacity-50" onclick="closeIssueModal()"></div>
-    <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow-lg w-full max-w-xl z-10 p-4 mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="relative bg-white rounded shadow-lg w-full max-w-xl z-10 p-4 mx-4 my-auto max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-3">
             <h3 id="modalTitle" class="text-sm font-semibold text-gray-800">Submit Issue</h3>
             <button type="button" onclick="closeIssueModal()" class="text-gray-600 hover:text-gray-800 text-xl" aria-label="Close">&times;</button>
@@ -553,6 +553,7 @@ function handleIssueClick(issueType) {
     
     // Show modal
     modal.classList.remove('hidden');
+    modal.classList.add('flex', 'items-center', 'justify-center');
 }
     
 function closeIssueModal() {
@@ -575,6 +576,7 @@ function closeIssueModal() {
     const issueTitleInput = document.getElementById('issueTitle');
     
     modal.classList.add('hidden');
+    modal.classList.remove('flex', 'items-center', 'justify-center');
     issueForm.reset();
     
     // Hide conditional fields

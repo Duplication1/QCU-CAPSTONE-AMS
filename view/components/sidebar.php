@@ -100,6 +100,11 @@ $navigation_items = [
                     'href' => 'standbyassets.php'
                 ],
                 [
+                    'id' => 'pc-categories',
+                    'label' => 'PC Categories',
+                    'href' => 'pc_categories.php'
+                ],
+                [
                     'id' => 'disposal',
                     'label' => 'Disposal',
                     'href' => 'disposal.php'
@@ -188,6 +193,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-wrench',
             'color' => 'blue',
             'href' => 'maintenance.php'
+        ],
+        [
+            'id' => 'activity-logs',
+            'label' => 'Activity Logs',
+            'icon' => 'fa-solid fa-clock-rotate-left',
+            'color' => 'blue',
+            'href' => 'activity_logs.php'
         ],
         [
             'id' => 'registry',

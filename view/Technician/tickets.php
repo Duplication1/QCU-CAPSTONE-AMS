@@ -94,9 +94,16 @@ $viewMode = $_GET['view'] ?? 'active';
 $isArchivedFilter = ($viewMode === 'archived') ? 1 : 0;
 
 // fetch tickets assigned to this technician (only show tickets assigned to the logged-in technician)
-$sql = "SELECT i.*, u.full_name AS reporter_name
+$sql = "SELECT i.*, 
+               u.full_name AS reporter_name,
+               r.name AS room_name,
+               b.name AS building_name,
+               pc.terminal_number
         FROM issues i
         LEFT JOIN users u ON u.id = i.user_id
+        LEFT JOIN rooms r ON r.id = i.room_id
+        LEFT JOIN buildings b ON b.id = r.building_id
+        LEFT JOIN pc_units pc ON pc.id = i.pc_id
         WHERE i.assigned_technician = ?
           AND LOWER(COALESCE(i.category,'')) IN ('hardware','software','network')
           AND COALESCE(i.is_archived, 0) = ?
@@ -243,7 +250,13 @@ if (!$result || $result->num_rows === 0): ?>
             $categoryLabel = htmlspecialchars(ucfirst($category));
             $title = htmlspecialchars($ticket['title'] ?? '-');
             $desc = htmlspecialchars($ticket['description'] ?? '');
-            $loc = htmlspecialchars(($ticket['room'] ?? '-') . ' / ' . ($ticket['terminal'] ?? '-'));
+            
+            // Build location string with building and room names
+            $building = htmlspecialchars($ticket['building_name'] ?? '-');
+            $room = htmlspecialchars($ticket['room_name'] ?? '-');
+            $terminal = htmlspecialchars($ticket['terminal_number'] ?? '-');
+            $loc = $building . ' / ' . $room . ' / Terminal ' . $terminal;
+            
             $rawPriority = $ticket['priority'] ?? '';
             $priority = trim((string)$rawPriority);
             if ($priority === '') $priority = 'Medium';

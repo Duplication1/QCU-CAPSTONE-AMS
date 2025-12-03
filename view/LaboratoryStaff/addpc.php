@@ -241,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
                             // Insert asset
                             $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
-                            $asset_stmt->bind_param('sssssiiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
+                            $asset_stmt->bind_param('sssssiiisssii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
 
                             if (!$asset_stmt->execute()) {
                                 $errors[] = "Failed to create asset for PC-$new_id: " . $asset_stmt->error;
@@ -366,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
                         // Insert asset
                         $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
-                        $asset_stmt->bind_param('sssssiiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
+                        $asset_stmt->bind_param('sssssiiisssii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
 
                         if ($asset_stmt->execute()) {
                             $assets_created++;

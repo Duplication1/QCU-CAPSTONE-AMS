@@ -106,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
             
-            // Log activity for Laboratory Staff
-            if ($user['role'] === 'Laboratory Staff') {
+            // Log activity for Laboratory Staff and Technician
+            if ($user['role'] === 'Laboratory Staff' || $user['role'] === 'Technician') {
                 $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, entity_type, description, ip_address, user_agent) VALUES (?, 'login', 'user', ?, ?, ?)");
-                $description = 'User logged in to Laboratory Staff panel';
+                $description = 'User logged in to ' . $user['role'] . ' panel';
                 $logStmt->bind_param('isss', $user['id'], $description, $ip_address, $user_agent);
                 $logStmt->execute();
                 $logStmt->close();

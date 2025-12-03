@@ -67,6 +67,23 @@ try {
     $affected = $u->affected_rows;
     $u->close();
 
+    // Log activity for ticket status change
+    if ($affected > 0 && isset($_SESSION['user_id'])) {
+        try {
+            require_once __DIR__ . '/../model/Database.php';
+            require_once __DIR__ . '/../model/ActivityLog.php';
+            ActivityLog::record(
+                $_SESSION['user_id'],
+                'update',
+                'ticket',
+                $ticketId,
+                "Changed ticket #{$ticketId} status to {$newStatus}"
+            );
+        } catch (Exception $logError) {
+            error_log('Failed to log ticket status change: ' . $logError->getMessage());
+        }
+    }
+
     // Create notification for the user who submitted the ticket
     if ($affected > 0 && $issueUserId) {
         try {

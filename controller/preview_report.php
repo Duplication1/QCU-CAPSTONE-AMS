@@ -40,18 +40,23 @@ try {
     
     switch ($reportType) {
         case 'tickets':
-            $headers = ['ID', 'Category', 'Title', 'Room', 'Priority', 'Status', 'Submitter', 'Created'];
+            $headers = ['ID', 'Category', 'Title', 'Building', 'Room', 'PC', 'Priority', 'Status', 'Submitter', 'Created'];
             $query = "SELECT 
                 i.id,
                 i.category,
                 i.title,
-                i.room,
+                b.name as building_name,
+                r.name as room_name,
+                pc.terminal_number,
                 i.priority,
                 i.status,
                 u.full_name as submitter,
                 DATE_FORMAT(i.created_at, '%Y-%m-%d %H:%i') as created
             FROM issues i
             LEFT JOIN users u ON i.user_id = u.id
+            LEFT JOIN rooms r ON i.room_id = r.id
+            LEFT JOIN buildings b ON i.building_id = b.id
+            LEFT JOIN pc_units pc ON i.pc_id = pc.id
             WHERE DATE(i.created_at) BETWEEN ? AND ?
             ORDER BY i.created_at DESC";
             
@@ -62,9 +67,11 @@ try {
             foreach ($results as $row) {
                 $data[] = [
                     'ID' => '#' . str_pad($row['id'], 4, '0', STR_PAD_LEFT),
-                    'Category' => $row['category'],
+                    'Category' => ucfirst($row['category']),
                     'Title' => $row['title'],
-                    'Room' => $row['room'],
+                    'Building' => $row['building_name'] ?? 'N/A',
+                    'Room' => $row['room_name'] ?? 'N/A',
+                    'PC' => $row['terminal_number'] ?? 'N/A',
                     'Priority' => $row['priority'],
                     'Status' => $row['status'],
                     'Submitter' => $row['submitter'],
@@ -74,19 +81,20 @@ try {
             break;
             
         case 'borrowing':
-            $headers = ['ID', 'Borrower', 'Asset', 'Purpose', 'Status', 'Borrow Date', 'Return Date'];
+            $headers = ['ID', 'Borrower', 'Asset', 'Purpose', 'Status', 'Borrowed Date', 'Expected Return', 'Actual Return'];
             $query = "SELECT 
                 ab.id,
                 u.full_name as borrower,
                 a.asset_name,
                 ab.purpose,
                 ab.status,
-                DATE_FORMAT(ab.borrow_date, '%Y-%m-%d') as borrow_date,
-                DATE_FORMAT(ab.return_date, '%Y-%m-%d') as return_date
+                DATE_FORMAT(ab.borrowed_date, '%Y-%m-%d') as borrowed_date,
+                DATE_FORMAT(ab.expected_return_date, '%Y-%m-%d') as expected_return,
+                DATE_FORMAT(ab.actual_return_date, '%Y-%m-%d') as actual_return
             FROM asset_borrowing ab
             LEFT JOIN users u ON ab.borrower_id = u.id
             LEFT JOIN assets a ON ab.asset_id = a.id
-            WHERE DATE(ab.borrow_date) BETWEEN ? AND ?
+            WHERE DATE(ab.borrowed_date) BETWEEN ? AND ?
             ORDER BY ab.created_at DESC";
             
             $stmt = $conn->prepare($query);
@@ -100,25 +108,31 @@ try {
                     'Asset' => $row['asset_name'],
                     'Purpose' => $row['purpose'],
                     'Status' => $row['status'],
-                    'Borrow Date' => $row['borrow_date'],
-                    'Return Date' => $row['return_date']
+                    'Borrowed Date' => $row['borrowed_date'],
+                    'Expected Return' => $row['expected_return'],
+                    'Actual Return' => $row['actual_return'] ?? 'Not Returned'
                 ];
             }
             break;
             
         case 'assets':
-            $headers = ['Asset Tag', 'Name', 'Type', 'Brand', 'Status', 'Location', 'Acquired'];
+            $headers = ['Asset Tag', 'Name', 'Type', 'Category', 'Brand', 'Status', 'Building', 'Room', 'Purchased'];
             $query = "SELECT 
-                asset_tag,
-                asset_name,
-                type,
-                brand,
-                status,
-                room,
-                DATE_FORMAT(date_acquired, '%Y-%m-%d') as acquired
-            FROM assets
-            WHERE DATE(date_acquired) BETWEEN ? AND ?
-            ORDER BY asset_tag";
+                a.asset_tag,
+                a.asset_name,
+                a.asset_type,
+                ac.name as category_name,
+                a.brand,
+                a.status,
+                b.name as building_name,
+                r.name as room_name,
+                DATE_FORMAT(a.purchase_date, '%Y-%m-%d') as purchased
+            FROM assets a
+            LEFT JOIN rooms r ON a.room_id = r.id
+            LEFT JOIN buildings b ON r.building_id = b.id
+            LEFT JOIN asset_categories ac ON a.category = ac.id
+            WHERE DATE(a.created_at) BETWEEN ? AND ?
+            ORDER BY a.asset_tag";
             
             $stmt = $conn->prepare($query);
             $stmt->execute([$startDate, $endDate]);
@@ -128,11 +142,47 @@ try {
                 $data[] = [
                     'Asset Tag' => $row['asset_tag'],
                     'Name' => $row['asset_name'],
-                    'Type' => $row['type'],
-                    'Brand' => $row['brand'],
+                    'Type' => $row['asset_type'],
+                    'Category' => $row['category_name'] ?? 'N/A',
+                    'Brand' => $row['brand'] ?? 'N/A',
                     'Status' => $row['status'],
-                    'Location' => $row['room'],
-                    'Acquired' => $row['acquired']
+                    'Building' => $row['building_name'] ?? 'N/A',
+                    'Room' => $row['room_name'] ?? 'N/A',
+                    'Purchased' => $row['purchased'] ?? 'N/A'
+                ];
+            }
+            break;
+            
+        case 'activity_logs':
+            $headers = ['ID', 'User', 'Role', 'Action', 'Entity', 'Description', 'IP Address', 'Date/Time'];
+            $query = "SELECT 
+                al.id,
+                u.full_name as user_name,
+                u.role as user_role,
+                al.action,
+                al.entity_type,
+                al.description,
+                al.ip_address,
+                DATE_FORMAT(al.created_at, '%Y-%m-%d %H:%i') as created
+            FROM activity_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            WHERE DATE(al.created_at) BETWEEN ? AND ?
+            ORDER BY al.created_at DESC";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->execute([$startDate, $endDate]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($results as $row) {
+                $data[] = [
+                    'ID' => '#' . str_pad($row['id'], 4, '0', STR_PAD_LEFT),
+                    'User' => $row['user_name'] ?? 'System',
+                    'Role' => $row['user_role'] ?? 'N/A',
+                    'Action' => ucfirst($row['action']),
+                    'Entity' => $row['entity_type'] ?? 'N/A',
+                    'Description' => $row['description'] ?? 'N/A',
+                    'IP Address' => $row['ip_address'] ?? 'N/A',
+                    'Date/Time' => $row['created']
                 ];
             }
             break;

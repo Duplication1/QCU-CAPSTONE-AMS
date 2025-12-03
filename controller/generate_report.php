@@ -56,6 +56,9 @@ switch ($reportType) {
     case 'summary':
         generateSummaryReport($conn, $output);
         break;
+    case 'activity_logs':
+        generateActivityLogsReport($conn, $output, $startDate, $endDate);
+        break;
     default:
         fputcsv($output, ['Error: Unknown report type']);
 }
@@ -81,33 +84,63 @@ function generateUsersReport($conn, $output) {
 }
 
 function generateAssetsReport($conn, $output) {
-    fputcsv($output, ['Asset Tag', 'Asset Name', 'Type', 'Brand', 'Model', 'Serial Number', 'Status', 'Location', 'Acquired Date']);
+    fputcsv($output, ['Asset Tag', 'Asset Name', 'Type', 'Category', 'Brand', 'Model', 'Serial Number', 'Status', 'Condition', 'Room', 'Building', 'Purchase Date', 'Purchase Cost', 'Warranty Expiry', 'Is Borrowable']);
     
-    $stmt = $conn->query("SELECT asset_tag, asset_name, type, brand, model, serial_number, status, room, date_acquired FROM assets ORDER BY asset_tag");
+    $query = "SELECT 
+        a.asset_tag, 
+        a.asset_name, 
+        a.asset_type, 
+        ac.name as category_name,
+        a.brand, 
+        a.model, 
+        a.serial_number, 
+        a.status,
+        a.condition,
+        r.name as room_name,
+        b.name as building_name,
+        a.purchase_date, 
+        a.purchase_cost,
+        a.warranty_expiry,
+        a.is_borrowable
+    FROM assets a
+    LEFT JOIN rooms r ON a.room_id = r.id
+    LEFT JOIN buildings b ON r.building_id = b.id
+    LEFT JOIN asset_categories ac ON a.category = ac.id
+    ORDER BY a.asset_tag";
+    
+    $stmt = $conn->query($query);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [
             $row['asset_tag'],
             $row['asset_name'],
-            $row['type'],
-            $row['brand'],
-            $row['model'],
-            $row['serial_number'],
+            $row['asset_type'],
+            $row['category_name'] ?? 'N/A',
+            $row['brand'] ?? 'N/A',
+            $row['model'] ?? 'N/A',
+            $row['serial_number'] ?? 'N/A',
             $row['status'],
-            $row['room'],
-            $row['date_acquired']
+            $row['condition'],
+            $row['room_name'] ?? 'N/A',
+            $row['building_name'] ?? 'N/A',
+            $row['purchase_date'] ?? 'N/A',
+            $row['purchase_cost'] ?? 'N/A',
+            $row['warranty_expiry'] ?? 'N/A',
+            $row['is_borrowable'] ? 'Yes' : 'No'
         ]);
     }
 }
 
 function generateTicketsReport($conn, $output, $startDate, $endDate) {
-    fputcsv($output, ['Ticket ID', 'Category', 'Title', 'Description', 'Room', 'Priority', 'Status', 'Submitter', 'Assigned To', 'Created At', 'Updated At']);
+    fputcsv($output, ['Ticket ID', 'Category', 'Title', 'Description', 'Building', 'Room', 'PC Unit', 'Priority', 'Status', 'Submitter', 'Assigned To', 'Created At', 'Updated At']);
     
     $query = "SELECT 
         i.id,
         i.category,
         i.title,
         i.description,
-        i.room,
+        b.name as building_name,
+        r.name as room_name,
+        pc.terminal_number as pc_terminal,
         i.priority,
         i.status,
         u1.full_name as submitter,
@@ -116,6 +149,9 @@ function generateTicketsReport($conn, $output, $startDate, $endDate) {
         i.updated_at
     FROM issues i
     LEFT JOIN users u1 ON i.user_id = u1.id
+    LEFT JOIN rooms r ON i.room_id = r.id
+    LEFT JOIN buildings b ON i.building_id = b.id
+    LEFT JOIN pc_units pc ON i.pc_id = pc.id
     WHERE 1=1";
     
     if ($startDate && $endDate) {
@@ -129,10 +165,12 @@ function generateTicketsReport($conn, $output, $startDate, $endDate) {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [
             $row['id'],
-            $row['category'],
+            ucfirst($row['category']),
             $row['title'],
             $row['description'],
-            $row['room'],
+            $row['building_name'] ?? 'N/A',
+            $row['room_name'] ?? 'N/A',
+            $row['pc_terminal'] ?? 'N/A',
             $row['priority'],
             $row['status'],
             $row['submitter'],
@@ -144,25 +182,29 @@ function generateTicketsReport($conn, $output, $startDate, $endDate) {
 }
 
 function generateBorrowingReport($conn, $output, $startDate, $endDate) {
-    fputcsv($output, ['Request ID', 'Borrower', 'Asset', 'Purpose', 'Status', 'Borrowed Date', 'Return Date', 'Actual Return', 'Condition']);
+    fputcsv($output, ['Request ID', 'Borrower', 'Borrower Name', 'Asset', 'Purpose', 'Status', 'Borrowed Date', 'Expected Return', 'Actual Return', 'Approved By', 'Return Condition', 'Return Notes']);
     
     $query = "SELECT 
         ab.id,
         u.full_name as borrower,
+        ab.borrower_name,
         a.asset_name,
         ab.purpose,
         ab.status,
-        ab.borrow_date,
-        ab.return_date,
+        ab.borrowed_date,
+        ab.expected_return_date,
         ab.actual_return_date,
-        ab.return_condition
+        u2.full_name as approved_by_name,
+        ab.returned_condition,
+        ab.return_notes
     FROM asset_borrowing ab
     LEFT JOIN users u ON ab.borrower_id = u.id
     LEFT JOIN assets a ON ab.asset_id = a.id
+    LEFT JOIN users u2 ON ab.approved_by = u2.id
     WHERE 1=1";
     
     if ($startDate && $endDate) {
-        $query .= " AND DATE(ab.borrow_date) BETWEEN ? AND ?";
+        $query .= " AND DATE(ab.borrowed_date) BETWEEN ? AND ?";
         $stmt = $conn->prepare($query . " ORDER BY ab.created_at DESC");
         $stmt->execute([$startDate, $endDate]);
     } else {
@@ -172,43 +214,52 @@ function generateBorrowingReport($conn, $output, $startDate, $endDate) {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [
             $row['id'],
-            $row['borrower'],
-            $row['asset_name'],
-            $row['purpose'],
+            $row['borrower'] ?? 'N/A',
+            $row['borrower_name'],
+            $row['asset_name'] ?? 'N/A',
+            $row['purpose'] ?? 'N/A',
             $row['status'],
-            $row['borrow_date'],
-            $row['return_date'],
-            $row['actual_return_date'] ?? '-',
-            $row['return_condition'] ?? '-'
+            $row['borrowed_date'] ?? 'N/A',
+            $row['expected_return_date'] ?? 'N/A',
+            $row['actual_return_date'] ?? 'Not Returned',
+            $row['approved_by_name'] ?? 'N/A',
+            $row['returned_condition'] ?? 'N/A',
+            $row['return_notes'] ?? 'N/A'
         ]);
     }
 }
 
 function generatePCHealthReport($conn, $output) {
-    fputcsv($output, ['PC Unit', 'Room', 'CPU Usage', 'RAM Usage', 'Disk Usage', 'Health Score', 'Status', 'Last Updated']);
+    fputcsv($output, ['PC Unit ID', 'Terminal Number', 'Building', 'Room', 'Asset Tag', 'Status', 'Condition', 'Created At', 'Notes']);
     
-    $stmt = $conn->query("SELECT 
-        pc.pc_name,
-        pc.room,
-        pc.cpu_usage,
-        pc.ram_usage,
-        pc.disk_usage,
-        pc.health_score,
+    $query = "SELECT 
+        pc.id,
+        pc.terminal_number,
+        b.name as building_name,
+        r.name as room_name,
+        pc.asset_tag,
         pc.status,
-        pc.last_updated
+        pc.condition,
+        pc.created_at,
+        pc.notes
     FROM pc_units pc
-    ORDER BY pc.room, pc.pc_name");
+    LEFT JOIN rooms r ON pc.room_id = r.id
+    LEFT JOIN buildings b ON pc.building_id = b.id
+    ORDER BY b.name, r.name, pc.terminal_number";
+    
+    $stmt = $conn->query($query);
     
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [
-            $row['pc_name'],
-            $row['room'],
-            $row['cpu_usage'] . '%',
-            $row['ram_usage'] . '%',
-            $row['disk_usage'] . '%',
-            $row['health_score'],
+            $row['id'],
+            $row['terminal_number'] ?? 'N/A',
+            $row['building_name'] ?? 'N/A',
+            $row['room_name'] ?? 'N/A',
+            $row['asset_tag'] ?? 'N/A',
             $row['status'],
-            $row['last_updated']
+            $row['condition'],
+            $row['created_at'],
+            $row['notes'] ?? 'N/A'
         ]);
     }
 }
@@ -250,5 +301,45 @@ function generateSummaryReport($conn, $output) {
     fputcsv($output, ['Status', 'Count']);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, [$row['status'], $row['count']]);
+    }
+}
+
+function generateActivityLogsReport($conn, $output, $startDate, $endDate) {
+    fputcsv($output, ['ID', 'User', 'User Role', 'Action', 'Entity Type', 'Entity ID', 'Description', 'IP Address', 'Created At']);
+    
+    $query = "SELECT 
+        al.id,
+        u.full_name as user_name,
+        u.role as user_role,
+        al.action,
+        al.entity_type,
+        al.entity_id,
+        al.description,
+        al.ip_address,
+        al.created_at
+    FROM activity_logs al
+    LEFT JOIN users u ON al.user_id = u.id
+    WHERE 1=1";
+    
+    if ($startDate && $endDate) {
+        $query .= " AND DATE(al.created_at) BETWEEN ? AND ?";
+        $stmt = $conn->prepare($query . " ORDER BY al.created_at DESC");
+        $stmt->execute([$startDate, $endDate]);
+    } else {
+        $stmt = $conn->query($query . " ORDER BY al.created_at DESC");
+    }
+    
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        fputcsv($output, [
+            $row['id'],
+            $row['user_name'] ?? 'System',
+            $row['user_role'] ?? 'N/A',
+            ucfirst($row['action']),
+            $row['entity_type'] ?? 'N/A',
+            $row['entity_id'] ?? 'N/A',
+            $row['description'] ?? 'N/A',
+            $row['ip_address'] ?? 'N/A',
+            $row['created_at']
+        ]);
     }
 }

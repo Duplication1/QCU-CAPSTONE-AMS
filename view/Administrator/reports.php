@@ -150,6 +150,22 @@ main {
                     </div>
                 </div>
 
+                <!-- Activity Logs Report -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 p-4 hover:shadow-md transition">
+                    <div class="flex items-start gap-3">
+                        <div class="w-12 h-12 bg-[#1E3A8A] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-history text-[#1E3A8A] text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-gray-800 mb-1">Activity Logs</h4>
+                            <p class="text-[10px] text-gray-500 mb-3">Export detailed system activity logs</p>
+                            <button onclick="generateReport('activity_logs')" class="w-full px-3 py-1.5 bg-[#1E3A8A] text-white text-xs rounded hover:bg-[#152e6e] transition">
+                                <i class="fas fa-download mr-1"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Custom Date Range Report -->
@@ -164,6 +180,7 @@ main {
                             <option value="tickets">Tickets</option>
                             <option value="borrowing">Borrowing</option>
                             <option value="assets">Assets</option>
+                            <option value="activity_logs">Activity Logs</option>
                         </select>
                     </div>
                     <div>

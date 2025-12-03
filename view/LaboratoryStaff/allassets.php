@@ -707,36 +707,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
-    
-    if ($action === 'bulk_dispose') {
-        $asset_ids = json_decode($_POST['asset_ids'] ?? '[]', true);
-        
-        if (empty($asset_ids) || !is_array($asset_ids)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
-            exit;
-        }
-        
-        try {
-            $placeholders = str_repeat('?,', count($asset_ids) - 1) . '?';
-            $stmt = $conn->prepare("UPDATE assets SET status = 'Disposed', updated_by = ? WHERE id IN ($placeholders)");
-            $updated_by = $_SESSION['user_id'];
-            $params = array_merge([$updated_by], $asset_ids);
-            $types = 'i' . str_repeat('i', count($asset_ids));
-            $stmt->bind_param($types, ...$params);
-            $success = $stmt->execute();
-            $affected_rows = $stmt->affected_rows;
-            $stmt->close();
-            
-            if ($success) {
-                echo json_encode(['success' => true, 'message' => "Successfully disposed {$affected_rows} asset(s)"]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to dispose assets']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
-        }
-        exit;
-    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -748,7 +718,10 @@ $filter_room = isset($_GET['filter_room']) ? trim($_GET['filter_room']) : '';
 $show_standby = isset($_GET['show_standby']) && $_GET['show_standby'] === '1';
 $show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] === '1';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$limit = 9;
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 9;
+// Handle "all" entries
+if ($per_page <= 0) $per_page = 999999; // Show all
+$limit = $per_page;
 $offset = ($page - 1) * $limit;
 
 // Get all buildings for filter
@@ -847,23 +820,10 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-html, body {
-    height: 100vh;
-    overflow: hidden;
-}
-#app-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 main {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
     padding: 0.5rem;
     background-color: #f9fafb;
+    min-height: 100%;
 }
 @media print {
     body * {
@@ -892,7 +852,7 @@ main {
 </style>
 
 <main>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col">
         
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
@@ -964,6 +924,12 @@ main {
                     <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?> onchange="this.form.submit()" class="rounded">
                     <span class="text-sm text-gray-700">Show Archived</span>
                 </label>
+                <select name="per_page" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="10" <?php echo ($per_page == 10) ? 'selected' : ''; ?>>Show 10</option>
+                    <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>Show 25</option>
+                    <option value="50" <?php echo ($per_page == 50) ? 'selected' : ''; ?>>Show 50</option>
+                    <option value="0" <?php echo ($per_page == 999999) ? 'selected' : ''; ?>>Show All</option>
+                </select>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fa-solid fa-search"></i>
                 </button>
@@ -977,44 +943,44 @@ main {
         </div>
 
         <!-- Bulk Actions Bar -->
-        <div id="bulkActionsBar" class="hidden bg-blue-50 border border-blue-200 rounded shadow-sm mb-3 px-4 py-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-blue-900">
-                        <span id="selectedCount">0</span> asset(s) selected
-                    </span>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="bulkArchive()" 
-                            class="px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors">
-                        <i class="fa-solid fa-archive mr-2"></i>Archive Selected
-                    </button>
-                    <button onclick="bulkDispose()" 
-                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors">
-                        <i class="fa-solid fa-trash mr-2"></i>Dispose Selected
-                    </button>
-                </div>
+        <div id="bulkActionsBar" class="hidden bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600">
+                    <span id="selectedCount">0</span> selected
+                </span>
+                <button onclick="printSelectedQRCodes()" 
+                        class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors">
+                    <i class="fa-solid fa-qrcode mr-2"></i>Print QR Codes
+                </button>
+                <button onclick="bulkArchive()" 
+                        class="px-4 py-2 bg-[#1E3A8A] text-white text-sm font-medium rounded hover:bg-[#153570] transition-colors">
+                    <i class="fa-solid fa-archive mr-2"></i>Archive Selected
+                </button>
+                <button onclick="clearSelection()" 
+                        class="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-300 transition-colors">
+                    Clear
+                </button>
             </div>
         </div>
 
         <!-- Assets Table -->
         <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">
+                            <input type="checkbox" id="selectAll" class="rounded cursor-pointer" title="Select all">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand/Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Actions</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">#</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Asset Tag</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Asset Name</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Type</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Brand/Model</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Serial Number</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Room</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Condition</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="assetsTableBody" class="bg-white divide-y divide-gray-200">
@@ -1032,23 +998,26 @@ main {
                         </tr>
                     <?php else: ?>
                         <?php foreach ($assets as $index => $asset): ?>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <input type="checkbox" class="asset-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="<?php echo $asset['id']; ?>">
+                            <tr class="hover:bg-blue-50 transition-colors">
+                                <td class="px-3 py-2 text-center">
+                                    <input type="checkbox" class="asset-checkbox rounded cursor-pointer" value="<?php echo $asset['id']; ?>" onchange="updateSelectAllState(); updateBulkActions();">
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                                     <?php echo $offset + $index + 1; ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-medium text-blue-600"><?php echo htmlspecialchars($asset['asset_tag']); ?></span>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs font-medium text-blue-600">
+                                    <?php echo htmlspecialchars($asset['asset_tag']); ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($asset['asset_name']); ?></span>
+                                <td class="px-3 py-2 text-xs text-gray-900">
+                                    <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['asset_name']); ?></div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo htmlspecialchars($asset['asset_type']); ?>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs">
+                                    <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                                        <?php echo htmlspecialchars($asset['asset_type']); ?>
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-3 py-2 text-xs text-gray-700">
+                                    <div class="max-w-xs truncate">
                                     <?php 
                                     $brand_model = array_filter([
                                         $asset['brand'] ?? '', 
@@ -1056,14 +1025,15 @@ main {
                                     ]);
                                     echo htmlspecialchars(implode(' - ', $brand_model) ?: 'N/A'); 
                                     ?>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo htmlspecialchars($asset['serial_number'] ?: 'N/A'); ?>
+                                <td class="px-3 py-2 text-xs text-gray-700">
+                                    <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['serial_number'] ?: 'N/A'); ?></div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo htmlspecialchars($asset['room_name'] ?: 'N/A'); ?>
+                                <td class="px-3 py-2 text-xs text-gray-700">
+                                    <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['room_name'] ?: 'Standby'); ?></div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <?php
                                     $status_colors = [
                                         'Active' => 'bg-green-100 text-green-700',
@@ -1079,43 +1049,43 @@ main {
                                     $status_value = isset($asset['status']) && trim($asset['status']) !== '' ? $asset['status'] : 'Available';
                                     $status_class = $status_colors[$status_value] ?? 'bg-gray-100 text-gray-700';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded <?php echo $status_class; ?>">
                                         <?php echo htmlspecialchars($status_value); ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <?php
                                     $condition_colors = [
-                                        'Excellent' => 'bg-green-100 text-green-700',
-                                        'Good' => 'bg-blue-100 text-blue-700',
-                                        'Fair' => 'bg-yellow-100 text-yellow-700',
-                                        'Poor' => 'bg-orange-100 text-orange-700',
-                                        'Non-Functional' => 'bg-red-100 text-red-700'
+                                        'Excellent' => 'bg-green-50 text-green-700 border border-green-300',
+                                        'Good' => 'bg-blue-50 text-blue-700 border border-blue-300',
+                                        'Fair' => 'bg-yellow-50 text-yellow-700 border border-yellow-300',
+                                        'Poor' => 'bg-orange-50 text-orange-700 border border-orange-300',
+                                        'Non-Functional' => 'bg-red-50 text-red-700 border border-red-300'
                                     ];
-                                    $condition_class = $condition_colors[$asset['condition']] ?? 'bg-gray-100 text-gray-700';
+                                    $condition_class = $condition_colors[$asset['condition']] ?? 'bg-gray-50 text-gray-700 border border-gray-300';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $condition_class; ?>">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded <?php echo $condition_class; ?>">
                                         <?php echo htmlspecialchars($asset['condition']); ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                <td class="px-3 py-2 whitespace-nowrap text-center text-xs">
                                     <div class="relative inline-block">
-                                        <button onclick="toggleMenu(<?php echo $asset['id']; ?>)" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full focus:outline-none transition-colors">
-                                            <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
+                                        <button onclick="toggleMenu(<?php echo $asset['id']; ?>)" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-blue-50 rounded-full focus:outline-none transition-colors">
+                                            <i class="fa-solid fa-ellipsis-vertical text-base"></i>
                                         </button>
-                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 12rem;">
+                                        <div id="menu-<?php echo $asset['id']; ?>" class="hidden absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50" style="min-width: 11rem;">
                                             <div class="py-1">
                                                 <button onclick='printQRCode(<?php echo json_encode($asset); ?>)' 
-                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                        class="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-blue-50 flex items-center gap-2">
                                                     <i class="fa-solid fa-qrcode text-purple-600"></i> Print QR Code
                                                 </button>
                                                 <button onclick='editAsset(<?php echo json_encode($asset); ?>)' 
-                                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                        class="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-blue-50 flex items-center gap-2">
                                                     <i class="fa-solid fa-pencil text-blue-600"></i> Edit
                                                 </button>
                                                 <?php if ($asset['status'] !== 'Archived'): ?>
                                                 <button onclick="archiveAsset(<?php echo $asset['id']; ?>, '<?php echo htmlspecialchars($asset['asset_tag'], ENT_QUOTES); ?>')" 
-                                                        class="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2">
+                                                        class="w-full text-left px-3 py-2 text-xs text-orange-600 hover:bg-orange-50 flex items-center gap-2">
                                                     <i class="fa-solid fa-archive"></i> Archive
                                                 </button>
                                                 <?php endif; ?>
@@ -1312,35 +1282,6 @@ main {
         </div>
     </div>
 </div>
-
-<!-- Bulk Dispose Confirmation Modal -->
-<div id="bulkDisposeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Dispose Assets?</h3>
-            <p class="text-sm text-gray-600 text-center mb-4">
-                Are you sure you want to dispose <strong id="bulkDisposeCount">0</strong> asset(s)?
-            </p>
-            <p class="text-xs text-red-600 text-center mb-6">
-                <i class="fa-solid fa-exclamation-triangle mr-1"></i>This action cannot be undone!
-            </p>
-            <div class="flex gap-3">
-                <button onclick="closeBulkDisposeModal()" 
-                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                    Cancel
-                </button>
-                <button id="confirmBulkDisposeBtn" onclick="confirmBulkDispose()" 
-                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
-                    <i class="fa-solid fa-trash mr-1"></i>Dispose
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Add Asset Modal -->
 <div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -2056,6 +1997,22 @@ function updateBulkActions() {
     }
 }
 
+// Clear selection
+function clearSelection() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+    
+    selectAllCheckbox.checked = false;
+    selectAllCheckbox.indeterminate = false;
+    
+    assetCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    document.getElementById('bulkActionsBar').classList.add('hidden');
+    document.getElementById('selectedCount').textContent = '0';
+}
+
 async function bulkArchive() {
     const selectedAssets = document.querySelectorAll('.asset-checkbox:checked');
     if (selectedAssets.length === 0) {
@@ -2071,23 +2028,6 @@ async function bulkArchive() {
     
     // Store asset IDs for later use
     window.bulkArchiveAssetIds = assetIds;
-}
-
-async function bulkDispose() {
-    const selectedAssets = document.querySelectorAll('.asset-checkbox:checked');
-    if (selectedAssets.length === 0) {
-        showAlert('error', 'Please select assets to dispose');
-        return;
-    }
-    
-    const assetIds = Array.from(selectedAssets).map(cb => parseInt(cb.value));
-    
-    // Open modal instead of confirm dialog
-    document.getElementById('bulkDisposeCount').textContent = assetIds.length;
-    document.getElementById('bulkDisposeModal').classList.remove('hidden');
-    
-    // Store asset IDs for later use
-    window.bulkDisposeAssetIds = assetIds;
 }
 
 // Modal functions
@@ -2655,55 +2595,7 @@ document.getElementById('bulkArchiveModal')?.addEventListener('click', function(
     }
 });
 
-// Bulk Dispose Modal Functions
-function closeBulkDisposeModal() {
-    document.getElementById('bulkDisposeModal').classList.add('hidden');
-    window.bulkDisposeAssetIds = null;
-}
 
-async function confirmBulkDispose() {
-    if (!window.bulkDisposeAssetIds) return;
-    
-    const button = document.getElementById('confirmBulkDisposeBtn');
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Disposing...';
-    button.disabled = true;
-    
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'bulk_dispose');
-        formData.append('asset_ids', JSON.stringify(window.bulkDisposeAssetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showAlert('error', result.message);
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('error', 'An error occurred while disposing assets');
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }
-}
-
-// Close bulk dispose modal when clicking outside
-document.getElementById('bulkDisposeModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeBulkDisposeModal();
-    }
-});
 
 // Delete Asset (now opens modal)
 async function deleteAsset(id, assetTag) {
@@ -2763,6 +2655,23 @@ async function openQRPrintModalForAssets(assetIds) {
         console.error('Error:', error);
         showAlert('error', 'An error occurred while loading QR codes');
     }
+}
+
+// Print selected QR codes from bulk selection
+async function printSelectedQRCodes() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to print QR codes');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    await openQRPrintModalForAssets(assetIds);
+}
+
+// Close QR Print Modal
+function closeQRPrintModal() {
+    document.getElementById('qrPrintModal').classList.add('hidden');
 }
 
 // Toggle three-dot menu
