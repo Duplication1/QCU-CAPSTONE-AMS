@@ -228,22 +228,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             }
                             $check_asset->close();
 
-                            // Generate QR code data
-                            $qr_data = json_encode([
-                                'asset_tag' => $asset_tag,
-                                'asset_name' => $asset_name,
-                                'asset_type' => 'Hardware',
-                                'room_id' => $room_id,
-                                'room_name' => $room['name'],
-                                'pc_unit_id' => $new_id
-                            ]);
-                            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+                            // Insert asset first to get ID
+                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
+                            $asset_stmt->bind_param('sssssiiiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
 
-                            // Insert asset
-                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
-                            $asset_stmt->bind_param('sssssiiisssii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
-
-                            if (!$asset_stmt->execute()) {
+                            if ($asset_stmt->execute()) {
+                                $asset_id = $conn->insert_id;
+                                
+                                // Generate QR code with scan URL
+                                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                                $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $asset_id;
+                                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                                
+                                // Update asset with QR code
+                                $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                                $update_qr->bind_param('si', $qr_code_url, $asset_id);
+                                $update_qr->execute();
+                                $update_qr->close();
+                                
+                                // Log asset creation history
+                                require_once '../../controller/AssetHistoryHelper.php';
+                                $historyHelper = AssetHistoryHelper::getInstance();
+                                $historyHelper->logAssetCreated($asset_id, $asset_tag, $asset_name, $created_by);
+                            } else {
                                 $errors[] = "Failed to create asset for PC-$new_id: " . $asset_stmt->error;
                             }
                             $asset_stmt->close();
@@ -353,22 +360,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         }
                         $check_asset->close();
 
-                        // Generate QR code data
-                        $qr_data = json_encode([
-                            'asset_tag' => $asset_tag,
-                            'asset_name' => $asset_name,
-                            'asset_type' => 'Hardware',
-                            'room_id' => $room_id,
-                            'room_name' => $room['name'],
-                            'pc_unit_id' => $new_id
-                        ]);
-                        $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-
-                        // Insert asset
-                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, qr_code, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?, ?)");
-                        $asset_stmt->bind_param('sssssiiisssii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $qr_code_url, $created_by, $category_id);
+                        // Insert asset first to get ID
+                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
+                        $asset_stmt->bind_param('sssssiiiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
 
                         if ($asset_stmt->execute()) {
+                            $asset_id = $conn->insert_id;
+                            
+                            // Generate QR code with scan URL
+                            $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                            $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $asset_id;
+                            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                            
+                            // Update asset with QR code
+                            $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                            $update_qr->bind_param('si', $qr_code_url, $asset_id);
+                            $update_qr->execute();
+                            $update_qr->close();
+                            
+                            // Log asset creation history
+                            require_once '../../controller/AssetHistoryHelper.php';
+                            $historyHelper = AssetHistoryHelper::getInstance();
+                            $historyHelper->logAssetCreated($asset_id, $asset_tag, $asset_name, $created_by);
+                            
                             $assets_created++;
                         } else {
                             $asset_failed[] = $asset_tag;

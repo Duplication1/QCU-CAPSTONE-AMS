@@ -27,30 +27,25 @@ $query = "SELECT al.*, u.full_name, u.id_number
           WHERE u.role = 'Laboratory Staff'";
 
 $params = [];
-$types = '';
 
 if (!empty($action_filter)) {
     $query .= " AND al.action = ?";
     $params[] = $action_filter;
-    $types .= 's';
 }
 
 if (!empty($entity_filter)) {
     $query .= " AND al.entity_type = ?";
     $params[] = $entity_filter;
-    $types .= 's';
 }
 
 if (!empty($date_from)) {
     $query .= " AND DATE(al.created_at) >= ?";
     $params[] = $date_from;
-    $types .= 's';
 }
 
 if (!empty($date_to)) {
     $query .= " AND DATE(al.created_at) <= ?";
     $params[] = $date_to;
-    $types .= 's';
 }
 
 if (!empty($search)) {
@@ -59,17 +54,16 @@ if (!empty($search)) {
     $params[] = $search_param;
     $params[] = $search_param;
     $params[] = $search_param;
-    $types .= 'sss';
 }
 
-$query .= " ORDER BY al.created_at DESC LIMIT 1000";
+// Handle pagination
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 25;
+if ($per_page <= 0) $per_page = 999999; // Show all
+
+$query .= " ORDER BY al.created_at DESC LIMIT " . $per_page;
 
 $stmt = $conn->prepare($query);
-if (!empty($params)) {
-    $stmt->execute($params);
-} else {
-    $stmt->execute();
-}
+$stmt->execute($params);
 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get statistics
@@ -129,121 +123,114 @@ $pageTitle = "Activity Logs";
         <div id="main-content-container" class="p-6">
             <div class="max-w-[1400px] mx-auto">
                 <!-- Header -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <button onclick="exportLogs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Activity Logs</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Total: <?php echo count($logs); ?> log(s)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportLogs()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
                             <i class="fa-solid fa-download"></i>
-                            Export Logs
+                            <span>Export Logs</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Filters -->
-                <div class="bg-white rounded-lg shadow mb-6 p-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-filter text-blue-600"></i>
-                        Filters
-                    </h3>
-                    <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
-                            <select name="action" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">All Actions</option>
-                                <option value="login" <?php echo $action_filter === 'login' ? 'selected' : ''; ?>>Login</option>
-                                <option value="create" <?php echo $action_filter === 'create' ? 'selected' : ''; ?>>Create</option>
-                                <option value="update" <?php echo $action_filter === 'update' ? 'selected' : ''; ?>>Update</option>
-                                <option value="archive" <?php echo $action_filter === 'archive' ? 'selected' : ''; ?>>Archive</option>
-                                <option value="restore" <?php echo $action_filter === 'restore' ? 'selected' : ''; ?>>Restore</option>
-                                <option value="dispose" <?php echo $action_filter === 'dispose' ? 'selected' : ''; ?>>Dispose</option>
-                                <option value="import" <?php echo $action_filter === 'import' ? 'selected' : ''; ?>>Import</option>
-                                <option value="assign" <?php echo $action_filter === 'assign' ? 'selected' : ''; ?>>Assign</option>
-                                <option value="upload" <?php echo $action_filter === 'upload' ? 'selected' : ''; ?>>Upload</option>
-                                <option value="export" <?php echo $action_filter === 'export' ? 'selected' : ''; ?>>Export</option>
-                            </select>
+                <!-- Search and Filters -->
+                <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
+                    <form method="GET" action="" class="flex flex-wrap gap-3">
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="text" name="search" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
+                                   placeholder="Search logs..." 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Entity Type</label>
-                            <select name="entity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">All Entities</option>
-                                <option value="asset" <?php echo $entity_filter === 'asset' ? 'selected' : ''; ?>>Asset</option>
-                                <option value="pc_unit" <?php echo $entity_filter === 'pc_unit' ? 'selected' : ''; ?>>PC Unit</option>
-                                <option value="ticket" <?php echo $entity_filter === 'ticket' ? 'selected' : ''; ?>>Ticket</option>
-                                <option value="signature" <?php echo $entity_filter === 'signature' ? 'selected' : ''; ?>>Signature</option>
-                                <option value="user" <?php echo $entity_filter === 'user' ? 'selected' : ''; ?>>User</option>
-                                <option value="report" <?php echo $entity_filter === 'report' ? 'selected' : ''; ?>>Report</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                            <input type="date" name="date_from" value="<?php echo htmlspecialchars($date_from); ?>" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                            <input type="date" name="date_to" value="<?php echo htmlspecialchars($date_to); ?>" 
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        
-                        <div class="flex items-end gap-2">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-search"></i>
-                                Apply
-                            </button>
-                            <a href="activity_logs.php" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors flex items-center justify-center">
-                                <i class="fa-solid fa-times"></i>
+                        <select name="action" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Actions</option>
+                            <option value="login" <?php echo $action_filter === 'login' ? 'selected' : ''; ?>>Login</option>
+                            <option value="create" <?php echo $action_filter === 'create' ? 'selected' : ''; ?>>Create</option>
+                            <option value="update" <?php echo $action_filter === 'update' ? 'selected' : ''; ?>>Update</option>
+                            <option value="archive" <?php echo $action_filter === 'archive' ? 'selected' : ''; ?>>Archive</option>
+                            <option value="restore" <?php echo $action_filter === 'restore' ? 'selected' : ''; ?>>Restore</option>
+                            <option value="dispose" <?php echo $action_filter === 'dispose' ? 'selected' : ''; ?>>Dispose</option>
+                            <option value="import" <?php echo $action_filter === 'import' ? 'selected' : ''; ?>>Import</option>
+                            <option value="assign" <?php echo $action_filter === 'assign' ? 'selected' : ''; ?>>Assign</option>
+                            <option value="upload" <?php echo $action_filter === 'upload' ? 'selected' : ''; ?>>Upload</option>
+                            <option value="export" <?php echo $action_filter === 'export' ? 'selected' : ''; ?>>Export</option>
+                        </select>
+                        <select name="entity" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Entities</option>
+                            <option value="asset" <?php echo $entity_filter === 'asset' ? 'selected' : ''; ?>>Asset</option>
+                            <option value="pc_unit" <?php echo $entity_filter === 'pc_unit' ? 'selected' : ''; ?>>PC Unit</option>
+                            <option value="scanner" <?php echo $entity_filter === 'scanner' ? 'selected' : ''; ?>>Scanner</option>
+                            <option value="ticket" <?php echo $entity_filter === 'ticket' ? 'selected' : ''; ?>>Ticket</option>
+                            <option value="signature" <?php echo $entity_filter === 'signature' ? 'selected' : ''; ?>>Signature</option>
+                            <option value="user" <?php echo $entity_filter === 'user' ? 'selected' : ''; ?>>User</option>
+                            <option value="report" <?php echo $entity_filter === 'report' ? 'selected' : ''; ?>>Report</option>
+                        </select>
+                        <input type="date" name="date_from" value="<?php echo htmlspecialchars($date_from); ?>" 
+                               onchange="this.form.submit()"
+                               class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <input type="date" name="date_to" value="<?php echo htmlspecialchars($date_to); ?>" 
+                               onchange="this.form.submit()"
+                               class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select name="per_page" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <?php $per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 25; ?>
+                            <option value="10" <?php echo ($per_page == 10) ? 'selected' : ''; ?>>Show 10</option>
+                            <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>Show 25</option>
+                            <option value="100" <?php echo ($per_page == 100) ? 'selected' : ''; ?>>Show 100</option>
+                            <option value="0" <?php echo ($per_page == 0 || $per_page >= 1000) ? 'selected' : ''; ?>>Show All</option>
+                        </select>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                        <?php if (!empty($search) || !empty($action_filter) || !empty($entity_filter) || !empty($date_from) || !empty($date_to)): ?>
+                            <a href="activity_logs.php" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                                <i class="fa-solid fa-times"></i> Clear
                             </a>
-                        </div>
+                        <?php endif; ?>
                     </form>
                 </div>
 
                 <!-- Activity Logs Table -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="p-5 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <i class="fa-solid fa-table text-blue-600"></i>
-                            Activity Logs (Showing <?php echo count($logs); ?> records)
-                        </h3>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table id="logsTable" class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
+                    <table id="logsTable" class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Timestamp</th>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">User</th>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Action</th>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Entity</th>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Description</th>
+                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
                                 <?php if (empty($logs)): ?>
                                 <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                        <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-2"></i>
-                                        <p>No activity logs found</p>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fa-solid fa-clipboard-list text-5xl mb-3 opacity-30"></i>
+                                        <p class="text-lg">No activity logs found</p>
+                                        <?php if (!empty($search) || !empty($action_filter) || !empty($entity_filter) || !empty($date_from) || !empty($date_to)): ?>
+                                            <p class="text-sm">Try adjusting your filters</p>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                                 <?php else: ?>
                                     <?php foreach ($logs as $log): ?>
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div class="flex items-center gap-2">
-                                                <i class="fa-solid fa-clock text-gray-400"></i>
-                                                <?php echo date('M d, Y H:i:s', strtotime($log['created_at'])); ?>
+                                    <tr class="hover:bg-blue-50 transition-colors">
+                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-700">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium"><?php echo date('M d, Y', strtotime($log['created_at'])); ?></span>
+                                                <span class="text-gray-500"><?php echo date('H:i:s', strtotime($log['created_at'])); ?></span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <div>
-                                                <div class="font-medium text-gray-900"><?php echo htmlspecialchars($log['full_name'] ?? 'Unknown'); ?></div>
-                                                <div class="text-gray-500"><?php echo htmlspecialchars($log['id_number'] ?? 'N/A'); ?></div>
+                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium text-gray-900"><?php echo htmlspecialchars($log['full_name'] ?? 'Unknown'); ?></span>
+                                                <span class="text-gray-500"><?php echo htmlspecialchars($log['id_number'] ?? 'N/A'); ?></span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-3 py-1.5 whitespace-nowrap">
                                             <?php
                                             $action_colors = [
                                                 'login' => 'bg-blue-100 text-blue-800',
@@ -259,85 +246,55 @@ $pageTitle = "Activity Logs";
                                             ];
                                             $color = $action_colors[$log['action']] ?? 'bg-gray-100 text-gray-800';
                                             ?>
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $color; ?>">
+                                            <span class="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full <?php echo $color; ?>">
                                                 <?php echo ucfirst(htmlspecialchars($log['action'])); ?>
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-700">
                                             <?php if ($log['entity_type']): ?>
                                                 <span class="font-medium"><?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($log['entity_type']))); ?></span>
                                                 <?php if ($log['entity_id']): ?>
-                                                    <span class="text-gray-400">#<?php echo htmlspecialchars($log['entity_id']); ?></span>
+                                                    <span class="text-gray-500">#<?php echo htmlspecialchars($log['entity_id']); ?></span>
                                                 <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="text-gray-400">—</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 max-w-md">
+                                        <td class="px-3 py-1.5 text-xs text-gray-700 max-w-md">
                                             <div class="truncate" title="<?php echo htmlspecialchars($log['description']); ?>">
                                                 <?php echo htmlspecialchars($log['description']); ?>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-500">
                                             <?php echo htmlspecialchars($log['ip_address'] ?? 'N/A'); ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        $(document).ready(function() {
-            // Initialize DataTable
-            const table = $('#logsTable').DataTable({
-                "order": [[0, "desc"]],
-                "pageLength": 25,
-                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search logs...",
-                    "emptyTable": "No activity logs found",
-                    "zeroRecords": "No matching records found"
-                },
-                "dom": '<"flex justify-between items-center mb-4"lf>rt<"flex justify-between items-center mt-4"ip>',
-                "columnDefs": [
-                    { "orderable": true, "targets": [0, 1, 2, 3] },
-                    { "orderable": false, "targets": [4, 5] }
-                ]
+        // Auto-submit search with debounce
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    document.querySelector('form').submit();
+                }, 800); // Wait 800ms after user stops typing
             });
-        });
+        }
 
         function exportLogs() {
             const params = new URLSearchParams(window.location.search);
             window.location.href = '../../controller/export_logs.php?' + params.toString();
         }
-
-        // Auto-refresh notification for new logs (optional)
-        let lastLogCount = <?php echo count($logs); ?>;
-        setInterval(function() {
-            fetch('?ajax=1&count_only=1')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.count > lastLogCount) {
-                        const notification = document.createElement('div');
-                        notification.className = 'fixed top-24 right-6 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3';
-                        notification.innerHTML = `
-                            <i class="fa-solid fa-bell"></i>
-                            <span>New activity logs available. <a href="#" onclick="location.reload()" class="underline font-semibold">Refresh</a></span>
-                        `;
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 5000);
-                        lastLogCount = data.count;
-                    }
-                })
-                .catch(err => console.error('Failed to check for new logs:', err));
-        }, 30000); // Check every 30 seconds
     </script>
 </body>
 </html>

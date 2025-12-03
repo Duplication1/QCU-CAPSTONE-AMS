@@ -121,23 +121,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            // Generate QR code data
-            $qr_data = json_encode([
-                'asset_tag' => $asset_tag,
-                'asset_name' => $asset_name,
-                'asset_type' => $asset_type,
-                'room_id' => $room_id
-            ]);
-            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-            
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            // Insert asset first to get ID
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by);
+            $stmt->bind_param('ssssssissi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $created_by);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
             
             if ($success) {
+                // Generate QR code with scan URL
+                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $new_id;
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                
+                // Update asset with QR code
+                $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                $update_qr->bind_param('si', $qr_code_url, $new_id);
+                $update_qr->execute();
+                $update_qr->close();
+                
+                // Log asset creation history
+                require_once '../../controller/AssetHistoryHelper.php';
+                $historyHelper = AssetHistoryHelper::getInstance();
+                $historyHelper->logAssetCreated($new_id, $asset_tag, $asset_name, $created_by);
+                
                 echo json_encode(['success' => true, 'message' => 'Asset created successfully', 'id' => $new_id]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to create asset']);
@@ -281,23 +289,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 }
                 $check->close();
                 
-                // Generate unique QR code
-                $qr_data = json_encode([
-                    'asset_tag' => $asset_tag,
-                    'asset_name' => $asset_name,
-                    'asset_type' => $asset_type,
-                    'room_id' => $room_id,
-                    'brand' => $brand,
-                    'model' => $model
-                ]);
-                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-                
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssissssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $is_borrowable, $created_by);
+                // Insert asset first to get ID
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('sssssissii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $is_borrowable, $created_by);
                 
                 if ($stmt->execute()) {
+                    $new_id = $conn->insert_id;
                     $created_count++;
-                    $created_asset_ids[] = $conn->insert_id;
+                    $created_asset_ids[] = $new_id;
+                    
+                    // Generate QR code with scan URL
+                    $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+                    $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $new_id;
+                    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                    
+                    // Update asset with QR code
+                    $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                    $update_qr->bind_param('si', $qr_code_url, $new_id);
+                    $update_qr->execute();
+                    $update_qr->close();
+                    
+                    // Log asset creation history
+                    require_once '../../controller/AssetHistoryHelper.php';
+                    $historyHelper = AssetHistoryHelper::getInstance();
+                    $historyHelper->logAssetCreated($new_id, $asset_tag, $asset_name, $created_by);
                 } else {
                     $failed[] = $asset_tag . ' (insert failed)';
                 }
