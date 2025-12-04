@@ -102,6 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         $idNumber = trim($_POST['id_number'] ?? '');
         if ($uid <= 0) { echo json_encode(['success'=>false,'message'=>'Invalid user']); exit; }
         if ($full === '' || $email === '' || $role === '') { echo json_encode(['success'=>false,'message'=>'Missing fields']); exit; }
+        
+        // Normalize role for database storage
+        if ($role === 'LaboratoryStaff') {
+            $role = 'Laboratory Staff';
+        }
+        
         $u = $conn->prepare("UPDATE users SET id_number = ?, full_name = ?, email = ?, role = ?, updated_at = NOW() WHERE id = ?");
         $u->bind_param('ssssi', $idNumber, $full, $email, $role, $uid);
         $ok = $u->execute();
@@ -233,10 +239,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
             echo json_encode(['success'=>false,'message'=>'Missing required fields (password is required)']); exit;
         }
 
-        // Validate role is one of the allowed values
-        $validRoles = ['Student', 'Faculty', 'Technician', 'Laboratory Staff', 'Administrator'];
+        // Validate role is one of the allowed values (support both formats)
+        $validRoles = ['Student', 'Faculty', 'Technician', 'Laboratory Staff', 'LaboratoryStaff', 'Administrator'];
         if (!in_array($role, $validRoles)) {
             echo json_encode(['success'=>false,'message'=>'Invalid role selected. Please choose a valid role.']); exit;
+        }
+
+        // Normalize role for database storage (convert LaboratoryStaff to Laboratory Staff)
+        if ($role === 'LaboratoryStaff') {
+            $role = 'Laboratory Staff';
         }
 
         // Enhanced duplicate check - handle empty id_number case
@@ -439,7 +450,7 @@ main {
         </div>
       </td>
       <td class="px-3 py-2 text-xs text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
-      <td class="px-3 py-2 text-xs"><?php echo htmlspecialchars($u['role']); ?></td>
+      <td class="px-3 py-2 text-xs"><?php echo htmlspecialchars($u['role'] === 'LaboratoryStaff' ? 'Laboratory Staff' : $u['role']); ?></td>
       <td class="px-3 py-2">
         <?php 
         // Handle empty status (when ENUM value doesn't exist in database)
@@ -1198,6 +1209,13 @@ window.submitEditForm = async function(e) {
 };
 
 window.filterUsers = function() {
+    // If updatePagination exists (loaded later), use it for proper pagination support
+    if (typeof updatePagination === 'function') {
+        updatePagination();
+        return;
+    }
+    
+    // Fallback: simple show/hide without pagination
     const searchQuery = (document.getElementById('userSearch')?.value || '').toLowerCase().trim();
     const roleFilter = (document.getElementById('roleFilter')?.value || '').toLowerCase();
     const statusFilter = (document.getElementById('statusFilter')?.value || '').toLowerCase();
@@ -1206,7 +1224,6 @@ window.filterUsers = function() {
     if (!tbody) return;
     
     const rows = tbody.querySelectorAll('tr');
-    let visibleCount = 0;
     
     rows.forEach(row => {
         try {
@@ -1228,26 +1245,21 @@ window.filterUsers = function() {
             const userStatus = (user.status || 'active').toLowerCase();
             const matchesStatus = !statusFilter || userStatus === statusFilter;
             
-            if (matchesSearch && matchesRole && matchesStatus) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = (matchesSearch && matchesRole && matchesStatus) ? '' : 'none';
         } catch (e) {
             row.style.display = '';
         }
     });
-    
-    // Update visible count if there's a counter element
-    const counter = document.getElementById('visibleUsersCount');
-    if (counter) {
-        counter.textContent = visibleCount;
-    }
 };
 
 window.applyFilters = function() {
+    // Reset to first page when filtering
+    if (typeof currentPage !== 'undefined') {
+        currentPage = 1;
+    }
+    
     // Call filterUsers to apply the filters
+    window.filterUsers();
     window.filterUsers();
     
     const roleFilter = document.getElementById('roleFilter');
@@ -1697,6 +1709,8 @@ window.closeUserModal = function() {
 // Initialize pagination on page load
 document.addEventListener('DOMContentLoaded', function() {
     allRows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
+    console.log('Total users loaded:', allRows.length);
+    currentPage = 1;
     updatePagination();
     
     // Close menus when clicking outside
@@ -1748,8 +1762,7 @@ function getVisibleRows() {
         
         // Role filter
         const userRole = (user.role || '').toLowerCase();
-        const matchesRole = !roleFilter || userRole === roleFilter || 
-                           ;
+        const matchesRole = !roleFilter || userRole === roleFilter;
         
         // Status filter
         const userStatus = (user.status || 'active').toLowerCase();
@@ -1763,6 +1776,8 @@ function updatePagination() {
     const visibleRows = getVisibleRows();
     const totalRows = visibleRows.length;
     const totalPages = Math.ceil(totalRows / pageSize);
+    
+    console.log('Pagination:', { totalRows, pageSize, totalPages, currentPage });
     
     // Ensure current page is valid
     if (currentPage > totalPages && totalPages > 0) {
@@ -1787,9 +1802,22 @@ function updatePagination() {
 
 function renderPageNumbers(totalPages) {
     const container = document.getElementById('pageNumbers');
+    if (!container) {
+        console.error('pageNumbers container not found!');
+        return;
+    }
     container.innerHTML = '';
     
-    if (totalPages <= 1) return;
+    console.log('Rendering page numbers, totalPages:', totalPages);
+    
+    if (totalPages <= 1) {
+        // Still show current page indicator even if only 1 page
+        const info = document.createElement('span');
+        info.className = 'text-sm text-gray-500';
+        info.textContent = `Page 1 of 1`;
+        container.appendChild(info);
+        return;
+    }
     
     const maxVisible = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
@@ -2093,7 +2121,7 @@ function addUserRow(user) {
     tr.innerHTML = `
         <td class="px-4 py-3">${renderNameCell(user)}</td>
         <td class="px-4 py-3 text-gray-500">${escapeHtml(user.email||'')}</td>
-        <td class="px-4 py-3">${escapeHtml(user.role||'')}</td>
+        <td class="px-4 py-3">${escapeHtml(user.role === 'LaboratoryStaff' ? 'Laboratory Staff' : (user.role||''))}</td>
         <td class="px-4 py-3"><span class="status-badge px-2 py-1 rounded" style="background-color:#d1fae5;color:#065f46;">${escapeHtml(user.status||'')}</span></td>
         <td class="px-4 py-3">${user.created_at ? formatDateShortDate(user.created_at) : '-'}</td>
         <td class="px-4 py-3 flex items-center justify-between">
@@ -2596,8 +2624,7 @@ function getVisibleRows() {
         
         // Role filter
         const userRole = (user.role || '').toLowerCase();
-        const matchesRole = !roleFilter || userRole === roleFilter || 
-                           ;
+        const matchesRole = !roleFilter || userRole === roleFilter;
         
         // Status filter
         const userStatus = (user.status || 'active').toLowerCase();
@@ -2845,7 +2872,7 @@ function addUserToTable(user) {
             </div>
         </td>
         <td class="px-3 py-2 text-xs text-gray-500">${user.email}</td>
-        <td class="px-3 py-2 text-xs">${user.role}</td>
+        <td class="px-3 py-2 text-xs">${user.role === 'LaboratoryStaff' ? 'Laboratory Staff' : user.role}</td>
         <td class="px-3 py-2">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusClass}">
                 ${user.status}
