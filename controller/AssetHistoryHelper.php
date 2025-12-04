@@ -86,6 +86,38 @@ class AssetHistoryHelper {
     }
     
     /**
+     * Log asset room change (including building info)
+     */
+    public function logRoomChange($asset_id, $old_room, $new_room, $performed_by = null) {
+        $description = "Room changed from $old_room to $new_room";
+        return $this->assetHistory->logHistory(
+            $asset_id,
+            'Room Changed',
+            'room_id',
+            $old_room,
+            $new_room,
+            $description,
+            $performed_by
+        );
+    }
+    
+    /**
+     * Log asset building change
+     */
+    public function logBuildingChange($asset_id, $old_building, $new_building, $performed_by = null) {
+        $description = "Building changed from $old_building to $new_building";
+        return $this->assetHistory->logHistory(
+            $asset_id,
+            'Building Changed',
+            'building',
+            $old_building,
+            $new_building,
+            $description,
+            $performed_by
+        );
+    }
+    
+    /**
      * Log asset assignment
      */
     public function logAssignment($asset_id, $assigned_to_name, $performed_by = null) {

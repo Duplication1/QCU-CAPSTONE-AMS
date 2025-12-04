@@ -39,6 +39,23 @@ $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();
 
+// Log the issue submission
+if ($id > 0) {
+    try {
+        require_once __DIR__ . '/../model/ActivityLog.php';
+        require_once __DIR__ . '/../model/Database.php';
+        ActivityLog::record(
+            $user_id,
+            'create',
+            'ticket',
+            $id,
+            "Submitted {$category} ticket: {$title}"
+        );
+    } catch (Exception $logError) {
+        error_log('Failed to log issue submission: ' . $logError->getMessage());
+    }
+}
+
 // Create notification for successful submission
 if ($id > 0) {
     try {

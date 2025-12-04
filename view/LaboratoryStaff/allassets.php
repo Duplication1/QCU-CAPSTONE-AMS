@@ -722,6 +722,326 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'bulk_update') {
+        error_log("=== BULK UPDATE STARTED ===");
+        error_log("POST data: " . print_r($_POST, true));
+        
+        require_once '../../model/ActivityLog.php';
+        
+        $asset_ids = json_decode($_POST['asset_ids'] ?? '[]', true);
+        error_log("Asset IDs: " . print_r($asset_ids, true));
+        
+        if (empty($asset_ids) || !is_array($asset_ids)) {
+            error_log("ERROR: No assets selected or invalid format");
+            echo json_encode(['success' => false, 'message' => 'No assets selected']);
+            exit;
+        }
+        
+        // Get fields to update (only if provided)
+        $updates = [];
+        $params = [];
+        $types = '';
+        $changed_fields = [];
+        
+        if (isset($_POST['asset_name']) && $_POST['asset_name'] !== '') {
+            $updates[] = 'asset_name = ?';
+            $params[] = trim($_POST['asset_name']);
+            $types .= 's';
+            $changed_fields['asset_name'] = trim($_POST['asset_name']);
+        }
+        
+        if (isset($_POST['asset_type']) && $_POST['asset_type'] !== '') {
+            $updates[] = 'asset_type = ?';
+            $params[] = trim($_POST['asset_type']);
+            $types .= 's';
+            $changed_fields['asset_type'] = trim($_POST['asset_type']);
+        }
+        
+        if (isset($_POST['room_id']) && $_POST['room_id'] !== '') {
+            $updates[] = 'room_id = ?';
+            $new_room_id = $_POST['room_id'] === '0' ? null : intval($_POST['room_id']);
+            $params[] = $new_room_id;
+            $types .= 'i';
+            $changed_fields['room_id'] = $new_room_id;
+        }
+        
+        if (isset($_POST['status']) && $_POST['status'] !== '') {
+            $updates[] = 'status = ?';
+            $params[] = trim($_POST['status']);
+            $types .= 's';
+            $changed_fields['status'] = trim($_POST['status']);
+        }
+        
+        if (isset($_POST['condition']) && $_POST['condition'] !== '') {
+            $updates[] = '`condition` = ?';
+            $params[] = trim($_POST['condition']);
+            $types .= 's';
+            $changed_fields['condition'] = trim($_POST['condition']);
+        }
+        
+        if (isset($_POST['is_borrowable']) && $_POST['is_borrowable'] !== '') {
+            $updates[] = 'is_borrowable = ?';
+            $params[] = intval($_POST['is_borrowable']);
+            $types .= 'i';
+            $changed_fields['is_borrowable'] = intval($_POST['is_borrowable']);
+        }
+        
+        if (empty($updates)) {
+            error_log("ERROR: No fields to update");
+            echo json_encode(['success' => false, 'message' => 'No fields to update']);
+            exit;
+        }
+        
+        error_log("Updates to apply: " . print_r($updates, true));
+        error_log("Parameters: " . print_r($params, true));
+        error_log("Changed fields: " . print_r($changed_fields, true));
+        
+        try {
+            error_log("Starting database transaction");
+            $conn->begin_transaction();
+            
+            // Fetch old values for each asset before updating
+            $placeholders_select = implode(',', array_fill(0, count($asset_ids), '?'));
+            $select_sql = "SELECT id, asset_tag, asset_name, asset_type, room_id, status, `condition`, is_borrowable FROM assets WHERE id IN ($placeholders_select)";
+            error_log("Select SQL: " . $select_sql);
+            
+            $select_stmt = $conn->prepare($select_sql);
+            if (!$select_stmt) {
+                throw new Exception("Prepare failed for SELECT: " . $conn->error);
+            }
+            
+            $select_types = str_repeat('i', count($asset_ids));
+            $select_stmt->bind_param($select_types, ...$asset_ids);
+            $select_stmt->execute();
+            $result = $select_stmt->get_result();
+            $old_values = [];
+            while ($row = $result->fetch_assoc()) {
+                $old_values[$row['id']] = $row;
+            }
+            $select_stmt->close();
+            error_log("Fetched old values for " . count($old_values) . " assets");
+            
+            // Update assets
+            $placeholders = implode(',', array_fill(0, count($asset_ids), '?'));
+            $sql = "UPDATE assets SET " . implode(', ', $updates) . " WHERE id IN ($placeholders)";
+            error_log("Update SQL: " . $sql);
+            
+            // Add asset_ids to params
+            foreach ($asset_ids as $id) {
+                $params[] = intval($id);
+                $types .= 'i';
+            }
+            
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                throw new Exception("Prepare failed for UPDATE: " . $conn->error);
+            }
+            
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            if (!$success) {
+                throw new Exception("Execute failed for UPDATE: " . $stmt->error);
+            }
+            
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            error_log("Updated $affected assets");
+            
+            // Regenerate asset tags if asset_name or room_id changed
+            if (isset($changed_fields['asset_name']) || isset($changed_fields['room_id'])) {
+                error_log("Asset name or room changed, regenerating asset tags");
+                
+                foreach ($old_values as $asset_id => $old_data) {
+                    // Get the current values (after update)
+                    $current_asset_name = isset($changed_fields['asset_name']) ? $changed_fields['asset_name'] : $old_data['asset_name'];
+                    $current_room_id = isset($changed_fields['room_id']) ? $changed_fields['room_id'] : $old_data['room_id'];
+                    
+                    // Parse the old asset tag to extract date and number
+                    $old_tag_parts = explode('-', $old_data['asset_tag']);
+                    $acquisition_date = (count($old_tag_parts) >= 3) ? "{$old_tag_parts[0]}-{$old_tag_parts[1]}-{$old_tag_parts[2]}" : date('m-d-Y');
+                    
+                    // Extract the sequential number from the old tag (last part)
+                    $sequential_number = '001';
+                    if (count($old_tag_parts) > 0) {
+                        $last_part = end($old_tag_parts);
+                        if (preg_match('/(\d{3})$/', $last_part, $matches)) {
+                            $sequential_number = $matches[1];
+                        }
+                    }
+                    
+                    // Get room number
+                    $room_number = 'NOROOM';
+                    if ($current_room_id) {
+                        $room_stmt = $conn->prepare("SELECT r.name FROM rooms r WHERE r.id = ?");
+                        $room_stmt->bind_param('i', $current_room_id);
+                        $room_stmt->execute();
+                        $room_result = $room_stmt->get_result();
+                        if ($room_row = $room_result->fetch_assoc()) {
+                            $room_name = $room_row['name'];
+                            $room_match = preg_match('/([A-Z0-9]+)/', $room_name, $room_matches);
+                            if ($room_match) {
+                                $room_number = $room_matches[1];
+                            } else {
+                                $room_number = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $room_name), 0, 6));
+                            }
+                        }
+                        $room_stmt->close();
+                    }
+                    
+                    // Create asset name prefix
+                    $asset_name_prefix = substr($current_asset_name, 0, min(10, strlen($current_asset_name)));
+                    $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+                    
+                    // Generate new asset tag
+                    $new_asset_tag = "{$acquisition_date}-{$asset_name_prefix}-{$room_number}-{$sequential_number}";
+                    
+                    // Update the asset tag
+                    $tag_update_stmt = $conn->prepare("UPDATE assets SET asset_tag = ? WHERE id = ?");
+                    $tag_update_stmt->bind_param('si', $new_asset_tag, $asset_id);
+                    $tag_update_stmt->execute();
+                    $tag_update_stmt->close();
+                    
+                    error_log("Updated asset tag for asset $asset_id: {$old_data['asset_tag']} -> $new_asset_tag");
+                }
+            }
+            
+            if ($success && $affected > 0) {
+                $user_id = $_SESSION['user_id'];
+                error_log("Logging to activity_logs for user: " . $user_id);
+                
+                // Log to activity_logs
+                try {
+                    $fields_changed = implode(', ', array_keys($changed_fields));
+                    ActivityLog::record(
+                        $user_id,
+                        'update',
+                        'asset',
+                        "Bulk updated {$affected} assets: {$fields_changed}"
+                    );
+                } catch (Exception $e) {
+                    error_log("Failed to log bulk update to activity_logs: " . $e->getMessage());
+                }
+                
+                // Log to asset_history for each asset (within the same transaction)
+                $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+                $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+                
+                // Get user's full name
+                $performed_by_name = null;
+                $user_query = $conn->prepare("SELECT full_name FROM users WHERE id = ?");
+                $user_query->bind_param('i', $user_id);
+                $user_query->execute();
+                $user_result = $user_query->get_result();
+                if ($user_row = $user_result->fetch_assoc()) {
+                    $performed_by_name = $user_row['full_name'];
+                }
+                $user_query->close();
+                
+                foreach ($old_values as $asset_id => $old_data) {
+                    try {
+                        // Get room name if room changed
+                        if (isset($changed_fields['room_id'])) {
+                            $old_room_id = $old_data['room_id'];
+                            $new_room_id = $changed_fields['room_id'];
+                            
+                            if ($old_room_id != $new_room_id) {
+                                // Get room names
+                                $old_room_name = 'No Room';
+                                $new_room_name = 'No Room';
+                                
+                                if ($old_room_id) {
+                                    $room_stmt = $conn->prepare("SELECT r.name, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id WHERE r.id = ?");
+                                    $room_stmt->bind_param('i', $old_room_id);
+                                    $room_stmt->execute();
+                                    $room_result = $room_stmt->get_result();
+                                    if ($room_row = $room_result->fetch_assoc()) {
+                                        $old_room_name = $room_row['name'] . ' (' . $room_row['building_name'] . ')';
+                                    }
+                                    $room_stmt->close();
+                                }
+                                
+                                if ($new_room_id) {
+                                    $room_stmt = $conn->prepare("SELECT r.name, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id WHERE r.id = ?");
+                                    $room_stmt->bind_param('i', $new_room_id);
+                                    $room_stmt->execute();
+                                    $room_result = $room_stmt->get_result();
+                                    if ($room_row = $room_result->fetch_assoc()) {
+                                        $new_room_name = $room_row['name'] . ' (' . $room_row['building_name'] . ')';
+                                    }
+                                    $room_stmt->close();
+                                }
+                                
+                                // Insert room change history
+                                $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $action_type = 'Location Changed';
+                                $field_changed = 'Room';
+                                $description = "Room changed from {$old_room_name} to {$new_room_name}";
+                                $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_changed, $old_room_name, $new_room_name, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                                $history_stmt->execute();
+                                $history_stmt->close();
+                            }
+                        }
+                        
+                        // Log status change
+                        if (isset($changed_fields['status']) && $old_data['status'] != $changed_fields['status']) {
+                            $old_status = $old_data['status'];
+                            $new_status = $changed_fields['status'];
+                            $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $action_type = 'Status Changed';
+                            $field_changed = 'Status';
+                            $description = "Status changed from {$old_status} to {$new_status}";
+                            $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_changed, $old_status, $new_status, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                            $history_stmt->execute();
+                            $history_stmt->close();
+                        }
+                        
+                        // Log condition change
+                        if (isset($changed_fields['condition']) && $old_data['condition'] != $changed_fields['condition']) {
+                            $old_condition = $old_data['condition'];
+                            $new_condition = $changed_fields['condition'];
+                            $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $action_type = 'Condition Changed';
+                            $field_changed = 'Condition';
+                            $description = "Condition changed from {$old_condition} to {$new_condition}";
+                            $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_changed, $old_condition, $new_condition, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                            $history_stmt->execute();
+                            $history_stmt->close();
+                        }
+                        
+                        // Log field updates (asset_name, asset_type, is_borrowable)
+                        foreach (['asset_name', 'asset_type', 'is_borrowable'] as $field) {
+                            if (isset($changed_fields[$field]) && $old_data[$field] != $changed_fields[$field]) {
+                                $field_label = str_replace('_', ' ', ucwords(str_replace('_', ' ', $field)));
+                                $old_display = $field === 'is_borrowable' ? ($old_data[$field] ? 'Yes' : 'No') : $old_data[$field];
+                                $new_display = $field === 'is_borrowable' ? ($changed_fields[$field] ? 'Yes' : 'No') : $changed_fields[$field];
+                                $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $action_type = 'Updated';
+                                $description = "{$field_label} changed from {$old_display} to {$new_display}";
+                                $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_label, $old_display, $new_display, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                                $history_stmt->execute();
+                                $history_stmt->close();
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log("Failed to log asset history for asset {$asset_id}: " . $e->getMessage());
+                    }
+                }
+                
+                $conn->commit();
+                echo json_encode(['success' => true, 'message' => "Successfully updated {$affected} asset(s)"]);
+            } else {
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => 'No assets were updated']);
+            }
+        } catch (Exception $e) {
+            if ($conn) {
+                $conn->rollback();
+            }
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -963,6 +1283,14 @@ main {
                 <span class="text-sm text-gray-600">
                     <span id="selectedCount">0</span> selected
                 </span>
+                <button onclick="openBulkEditModal()" 
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-edit mr-2"></i>Edit Selected
+                </button>
+                <button onclick="editSelectedAssetTags()" 
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-tag mr-2"></i>Edit Asset Tags
+                </button>
                 <button onclick="printSelectedQRCodes()" 
                         class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors">
                     <i class="fa-solid fa-qrcode mr-2"></i>Print QR Codes
@@ -1815,6 +2143,143 @@ main {
     </div>
 </div>
 
+<!-- Bulk Edit Modal -->
+<div id="bulkEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white flex items-center justify-between">
+                <span><i class="fa-solid fa-edit mr-2"></i>Bulk Edit Assets</span>
+                <button onclick="closeBulkEditModal()" class="text-white hover:text-gray-200">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </h3>
+        </div>
+        <form id="bulkEditForm" class="p-6">
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    <span id="bulkEditCount">0</span> asset(s) selected. Only fill in the fields you want to update. Empty fields will remain unchanged.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Asset Name (Category) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Name (Category)
+                    </label>
+                    <div class="searchable-dropdown relative">
+                        <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors flex items-center justify-between bg-white">
+                            <span class="selected-text text-gray-400">Keep current values</span>
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <select id="bulkEditAssetName" name="asset_name" class="hidden">
+                            <option value="">Keep current values</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white border-b border-gray-200 p-2">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Search categories...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="">
+                                <em class="text-gray-400">Keep current values</em>
+                            </div>
+                            <?php foreach ($categories as $cat): ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="<?php echo htmlspecialchars($cat['name']); ?>">
+                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Type -->
+                <div>
+                    <label for="bulkEditAssetType" class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Type
+                    </label>
+                    <select id="bulkEditAssetType" name="asset_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Equipment">Equipment</option>
+                    </select>
+                </div>
+
+                <!-- Room -->
+                <div>
+                    <label for="bulkEditRoomId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Room
+                    </label>
+                    <select id="bulkEditRoomId" name="room_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="0">No Room</option>
+                        <?php foreach ($rooms as $room): ?>
+                            <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="bulkEditStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    <select id="bulkEditStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Under Maintenance">Under Maintenance</option>
+                        <option value="Damaged">Damaged</option>
+                        <option value="For Repair">For Repair</option>
+                    </select>
+                </div>
+
+                <!-- Condition -->
+                <div>
+                    <label for="bulkEditCondition" class="block text-sm font-medium text-gray-700 mb-2">
+                        Condition
+                    </label>
+                    <select id="bulkEditCondition" name="condition" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+
+                <!-- Borrowable -->
+                <div>
+                    <label for="bulkEditIsBorrowable" class="block text-sm font-medium text-gray-700 mb-2">
+                        Borrowable Status
+                    </label>
+                    <select id="bulkEditIsBorrowable" name="is_borrowable" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="1">Borrowable</option>
+                        <option value="0">Not Borrowable</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeBulkEditModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="bulkEditBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-save mr-2"></i>Update Selected Assets
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 @media print {
     body * {
@@ -2043,6 +2508,21 @@ async function bulkArchive() {
     
     // Store asset IDs for later use
     window.bulkArchiveAssetIds = assetIds;
+}
+
+// Edit selected asset tags
+function editSelectedAssetTags() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit asset tags');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    
+    // Redirect to edit asset tags page with selected IDs
+    const idsParam = assetIds.join(',');
+    window.location.href = 'edit_asset_tag_all_assets.php?asset_ids=' + idsParam;
 }
 
 // Modal functions
@@ -3217,8 +3697,13 @@ function filterDropdownOptions(optionsContainer, searchTerm) {
 // Update searchable dropdown display
 function updateSearchableDropdownDisplay(selectId, value) {
     const select = document.getElementById(selectId);
-    const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+    if (!select) return;
+    
+    const dropdown = select.parentElement ? select.parentElement.querySelector('.searchable-dropdown') : null;
+    if (!dropdown) return;
+    
     const selectedText = dropdown.querySelector('.selected-text');
+    if (!selectedText) return;
     
     if (value) {
         selectedText.textContent = value;
@@ -3457,5 +3942,156 @@ async function addNewCategory() {
         }
     }
 }
+
+// Bulk Edit Functions
+function openBulkEditModal() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit');
+        return;
+    }
+    
+    document.getElementById('bulkEditCount').textContent = selectedCheckboxes.length;
+    document.getElementById('bulkEditModal').classList.remove('hidden');
+    
+    // Initialize bulk edit dropdowns if needed
+    initializeBulkEditDropdowns();
+}
+
+function closeBulkEditModal() {
+    document.getElementById('bulkEditModal').classList.add('hidden');
+    document.getElementById('bulkEditForm').reset();
+}
+
+// Initialize bulk edit dropdowns
+function initializeBulkEditDropdowns() {
+    // Reset the asset name dropdown if it exists
+    const bulkEditAssetName = document.getElementById('bulkEditAssetName');
+    if (bulkEditAssetName) {
+        bulkEditAssetName.value = '';
+        const dropdown = bulkEditAssetName.parentElement ? bulkEditAssetName.parentElement.querySelector('.searchable-dropdown') : null;
+        if (dropdown) {
+            const selectedText = dropdown.querySelector('.selected-text');
+            if (selectedText) {
+                selectedText.textContent = 'Select Category';
+                selectedText.className = 'selected-text text-gray-500';
+            }
+        }
+    }
+}
+
+// Bulk Edit Form Submit
+document.getElementById('bulkEditForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    console.log('=== BULK EDIT SUBMIT STARTED ===');
+    
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    console.log('Selected checkboxes:', selectedCheckboxes.length);
+    
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'No assets selected');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    console.log('Asset IDs:', assetIds);
+    
+    const formData = new URLSearchParams();
+    formData.append('ajax', '1');
+    formData.append('action', 'bulk_update');
+    formData.append('asset_ids', JSON.stringify(assetIds));
+    
+    // Only append fields that have values (not empty)
+    const assetName = document.getElementById('bulkEditAssetName').value;
+    console.log('Asset Name:', assetName);
+    if (assetName) formData.append('asset_name', assetName);
+    
+    const assetType = document.getElementById('bulkEditAssetType').value;
+    console.log('Asset Type:', assetType);
+    if (assetType) formData.append('asset_type', assetType);
+    
+    const roomId = document.getElementById('bulkEditRoomId').value;
+    console.log('Room ID:', roomId);
+    if (roomId !== '') formData.append('room_id', roomId);
+    
+    const status = document.getElementById('bulkEditStatus').value;
+    console.log('Status:', status);
+    if (status) formData.append('status', status);
+    
+    const condition = document.getElementById('bulkEditCondition').value;
+    console.log('Condition:', condition);
+    if (condition) formData.append('condition', condition);
+    
+    const isBorrowable = document.getElementById('bulkEditIsBorrowable').value;
+    console.log('Is Borrowable:', isBorrowable);
+    if (isBorrowable !== '') formData.append('is_borrowable', isBorrowable);
+    
+    console.log('FormData to send:', Object.fromEntries(formData));
+    
+    try {
+        const submitBtn = document.getElementById('bulkEditBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Updating...';
+        
+        console.log('Sending request to:', location.href);
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Get the raw text first to see what we're getting
+        const rawText = await response.text();
+        console.log('Raw response text:', rawText);
+        
+        // Try to parse as JSON
+        let result;
+        try {
+            result = JSON.parse(rawText);
+            console.log('Parsed JSON result:', result);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.error('Failed to parse response:', rawText.substring(0, 500));
+            showAlert('error', 'Server returned invalid response. Check console for details.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Update Selected Assets';
+            return;
+        }
+        
+        if (result.success) {
+            console.log('Success! Message:', result.message);
+            showAlert('success', result.message);
+            closeBulkEditModal();
+            clearSelection();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            console.error('Update failed:', result.message);
+            showAlert('error', result.message || 'Failed to update assets');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Update Selected Assets';
+        }
+    } catch (error) {
+        console.error('=== BULK EDIT ERROR ===');
+        console.error('Error type:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        showAlert('error', 'An error occurred: ' + error.message);
+        const submitBtn = document.getElementById('bulkEditBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Update Selected Assets';
+        }
+    }
+});
+
+// Close bulk edit modal when clicking outside
+document.getElementById('bulkEditModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkEditModal();
+    }
+});
 </script>
 <?php include '../components/layout_footer.php'; ?>

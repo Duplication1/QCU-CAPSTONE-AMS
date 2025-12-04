@@ -228,7 +228,7 @@ tbody tr {
         <!-- Tab Navigation -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
             <div class="grid grid-cols-4 border-b border-gray-200">
-                <a href="roomassets.php?room_id=<?php echo $room_id; ?>" 
+                <a href="pcunits.php?room_id=<?php echo $room_id; ?>" 
                    class="px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center">
                     <i class="fa-solid fa-desktop mr-2"></i>PC Units
                     <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-500 text-white rounded-full"><?php echo $total_pc_units; ?></span>

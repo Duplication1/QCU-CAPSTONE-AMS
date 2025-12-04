@@ -43,6 +43,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($borrowing->create()) {
             $_SESSION['success_message'] = "Borrowing request submitted successfully! Awaiting approval.";
+            
+            // Log the borrowing request
+            try {
+                require_once '../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'create',
+                    'borrowing',
+                    null,
+                    "Submitted borrowing request for asset ID: {$asset_id}"
+                );
+            } catch (Exception $logError) {
+                error_log('Failed to log borrowing request: ' . $logError->getMessage());
+            }
         } else {
             $_SESSION['error_message'] = "Failed to submit borrowing request.";
         }

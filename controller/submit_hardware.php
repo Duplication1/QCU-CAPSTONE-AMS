@@ -79,6 +79,21 @@ if ($stmt->execute()) {
     $_SESSION['success_message'] = 'Hardware issue submitted successfully!';
     error_log('Hardware issue submitted: ID=' . $ticketId);
     
+    // Log the issue submission
+    try {
+        require_once '../model/ActivityLog.php';
+        require_once '../model/Database.php';
+        ActivityLog::record(
+            $userId,
+            'create',
+            'ticket',
+            $ticketId,
+            "Submitted hardware ticket: {$titleWithComponent}"
+        );
+    } catch (Exception $logError) {
+        error_log('Failed to log hardware issue submission: ' . $logError->getMessage());
+    }
+    
     // Notify all Laboratory Staff
     try {
         // Create notifications table if it doesn't exist

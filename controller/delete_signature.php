@@ -38,6 +38,20 @@ try {
         $stmt = $conn->prepare("UPDATE users SET e_signature = NULL WHERE id = ?");
         $stmt->execute([$user_id]);
         
+        // Log the signature deletion
+        try {
+            require_once '../model/ActivityLog.php';
+            ActivityLog::record(
+                $user_id,
+                'delete',
+                'signature',
+                $user_id,
+                'Deleted e-signature'
+            );
+        } catch (Exception $logError) {
+            error_log('Failed to log signature deletion: ' . $logError->getMessage());
+        }
+        
         $_SESSION['success_message'] = "E-signature removed successfully.";
     } else {
         $_SESSION['error_message'] = "No signature found to remove.";

@@ -67,8 +67,24 @@ if (!$stmt) {
 $stmt->bind_param('isssssssss', $userId, $requesterName, $room, $terminal, $titleWithSoftware, $description, $priority, $issueType, $requesterName, $status);
 
 if ($stmt->execute()) {
+    $ticketId = $stmt->insert_id;
     $_SESSION['success_message'] = 'Software issue submitted successfully!';
-    error_log('Software issue submitted: ID=' . $stmt->insert_id);
+    error_log('Software issue submitted: ID=' . $ticketId);
+    
+    // Log the issue submission
+    try {
+        require_once '../model/ActivityLog.php';
+        require_once '../model/Database.php';
+        ActivityLog::record(
+            $userId,
+            'create',
+            'ticket',
+            $ticketId,
+            "Submitted software ticket: {$titleWithSoftware}"
+        );
+    } catch (Exception $logError) {
+        error_log('Failed to log software issue submission: ' . $logError->getMessage());
+    }
 } else {
     error_log('Execute failed: ' . $stmt->error);
     $_SESSION['error_message'] = 'Failed to submit: ' . $stmt->error;

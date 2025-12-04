@@ -77,6 +77,21 @@ if ($stmt->execute()) {
     $_SESSION['success_message'] = 'Network issue submitted successfully!';
     error_log('Network issue submitted: ID=' . $ticketId);
     
+    // Log the issue submission
+    try {
+        require_once '../model/ActivityLog.php';
+        require_once '../model/Database.php';
+        ActivityLog::record(
+            $userId,
+            'create',
+            'ticket',
+            $ticketId,
+            "Submitted network ticket: {$titleWithType}"
+        );
+    } catch (Exception $logError) {
+        error_log('Failed to log network issue submission: ' . $logError->getMessage());
+    }
+    
     // Notify all Laboratory Staff
     try {
         // Create notifications table if it doesn't exist

@@ -4,6 +4,8 @@
  * Handles activity logging for the system
  */
 
+require_once __DIR__ . '/Database.php';
+
 class ActivityLog {
     private $conn;
     private $table_name = "activity_logs";

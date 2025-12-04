@@ -808,6 +808,192 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'import_room_assets_rows') {
+        $headers = json_decode($_POST['headers'] ?? '[]', true);
+        $rows = json_decode($_POST['rows'] ?? '[]', true);
+        
+        if (empty($headers) || empty($rows)) {
+            echo json_encode(['success' => false, 'message' => 'No data to import']);
+            exit;
+        }
+        
+        // Since sheet_to_json returns objects, rows are associative arrays with column names as keys
+        // Headers contains the column names
+        error_log("Import Headers: " . print_r($headers, true));
+        error_log("Total Rows: " . count($rows));
+        error_log("First Row Sample: " . print_r($rows[0] ?? [], true));
+        
+        // Map headers to expected column names (case-insensitive)
+        $header_map = [];
+        $expected_headers = ['ASSET TAG', 'NAME', 'TYPE', 'BRAND', 'MODEL', 'SERIAL NUMBER', 'ROOM', 'STATUS', 'CONDITION'];
+        
+        // Build case-insensitive mapping from actual headers to normalized names
+        foreach ($headers as $header) {
+            $header_upper = strtoupper(trim($header));
+            if (in_array($header_upper, $expected_headers)) {
+                $header_map[$header] = $header_upper; // Map actual header name to normalized name
+            }
+        }
+        
+        error_log("Header Map: " . print_r($header_map, true));
+        
+        // Verify all required columns are present
+        $missing = [];
+        foreach ($expected_headers as $expected) {
+            $found = false;
+            foreach ($header_map as $normalized) {
+                if ($normalized === $expected) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $missing[] = $expected;
+            }
+        }
+        
+        if (!empty($missing)) {
+            echo json_encode(['success' => false, 'message' => 'Missing columns: ' . implode(', ', $missing)]);
+            exit;
+        }
+        
+        try {
+            $created_by = $_SESSION['user_id'];
+            $created_count = 0;
+            $failed = [];
+            $created_asset_ids = [];
+            
+            foreach ($rows as $row_idx => $row) {
+                error_log("Processing Row " . ($row_idx + 1) . ": " . print_r($row, true));
+                
+                // Find the actual header names for each field (case-insensitive)
+                $asset_tag = '';
+                $asset_name = '';
+                $asset_type = 'Hardware';
+                $brand = '';
+                $model = '';
+                $serial_number = '';
+                $room_name = '';
+                $status = 'Available';
+                $condition = 'Good';
+                
+                // Extract values from row using actual header names
+                foreach ($row as $col_name => $col_value) {
+                    $col_upper = strtoupper(trim($col_name));
+                    switch ($col_upper) {
+                        case 'ASSET TAG':
+                            $asset_tag = trim($col_value);
+                            break;
+                        case 'NAME':
+                            $asset_name = trim($col_value);
+                            break;
+                        case 'TYPE':
+                            $asset_type = trim($col_value) ?: 'Hardware';
+                            break;
+                        case 'BRAND':
+                            $brand = trim($col_value);
+                            break;
+                        case 'MODEL':
+                            $model = trim($col_value);
+                            break;
+                        case 'SERIAL NUMBER':
+                            $serial_number = trim($col_value);
+                            break;
+                        case 'ROOM':
+                            $room_name = trim($col_value);
+                            break;
+                        case 'STATUS':
+                            $status = trim($col_value) ?: 'Available';
+                            break;
+                        case 'CONDITION':
+                            $condition = trim($col_value) ?: 'Good';
+                            break;
+                    }
+                }
+                
+                error_log("Extracted - Tag: '$asset_tag', Name: '$asset_name'");
+                
+                // Skip empty rows
+                if (empty($asset_tag) && empty($asset_name)) {
+                    error_log("Skipping empty row");
+                    continue;
+                }
+                
+                if (empty($asset_tag) || empty($asset_name)) {
+                    $failed[] = "Row " . ($row_idx + 2) . ": Missing asset tag or name";
+                    error_log("Failed validation - missing tag or name");
+                    continue;
+                }
+                
+                // Check if asset tag already exists
+                $check = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                $check->bind_param('s', $asset_tag);
+                $check->execute();
+                $check->store_result();
+                
+                if ($check->num_rows > 0) {
+                    $failed[] = "Row " . ($row_idx + 2) . ": Asset tag '{$asset_tag}' already exists";
+                    $check->close();
+                    continue;
+                }
+                $check->close();
+                
+                // Lookup category ID from asset name
+                $category_id = null;
+                if (!empty($asset_name)) {
+                    $category_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+                    $category_stmt->bind_param('s', $asset_name);
+                    $category_stmt->execute();
+                    $category_result = $category_stmt->get_result();
+                    if ($category_result->num_rows > 0) {
+                        $category_id = $category_result->fetch_assoc()['id'];
+                    }
+                    $category_stmt->close();
+                }
+                
+                // Generate QR code
+                $qr_data = json_encode([
+                    'asset_tag' => $asset_tag,
+                    'asset_name' => $asset_name,
+                    'asset_type' => $asset_type,
+                    'room_id' => $room_id,
+                    'room_name' => $room['name'],
+                    'brand' => $brand,
+                    'model' => $model
+                ]);
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
+                
+                // Insert asset
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('ssssssssssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
+                
+                if ($stmt->execute()) {
+                    $created_count++;
+                    $created_asset_ids[] = $conn->insert_id;
+                } else {
+                    $failed[] = "Row " . ($row_idx + 2) . ": Failed to insert '{$asset_tag}'";
+                }
+                $stmt->close();
+            }
+            
+            $message = "Successfully imported {$created_count} asset(s)";
+            if (!empty($failed)) {
+                $message .= ". Failed: " . implode(', ', $failed);
+            }
+            
+            echo json_encode([
+                'success' => $created_count > 0,
+                'message' => $message,
+                'created' => $created_count,
+                'failed' => count($failed),
+                'asset_ids' => $created_asset_ids
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
 
 // Fetch assets with search, filter, and pagination
@@ -1268,6 +1454,14 @@ main {
                     <p class="text-xs text-gray-500 mt-1">Automatically generated based on asset name and room</p>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Acquisition Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="acquisitionDate" name="acquisition_date" 
+                           value="<?php echo date('Y-m-d'); ?>"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
                     <div class="searchable-dropdown relative">
                         <div class="dropdown-display flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors">
@@ -1359,7 +1553,24 @@ main {
                         <div class="text-sm text-green-900">
                             <p class="font-medium mb-1">Bulk Asset Creation</p>
                             <p>Create multiple assets with sequential numbering and unique QR codes.</p>
-                            <p class="mt-1 text-xs">Example: 11-23-2025-LAPTOP-IK501-001 through 11-23-2025-LAPTOP-IK501-020</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag Preview</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">First Asset</label>
+                            <input type="text" id="firstAssetTagPreview" readonly
+                                   class="w-full px-3 py-2 bg-white border border-blue-300 rounded text-sm font-mono text-gray-700"
+                                   value="--">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Last Asset</label>
+                            <input type="text" id="lastAssetTagPreview" readonly
+                                   class="w-full px-3 py-2 bg-white border border-blue-300 rounded text-sm font-mono text-gray-700"
+                                   value="--">
                         </div>
                     </div>
                 </div>
@@ -1417,29 +1628,21 @@ main {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Starting Number <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" id="bulkStartNumber" name="bulk_start_number" 
-                               min="1" value="1" readonly
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <p class="text-xs text-gray-500 mt-1">Automatically calculated based on existing assets</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
-                        <select id="bulkAssetType" name="bulk_asset_type" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="Hardware">Hardware</option>
-                            <option value="Software">Software</option>
-                            <option value="Furniture">Furniture</option>
-                            <option value="Equipment">Equipment</option>
-                            <option value="Peripheral">Peripheral</option>
-                            <option value="Network Device">Network Device</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
+                <!-- Hidden field for starting number (auto-calculated) -->
+                <input type="hidden" id="bulkStartNumber" name="bulk_start_number" value="1">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
+                    <select id="bulkAssetType" name="bulk_asset_type" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Peripheral">Peripheral</option>
+                        <option value="Network Device">Network Device</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -1495,10 +1698,6 @@ main {
                     </div>
                 </div>
 
-                <div class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-3">
-                    <i class="fa-solid fa-lightbulb mr-1"></i>
-                    <strong>Preview:</strong> <span id="assetTagPreview">11-23-2025-LAPTOP-IK501-001, 11-23-2025-LAPTOP-IK501-002, ...</span>
-                </div>
             </div>
 
             <div class="flex gap-3 justify-end mt-6">
@@ -1691,6 +1890,36 @@ main {
                 </button>
                 <button type="button" onclick="addNewCategory()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Room Assets Modal -->
+<div id="importRoomAssetsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Import Room Assets</h3>
+        </div>
+        <div class="p-6">
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-3">Upload an Excel file (.xlsx, .xls, .csv) with the following columns:</p>
+                <div class="bg-gray-50 p-3 rounded border border-gray-200 text-xs font-mono">
+                    <div class="font-semibold text-gray-700 mb-1">Required Columns:</div>
+                    <div class="text-gray-600">ASSET TAG, NAME, TYPE, BRAND, MODEL, SERIAL NUMBER, ROOM, STATUS, CONDITION</div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Choose File</label>
+                <input type="file" id="importRoomAssetsFile" accept=".xlsx,.xls,.csv" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeImportRoomAssetsModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="processImportRoomAssets()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-upload mr-2"></i>Import Assets
                 </button>
             </div>
         </div>
@@ -1950,7 +2179,7 @@ async function updateBulkStartNumber() {
         
         if (result.success) {
             startNumberField.value = result.next_number;
-            updateAssetTagPreview();
+            updateBulkAssetTagPreview();
         }
     } catch (error) {
         console.error('Error updating start number:', error);
@@ -1996,6 +2225,7 @@ function toggleAssetBulkMode() {
 async function generateAssetTag() {
     const assetName = document.getElementById('assetName')?.value?.trim();
     const assetTagField = document.getElementById('assetTag');
+    const acquisitionDateField = document.getElementById('acquisitionDate');
     
     if (!assetName || !assetTagField) {
         if (assetTagField) assetTagField.value = '';
@@ -2015,12 +2245,18 @@ async function generateAssetTag() {
     }
     
     try {
-        // Get current date
-        const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const year = today.getFullYear();
-        const formattedDate = `${month}-${day}-${year}`;
+        // Get acquisition date from form or use today's date
+        let formattedDate;
+        if (acquisitionDateField && acquisitionDateField.value) {
+            const dateParts = acquisitionDateField.value.split('-');
+            formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
+        } else {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const year = today.getFullYear();
+            formattedDate = `${month}-${day}-${year}`;
+        }
         
         // Create asset name prefix (first few letters)
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
@@ -2050,42 +2286,47 @@ async function generateAssetTag() {
     } catch (error) {
         console.error('Error generating asset tag:', error);
         // Fallback generation
-        const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const year = today.getFullYear();
-        const formattedDate = `${month}-${day}-${year}`;
+        let formattedDate;
+        if (acquisitionDateField && acquisitionDateField.value) {
+            const dateParts = acquisitionDateField.value.split('-');
+            formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
+        } else {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const year = today.getFullYear();
+            formattedDate = `${month}-${day}-${year}`;
+        }
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\\s+/g, '');
         assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
 
-// Update Asset Tag Preview
+// Update Asset Tag Preview for Bulk Assets
 function updateAssetTagPreview() {
-    const date = document.getElementById('bulkAcquisitionDate')?.value || '2025-11-23';
-    const assetName = document.getElementById('bulkAssetName')?.value || 'LAPTOP';
-    const roomNumber = document.getElementById('bulkRoomNumber')?.value || 'IK501';
+    const date = document.getElementById('bulkAcquisitionDate')?.value;
+    const assetName = document.getElementById('bulkAssetName')?.value;
+    const roomNumber = document.getElementById('bulkRoomNumber')?.value;
     const quantity = parseInt(document.getElementById('bulkQuantity')?.value || 1);
     const startNumber = parseInt(document.getElementById('bulkStartNumber')?.value || 1);
+    
+    const firstPreview = document.getElementById('firstAssetTagPreview');
+    const lastPreview = document.getElementById('lastAssetTagPreview');
+    
+    if (!date || !assetName || !roomNumber || !firstPreview || !lastPreview) {
+        if (firstPreview) firstPreview.value = '--';
+        if (lastPreview) lastPreview.value = '--';
+        return;
+    }
     
     const dateParts = date.split('-');
     const formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
     
-    const preview = document.getElementById('assetTagPreview');
-    if (preview) {
-        if (quantity <= 3) {
-            const tags = [];
-            for (let i = 0; i < quantity; i++) {
-                const num = String(startNumber + i).padStart(3, '0');
-                tags.push(`${formattedDate}-${assetName}-${roomNumber}-${num}`);
-            }
-            preview.textContent = tags.join(', ');
-        } else {
-            const firstNum = String(startNumber).padStart(3, '0');
-            const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
-            preview.textContent = `${formattedDate}-${assetName}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetName}-${roomNumber}-${lastNum}`;
-        }
-    }
+    const firstNum = String(startNumber).padStart(3, '0');
+    const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
+    
+    firstPreview.value = `${formattedDate}-${assetName}-${roomNumber}-${firstNum}`;
+    lastPreview.value = `${formattedDate}-${assetName}-${roomNumber}-${lastNum}`;
 }
 
 // Add event listeners for preview update
@@ -2114,6 +2355,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Initial preview update when page loads
+    setTimeout(() => {
+        updateAssetTagPreview();
+    }, 300);
 });
 
 // Edit Asset
@@ -2362,7 +2608,7 @@ async function processImportRoomAssets() {
         const res = await fetch(location.href, { method: 'POST', body: formData });
         const result = await res.json();
         if (result.success) {
-            showAlert('success', `Imported ${result.created.length} asset(s)`);
+            showAlert('success', result.message || `Imported ${result.created} asset(s)`);
             closeImportRoomAssetsModal();
             setTimeout(() => window.location.reload(), 800);
         } else {
@@ -2592,6 +2838,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Add event listener for acquisition date in single asset mode
+    const acquisitionDateField = document.getElementById('acquisitionDate');
+    if (acquisitionDateField) {
+        acquisitionDateField.addEventListener('change', function() {
+            // Regenerate asset tag when date changes
+            generateAssetTag();
+        });
+    }
     
     // Note: Room is fixed in this view, so no room change listener needed
     // Asset tag will be generated when category is selected

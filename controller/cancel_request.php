@@ -74,6 +74,20 @@ try {
         // Commit transaction
         $conn->commit();
         
+        // Log the cancellation
+        try {
+            require_once '../model/ActivityLog.php';
+            ActivityLog::record(
+                $_SESSION['user_id'],
+                'delete',
+                'borrowing',
+                $request_id,
+                'Cancelled borrowing request'
+            );
+        } catch (Exception $logError) {
+            error_log('Failed to log request cancellation: ' . $logError->getMessage());
+        }
+        
         echo json_encode([
             'success' => true, 
             'message' => 'Request cancelled and removed successfully'

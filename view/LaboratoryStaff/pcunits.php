@@ -47,7 +47,8 @@ if (!$room) {
 $pc_search = isset($_GET['pc_search']) ? trim($_GET['pc_search']) : '';
 $show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] === '1';
 $pc_page = isset($_GET['pc_page']) ? max(1, intval($_GET['pc_page'])) : 1;
-$pc_limit = 6;
+$pc_limit_param = isset($_GET['pc_limit']) ? $_GET['pc_limit'] : '10';
+$pc_limit = ($pc_limit_param === 'all') ? PHP_INT_MAX : intval($pc_limit_param);
 $pc_offset = ($pc_page - 1) * $pc_limit;
 
 // Count total PC units
@@ -445,6 +446,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         exit;
     }
+    
+    if ($action === 'bulk_edit_pc_units') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        $status = trim($_POST['status'] ?? '');
+        $notes = trim($_POST['notes'] ?? '');
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid PC unit IDs']);
+            exit;
+        }
+        
+        if (empty($status) && empty($notes)) {
+            echo json_encode(['success' => false, 'message' => 'Please provide at least one field to update']);
+            exit;
+        }
+        
+        try {
+            $updates = [];
+            $params = [];
+            $types = '';
+            
+            if (!empty($status)) {
+                $updates[] = 'status = ?';
+                $params[] = $status;
+                $types .= 's';
+            }
+            
+            if (!empty($notes)) {
+                $updates[] = 'notes = ?';
+                $params[] = $notes;
+                $types .= 's';
+            }
+            
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $sql = "UPDATE pc_units SET " . implode(', ', $updates) . " WHERE id IN ($placeholders) AND room_id = ?";
+            
+            $params = array_merge($params, $ids, [$room_id]);
+            $types .= str_repeat('i', count($ids)) . 'i';
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($types, ...$params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                // Log activity
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'update',
+                    'pc_unit',
+                    null,
+                    'Bulk updated ' . $affected . ' PC unit(s)'
+                );
+                
+                echo json_encode(['success' => true, 'message' => "$affected PC unit(s) updated successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update PC units']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
 
 // Count archived PC units and assets for tabs
@@ -476,17 +542,15 @@ include '../components/layout_header.php';
 <style>
 html, body {
     height: 100vh;
-    overflow: hidden;
+    overflow: auto;
 }
 #app-container {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 main {
     flex: 1;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     padding: 0.5rem;
@@ -495,7 +559,7 @@ main {
 </style>
 
 <main>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col">
         
         <!-- Breadcrumb -->
         <div class="mb-4">
@@ -555,6 +619,15 @@ main {
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
             <div class="flex gap-3">
                 <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600 whitespace-nowrap">Show:</label>
+                    <select id="pcLimitSelect" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="10" <?php echo $pc_limit_param === '10' ? 'selected' : ''; ?>>10</option>
+                        <option value="25" <?php echo $pc_limit_param === '25' ? 'selected' : ''; ?>>25</option>
+                        <option value="100" <?php echo $pc_limit_param === '100' ? 'selected' : ''; ?>>100</option>
+                        <option value="all" <?php echo $pc_limit_param === 'all' ? 'selected' : ''; ?>>All</option>
+                    </select>
+                </div>
                 <div class="flex-1">
                     <input type="text" id="pcSearchInput" value="<?php echo htmlspecialchars($pc_search); ?>" 
                            placeholder="Search by terminal number..." 
@@ -578,6 +651,9 @@ main {
                 </div>
                 <div class="flex items-center gap-2">
                     <div id="pc-bulk-actions" class="hidden flex items-center gap-2">
+                        <button onclick="openBulkEditModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">
+                            <i class="fa-solid fa-edit mr-1"></i>Edit Selected
+                        </button>
                         <button onclick="bulkArchivePCUnits()" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors">
                             <i class="fa-solid fa-archive mr-1"></i>Archive Selected
                         </button>
@@ -597,6 +673,7 @@ main {
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PC Name</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Tag</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Online</th>
                             <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -605,7 +682,7 @@ main {
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php if (empty($pc_units)): ?>
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                                     <i class="fa-solid fa-desktop text-5xl mb-3 opacity-30"></i>
                                     <p class="text-lg">No PC units found</p>
                                     <?php if (!empty($pc_search)): ?>
@@ -629,6 +706,20 @@ main {
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span class="text-sm text-gray-600"><?php echo htmlspecialchars($pc['asset_tag']); ?></span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <?php
+                                    $status_colors = [
+                                        'Active' => 'bg-green-100 text-green-700',
+                                        'Inactive' => 'bg-gray-100 text-gray-700',
+                                        'Maintenance' => 'bg-yellow-100 text-yellow-700',
+                                        'Archive' => 'bg-red-100 text-red-700'
+                                    ];
+                                    $status_class = $status_colors[$pc['status']] ?? 'bg-gray-100 text-gray-700';
+                                    ?>
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
+                                        <?php echo htmlspecialchars($pc['status']); ?>
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <?php
@@ -816,6 +907,57 @@ main {
     </div>
 </div>
 
+<!-- Bulk Edit Modal -->
+<div id="bulkEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white">Bulk Edit PC Units</h3>
+        </div>
+        <form id="bulkEditForm" class="p-6">
+            <div class="mb-4">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p class="text-sm text-gray-700">
+                        <i class="fa-solid fa-info-circle text-blue-600 mr-1"></i>
+                        Editing <strong id="bulkEditCount">0</strong> PC Unit(s)
+                    </p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Status <span class="text-gray-500 text-xs">(Leave unchanged if empty)</span>
+                    </label>
+                    <select id="bulkEditStatus" name="status" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">-- No Change --</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Notes <span class="text-gray-500 text-xs">(Leave empty to keep existing notes)</span>
+                    </label>
+                    <textarea id="bulkEditNotes" name="notes" rows="4"
+                              placeholder="Enter notes to update all selected PC units..."
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeBulkEditModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="submitBulkEdit()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-save mr-2"></i>Update PC Units
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 // Modal functions
 function openArchiveModal(content, callback) {
@@ -948,6 +1090,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeEditPCUnitModal();
         closeArchiveModal();
+        closeBulkEditModal();
     }
 });
 
@@ -1056,6 +1199,74 @@ if (pcSearchInput) {
             
             window.location.href = url.toString();
         }, 1000); // 1000ms debounce
+    });
+}
+
+// Handle limit select change
+const pcLimitSelect = document.getElementById('pcLimitSelect');
+if (pcLimitSelect) {
+    pcLimitSelect.addEventListener('change', function() {
+        const url = new URL(window.location);
+        url.searchParams.set('pc_limit', this.value);
+        url.searchParams.delete('pc_page'); // Reset to page 1
+        window.location.href = url.toString();
+    });
+}
+
+// Bulk edit functions
+function openBulkEditModal() {
+    const selectedIds = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
+    if (selectedIds.length === 0) return;
+    
+    document.getElementById('bulkEditCount').textContent = selectedIds.length;
+    document.getElementById('bulkEditStatus').value = '';
+    document.getElementById('bulkEditNotes').value = '';
+    document.getElementById('bulkEditModal').classList.remove('hidden');
+}
+
+function closeBulkEditModal() {
+    document.getElementById('bulkEditModal').classList.add('hidden');
+}
+
+function submitBulkEdit() {
+    const selectedIds = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
+    const status = document.getElementById('bulkEditStatus').value;
+    const notes = document.getElementById('bulkEditNotes').value.trim();
+    
+    if (selectedIds.length === 0) {
+        showNotification('error', 'No PC units selected');
+        return;
+    }
+    
+    if (!status && !notes) {
+        showNotification('error', 'Please provide at least one field to update');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('action', 'bulk_edit_pc_units');
+    formData.append('ids', JSON.stringify(selectedIds));
+    if (status) formData.append('status', status);
+    if (notes) formData.append('notes', notes);
+    
+    fetch('', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', data.message);
+            closeBulkEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('error', 'An error occurred while updating PC units');
     });
 }
 

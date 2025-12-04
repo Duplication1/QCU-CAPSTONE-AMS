@@ -120,6 +120,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             exit();
         }
 
+        if ($action === 'get_next_available_asset_tag') {
+            $date = $_POST['date'] ?? date('m-d-Y');
+            $room_name = $_POST['room_name'] ?? '';
+            $start = intval($_POST['start'] ?? 1);
+            
+            $current_number = $start;
+            $max_attempts = 1000;
+            $attempts = 0;
+            
+            while ($attempts < $max_attempts) {
+                $asset_tag = $date . '-' . $room_name . '-TH-' . str_pad($current_number, 3, '0', STR_PAD_LEFT);
+                
+                $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE asset_tag = ?");
+                $check_stmt->bind_param('s', $asset_tag);
+                $check_stmt->execute();
+                $check_stmt->store_result();
+                
+                if ($check_stmt->num_rows == 0) {
+                    $check_stmt->close();
+                    echo json_encode(['success' => true, 'next_number' => $current_number, 'asset_tag' => $asset_tag]);
+                    exit();
+                }
+                
+                $check_stmt->close();
+                $current_number++;
+                $attempts++;
+            }
+            
+            echo json_encode(['success' => false, 'message' => 'No available asset tags found']);
+            exit();
+        }
+
     if ($action === 'create_pc_unit') {
         $bulk_mode = $_POST['bulk_mode'] ?? 'single';
 
@@ -177,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $check_stmt->close();
                 
                 // Use the date selected in the form (already formatted above)
-                $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($current_number, 2, '0', STR_PAD_LEFT);
+                $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($current_number, 3, '0', STR_PAD_LEFT);
 
                 // Insert PC unit
                 $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, asset_tag, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
@@ -211,10 +243,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
                             $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
-                            // Generate asset tag: DATE-TH-ID-ROOM-COMPONENT-001
+                            // Generate asset tag: DATE-ROOM-COMPONENT-001
                             // Use component-specific date if provided, otherwise use PC unit date
-                            $asset_tag = $component_date_formatted . '-TH-' . str_pad($new_id, 2, '0', STR_PAD_LEFT) . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
-                            $asset_name = $category['name'] . ' for PC-' . $new_id;
+                            $asset_tag = $component_date_formatted . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
+                            $asset_name = $category['name'];
 
                             // Check if asset tag already exists
                             $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
@@ -230,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
                             // Insert asset first to get ID
                             $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                            $asset_stmt->bind_param('sssssiiiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
+                            $asset_stmt->bind_param('sssssiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
 
                             if ($asset_stmt->execute()) {
                                 $asset_id = $conn->insert_id;
@@ -284,9 +316,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $terminal_number = trim($_POST['terminal_number'] ?? '');
             $asset_date = trim($_POST['asset_date'] ?? date('Y-m-d'));
             $date = date('m-d-Y', strtotime($asset_date));
-            // Extract number from terminal (e.g., PC-001 -> 01)
-            $terminal_num = preg_replace('/[^0-9]/', '', $terminal_number);
-            $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($terminal_num, 2, '0', STR_PAD_LEFT);
             $status = $_POST['status'] ?? 'Active';
             $notes = trim($_POST['notes'] ?? '');
 
@@ -295,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 exit();
             }
 
-            // Check if terminal number already exists
+            // Check if terminal number already exists and auto-increment if needed
             $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
             $check_stmt->bind_param('s', $terminal_number);
             $check_stmt->execute();
@@ -303,10 +332,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
             if ($check_stmt->num_rows > 0) {
                 $check_stmt->close();
-                echo json_encode(['success' => false, 'message' => 'Terminal number already exists']);
-                exit();
+                // Extract prefix and number
+                preg_match('/^([A-Za-z-]+)(\d+)$/', $terminal_number, $matches);
+                if ($matches) {
+                    $prefix = $matches[1];
+                    $start_num = intval($matches[2]);
+                    $next_num = getNextAvailableTerminalNumber($conn, $prefix, $start_num);
+                    if ($next_num !== null) {
+                        $terminal_number = $prefix . str_pad($next_num, strlen($matches[2]), '0', STR_PAD_LEFT);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'No available terminal numbers found']);
+                        exit();
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Invalid terminal number format']);
+                    exit();
+                }
+            } else {
+                $check_stmt->close();
             }
-            $check_stmt->close();
+            
+            // Generate asset tag AFTER determining final terminal number
+            $terminal_num = preg_replace('/[^0-9]/', '', $terminal_number);
+            $asset_tag = $date . '-' . $room['name'] . '-TH-' . str_pad($terminal_num, 3, '0', STR_PAD_LEFT);
 
             // Insert PC unit
             $insert_stmt = $conn->prepare("INSERT INTO pc_units (terminal_number, asset_tag, room_id, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)");
@@ -343,10 +391,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
                         $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
-                        // Generate asset tag: DATE-TH-ID-ROOM-COMPONENT-001
+                        // Generate asset tag: DATE-ROOM-COMPONENT-001
                         // Use component-specific date if provided, otherwise use PC unit date
-                        $asset_tag = $component_date_formatted . '-TH-' . str_pad($new_id, 2, '0', STR_PAD_LEFT) . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
-                        $asset_name = $category['name'] . ' for PC-' . $new_id;
+                        $asset_tag = $component_date_formatted . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
+                        $asset_name = $category['name'];
 
                         // Check if asset tag already exists
                         $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
@@ -362,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
 
                         // Insert asset first to get ID
                         $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                        $asset_stmt->bind_param('sssssiiiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
+                        $asset_stmt->bind_param('sssssiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
 
                         if ($asset_stmt->execute()) {
                             $asset_id = $conn->insert_id;
@@ -506,7 +554,7 @@ include '../components/layout_header.php';
                                     Asset Tag Date <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date" name="asset_date" id="singleAssetDate" required
-                                       oninput="updateAssetTagPreview()"
+                                       onchange="handleDateChange()"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
                                        value="<?php echo date('Y-m-d'); ?>">
                             </div>
@@ -515,7 +563,7 @@ include '../components/layout_header.php';
                                     Terminal Number <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="terminal_number" id="singleTerminalNumber"
-                                       oninput="updateAssetTagPreview()"
+                                       onchange="updateAssetTagPreview()" onblur="updateAssetTagPreview()"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm"
                                        placeholder="e.g., PC-001">
                             </div>
@@ -525,7 +573,7 @@ include '../components/layout_header.php';
                                 </label>
                                 <input type="text" id="assetTagPreview" readonly
                                        class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
-                                       placeholder="<?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-01'; ?>">
+                                       placeholder="<?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-001'; ?>">
                             </div>
                         </div>
                     </div>
@@ -563,23 +611,15 @@ include '../components/layout_header.php';
                                        placeholder="e.g., PC-">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        Start Number <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="number" name="range_start" id="bulkRangeStart" value="1" min="1" max="999"
-                                           oninput="updateBulkAssetTagPreview()"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        End Number <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="number" name="range_end" id="bulkRangeEnd" value="50" min="1" max="999"
-                                           oninput="updateBulkAssetTagPreview()"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
-                                </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Quantity (How many PCs?) <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" name="quantity" id="bulkQuantity" value="50" min="1" max="100"
+                                       oninput="updateBulkAssetTagPreview()"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent text-sm">
+                                <input type="hidden" name="range_start" id="bulkRangeStart" value="1">
+                                <input type="hidden" name="range_end" id="bulkRangeEnd" value="50">
                             </div>
 
                             <div>
@@ -589,21 +629,16 @@ include '../components/layout_header.php';
                                 <div class="space-y-2">
                                     <input type="text" id="bulkAssetTagPreviewFirst" readonly
                                            class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
-                                           placeholder="First: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-01'; ?>">
+                                           placeholder="First: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-001'; ?>">
                                     <input type="text" id="bulkAssetTagPreviewLast" readonly
                                            class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-600 cursor-not-allowed"
-                                           placeholder="Last: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-50'; ?>">
+                                           placeholder="Last: <?php echo date('m-d-Y') . '-' . $room['name'] . '-TH-050'; ?>">
                                 </div>
                             </div>
 
                             <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
                                 <i class="fa-solid fa-lightbulb mr-2 text-yellow-500"></i>
-                                Maximum 100 units can be created at once. Numbers will be zero-padded (e.g., 01, 02, 03...)
-                            </div>
-                            
-                            <div id="bulkAutoUpdateInfo" class="hidden text-sm text-blue-600 bg-blue-50 p-2 rounded-md">
-                                <i class="fa-solid fa-info-circle mr-2"></i>
-                                <span></span>
+                                Maximum 100 units can be created at once. The system will automatically find the next available numbers.
                             </div>
                         </div>
                     </div>
@@ -651,7 +686,7 @@ include '../components/layout_header.php';
 
                             <div class="mt-3 text-sm text-gray-600 bg-blue-50 p-2 rounded-md">
                                 <i class="fa-solid fa-info-circle mr-2 text-blue-600"></i>
-                                Assets will be created with format: DATE-TH-{ID}-ROOM-{COMPONENT}-001
+                                Assets will be created with format: DATE-ROOM-{COMPONENT}-001
                             </div>
                         </div>
                     </div>
@@ -701,31 +736,69 @@ async function autoSuggestTerminalNumber() {
     const terminalInput = document.getElementById('singleTerminalNumber');
     if (!terminalInput || terminalInput.value.trim()) return; // Don't override if user already typed
     
-    const nextNum = await getNextAvailableNumber('PC-', 1);
-    if (nextNum !== null) {
-        terminalInput.value = 'PC-' + String(nextNum).padStart(3, '0');
+    const assetDateInput = document.getElementById('singleAssetDate').value;
+    if (!assetDateInput) return;
+    
+    const [year, month, day] = assetDateInput.split('-');
+    const dateStr = month + '-' + day + '-' + year;
+    const roomName = '<?php echo $room['name']; ?>';
+    
+    const result = await getNextAvailableAssetTag(dateStr, roomName, 1);
+    if (result && result.next_number !== null) {
+        terminalInput.value = 'PC-' + String(result.next_number).padStart(3, '0');
         updateAssetTagPreview();
     }
 }
 
-// Auto-update bulk range when prefix/start changes
-async function autoUpdateBulkRange() {
-    const prefix = document.getElementById('bulkPrefix').value;
-    const rangeStart = parseInt(document.getElementById('bulkRangeStart').value) || 1;
-    
-    const nextNum = await getNextAvailableNumber(prefix, rangeStart);
-    if (nextNum !== null && nextNum !== rangeStart) {
-        document.getElementById('bulkRangeStart').value = nextNum;
-        updateBulkAssetTagPreview();
-        
-        // Show info message
-        const infoDiv = document.getElementById('bulkAutoUpdateInfo');
-        if (infoDiv) {
-            infoDiv.textContent = `Auto-adjusted start number to ${nextNum} (next available)`;
-            infoDiv.classList.remove('hidden');
-            setTimeout(() => infoDiv.classList.add('hidden'), 5000);
-        }
+// Get next available asset tag
+async function getNextAvailableAssetTag(date, roomName, startNumber = 1) {
+    try {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'get_next_available_asset_tag');
+        formData.append('date', date);
+        formData.append('room_name', roomName);
+        formData.append('start', startNumber);
+
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        return result.success ? result : null;
+    } catch (error) {
+        console.error('Error getting next available asset tag:', error);
+        return null;
     }
+}
+
+// Handle date change to update terminal number and asset tag
+async function handleDateChange() {
+    const assetDateInput = document.getElementById('singleAssetDate').value;
+    const terminalInput = document.getElementById('singleTerminalNumber');
+    
+    if (!assetDateInput) return;
+    
+    const [year, month, day] = assetDateInput.split('-');
+    const dateStr = month + '-' + day + '-' + year;
+    const roomName = '<?php echo $room['name']; ?>';
+    
+    // Get current terminal number or start from 1
+    const currentTerminal = terminalInput.value.trim();
+    const currentNum = currentTerminal ? parseInt(currentTerminal.replace(/[^0-9]/g, '')) || 1 : 1;
+    
+    const result = await getNextAvailableAssetTag(dateStr, roomName, currentNum);
+    if (result && result.next_number !== null) {
+        const prefix = currentTerminal.match(/^[A-Za-z-]+/)?.[0] || 'PC-';
+        terminalInput.value = prefix + String(result.next_number).padStart(3, '0');
+        updateAssetTagPreview();
+    }
+}
+
+// Auto-update bulk range when prefix changes
+async function autoUpdateBulkRange() {
+    updateBulkAssetTagPreview();
 }
 
 // Load PC Components for selection
@@ -774,7 +847,7 @@ async function loadPCComponents() {
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Asset Tag (Preview)</label>
                                 <input type="text" id="component_tag_${category.id}" readonly
                                        class="w-full px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 cursor-not-allowed"
-                                       placeholder="DATE-TH-{ID}-<?php echo $room['name']; ?>-${category.name.toUpperCase()}-001">
+                                       placeholder="DATE-<?php echo $room['name']; ?>-${category.name.toUpperCase()}-001">
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
@@ -828,38 +901,65 @@ async function loadPCComponents() {
 }
 
 // Update asset tag preview
-function updateAssetTagPreview() {
+async function updateAssetTagPreview() {
     const terminalNumber = document.getElementById('singleTerminalNumber').value.trim();
     const assetDateInput = document.getElementById('singleAssetDate').value;
     const assetTagPreview = document.getElementById('assetTagPreview');
+    const terminalInput = document.getElementById('singleTerminalNumber');
+    
     if (terminalNumber && assetDateInput) {
         // Parse date properly to avoid timezone issues
         const [year, month, day] = assetDateInput.split('-');
         const dateStr = month + '-' + day + '-' + year;
         const roomName = '<?php echo $room['name']; ?>';
-        const terminalNum = terminalNumber.replace(/[^0-9]/g, '').padStart(2, '0');
-        assetTagPreview.value = dateStr + '-' + roomName + '-TH-' + terminalNum;
+        const terminalNum = parseInt(terminalNumber.replace(/[^0-9]/g, '')) || 1;
+        
+        // Check if asset tag already exists and find next available
+        const result = await getNextAvailableAssetTag(dateStr, roomName, terminalNum);
+        if (result && result.next_number !== null) {
+            if (result.next_number !== terminalNum) {
+                // Update terminal number to match available asset tag
+                const prefix = terminalNumber.match(/^[A-Za-z-]+/)?.[0] || 'PC-';
+                terminalInput.value = prefix + String(result.next_number).padStart(3, '0');
+            }
+            assetTagPreview.value = result.asset_tag;
+        } else {
+            // Fallback to manual generation if check fails
+            const paddedNum = String(terminalNum).padStart(3, '0');
+            assetTagPreview.value = dateStr + '-' + roomName + '-TH-' + paddedNum;
+        }
     } else {
         assetTagPreview.value = '';
     }
 }
 
 // Update bulk asset tag preview
-function updateBulkAssetTagPreview() {
+async function updateBulkAssetTagPreview() {
     const assetDateInput = document.getElementById('bulkAssetDate').value;
-    const rangeStart = document.getElementById('bulkRangeStart').value;
-    const rangeEnd = document.getElementById('bulkRangeEnd').value;
+    const quantity = parseInt(document.getElementById('bulkQuantity').value) || 1;
+    const prefix = document.getElementById('bulkPrefix').value;
     const previewFirst = document.getElementById('bulkAssetTagPreviewFirst');
     const previewLast = document.getElementById('bulkAssetTagPreviewLast');
     
-    if (assetDateInput && rangeStart && rangeEnd) {
+    if (assetDateInput && quantity > 0) {
         const [year, month, day] = assetDateInput.split('-');
         const dateStr = month + '-' + day + '-' + year;
         const roomName = '<?php echo $room['name']; ?>';
-        const startNum = String(rangeStart).padStart(2, '0');
-        const endNum = String(rangeEnd).padStart(2, '0');
-        previewFirst.value = dateStr + '-' + roomName + '-TH-' + startNum;
-        previewLast.value = dateStr + '-' + roomName + '-TH-' + endNum;
+        
+        // Get next available number for the start
+        const result = await getNextAvailableAssetTag(dateStr, roomName, 1);
+        const startNum = result && result.next_number ? result.next_number : 1;
+        const endNum = startNum + quantity - 1;
+        
+        // Update hidden fields
+        document.getElementById('bulkRangeStart').value = startNum;
+        document.getElementById('bulkRangeEnd').value = endNum;
+        
+        // Update preview
+        const startNumPadded = String(startNum).padStart(3, '0');
+        const endNumPadded = String(endNum).padStart(3, '0');
+        previewFirst.value = dateStr + '-' + roomName + '-TH-' + startNumPadded;
+        previewLast.value = dateStr + '-' + roomName + '-TH-' + endNumPadded;
     } else {
         previewFirst.value = '';
         previewLast.value = '';
@@ -875,7 +975,7 @@ function updateComponentAssetTagPreview(categoryId, categoryName) {
         const [year, month, day] = componentDate.split('-');
         const dateStr = month + '-' + day + '-' + year;
         const roomName = '<?php echo $room['name']; ?>';
-        componentTag.value = dateStr + '-TH-{ID}-' + roomName + '-' + categoryName.toUpperCase() + '-001';
+        componentTag.value = dateStr + '-' + roomName + '-' + categoryName.toUpperCase() + '-001';
     } else {
         componentTag.value = '';
     }
@@ -925,34 +1025,59 @@ function submitPCUnit() {
     // Validation
     if (bulkMode === 'single') {
         const terminalNumber = document.getElementById('singleTerminalNumber').value.trim();
+        
         if (!terminalNumber) {
             showAlert('error', 'Terminal number is required');
+            document.getElementById('singleTerminalNumber').focus();
             return;
         }
+        
+        // Validate terminal number format (should contain letters and numbers)
+        if (!/^[A-Za-z]+-\d+$/.test(terminalNumber)) {
+            showAlert('error', 'Invalid terminal number format. Expected format: PC-001');
+            document.getElementById('singleTerminalNumber').focus();
+            return;
+        }
+        
     } else {
         const prefix = form.querySelector('input[name="prefix"]').value.trim();
+        const quantity = parseInt(form.querySelector('input[name="quantity"]').value);
         const rangeStart = parseInt(form.querySelector('input[name="range_start"]').value);
         const rangeEnd = parseInt(form.querySelector('input[name="range_end"]').value);
 
         if (!prefix) {
             showAlert('error', 'Prefix is required for bulk creation');
+            form.querySelector('input[name="prefix"]').focus();
+            return;
+        }
+        
+        // Validate prefix format (should contain at least one letter and end with hyphen)
+        if (!/^[A-Za-z]+-$/.test(prefix)) {
+            showAlert('error', 'Invalid prefix format. Expected format: PC- or LAB-');
+            form.querySelector('input[name="prefix"]').focus();
             return;
         }
 
-        if (rangeStart < 1 || rangeEnd < rangeStart) {
-            showAlert('error', 'Invalid range. End number must be greater than start number');
+        if (isNaN(quantity) || quantity < 1) {
+            showAlert('error', 'Quantity must be at least 1');
+            form.querySelector('input[name="quantity"]').focus();
             return;
         }
 
-        if (rangeEnd - rangeStart > 100) {
+        if (quantity > 100) {
             showAlert('error', 'Maximum 100 units can be created at once');
+            form.querySelector('input[name="quantity"]').focus();
             return;
+        }
+        
+        if (quantity === 1) {
+            showAlert('warning', 'You are creating only 1 unit. Consider using Single PC mode instead.');
+            // Allow to continue but warn user
         }
 
         // Show bulk creation confirmation modal
-        const count = rangeEnd - rangeStart + 1;
         const range = `${prefix}${String(rangeStart).padStart(2, '0')} to ${prefix}${String(rangeEnd).padStart(2, '0')}`;
-        openBulkCreatePCModal(count, range, form);
+        openBulkCreatePCModal(quantity, range, form);
         return;
     }
 
@@ -1053,15 +1178,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-suggest terminal number for single mode on page load
     setTimeout(autoSuggestTerminalNumber, 500);
     
+    // Auto-update bulk preview on page load
+    setTimeout(updateBulkAssetTagPreview, 500);
+    
     // Add event listeners for bulk mode auto-update
     const bulkPrefix = document.getElementById('bulkPrefix');
-    const bulkRangeStart = document.getElementById('bulkRangeStart');
     
     if (bulkPrefix) {
         bulkPrefix.addEventListener('blur', autoUpdateBulkRange);
-    }
-    if (bulkRangeStart) {
-        bulkRangeStart.addEventListener('blur', autoUpdateBulkRange);
     }
 });
 </script>

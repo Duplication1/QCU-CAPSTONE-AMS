@@ -13,6 +13,21 @@ try {
     $asset = new Asset();
     $assets = $asset->getAll();
     
+    // Log the export activity
+    try {
+        require_once '../model/ActivityLog.php';
+        require_once '../model/Database.php';
+        ActivityLog::record(
+            $_SESSION['user_id'],
+            'export',
+            'asset',
+            null,
+            'Exported assets to CSV (' . count($assets) . ' records)'
+        );
+    } catch (Exception $logError) {
+        error_log('Failed to log asset export: ' . $logError->getMessage());
+    }
+    
     // Set headers for CSV download
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=assets_export_' . date('Y-m-d_His') . '.csv');

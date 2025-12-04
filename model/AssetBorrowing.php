@@ -259,6 +259,56 @@ class AssetBorrowing {
             $stmt2 = $this->conn->prepare($query2);
             $stmt2->execute([$id]);
             
+            // Get asset_id from borrowing data
+            $getBorrowingDetail = "SELECT asset_id, borrower_id FROM " . $this->table . " WHERE id = ?";
+            $detailStmt = $this->conn->prepare($getBorrowingDetail);
+            $detailStmt->execute([$id]);
+            $detail = $detailStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Log to asset history
+            if ($detail && isset($detail['asset_id'])) {
+                try {
+                    require_once __DIR__ . '/AssetHistory.php';
+                    $assetHistory = new AssetHistory();
+                    
+                    // Get borrower name
+                    $borrowerQuery = "SELECT full_name FROM users WHERE id = ?";
+                    $borrowerStmt = $this->conn->prepare($borrowerQuery);
+                    $borrowerStmt->execute([$detail['borrower_id']]);
+                    $borrowerData = $borrowerStmt->fetch(PDO::FETCH_ASSOC);
+                    $borrowerName = $borrowerData['full_name'] ?? 'Unknown';
+                    
+                    $description = "Asset returned by {$borrowerName} (Condition: {$returned_condition})";
+                    $assetHistory->logHistory(
+                        $detail['asset_id'],
+                        'Returned',
+                        'status',
+                        'In Use',
+                        'Available',
+                        $description,
+                        $_SESSION['user_id'] ?? null
+                    );
+                } catch (Exception $e) {
+                    error_log("Failed to log return to asset history: " . $e->getMessage());
+                }
+            }
+            
+            // Log the return activity
+            if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
+                try {
+                    require_once __DIR__ . '/ActivityLog.php';
+                    ActivityLog::record(
+                        $_SESSION['user_id'],
+                        'update',
+                        'borrowing',
+                        $id,
+                        "Marked asset as returned (Condition: {$returned_condition})"
+                    );
+                } catch (Exception $logError) {
+                    error_log('Failed to log asset return: ' . $logError->getMessage());
+                }
+            }
+            
             // Create notification
             if ($borrowingData && isset($borrowingData['borrower_id'])) {
                 try {
@@ -317,6 +367,22 @@ class AssetBorrowing {
         $stmt = $this->conn->prepare($query);
         
         if ($stmt->execute([$id])) {
+            // Log the cancellation activity
+            if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
+                try {
+                    require_once __DIR__ . '/ActivityLog.php';
+                    ActivityLog::record(
+                        $_SESSION['user_id'],
+                        'update',
+                        'borrowing',
+                        $id,
+                        'Cancelled borrowing request'
+                    );
+                } catch (Exception $logError) {
+                    error_log('Failed to log borrowing cancellation: ' . $logError->getMessage());
+                }
+            }
+            
             // Create notification
             if ($borrowingData && isset($borrowingData['borrower_id'])) {
                 try {
