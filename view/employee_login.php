@@ -121,7 +121,7 @@
         </div>
       </div>
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Login Successful!</h3>
-      <p class="text-gray-600 dark:text-gray-300 mb-4">Successfully logged in as <span class="font-semibold text-[#1E3A8A] dark:text-yellow-400" id="userRoleText"></span></p>
+      <p class="text-gray-800 dark:text-gray-300 mb-4 font-medium">Successfully logged in as <span class="font-bold text-[#1E3A8A] dark:text-yellow-400" id="userRoleText"></span></p>
       <div class="flex justify-center">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
       </div>

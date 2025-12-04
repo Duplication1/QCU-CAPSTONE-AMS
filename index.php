@@ -412,7 +412,7 @@
                         <div class="team-slide absolute transition-all duration-500" data-index="2" style="width: 240px;">
                             <div class="bg-white rounded-2xl shadow-xl p-6 text-center border-2 border-blue-400">
                                 <div class="w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden">
-                                    <img src="assets/images/albason.jpg" alt="Albason" class="w-full h-full object-cover">
+                                    <img src="assets/images/albason2.jpg" alt="Albason" class="w-full h-full object-cover">
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Albason</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Main Developer</p>
