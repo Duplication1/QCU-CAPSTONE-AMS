@@ -207,6 +207,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
 
     // Create user
     if ($action === 'create_user') {
+        // Fix AUTO_INCREMENT issue if it exists (one-time fix) - only if needed
+        $checkAutoInc = $conn->query("SHOW CREATE TABLE users");
+        if ($checkAutoInc) {
+            $createTableRow = $checkAutoInc->fetch_assoc();
+            if ($createTableRow && strpos($createTableRow['Create Table'], 'AUTO_INCREMENT') === false) {
+                // Get the current maximum ID to set AUTO_INCREMENT properly
+                $maxIdResult = $conn->query("SELECT MAX(id) as max_id FROM users");
+                $maxId = 1;
+                if ($maxIdResult && $row = $maxIdResult->fetch_assoc()) {
+                    $maxId = max(1, intval($row['max_id']) + 1);
+                }
+                $conn->query("ALTER TABLE users MODIFY id INT(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT = $maxId");
+            }
+        }
+        
         $id_number = trim($_POST['id_number'] ?? '');
         $full = trim($_POST['full_name'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -218,9 +233,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
             echo json_encode(['success'=>false,'message'=>'Missing required fields (password is required)']); exit;
         }
 
-        // check duplicates
-        $chk = $conn->prepare("SELECT id FROM users WHERE email = ? OR id_number = ? LIMIT 1");
-        $chk->bind_param('ss', $email, $id_number);
+        // Validate role is one of the allowed values
+        $validRoles = ['Student', 'Faculty', 'Technician', 'Laboratory Staff', 'Administrator'];
+        if (!in_array($role, $validRoles)) {
+            echo json_encode(['success'=>false,'message'=>'Invalid role selected. Please choose a valid role.']); exit;
+        }
+
+        // Enhanced duplicate check - handle empty id_number case
+        if (!empty($id_number)) {
+            $chk = $conn->prepare("SELECT id FROM users WHERE email = ? OR id_number = ? LIMIT 1");
+            $chk->bind_param('ss', $email, $id_number);
+        } else {
+            $chk = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+            $chk->bind_param('s', $email);
+        }
         $chk->execute();
         $rchk = $chk->get_result()->fetch_assoc();
         $chk->close();
@@ -231,13 +257,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         // password required - hash it
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $conn->prepare("INSERT INTO users (id_number, full_name, email, role, password, status, created_at) VALUES (?, ?, ?, ?, ?, 'Active', NOW())");
-        $stmt->bind_param('sssss', $id_number, $full, $email, $role, $hash);
+        // Handle NULL id_number if empty to avoid constraint issues
+        $id_number_param = !empty($id_number) ? $id_number : NULL;
+        
+        // Fix AUTO_INCREMENT issue: explicitly specify NULL for id to force auto-increment
+        $stmt = $conn->prepare("INSERT INTO users (id, id_number, full_name, email, role, password, status, created_at) VALUES (NULL, ?, ?, ?, ?, ?, 'Active', NOW())");
+        $stmt->bind_param('sssss', $id_number_param, $full, $email, $role, $hash);
         $ok = $stmt->execute();
         if (!$ok) {
             $err = $stmt->error;
             $stmt->close();
-            echo json_encode(['success'=>false,'message'=>'Insert failed: '.$err]); exit;
+            // More detailed error message for debugging
+            if (strpos($err, 'Duplicate entry') !== false) {
+                echo json_encode(['success'=>false,'message'=>'This ID number or email is already in use. Please use a different one.']); 
+            } else {
+                echo json_encode(['success'=>false,'message'=>'Database error: '.$err]); 
+            }
+            exit;
         }
         $newId = $stmt->insert_id;
         $stmt->close();
@@ -251,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         // return created user object (do not return password)
         $userObj = [
             'id' => $newId,
-            'id_number' => $id_number,
+            'id_number' => $id_number_param,
             'full_name' => $full,
             'email' => $email,
             'role' => $role,
@@ -315,7 +351,7 @@ main {
 <div class="relative flex items-center gap-2">
   <input id="userSearch" oninput="filterUsers()" type="search" placeholder="Search users..."
     class="w-48 pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition" />
-  <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+  <i class="fas fa-search absolute left-2.5 text-gray-400 text-xs pointer-events-none" style="top: 50%; transform: translateY(-50%);"></i>
   
   <!-- Filter Button -->
   <div class="relative">
@@ -584,6 +620,24 @@ main {
         </div>
 </div>
 
+<!-- Unsuspend/Activate Confirmation Modal -->
+<div id="unsuspendConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" style="background-color: rgba(0,0,0,0.4);" onclick="closeUnsuspendModal()"></div>
+        <div class="relative bg-white rounded-lg shadow-lg max-w-md w-11/12 p-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-4">
+                    <img src="../../assets/images/8376179.png" alt="warning" class="w-16 h-16 object-contain mx-auto" />
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Are you sure?</h3>
+                <p class="text-sm text-gray-600 mb-6">Do you really want to activate this user? Their status will be set to Active.</p>
+                <div class="flex gap-3 flex-col sm:flex-row w-full justify-center mt-2">
+                    <button id="cancelUnsuspendBtn" type="button" onclick="closeUnsuspendModal()" class="px-4 py-2 rounded bg-gray-200 text-gray-800 w-full sm:w-auto inline-block" style="min-width:120px;">No</button>
+                    <button id="confirmUnsuspendBtn" type="button" onclick="confirmUnsuspend()" class="px-4 py-2 rounded w-full sm:w-auto inline-block" style="min-width:120px;background-color:#10b981;color:#ffffff;border:none;box-shadow:0 1px 2px rgba(0,0,0,0.1);">Yes</button>
+                </div>
+            </div>
+        </div>
+</div>
+
 <!-- Bulk Import Modal -->
 <div id="bulkImportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" onclick="closeBulkImportModal()"></div>
@@ -737,21 +791,925 @@ main {
     </div>
 </div>
 
-<?php include '../components/layout_footer.php'; ?>
 <!-- Toast notification -->
 <div id="globalToast" class="fixed bottom-6 right-6 z-60 hidden">
     <div id="globalToastInner" class="px-4 py-2 rounded shadow text-sm"></div>
 </div>
+
+<script>
+// Define all onclick-called functions globally as placeholders - they'll be properly defined after DOM loads
+// This prevents "function is not defined" errors for inline onclick handlers
+window.toggleRowMenu = function(btn, userId) {
+    // If a floating menu for this user already exists, toggle it off
+    const existingForUser = document.querySelector('.floating-row-menu[data-user-id="' + userId + '"]');
+    if (existingForUser) { try { existingForUser.remove(); } catch(e){} return; }
+
+    // remove any other floating menus first
+    document.querySelectorAll('.floating-row-menu').forEach(c => c.remove());
+
+    const menuTemplate = btn && btn.parentElement ? btn.parentElement.querySelector('div[role="menu"]') : null;
+    if (!menuTemplate) return;
+
+    // clone the menu so it can float above overflowing parents
+    const clone = menuTemplate.cloneNode(true);
+    clone.classList.remove('hidden');
+    clone.classList.add('floating-row-menu');
+    clone.setAttribute('data-user-id', String(userId));
+    clone.style.position = 'fixed';
+    clone.style.zIndex = '9999';
+    clone.style.minWidth = '150px';
+    clone.style.visibility = 'hidden';
+
+    document.body.appendChild(clone);
+
+    // measure and position near the button
+    const rect = btn.getBoundingClientRect();
+    // ensure it's briefly in DOM so offsetWidth/Height are available
+    const cw = clone.offsetWidth || 180;
+    const ch = clone.offsetHeight || 120;
+    let left = rect.right - cw;
+    if (left < 8) left = rect.left;
+    if (left + cw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - cw - 8);
+    let top = rect.bottom + 6;
+    if (top + ch > window.innerHeight - 8) top = rect.top - ch - 6;
+    if (top < 8) top = 8;
+
+    clone.style.left = left + 'px';
+    clone.style.top = top + 'px';
+    clone.style.visibility = '';
+
+    // stop propagation on clicks inside clone so outside-click handler won't immediately close it
+    clone.addEventListener('click', function(ev){ ev.stopPropagation(); });
+
+    // when a menu action is clicked, also remove the clone (menu action handlers are inline and will run)
+    Array.from(clone.querySelectorAll('button')).forEach(b=> b.addEventListener('click', ()=> { try{ clone.remove(); } catch(e){} }));
+};
+
+// Helper function
+function getRowById(id) {
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    for (const r of rows) {
+        try {
+            const u = r.dataset.user ? JSON.parse(r.dataset.user) : null;
+            if (u && parseInt(u.id) === parseInt(id)) return r;
+        } catch(e) { continue; }
+    }
+    return null;
+}
+
+function showToast(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('globalToast');
+    const inner = document.getElementById('globalToastInner');
+    if (!container || !inner) return;
+    inner.textContent = message;
+    inner.className = 'px-4 py-2 rounded shadow text-sm ' + (type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white');
+    container.classList.remove('hidden');
+    setTimeout(() => { container.classList.add('hidden'); }, duration);
+}
+
+// Define full implementations immediately
+window.editUser = function(btn, userId) {
+    const tr = getRowById(userId);
+    const user = tr && tr.dataset.user ? JSON.parse(tr.dataset.user) : null;
+    if (!user) { showToast('User not found', 'error'); return; }
+
+    const modal = document.getElementById('editUserModal');
+    if (!modal) { showToast('Edit modal not found', 'error'); return; }
+
+    document.getElementById('edit_user_id').value = userId;
+
+    const full = (user.full_name || '').trim();
+    let first = '', last = '';
+    if (full) {
+        const parts = full.split(/\s+/);
+        first = parts.shift() || '';
+        last = parts.join(' ') || '';
+    }
+
+    const fnameEl = document.getElementById('edit_first_name');
+    const lnameEl = document.getElementById('edit_last_name');
+    const emailEl = document.getElementById('edit_email');
+    const roleEl = document.getElementById('edit_role');
+    const idEl = document.getElementById('edit_id_number');
+    const titleEl = document.getElementById('edit_modal_title');
+    const subtitleEl = document.getElementById('edit_modal_subtitle');
+    const imgEl = document.getElementById('edit_profile_photo_img');
+    const initialEl = document.getElementById('edit_profile_initial');
+    const photoContainer = document.getElementById('edit_profile_photo_container');
+    const fileInput = document.getElementById('edit_profile_file');
+
+    if (fileInput) fileInput.value = '';
+    if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+    if (initialEl) { initialEl.textContent = 'Add photo'; initialEl.style.display = ''; }
+
+    if (fnameEl) fnameEl.value = first;
+    if (lnameEl) lnameEl.value = last;
+    if (emailEl) emailEl.value = user.email || '';
+    if (roleEl) roleEl.value = user.role || '';
+    if (idEl) idEl.value = user.id_number || '';
+    if (titleEl) titleEl.textContent = full || 'Edit User';
+    if (subtitleEl) subtitleEl.textContent = user.email || 'Update account details';
+
+    if (photoContainer) photoContainer.classList.add('bg-gray-100');
+
+    const avatar = user.avatar || user.profile_photo || '';
+    if (avatar) {
+        if (imgEl) { imgEl.src = avatar; imgEl.style.display = ''; }
+        if (initialEl) { initialEl.textContent = ''; initialEl.style.display = 'none'; }
+        if (photoContainer) photoContainer.classList.remove('bg-gray-100');
+    } else {
+        const fallback = (full || user.email || 'User').trim().charAt(0).toUpperCase() || 'U';
+        if (imgEl) imgEl.style.display = 'none';
+        if (initialEl) { initialEl.textContent = fallback; initialEl.style.display = ''; }
+        if (photoContainer) photoContainer.classList.add('bg-gray-100');
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.closeUserModal = function() {
+    const modal = document.getElementById('userModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+};
+
+window.closeEditModal = function() {
+    const modal = document.getElementById('editUserModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+};
+
+window.editUserFromModal = function() {
+    const modal = document.getElementById('userModal');
+    if (!modal || !modal.dataset.userId) return;
+    window.editUser(null, modal.dataset.userId);
+};
+
+window.triggerEditProfileUpload = function() {
+    const input = document.getElementById('edit_profile_file');
+    if (input) input.click();
+};
+
+window.suspendUser = function(userId) {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) {
+        alert('Deactivate user feature loading...');
+        return;
+    }
+    modal.dataset.userId = String(userId);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.unsuspendUser = function(userId) {
+    const modal = document.getElementById('unsuspendConfirmModal');
+    if (!modal) {
+        alert('Activate user feature loading...');
+        return;
+    }
+    modal.dataset.userId = String(userId);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.closeUnsuspendModal = function() {
+    const modal = document.getElementById('unsuspendConfirmModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+};
+
+window.confirmUnsuspend = async function() {
+    const modal = document.getElementById('unsuspendConfirmModal');
+    if (!modal) return;
+    const userId = modal.dataset.userId;
+    if (!userId) { window.closeUnsuspendModal(); return; }
+    const btn = document.getElementById('confirmUnsuspendBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = new URLSearchParams();
+        form.append('ajax','1'); form.append('action','unsuspend_user'); form.append('user_id', String(userId));
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const j = await res.json();
+        if (j.success) {
+            location.reload();
+        } else {
+            alert(j.message || 'Activate failed');
+        }
+    } catch (err) { 
+        console.error(err); 
+        alert('Request failed');
+    }
+    if (btn) btn.disabled = false;
+    window.closeUnsuspendModal();
+};
+
+window.deleteUser = function(btn, userId) {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (!modal) {
+        if (confirm('Are you sure you want to delete this user?')) {
+            // Trigger deletion via AJAX
+            const form = new URLSearchParams();
+            form.append('ajax','1'); form.append('action','delete_user'); form.append('user_id', String(userId));
+            fetch(location.href, { method: 'POST', body: form })
+                .then(res => res.json())
+                .then(j => { if (j.success) location.reload(); else alert(j.message || 'Delete failed'); })
+                .catch(err => { console.error(err); alert('Request failed'); });
+        }
+        return;
+    }
+    modal.dataset.userId = String(userId);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.closeDeleteModal = function() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+};
+
+window.confirmDelete = async function() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (!modal || !modal.dataset.userId) return;
+    const userId = modal.dataset.userId;
+    const btn = document.getElementById('confirmDeleteBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = new URLSearchParams();
+        form.append('ajax','1'); form.append('action','delete_user'); form.append('user_id', String(userId));
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const j = await res.json();
+        if (j.success) {
+            location.reload();
+        } else {
+            alert(j.message || 'Delete failed');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Request failed');
+    }
+    if (btn) btn.disabled = false;
+};
+
+window.closeSuspendModal = function() {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+};
+
+window.confirmSuspend = async function() {
+    const modal = document.getElementById('suspendConfirmModal');
+    if (!modal) return;
+    const userId = modal.dataset.userId;
+    if (!userId) { window.closeSuspendModal(); return; }
+    const btn = document.getElementById('confirmSuspendBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = new URLSearchParams();
+        form.append('ajax','1'); form.append('action','suspend_user'); form.append('user_id', String(userId));
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const j = await res.json();
+        if (j.success) {
+            location.reload();
+        } else {
+            alert(j.message || 'Deactivate failed');
+        }
+    } catch (err) { 
+        console.error(err); 
+        alert('Request failed');
+    }
+    if (btn) btn.disabled = false;
+    window.closeSuspendModal();
+};
+
+window.toggleFilterMenu = function() {
+    const menu = document.getElementById('filterMenu');
+    if (!menu) return;
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+    } else {
+        menu.classList.add('hidden');
+    }
+};
+
+window.clearFilters = function() {
+    const roleFilter = document.getElementById('roleFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const userSearch = document.getElementById('userSearch');
+    if (roleFilter) roleFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (userSearch) userSearch.value = '';
+    if (typeof filterUsers === 'function') filterUsers();
+};
+
+window.openBulkImportModal = function() {
+    const modal = document.getElementById('bulkImportModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+};
+
+window.openAddUserModal = function() {
+    const modal = document.getElementById('addUserModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.submitEditForm = async function(e) {
+    e && e.preventDefault();
+    console.log('submitEditForm called');
+    const btn = document.getElementById('editSaveBtn');
+    if (!btn) { console.error('editSaveBtn not found'); if (typeof showToast === 'function') showToast('Request failed', 'error'); return false; }
+    btn.disabled = true;
+    const userIdEl = document.getElementById('edit_user_id');
+    const firstEl = document.getElementById('edit_first_name');
+    const lastEl = document.getElementById('edit_last_name');
+    const emailEl = document.getElementById('edit_email');
+    const roleEl = document.getElementById('edit_role');
+    const idNumberEl = document.getElementById('edit_id_number');
+    if (!userIdEl || !firstEl || !lastEl || !emailEl || !roleEl) {
+        console.error('Edit form elements missing');
+        if (typeof showToast === 'function') showToast('Request failed', 'error');
+        btn.disabled = false;
+        return false;
+    }
+    const userId = userIdEl.value;
+    const first = firstEl ? firstEl.value.trim() : '';
+    const last = lastEl ? lastEl.value.trim() : '';
+    const full = (first + ' ' + last).trim();
+    const email = emailEl.value.trim();
+    const role = roleEl.value;
+    const idNumber = idNumberEl ? idNumberEl.value.trim() : '';
+    if (!full || !email) {
+        if (typeof showToast === 'function') showToast('Please fill required fields', 'error');
+        btn.disabled = false;
+        return false;
+    }
+    try {
+        const form = new FormData();
+        form.append('ajax','1'); form.append('action','edit_user'); form.append('user_id', String(userId));
+        form.append('full_name', full); form.append('email', email); form.append('role', role);
+        form.append('id_number', idNumber);
+        const editFile = document.getElementById('edit_profile_file');
+        if (editFile && editFile.files && editFile.files[0]) {
+            form.append('profile_photo', editFile.files[0]);
+        }
+        console.log('Submitting edit_user', { user_id: userId, full: full, email: email, role: role, id_number: idNumber });
+        const res = await fetch(location.href, { method: 'POST', body: form });
+        const raw = await res.text();
+        let j;
+        try {
+            j = JSON.parse(raw);
+        } catch (parseErr) {
+            console.warn('edit_user: server returned non-JSON response:', raw);
+            j = { success: res.ok, message: raw || (res.ok ? 'OK (no JSON)' : 'Server error') };
+        }
+        console.log('edit_user response', j);
+        if (j && j.success) {
+            window.closeEditModal();
+            if (typeof showToast === 'function') {
+                showToast((j.user?.full_name || full || 'User') + ' details updated successfully!', 'success');
+            }
+            setTimeout(() => location.reload(), 800);
+        } else {
+            const msg = (j && j.message) ? j.message : ('Update failed' + (raw ? (': ' + raw) : ''));
+            if (typeof showToast === 'function') {
+                showToast(msg, 'error');
+            } else {
+                alert('Error: ' + msg);
+            }
+        }
+    } catch (err) {
+        console.error('submitEditForm error', err);
+        alert('Request failed: ' + err.message);
+    }
+    btn.disabled = false;
+    return false;
+};
+
+window.filterUsers = function() {
+    const searchQuery = (document.getElementById('userSearch')?.value || '').toLowerCase().trim();
+    const roleFilter = (document.getElementById('roleFilter')?.value || '').toLowerCase();
+    const statusFilter = (document.getElementById('statusFilter')?.value || '').toLowerCase();
+    
+    const tbody = document.querySelector('#usersTable tbody');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        try {
+            const user = row.dataset.user ? JSON.parse(row.dataset.user) : null;
+            if (!user) {
+                row.style.display = '';
+                return;
+            }
+            
+            // Search filter
+            const searchText = (user.full_name + ' ' + user.email + ' ' + (user.role || '')).toLowerCase();
+            const matchesSearch = !searchQuery || searchText.indexOf(searchQuery) !== -1;
+            
+            // Role filter
+            const userRole = (user.role || '').toLowerCase();
+            const matchesRole = !roleFilter || userRole === roleFilter;
+            
+            // Status filter
+            const userStatus = (user.status || 'active').toLowerCase();
+            const matchesStatus = !statusFilter || userStatus === statusFilter;
+            
+            if (matchesSearch && matchesRole && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        } catch (e) {
+            row.style.display = '';
+        }
+    });
+    
+    // Update visible count if there's a counter element
+    const counter = document.getElementById('visibleUsersCount');
+    if (counter) {
+        counter.textContent = visibleCount;
+    }
+};
+
+window.applyFilters = function() {
+    // Call filterUsers to apply the filters
+    window.filterUsers();
+    
+    const roleFilter = document.getElementById('roleFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const filterBtn = document.getElementById('filterBtn');
+    
+    if (filterBtn && roleFilter && statusFilter) {
+        if (roleFilter.value || statusFilter.value) {
+            filterBtn.classList.add('bg-blue-100', 'border-blue-300');
+            filterBtn.classList.remove('bg-gray-100', 'border-gray-300');
+        } else {
+            filterBtn.classList.remove('bg-blue-100', 'border-blue-300');
+            filterBtn.classList.add('bg-gray-100', 'border-gray-300');
+        }
+    }
+};
+
+window.submitAddUser = async function(e) {
+    e && e.preventDefault();
+    const btn = document.getElementById('addUserSaveBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const form = document.getElementById('addUserForm');
+        const first = (form.querySelector('input[name="first_name"]')||{}).value || '';
+        const last = (form.querySelector('input[name="last_name"]')||{}).value || '';
+        const pwd = (form.querySelector('input[name="password"]')||{}).value || '';
+        if (!pwd.trim()) {
+            if (typeof showToast === 'function') {
+                showToast('Password is required', 'error');
+            } else {
+                alert('Password is required');
+            }
+            if (btn) btn.disabled = false;
+            return false;
+        }
+
+        const full = (first + ' ' + last).trim();
+        const fd = new FormData(form);
+        fd.append('full_name', full);
+        fd.append('ajax','1'); fd.append('action','create_user');
+        const addFile = document.getElementById('add_profile_file');
+        if (addFile && addFile.files && addFile.files[0]) {
+            fd.append('profile_photo', addFile.files[0]);
+        }
+
+        const res = await fetch(location.href, { method: 'POST', body: fd });
+        const raw = await res.text();
+        console.log('create_user raw response:', raw);
+        let j;
+        try { j = JSON.parse(raw); } catch (err) { 
+            console.warn('create_user: server returned non-JSON:', raw); 
+            j = { success: res.ok, message: raw || (res.ok ? 'OK (no JSON)' : 'Server error') }; 
+        }
+
+        console.log('create_user parsed JSON:', j);
+        if (j && j.success) {
+            if (typeof closeAddUserModal === 'function') closeAddUserModal();
+            if (typeof showToast === 'function') {
+                showToast(j.message || 'User created successfully!', 'success');
+            } else {
+                alert(j.message || 'User created successfully!');
+            }
+            setTimeout(() => location.reload(), 800);
+        } else {
+            if (typeof showToast === 'function') {
+                showToast(j.message || 'Create failed', 'error');
+            } else {
+                alert('Error: ' + (j.message || 'Create failed'));
+            }
+        }
+    } catch (err) {
+        console.error('create user error', err);
+        if (typeof showToast === 'function') {
+            showToast('Request failed: ' + err.message, 'error');
+        } else {
+            alert('Request failed: ' + err.message);
+        }
+    }
+    if (btn) btn.disabled = false;
+    return false;
+};
+
+window.closeAddUserModal = function() {
+    const modal = document.getElementById('addUserModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    // Reset form
+    const form = document.getElementById('addUserForm');
+    if (form) form.reset();
+};
+
+window.closeBulkImportModal = function() {
+    const modal = document.getElementById('bulkImportModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    // Reset form
+    const form = document.getElementById('bulkImportForm');
+    if (form) form.reset();
+    document.getElementById('csvPreview')?.classList.add('hidden');
+    document.getElementById('importErrors')?.classList.add('hidden');
+    document.getElementById('importSuccess')?.classList.add('hidden');
+};
+
+window.downloadTemplate = function() {
+    const csvContent = "id_number,full_name,email,role,password\n" +
+                      "2021-00001,John Doe,john.doe@example.com,Student,password123\n" +
+                      "2021-00002,Jane Smith,jane.smith@example.com,Student,password123\n" +
+                      "EMP-001,Bob Johnson,bob.johnson@example.com,Technician,password123";
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'users_import_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+window.previewCSV = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+        
+        if (rows.length < 2) {
+            if (typeof showToast === 'function') {
+                showToast('CSV file must contain at least a header row and one data row', 'error');
+            }
+            return;
+        }
+        
+        const headers = rows[0].split(',').map(h => h.trim());
+        const preview = document.getElementById('csvPreview');
+        const headerRow = document.getElementById('csvPreviewHeader');
+        const bodyTable = document.getElementById('csvPreviewBody');
+        const rowCount = document.getElementById('csvRowCount');
+        
+        if (!headerRow || !bodyTable || !rowCount) return;
+        
+        // Show headers
+        headerRow.innerHTML = headers.map(h => `<th class="px-3 py-2 text-left text-xs font-medium text-gray-700 bg-gray-50">${h}</th>`).join('');
+        
+        // Show first 5 data rows
+        bodyTable.innerHTML = '';
+        const dataRows = rows.slice(1, 6);
+        dataRows.forEach((row, idx) => {
+            const cells = row.split(',').map(c => c.trim());
+            const tr = document.createElement('tr');
+            tr.innerHTML = cells.map(cell => `<td class="px-3 py-2 text-xs text-gray-600">${cell}</td>`).join('');
+            bodyTable.appendChild(tr);
+        });
+        
+        rowCount.textContent = `Total rows: ${rows.length - 1} users`;
+        if (preview) preview.classList.remove('hidden');
+    };
+    
+    reader.readAsText(file);
+};
+
+window.submitBulkImport = async function(event) {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput?.files[0];
+    
+    if (!file) {
+        if (typeof showToast === 'function') {
+            showToast('Please select a CSV file', 'error');
+        }
+        return false;
+    }
+    
+    const importBtn = document.getElementById('bulkImportBtn');
+    const originalText = importBtn?.innerHTML || 'Import Users';
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
+    }
+    
+    // Hide previous results
+    document.getElementById('importErrors')?.classList.add('hidden');
+    document.getElementById('importSuccess')?.classList.add('hidden');
+    
+    try {
+        const text = await file.text();
+        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+        
+        if (rows.length < 2) {
+            throw new Error('CSV file must contain at least a header row and one data row');
+        }
+        
+        const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+        const requiredHeaders = ['id_number', 'full_name', 'email', 'role', 'password'];
+        
+        // Validate headers
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        if (missingHeaders.length > 0) {
+            throw new Error(`Missing required columns: ${missingHeaders.join(', ')}`);
+        }
+        
+        const users = [];
+        const errors = [];
+        
+        // Parse data rows
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].split(',').map(c => c.trim());
+            const user = {};
+            
+            headers.forEach((header, idx) => {
+                user[header] = cells[idx] || '';
+            });
+            
+            // Validate row
+            if (!user.full_name || !user.email || !user.role || !user.password) {
+                errors.push(`Row ${i + 1}: Missing required fields`);
+                continue;
+            }
+            
+            if (!['Administrator', 'Technician', 'LaboratoryStaff', 'Student'].includes(user.role)) {
+                errors.push(`Row ${i + 1}: Invalid role "${user.role}"`);
+                continue;
+            }
+            
+            users.push(user);
+        }
+        
+        if (errors.length > 0 && users.length === 0) {
+            const errorList = document.getElementById('importErrorList');
+            if (errorList) {
+                errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+            }
+            document.getElementById('importErrors')?.classList.remove('hidden');
+            if (importBtn) {
+                importBtn.disabled = false;
+                importBtn.innerHTML = originalText;
+            }
+            return false;
+        }
+        
+        // Import users
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const user of users) {
+            try {
+                const formData = new FormData();
+                formData.append('ajax', '1');
+                formData.append('action', 'create_user');
+                formData.append('id_number', user.id_number);
+                formData.append('full_name', user.full_name);
+                formData.append('email', user.email);
+                formData.append('role', user.role);
+                formData.append('password', user.password);
+                
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errors.push(`${user.email}: ${result.message || 'Failed to create'}`);
+                    failCount++;
+                }
+            } catch (err) {
+                errors.push(`${user.email}: ${err.message}`);
+                failCount++;
+            }
+        }
+        
+        // Show results
+        if (successCount > 0) {
+            const successMsg = document.getElementById('importSuccessMessage');
+            if (successMsg) {
+                successMsg.textContent = 
+                    `Successfully imported ${successCount} user(s)${failCount > 0 ? `. ${failCount} failed.` : '.'}`;
+            }
+            document.getElementById('importSuccess')?.classList.remove('hidden');
+        }
+        
+        if (errors.length > 0) {
+            const errorList = document.getElementById('importErrorList');
+            if (errorList) {
+                errorList.innerHTML = errors.slice(0, 10).map(e => `<li>${e}</li>`).join('');
+                if (errors.length > 10) {
+                    errorList.innerHTML += `<li>...and ${errors.length - 10} more errors</li>`;
+                }
+            }
+            document.getElementById('importErrors')?.classList.remove('hidden');
+        }
+        
+        if (successCount > 0) {
+            if (typeof showToast === 'function') {
+                showToast(`Successfully imported ${successCount} users!`, 'success');
+            }
+            if (errors.length === 0) {
+                setTimeout(() => {
+                    window.closeBulkImportModal();
+                    location.reload();
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            }
+        }
+        
+    } catch (err) {
+        if (typeof showToast === 'function') {
+            showToast(err.message, 'error');
+        } else {
+            alert('Error: ' + err.message);
+        }
+    } finally {
+        if (importBtn) {
+            importBtn.disabled = false;
+            importBtn.innerHTML = originalText;
+        }
+    }
+    
+    return false;
+};
+
+// Other placeholders - these don't need early implementation
+</script>
+
+<?php include '../components/layout_footer.php'; ?>
 <script>
 // Pagination variables
 let currentPage = 1;
 let pageSize = 10;
 let allRows = [];
 
+// Define helper functions immediately (not in DOMContentLoaded)
+function getRowById(id) {
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    for (const r of rows) {
+        try {
+            const u = r.dataset.user ? JSON.parse(r.dataset.user) : null;
+            if (u && parseInt(u.id) === parseInt(id)) return r;
+        } catch(e) { continue; }
+    }
+    return null;
+}
+
+function showUserModal(user) {
+    document.getElementById('modalName').textContent = user.full_name || '-';
+    document.getElementById('modalEmail').textContent = 'Email: ' + (user.email || '-');
+    document.getElementById('modalRole').textContent = 'Role: ' + (user.role || '-');
+    document.getElementById('modalStatus').textContent = 'Status: ' + (user.status || '-');
+    const modal = document.getElementById('userModal');
+    modal.dataset.userId = user.id;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function showToast(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('globalToast');
+    const inner = document.getElementById('globalToastInner');
+    if (!container || !inner) return;
+    inner.textContent = message;
+    inner.className = 'px-4 py-2 rounded shadow text-sm ' + (type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white');
+    container.classList.remove('hidden');
+    setTimeout(() => {
+        container.classList.add('hidden');
+    }, duration);
+}
+
+// Override placeholder with real implementation for editUser
+window.editUser = function(btn, userId) {
+    const tr = getRowById(userId);
+    const user = tr && tr.dataset.user ? JSON.parse(tr.dataset.user) : null;
+    if (!user) { showToast('User not found', 'error'); return; }
+
+    const modal = document.getElementById('editUserModal');
+    if (!modal) { showToast('Edit modal not found', 'error'); return; }
+
+    document.getElementById('edit_user_id').value = userId;
+
+    const full = (user.full_name || '').trim();
+    let first = '', last = '';
+    if (full) {
+        const parts = full.split(/\s+/);
+        first = parts.shift() || '';
+        last = parts.join(' ') || '';
+    }
+
+    const fnameEl = document.getElementById('edit_first_name');
+    const lnameEl = document.getElementById('edit_last_name');
+    const emailEl = document.getElementById('edit_email');
+    const roleEl = document.getElementById('edit_role');
+    const idEl = document.getElementById('edit_id_number');
+    const titleEl = document.getElementById('edit_modal_title');
+    const subtitleEl = document.getElementById('edit_modal_subtitle');
+    const imgEl = document.getElementById('edit_profile_photo_img');
+    const initialEl = document.getElementById('edit_profile_initial');
+    const photoContainer = document.getElementById('edit_profile_photo_container');
+    const fileInput = document.getElementById('edit_profile_file');
+
+    if (fileInput) fileInput.value = '';
+    if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+    if (initialEl) { initialEl.textContent = 'Add photo'; initialEl.style.display = ''; }
+
+    if (fnameEl) fnameEl.value = first;
+    if (lnameEl) lnameEl.value = last;
+    if (emailEl) emailEl.value = user.email || '';
+    if (roleEl) roleEl.value = user.role || '';
+    if (idEl) idEl.value = user.id_number || '';
+    if (titleEl) titleEl.textContent = full || 'Edit User';
+    if (subtitleEl) subtitleEl.textContent = user.email || 'Update account details';
+
+    // avatar preview handling
+    if (photoContainer) photoContainer.classList.add('bg-gray-100');
+
+    const avatar = user.avatar || user.profile_photo || '';
+    if (avatar) {
+        if (imgEl) { imgEl.src = avatar; imgEl.style.display = ''; }
+        if (initialEl) { initialEl.textContent = ''; initialEl.style.display = 'none'; }
+        if (photoContainer) photoContainer.classList.remove('bg-gray-100');
+    } else {
+        const fallback = (full || user.email || 'User').trim().charAt(0).toUpperCase() || 'U';
+        if (imgEl) imgEl.style.display = 'none';
+        if (initialEl) { initialEl.textContent = fallback; initialEl.style.display = ''; }
+        if (photoContainer) photoContainer.classList.add('bg-gray-100');
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.closeUserModal = function() {
+    const modal = document.getElementById('userModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    delete modal.dataset.userId;
+};
+
 // Initialize pagination on page load
 document.addEventListener('DOMContentLoaded', function() {
     allRows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
     updatePagination();
+    
+    // Close menus when clicking outside
+    document.addEventListener('click', function(e){
+        const el = e.target;
+        // if click inside a menu or its button, ignore
+        if (el.closest && el.closest('[role="menu"]')) return;
+        if (el.closest && el.closest('.relative.inline-block.text-left')) return;
+        // hide any in-place menus
+        document.querySelectorAll('div[role="menu"]').forEach(d => { if (!d.classList.contains('hidden')) d.classList.add('hidden'); });
+        // remove any floating clones
+        document.querySelectorAll('.floating-row-menu').forEach(c => c.remove());
+    });
 });
 
 function changePageSize() {
@@ -791,7 +1749,7 @@ function getVisibleRows() {
         // Role filter
         const userRole = (user.role || '').toLowerCase();
         const matchesRole = !roleFilter || userRole === roleFilter || 
-                           (roleFilter === 'laboratorystaff' && userRole === 'laboratory staff');
+                           ;
         
         // Status filter
         const userStatus = (user.status || 'active').toLowerCase();
@@ -920,99 +1878,7 @@ function filterUsers() {
     updatePagination();
 }
 
-function getRowById(id) {
-    const rows = document.querySelectorAll('#usersTable tbody tr');
-    for (const r of rows) {
-        try {
-            const u = r.dataset.user ? JSON.parse(r.dataset.user) : null;
-            if (u && parseInt(u.id) === parseInt(id)) return r;
-        } catch(e) { continue; }
-    }
-    return null;
-}
-
-function showUserModal(user) {
-    document.getElementById('modalName').textContent = user.full_name || '-';
-    document.getElementById('modalEmail').textContent = 'Email: ' + (user.email || '-');
-    document.getElementById('modalRole').textContent = 'Role: ' + (user.role || '-');
-    document.getElementById('modalStatus').textContent = 'Status: ' + (user.status || '-');
-    const modal = document.getElementById('userModal');
-    modal.dataset.userId = user.id;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-function closeUserModal() {
-    const modal = document.getElementById('userModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    delete modal.dataset.userId;
-}
-
-
-
-function editUser(btn, userId) {
-    const tr = getRowById(userId);
-    const user = tr && tr.dataset.user ? JSON.parse(tr.dataset.user) : null;
-    if (!user) { showToast('User not found', 'error'); return; }
-
-    const modal = document.getElementById('editUserModal');
-    if (!modal) { showNotification('Edit modal not found', 'error'); return; }
-
-    document.getElementById('edit_user_id').value = userId;
-
-    const full = (user.full_name || '').trim();
-    let first = '', last = '';
-    if (full) {
-        const parts = full.split(/\s+/);
-        first = parts.shift() || '';
-        last = parts.join(' ') || '';
-    }
-
-    const fnameEl = document.getElementById('edit_first_name');
-    const lnameEl = document.getElementById('edit_last_name');
-    const emailEl = document.getElementById('edit_email');
-    const roleEl = document.getElementById('edit_role');
-    const idEl = document.getElementById('edit_id_number');
-    const titleEl = document.getElementById('edit_modal_title');
-    const subtitleEl = document.getElementById('edit_modal_subtitle');
-    const imgEl = document.getElementById('edit_profile_photo_img');
-    const initialEl = document.getElementById('edit_profile_initial');
-    const photoContainer = document.getElementById('edit_profile_photo_container');
-    const fileInput = document.getElementById('edit_profile_file');
-
-    if (fileInput) fileInput.value = '';
-    if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
-    if (initialEl) { initialEl.textContent = 'Add photo'; initialEl.style.display = ''; }
-
-    if (fnameEl) fnameEl.value = first;
-    if (lnameEl) lnameEl.value = last;
-    if (emailEl) emailEl.value = user.email || '';
-    if (roleEl) roleEl.value = user.role || '';
-    if (idEl) idEl.value = user.id_number || '';
-    if (titleEl) titleEl.textContent = full || 'Edit User';
-    if (subtitleEl) subtitleEl.textContent = user.email || 'Update account details';
-
-    // avatar preview handling
-    if (photoContainer) photoContainer.classList.add('bg-gray-100');
-
-    const avatar = user.avatar || user.profile_photo || '';
-    if (avatar) {
-        if (imgEl) { imgEl.src = avatar; imgEl.style.display = ''; }
-        if (initialEl) { initialEl.textContent = ''; initialEl.style.display = 'none'; }
-        if (photoContainer) photoContainer.classList.remove('bg-gray-100');
-    } else {
-        const fallback = (full || user.email || 'User').trim().charAt(0).toUpperCase() || 'U';
-        if (imgEl) imgEl.style.display = 'none';
-        if (initialEl) { initialEl.textContent = fallback; initialEl.style.display = ''; }
-        if (photoContainer) photoContainer.classList.add('bg-gray-100');
-    }
-
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-function closeEditModal() {
+window.closeEditModal = function() {
     const modal = document.getElementById('editUserModal');
     if (!modal) return;
     modal.classList.add('hidden');
@@ -1025,7 +1891,7 @@ function closeEditModal() {
     if (initialEl) { initialEl.textContent = 'Add photo'; initialEl.style.display = ''; }
     if (container) container.classList.add('bg-gray-100');
     if (fileInput) fileInput.value = '';
-}
+};
 
 async function submitEditForm(e) {
     e && e.preventDefault();
@@ -1135,11 +2001,11 @@ function showActionToast(message, onUndo, onView, duration = 6000) {
     setTimeout(()=>{ try{ div.remove(); } catch(e){} }, duration);
 }
 
-function editUserFromModal() {
+window.editUserFromModal = function() {
     const modal = document.getElementById('userModal');
     if (!modal || !modal.dataset.userId) return;
     editUser(null, modal.dataset.userId);
-}
+};
 
 // Preview selected profile file in the edit modal (client-side only)
 function previewEditProfileFile(e) {
@@ -1159,10 +2025,10 @@ function previewEditProfileFile(e) {
     reader.readAsDataURL(file);
 }
 
-function triggerEditProfileUpload() {
+window.triggerEditProfileUpload = function() {
     const input = document.getElementById('edit_profile_file');
     if (input) input.click();
-}
+};
 
 
 
@@ -1261,7 +2127,7 @@ function addUserRow(user) {
 function formatDateShort(d){ try { return new Date(d).toLocaleString('en-US', { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }); } catch(e){ return '-'; } }
 function formatDateShortDate(d){ try { return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'2-digit' }); } catch(e){ return '-'; } }
 
-async function suspendUser(userId) {
+window.suspendUser = async function(userId) {
     const modal = document.getElementById('suspendConfirmModal');
     if (!modal) {
         // fallback to async confirm modal
@@ -1295,9 +2161,9 @@ async function suspendUser(userId) {
     modal.dataset.userId = String(userId);
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-}
+};
 
-async function unsuspendUser(userId) {
+window.unsuspendUser = async function(userId) {
     const confirmed = await showConfirmModal({
         title: 'Activate User',
         message: 'Are you sure you want to activate this user? Their status will be set to Active.',
@@ -1375,7 +2241,7 @@ function updateUserStatus(userId, newStatus) {
     }
 }
 
-async function deleteUser(btn, userId) {
+window.deleteUser = async function(btn, userId) {
     // open the simple Yes/No confirmation modal
     const modal = document.getElementById('deleteConfirmModal');
     if (!modal) {
@@ -1416,25 +2282,25 @@ async function deleteUser(btn, userId) {
     // show modal
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-}
+};
 
-function closeDeleteModal() {
+window.closeDeleteModal = function() {
     const modal = document.getElementById('deleteConfirmModal');
     if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     delete modal.dataset.userId;
-}
+};
 
-function closeSuspendModal() {
+window.closeSuspendModal = function() {
     const modal = document.getElementById('suspendConfirmModal');
     if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     delete modal.dataset.userId;
-}
+};
 
-async function confirmSuspend() {
+window.confirmSuspend = async function() {
     const modal = document.getElementById('suspendConfirmModal');
     if (!modal) return;
     const userId = modal.dataset.userId;
@@ -1455,9 +2321,9 @@ async function confirmSuspend() {
     } catch (err) { console.error(err); showNotification('Request failed', 'error'); }
     if (btn) btn.disabled = false;
     closeSuspendModal();
-}
+};
 
-async function confirmDelete() {
+window.confirmDelete = async function() {
     const modal = document.getElementById('deleteConfirmModal');
     if (!modal || !modal.dataset.userId) return;
     const userId = modal.dataset.userId;
@@ -1508,7 +2374,7 @@ async function confirmDelete() {
         showTopAlert('error', 'Request failed');
     }
     btn.disabled = false;
-}
+};
 
 async function toggleStatus(btn, userId) {
     btn.disabled = true;
@@ -1542,14 +2408,14 @@ async function toggleStatus(btn, userId) {
 }
 
 // Add User modal handlers
-function openAddUserModal() {
+window.openAddUserModal = function() {
     const m = document.getElementById('addUserModal');
     if (!m) return;
     // reset preview state and show
     _resetAddModalState();
     m.classList.remove('hidden');
     m.classList.add('flex');
-}
+};
 
 // Reset add-modal previews and form state
 function _resetAddModalState() {
@@ -1655,67 +2521,8 @@ function triggerAddProfileUpload() {
     if (input) input.click();
 }
 
-// Toggle the per-row action menu (three-dots). This creates a floating clone appended to body
-function toggleRowMenu(btn, userId) {
-    // If a floating menu for this user already exists, toggle it off
-    const existingForUser = document.querySelector('.floating-row-menu[data-user-id="' + userId + '"]');
-    if (existingForUser) { try { existingForUser.remove(); } catch(e){} return; }
-
-    // remove any other floating menus first
-    document.querySelectorAll('.floating-row-menu').forEach(c => c.remove());
-
-    const menuTemplate = btn && btn.parentElement ? btn.parentElement.querySelector('div[role="menu"]') : null;
-    if (!menuTemplate) return;
-
-    // clone the menu so it can float above overflowing parents
-    const clone = menuTemplate.cloneNode(true);
-    clone.classList.remove('hidden');
-    clone.classList.add('floating-row-menu');
-    clone.setAttribute('data-user-id', String(userId));
-    clone.style.position = 'fixed';
-    clone.style.zIndex = '9999';
-    clone.style.minWidth = '150px';
-    clone.style.visibility = 'hidden';
-
-    document.body.appendChild(clone);
-
-    // measure and position near the button
-    const rect = btn.getBoundingClientRect();
-    // ensure it's briefly in DOM so offsetWidth/Height are available
-    const cw = clone.offsetWidth || 180;
-    const ch = clone.offsetHeight || 120;
-    let left = rect.right - cw;
-    if (left < 8) left = rect.left;
-    if (left + cw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - cw - 8);
-    let top = rect.bottom + 6;
-    if (top + ch > window.innerHeight - 8) top = rect.top - ch - 6;
-    if (top < 8) top = 8;
-
-    clone.style.left = left + 'px';
-    clone.style.top = top + 'px';
-    clone.style.visibility = '';
-
-    // stop propagation on clicks inside clone so outside-click handler won't immediately close it
-    clone.addEventListener('click', function(ev){ ev.stopPropagation(); });
-
-    // when a menu action is clicked, also remove the clone (menu action handlers are inline and will run)
-    Array.from(clone.querySelectorAll('button')).forEach(b=> b.addEventListener('click', ()=> { try{ clone.remove(); } catch(e){} }));
-}
-
-// Close menus when clicking outside
-document.addEventListener('click', function(e){
-    const el = e.target;
-    // if click inside a menu or its button, ignore
-    if (el.closest && el.closest('[role="menu"]')) return;
-    if (el.closest && el.closest('.relative.inline-block.text-left')) return;
-    // hide any in-place menus
-    document.querySelectorAll('div[role="menu"]').forEach(d => { if (!d.classList.contains('hidden')) d.classList.add('hidden'); });
-    // remove any floating clones
-    document.querySelectorAll('.floating-row-menu').forEach(c => c.remove());
-});
-
 // Filter menu toggle
-function toggleFilterMenu() {
+window.toggleFilterMenu = function() {
     const menu = document.getElementById('filterMenu');
     if (!menu) return;
     
@@ -1729,7 +2536,7 @@ function toggleFilterMenu() {
         menu.classList.add('hidden');
         document.removeEventListener('click', closeFilterMenuOutside);
     }
-}
+};
 
 function closeFilterMenuOutside(e) {
     const menu = document.getElementById('filterMenu');
@@ -1761,7 +2568,7 @@ function applyFilters() {
 }
 
 // Clear all filters
-function clearFilters() {
+window.clearFilters = function() {
     document.getElementById('roleFilter').value = '';
     document.getElementById('statusFilter').value = '';
     document.getElementById('userSearch').value = '';
@@ -1771,7 +2578,7 @@ function clearFilters() {
     filterBtn.classList.add('bg-gray-100', 'border-gray-300');
     
     applyFilters();
-}
+};
 
 // Update getVisibleRows to include filter logic
 function getVisibleRows() {
@@ -1790,7 +2597,7 @@ function getVisibleRows() {
         // Role filter
         const userRole = (user.role || '').toLowerCase();
         const matchesRole = !roleFilter || userRole === roleFilter || 
-                           (roleFilter === 'laboratorystaff' && userRole === 'laboratory staff');
+                           ;
         
         // Status filter
         const userStatus = (user.status || 'active').toLowerCase();
@@ -1801,13 +2608,13 @@ function getVisibleRows() {
 }
 
 // Bulk Import Functions
-function openBulkImportModal() {
+window.openBulkImportModal = function() {
     document.getElementById('bulkImportModal').classList.remove('hidden');
     document.getElementById('csvFile').value = '';
     document.getElementById('csvPreview').classList.add('hidden');
     document.getElementById('importErrors').classList.add('hidden');
     document.getElementById('importSuccess').classList.add('hidden');
-}
+};
 
 function closeBulkImportModal() {
     document.getElementById('bulkImportModal').classList.add('hidden');

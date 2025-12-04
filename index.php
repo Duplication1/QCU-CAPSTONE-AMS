@@ -515,6 +515,30 @@
                                 <p class="text-gray-600 text-xs">Documentation  </p>
                             </div>
                         </div>
+                        
+                        <!-- Team Member 12 -->
+                        <div class="team-slide absolute transition-all duration-500" data-index="11" style="width: 240px;">
+                            <div class="bg-white rounded-2xl shadow-xl p-6 text-center border-2 border-blue-400">
+                                <div class="w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden">
+                                    <img src="assets/images/naron.jpg" alt="Naron" class="w-full h-full object-cover">
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">Naron</h3>
+                                <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
+                                <p class="text-gray-600 text-xs">Documentation</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Team Member 13 -->
+                        <div class="team-slide absolute transition-all duration-500" data-index="12" style="width: 240px;">
+                            <div class="bg-white rounded-2xl shadow-xl p-6 text-center border-2 border-blue-400">
+                                <div class="w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden">
+                                    <img src="assets/images/vinas.jpg" alt="Vinas" class="w-full h-full object-cover">
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">Viñas</h3>
+                                <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
+                                <p class="text-gray-600 text-xs">UI Designer</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -603,9 +627,7 @@
                         <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
                             <i class="fa-brands fa-facebook"></i>
                         </a>
-                        <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors">
-                            <i class="fa-brands fa-twitter"></i>
-                        </a>
+                       
                         <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
                             <i class="fa-brands fa-instagram"></i>
                         </a>
@@ -656,7 +678,7 @@
         const teamSlider = document.getElementById('teamSlider');
         const sliderDots = document.getElementById('sliderDots');
         const slides = document.querySelectorAll('.team-slide');
-        const teamMembers = 11;
+        const teamMembers = 13;
         let currentSlide = 0;
         
         // Create navigation dots
