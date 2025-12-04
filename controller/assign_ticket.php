@@ -65,8 +65,8 @@ try {
     $technicianName = $techData['full_name'];
     error_log("Technician lookup - ID: $technicianId, Name: $technicianName");
 
-    // update assigned_technician with the technician's full name
-    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, updated_at = NOW() WHERE id = ?");
+    // update assigned_technician with the technician's full name and set status to In Progress
+    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, status = 'In Progress', updated_at = NOW() WHERE id = ?");
     if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
     $stmt->bind_param('si', $technicianName, $ticketId);
     $stmt->execute();

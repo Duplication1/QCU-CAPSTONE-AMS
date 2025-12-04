@@ -34,7 +34,7 @@ $inProgressIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE sta
 $resolvedIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'Resolved'")->fetch_assoc()['count'];
 
 // Asset status counts
-$assetsBorrowed = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Approved'")->fetch_assoc()['count'];
+$assetsBorrowed = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Pending'")->fetch_assoc()['count'];
 $assetsAvailable = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'Available'")->fetch_assoc()['count'];
 $assetsInUse = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'In Use'")->fetch_assoc()['count'];
 $assetsCritical = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Non-Functional', 'Poor')")->fetch_assoc()['count'];
@@ -84,6 +84,21 @@ if ($buildings_result && $buildings_result->num_rows > 0) {
     }
 }
 
+// Fetch recent 5 activity logs
+$recent_logs_query = "SELECT al.action, al.entity_type, al.entity_id, al.description, 
+                             COALESCE(u.full_name, 'System') as performed_by, al.created_at 
+                      FROM activity_logs al
+                      LEFT JOIN users u ON al.user_id = u.id
+                      ORDER BY al.created_at DESC 
+                      LIMIT 5";
+$recent_logs_result = $conn->query($recent_logs_query);
+$recent_logs = [];
+if ($recent_logs_result && $recent_logs_result->num_rows > 0) {
+    while ($log_row = $recent_logs_result->fetch_assoc()) {
+        $recent_logs[] = $log_row;
+    }
+}
+
 // Get count of new unassigned tickets
 $new_tickets_query = "SELECT COUNT(*) as count FROM issues 
                       WHERE (assigned_group IS NULL OR assigned_group = '') 
@@ -102,10 +117,43 @@ include '../components/layout_header.php';
             body, html { overflow: hidden !important; height: 100vh; }
             .metric-card {
                 transition: all 0.2s ease;
+                position: relative;
             }
             .metric-card:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+            .metric-increment {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: #10b981;
+                animation: fadeUp 5s ease-out forwards;
+                pointer-events: none;
+                z-index: 10;
+            }
+            .metric-decrement {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: #ef4444;
+                animation: fadeUp 5s ease-out forwards;
+                pointer-events: none;
+                z-index: 10;
+            }
+            @keyframes fadeUp {
+                0% {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
             }
         </style>
         <!-- Main Content -->
@@ -117,7 +165,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Unassigned Tickets</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $unassignedIssues; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="unassignedIssues"><?php echo $unassignedIssues; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -133,7 +181,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">In Progress Tickets</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $inProgressIssues; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="inProgressIssues"><?php echo $inProgressIssues; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -149,7 +197,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Resolved Tickets</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $resolvedIssues; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="resolvedIssues"><?php echo $resolvedIssues; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -165,7 +213,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Healthy Assets</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $healthyAssets; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="healthyAssets"><?php echo $healthyAssets; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -181,7 +229,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Near End of Life</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $assetsNearEOL; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="assetsNearEOL"><?php echo $assetsNearEOL; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -200,7 +248,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assets Borrowed</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $assetsBorrowed; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="assetsBorrowed"><?php echo $assetsBorrowed; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -208,7 +256,7 @@ include '../components/layout_header.php';
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs text-purple-600 font-medium">Currently on loan</p>
+                    <p class="text-xs text-purple-600 font-medium">Requesting to borrow</p>
                 </div>
 
                 <!-- Assets Available -->
@@ -216,7 +264,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assets Available</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $assetsAvailable; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="assetsAvailable"><?php echo $assetsAvailable; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -232,7 +280,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assets In Use</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $assetsInUse; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="assetsInUse"><?php echo $assetsInUse; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -248,7 +296,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Needs Attention</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $needsAttention; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="needsAttention"><?php echo $needsAttention; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -264,7 +312,7 @@ include '../components/layout_header.php';
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Critical Assets</p>
-                            <p class="text-3xl font-bold text-gray-900"><?php echo $assetsCritical; ?></p>
+                            <p class="text-3xl font-bold text-gray-900" data-metric="assetsCritical"><?php echo $assetsCritical; ?></p>
                         </div>
                         <div class="w-16 h-10">
                             <svg class="w-full h-full" viewBox="0 0 80 40" fill="none" preserveAspectRatio="none">
@@ -277,7 +325,7 @@ include '../components/layout_header.php';
             </div>
 
             <!-- Charts Grid -->
-            <div class="grid grid-cols-4 gap-3 flex-1 min-h-0">
+            <div class="grid grid-cols-5 gap-3 flex-1 min-h-0">
                 <?php foreach($buildingsData as $building): ?>
                 <!-- <?php echo htmlspecialchars($building['name']); ?> Building -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
@@ -318,6 +366,63 @@ include '../components/layout_header.php';
                     </div>
                 </div>
                 <?php endforeach; ?>
+
+                <!-- Recent Activity Logs -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-gray-900">Recent Activity</h3>
+                        <a href="activity_logs.php" class="text-xs text-purple-600 hover:text-purple-700 font-medium">View All</a>
+                    </div>
+                    
+                    <div id="activityLogsContainer" class="space-y-2">
+                        <?php if (empty($recent_logs)): ?>
+                            <p class="text-xs text-gray-500 text-center py-4">No recent activity</p>
+                        <?php else: ?>
+                            <?php foreach($recent_logs as $log): ?>
+                            <div class="bg-gray-50 rounded p-2 border border-gray-200 hover:bg-gray-100 transition-colors">
+                                <div class="flex items-start justify-between mb-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-medium
+                                        <?php 
+                                        switch($log['action']) {
+                                            case 'create': echo 'bg-green-100 text-green-800'; break;
+                                            case 'update': echo 'bg-blue-100 text-blue-800'; break;
+                                            case 'delete': echo 'bg-red-100 text-red-800'; break;
+                                            case 'scan': echo 'bg-purple-100 text-purple-800'; break;
+                                            case 'assign': echo 'bg-yellow-100 text-yellow-800'; break;
+                                            case 'view': echo 'bg-indigo-100 text-indigo-800'; break;
+                                            case 'export': echo 'bg-cyan-100 text-cyan-800'; break;
+                                            default: echo 'bg-gray-100 text-gray-800';
+                                        }
+                                        ?>">
+                                        <?php echo strtoupper(htmlspecialchars($log['action'])); ?>
+                                    </span>
+                                    <span class="text-[9px] text-gray-500">
+                                        <?php 
+                                        $time_ago = abs(time() - strtotime($log['created_at']));
+                                        if ($time_ago < 60) echo $time_ago . 's ago';
+                                        elseif ($time_ago < 3600) echo floor($time_ago / 60) . 'm ago';
+                                        elseif ($time_ago < 86400) echo floor($time_ago / 3600) . 'h ago';
+                                        else echo floor($time_ago / 86400) . 'd ago';
+                                        ?>
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-gray-700 font-medium mb-1">
+                                    <?php echo ucfirst(htmlspecialchars($log['entity_type'])); ?>
+                                    <?php if ($log['entity_id']): ?>
+                                        <span class="text-gray-500">#<?php echo htmlspecialchars($log['entity_id']); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                                <p class="text-[9px] text-gray-600 truncate">
+                                    <?php echo htmlspecialchars($log['description']); ?>
+                                </p>
+                                <p class="text-[9px] text-gray-500 mt-1">
+                                    by <?php echo htmlspecialchars($log['performed_by']); ?>
+                                </p>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </main>
                     <!-- UNASSIGNED -->
@@ -531,6 +636,187 @@ include '../components/layout_header.php';
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         
         <script>
+        // Real-time Dashboard Updates
+        let refreshInterval = null;
+        const REFRESH_RATE = 5000; // 5 seconds (faster updates)
+
+        // Function to fetch and update dashboard metrics
+        async function updateDashboardMetrics() {
+            try {
+                const response = await fetch('../../controller/get_dashboard_metrics.php', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch metrics');
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update metric values with smooth transitions
+                    updateMetricValue('unassignedIssues', data.unassignedIssues);
+                    updateMetricValue('inProgressIssues', data.inProgressIssues);
+                    updateMetricValue('resolvedIssues', data.resolvedIssues);
+                    updateMetricValue('healthyAssets', data.healthyAssets);
+                    updateMetricValue('assetsNearEOL', data.assetsNearEOL);
+                    updateMetricValue('assetsBorrowed', data.assetsBorrowed);
+                    updateMetricValue('assetsAvailable', data.assetsAvailable);
+                    updateMetricValue('assetsInUse', data.assetsInUse);
+                    updateMetricValue('needsAttention', data.needsAttention);
+                    updateMetricValue('assetsCritical', data.assetsCritical);
+                    
+                    // Update activity logs if changed
+                    if (data.recent_logs) {
+                        updateActivityLogs(data.recent_logs);
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+
+        // Smooth counter animation
+        function updateMetricValue(elementId, newValue) {
+            const elements = document.querySelectorAll(`[data-metric="${elementId}"]`);
+            elements.forEach(element => {
+                const currentValue = parseInt(element.textContent) || 0;
+                if (currentValue !== newValue) {
+                    const difference = newValue - currentValue;
+                    
+                    // Show increment/decrement indicator
+                    const card = element.closest('.metric-card');
+                    if (card && difference !== 0) {
+                        const indicator = document.createElement('div');
+                        indicator.className = difference > 0 ? 'metric-increment' : 'metric-decrement';
+                        indicator.textContent = difference > 0 ? `+${difference}` : `${difference}`;
+                        card.appendChild(indicator);
+                        
+                        // Remove indicator after animation
+                        setTimeout(() => indicator.remove(), 5000);
+                    }
+                    
+                    animateValue(element, currentValue, newValue, 1000);
+                    // Add pulse effect
+                    element.classList.add('animate-pulse');
+                    setTimeout(() => element.classList.remove('animate-pulse'), 1000);
+                }
+            });
+        }
+
+        // Counter animation function
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    element.textContent = end;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, 16);
+        }
+
+        // Update activity logs
+        function updateActivityLogs(logs) {
+            const container = document.getElementById('activityLogsContainer');
+            if (!container) return;
+            
+            const currentHTML = container.innerHTML;
+            const newHTML = generateActivityLogsHTML(logs);
+            
+            if (currentHTML !== newHTML) {
+                container.innerHTML = newHTML;
+                container.classList.add('animate-pulse');
+                setTimeout(() => container.classList.remove('animate-pulse'), 500);
+            }
+        }
+
+        // Generate activity logs HTML
+        function generateActivityLogsHTML(logs) {
+            if (!logs || logs.length === 0) {
+                return '<p class="text-xs text-gray-500 text-center py-4">No recent activity</p>';
+            }
+            
+            return logs.map(log => {
+                let badgeClass = 'bg-gray-100 text-gray-800';
+                switch(log.action) {
+                    case 'create': badgeClass = 'bg-green-100 text-green-800'; break;
+                    case 'update': badgeClass = 'bg-blue-100 text-blue-800'; break;
+                    case 'delete': badgeClass = 'bg-red-100 text-red-800'; break;
+                    case 'scan': badgeClass = 'bg-purple-100 text-purple-800'; break;
+                    case 'assign': badgeClass = 'bg-yellow-100 text-yellow-800'; break;
+                    case 'view': badgeClass = 'bg-indigo-100 text-indigo-800'; break;
+                    case 'export': badgeClass = 'bg-cyan-100 text-cyan-800'; break;
+                }
+                
+                const timeAgo = formatTimeAgo(log.created_at);
+                
+                return `
+                    <div class="bg-gray-50 rounded p-2 border border-gray-200 hover:bg-gray-100 transition-colors">
+                        <div class="flex items-start justify-between mb-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-medium ${badgeClass}">
+                                ${log.action.toUpperCase()}
+                            </span>
+                            <span class="text-[9px] text-gray-500">${timeAgo}</span>
+                        </div>
+                        <p class="text-[10px] text-gray-700 font-medium mb-1">
+                            ${log.entity_type}
+                            ${log.entity_id ? '<span class="text-gray-500">#' + log.entity_id + '</span>' : ''}
+                        </p>
+                        <p class="text-[9px] text-gray-600 truncate">${log.description}</p>
+                        <p class="text-[9px] text-gray-500 mt-1">by ${log.performed_by}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Format time ago
+        function formatTimeAgo(timestamp) {
+            const now = Date.now();
+            const time = new Date(timestamp).getTime();
+            const diff = Math.abs(Math.floor((now - time) / 1000));
+            
+            if (diff < 60) return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+        }
+
+        // Start/stop real-time updates
+        function startRealTimeUpdates() {
+            if (!refreshInterval) {
+                refreshInterval = setInterval(updateDashboardMetrics, REFRESH_RATE);
+                console.log('Real-time updates started (every 5s)');
+            }
+        }
+
+        function stopRealTimeUpdates() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                console.log('Real-time updates stopped');
+            }
+        }
+
+        // Auto-start updates when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            startRealTimeUpdates();
+            
+            // Stop updates when page is hidden (save resources)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopRealTimeUpdates();
+                } else {
+                    startRealTimeUpdates();
+                    updateDashboardMetrics(); // Immediate update when page becomes visible
+                }
+            });
+        });
+
         // Chart.js configuration
         Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
         Chart.defaults.color = '#9CA3AF';

@@ -1575,33 +1575,68 @@ document.addEventListener('DOMContentLoaded', function(){
   const form = document.getElementById('issueForm');
   if (!form) return;
 
-  function showTopAlert(type, msg) {
-    // remove existing
-    const existing = document.getElementById('topAjaxAlert');
+  // Safe notification wrapper that works even before notifications.js loads
+  function safeShowNotification(message, type = 'success', duration = 4000) {
+    // Try to use the global showNotification if available
+    if (typeof window.showNotification === 'function') {
+      window.showNotification(message, type, duration);
+      return;
+    }
+    
+    // Fallback: create inline notification
+    const existing = document.getElementById('inline-notification-toast');
     if (existing) existing.remove();
 
-    const div = document.createElement('div');
-    div.id = 'topAjaxAlert';
+    const notification = document.createElement('div');
+    notification.id = 'inline-notification-toast';
+    notification.className = 'fixed top-6 right-6 z-[9999] transform transition-all duration-300 ease-in-out';
     
-    if (type === 'success') {
-      div.className = 'bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-6';
-      div.innerHTML = '<strong>Success!</strong> ' + msg;
-    } else {
-      div.className = 'bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6';
-      div.innerHTML = '<strong>Error!</strong> ' + msg;
+    let iconClass, bgColor, borderColor, textColor;
+    switch(type) {
+      case 'success':
+        iconClass = 'fa-check-circle';
+        bgColor = 'bg-green-50';
+        borderColor = 'border-green-400';
+        textColor = 'text-green-800';
+        break;
+      case 'error':
+        iconClass = 'fa-exclamation-circle';
+        bgColor = 'bg-red-50';
+        borderColor = 'border-red-400';
+        textColor = 'text-red-800';
+        break;
+      case 'warning':
+        iconClass = 'fa-exclamation-triangle';
+        bgColor = 'bg-yellow-50';
+        borderColor = 'border-yellow-400';
+        textColor = 'text-yellow-800';
+        break;
+      default:
+        iconClass = 'fa-info-circle';
+        bgColor = 'bg-blue-50';
+        borderColor = 'border-blue-400';
+        textColor = 'text-blue-800';
     }
-    
-    // Insert into alert container
-    const alertContainer = document.getElementById('alertContainer');
-    if (alertContainer) {
-      alertContainer.appendChild(div);
-    }
-    
-    // Scroll to top to show the alert
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // auto-remove after 5s
-    setTimeout(() => div.remove(), 3000);
+
+    notification.innerHTML = `
+      <div class="${bgColor} ${textColor} border-l-4 ${borderColor} px-6 py-4 rounded-lg shadow-lg max-w-md flex items-start gap-3" style="animation: slideIn 0.3s ease-out;">
+        <i class="fas ${iconClass} text-xl mt-0.5"></i>
+        <div class="flex-1">
+          <p class="font-medium text-sm leading-relaxed">${message}</p>
+        </div>
+        <button onclick="this.closest('#inline-notification-toast').remove()" class="text-current opacity-50 hover:opacity-100 transition-opacity">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => notification.remove(), 300);
+    }, duration);
   }
 
   form.addEventListener('submit', function(e){
@@ -1641,13 +1676,13 @@ document.addEventListener('DOMContentLoaded', function(){
         if (loadingModal) loadingModal.classList.add('hidden');
         
         if (json.success) {
-          showChip(json.message || 'Issue successfully submitted!', 'success');
+          safeShowNotification(json.message || 'Issue successfully submitted!', 'success');
           form.reset();
           // close modal if open
           const modal = document.getElementById('issueModal');
           if (modal) modal.classList.add('hidden');
         } else {
-          showChip(json.message || 'Failed to submit. Please try again.', 'error');
+          safeShowNotification(json.message || 'Failed to submit. Please try again.', 'error');
         }
       }, remainingTime);
     })
@@ -1661,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (loadingModal) loadingModal.classList.add('hidden');
         
         console.error('Submit error:', err);
-        showChip('Failed to submit. Please try again.', 'error');
+        safeShowNotification('Failed to submit. Please try again.', 'error');
       }, remainingTime);
     })
     .finally(() => {
