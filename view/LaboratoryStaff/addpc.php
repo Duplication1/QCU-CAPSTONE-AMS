@@ -243,22 +243,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
                             $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
-                            // Generate asset tag: DATE-ROOM-COMPONENT-001
-                            // Use component-specific date if provided, otherwise use PC unit date
-                            $asset_tag = $component_date_formatted . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-001';
+                            // Generate unique asset tag for THIS specific PC unit
+                            // Use current_number to make it unique per PC
+                            $component_suffix = str_pad($current_number, 3, '0', STR_PAD_LEFT);
+                            $asset_tag = $component_date_formatted . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-' . $component_suffix;
                             $asset_name = $category['name'];
 
-                            // Check if asset tag already exists
-                            $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
-                            $check_asset->bind_param('s', $asset_tag);
-                            $check_asset->execute();
-                            $check_asset->store_result();
+                            // Check if asset tag already exists and find next available
+                            $asset_tag_counter = 1;
+                            $max_tag_attempts = 1000;
+                            while ($asset_tag_counter < $max_tag_attempts) {
+                                $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ?");
+                                $check_asset->bind_param('s', $asset_tag);
+                                $check_asset->execute();
+                                $check_asset->store_result();
 
-                            if ($check_asset->num_rows > 0) {
+                                if ($check_asset->num_rows == 0) {
+                                    $check_asset->close();
+                                    break; // Found available tag
+                                }
                                 $check_asset->close();
-                                continue; // Skip if asset already exists
+                                
+                                // Try next number
+                                $component_suffix = str_pad($current_number + $asset_tag_counter, 3, '0', STR_PAD_LEFT);
+                                $asset_tag = $component_date_formatted . '-' . $room['name'] . '-' . strtoupper($category['name']) . '-' . $component_suffix;
+                                $asset_tag_counter++;
                             }
-                            $check_asset->close();
 
                             // Insert asset first to get ID
                             $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
@@ -283,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                                 $historyHelper = AssetHistoryHelper::getInstance();
                                 $historyHelper->logAssetCreated($asset_id, $asset_tag, $asset_name, $created_by);
                             } else {
-                                $errors[] = "Failed to create asset for PC-$new_id: " . $asset_stmt->error;
+                                $errors[] = "Failed to create asset for PC-$terminal_number: " . $asset_stmt->error;
                             }
                             $asset_stmt->close();
                         }

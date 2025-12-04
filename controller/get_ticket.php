@@ -38,11 +38,15 @@ if ($ticketId <= 0) {
 }
 
 // Fetch ticket details with reporter information
-$query = "SELECT i.id, i.user_id, i.category, i.room, i.terminal, i.title, i.description, 
+$query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number AS terminal, i.title, i.description, 
                  i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
-                 u.full_name AS reporter_name, u.email AS reporter_email
+                 u.full_name AS reporter_name, u.email AS reporter_email,
+                 i.component_asset_id, a.asset_name AS component_name, a.asset_tag AS component_tag
           FROM issues i
           LEFT JOIN users u ON u.id = i.user_id
+          LEFT JOIN rooms r ON r.id = i.room_id
+          LEFT JOIN pc_units p ON p.id = i.pc_id
+          LEFT JOIN assets a ON a.id = i.component_asset_id
           WHERE i.id = ?";
 
 $stmt = $conn->prepare($query);
@@ -83,7 +87,10 @@ echo json_encode([
         'updated_at' => $ticket['updated_at'],
         'assigned_technician' => $ticket['assigned_technician'],
         'reporter_name' => $ticket['reporter_name'],
-        'reporter_email' => $ticket['reporter_email']
+        'reporter_email' => $ticket['reporter_email'],
+        'component_asset_id' => $ticket['component_asset_id'],
+        'component_name' => $ticket['component_name'],
+        'component_tag' => $ticket['component_tag']
     ]
 ]);
 ?>

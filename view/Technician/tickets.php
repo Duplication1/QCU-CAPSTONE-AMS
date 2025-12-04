@@ -98,12 +98,15 @@ $sql = "SELECT i.*,
                u.full_name AS reporter_name,
                r.name AS room_name,
                b.name AS building_name,
-               pc.terminal_number
+               pc.terminal_number,
+               a.asset_name AS component_name,
+               a.asset_tag AS component_tag
         FROM issues i
         LEFT JOIN users u ON u.id = i.user_id
         LEFT JOIN rooms r ON r.id = i.room_id
         LEFT JOIN buildings b ON b.id = r.building_id
         LEFT JOIN pc_units pc ON pc.id = i.pc_id
+        LEFT JOIN assets a ON a.id = i.component_asset_id
         WHERE i.assigned_technician = ?
           AND LOWER(COALESCE(i.category,'')) IN ('hardware','software','network')
           AND COALESCE(i.is_archived, 0) = ?
@@ -236,6 +239,7 @@ if (!$result || $result->num_rows === 0): ?>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Type</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Title / Details</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Location</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Component</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Priority</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Status</th>
             <?php if ($viewMode === 'active'): ?>
@@ -281,6 +285,23 @@ if (!$result || $result->num_rows === 0): ?>
               <div class="text-[10px] text-gray-500 mt-0.5 line-clamp-1"><?php echo (strlen($desc) > 80 ? substr($desc,0,80).'...' : $desc); ?></div>
             </td>
             <td class="px-3 py-2 text-xs text-gray-700"><?php echo $loc; ?></td>
+            <td class="px-3 py-2 text-xs">
+              <?php if (!empty($ticket['component_name'])): ?>
+                <div class="flex items-center gap-1">
+                  <span class="text-blue-600 font-medium" title="<?php echo htmlspecialchars($ticket['component_tag'] ?? ''); ?>">
+                    <?php echo htmlspecialchars($ticket['component_name']); ?>
+                  </span>
+                  <a href="allassets.php?search=<?php echo urlencode($ticket['component_tag'] ?? $ticket['component_name']); ?>" 
+                     class="text-[#1E3A8A] hover:text-blue-700 transition-colors" 
+                     title="Search this asset">
+                    <i class="fas fa-arrow-right text-[10px]"></i>
+                  </a>
+                </div>
+                <div class="text-[9px] text-gray-400"><?php echo htmlspecialchars($ticket['component_tag'] ?? ''); ?></div>
+              <?php else: ?>
+                <span class="text-gray-400 text-[10px]">N/A</span>
+              <?php endif; ?>
+            </td>
             <td class="px-3 py-2 text-xs">
               <?php
                 $priorityEsc = htmlspecialchars($priority);

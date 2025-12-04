@@ -48,7 +48,10 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Pagination for archived PC units
 $archived_pc_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$archived_pc_limit = 5;
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+// Handle "all" entries
+if ($per_page <= 0) $per_page = 999999; // Show all
+$archived_pc_limit = $per_page;
 $archived_pc_offset = ($archived_pc_page - 1) * $archived_pc_limit;
 
 // Count total archived PC units
@@ -159,22 +162,10 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-html, body {
-    height: 100vh;
-    overflow: hidden;
-}
-#app-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 main {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
     padding: 0.5rem;
+    background-color: #f9fafb;
+    min-height: 100vh;
 }
 .overflow-x-auto {
     overflow: visible !important;
@@ -187,8 +178,8 @@ tbody tr {
 }
 </style>
 
-<main class="flex-1 overflow-auto">
-    <div id="app-container" class="h-full flex flex-col">
+<main>
+    <div class="flex-1 flex flex-col">
         <!-- Breadcrumb -->
         <div class="mb-4">
             <nav class="flex" aria-label="Breadcrumb">
@@ -254,18 +245,30 @@ tbody tr {
         <div class="bg-white rounded shadow-sm border border-gray-200">
             <!-- Search Bar -->
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div class="flex items-center gap-4">
-                    <div class="flex-1">
-                        <input type="text" id="search-input" placeholder="Search by terminal number..." 
-                               value="<?php echo htmlspecialchars($search); ?>" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <form method="GET" action="" id="filterForm">
+                    <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <input type="text" name="search" id="search-input" placeholder="Search by terminal number..." 
+                                   value="<?php echo htmlspecialchars($search); ?>" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700">Show:</label>
+                            <select name="per_page" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <option value="10" <?php echo ($per_page == 10) ? 'selected' : ''; ?>>10</option>
+                                <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>25</option>
+                                <option value="100" <?php echo ($per_page == 100) ? 'selected' : ''; ?>>100</option>
+                                <option value="0" <?php echo ($per_page == 999999) ? 'selected' : ''; ?>>All</option>
+                            </select>
+                        </div>
+                        <?php if (!empty($search)): ?>
+                        <a href="?room_id=<?php echo $room_id; ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            <i class="fa-solid fa-times mr-1"></i>Clear
+                        </a>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($search)): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        <i class="fa-solid fa-times mr-1"></i>Clear
-                    </a>
-                    <?php endif; ?>
-                </div>
+                </form>
             </div>
             <div class="px-4 py-3 bg-gradient-to-r from-red-50 to-red-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -365,7 +368,7 @@ tbody tr {
                 </div>
                 <div class="flex items-center space-x-1">
                     <?php if ($archived_pc_page > 1): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_pc_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_pc_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         <i class="fa-solid fa-chevron-left mr-1"></i>Previous
                     </a>
@@ -376,14 +379,14 @@ tbody tr {
                     $end_page = min($total_archived_pc_pages, $archived_pc_page + 2);
                     for ($i = $start_page; $i <= $end_page; $i++):
                     ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium <?php echo $i === $archived_pc_page ? 'text-blue-600 bg-blue-50 border-blue-500' : 'text-gray-500 bg-white border-gray-300'; ?> border rounded-md hover:bg-gray-50">
                         <?php echo $i; ?>
                     </a>
                     <?php endfor; ?>
 
                     <?php if ($archived_pc_page < $total_archived_pc_pages): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_pc_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_pc_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Next<i class="fa-solid fa-chevron-right ml-1"></i>
                     </a>
@@ -443,6 +446,37 @@ tbody tr {
     </div>
 </div>
 
+<!-- Bulk Restore Confirmation Modal -->
+<div id="bulkRestoreModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore Multiple PC Units?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="bulkRestorePCCount">0</strong> PC unit(s)?
+            </p>
+            <div id="bulkRestorePCList" class="bg-gray-50 p-3 rounded-lg border max-h-32 overflow-y-auto mb-4">
+                <!-- PC tags will be listed here -->
+            </div>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The PC units will be available again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkRestorePCModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmBulkRestorePCBtn" onclick="confirmBulkRestorePC()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore All
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // PC Unit Kebab Menu Functions
 function togglePCMenu(id) {
@@ -478,6 +512,11 @@ document.getElementById('search-input').addEventListener('input', function() {
             url.searchParams.delete('search');
         }
         url.searchParams.delete('page'); // Reset to page 1
+        // Preserve per_page parameter
+        const perPage = new URLSearchParams(window.location.search).get('per_page');
+        if (perPage) {
+            url.searchParams.set('per_page', perPage);
+        }
         window.location.href = url.toString();
     }, 1000);
 });
@@ -495,12 +534,25 @@ function bulkRestoreArchivedPCUnits() {
         return pc ? pc.terminal_number : id;
     });
 
-    if (!confirm(`Are you sure you want to restore ${selectedIds.length} PC unit(s)?\n\nPC Units: ${pcTags.join(', ')}\n\nRestored PC units will be available again.`)) {
-        return;
-    }
+    // Open modal instead of confirm
+    document.getElementById('bulkRestorePCCount').textContent = selectedIds.length;
+    const listHtml = pcTags.map(tag => `<span class="inline-block bg-white px-2 py-1 rounded border text-sm mr-1 mb-1">${tag}</span>`).join('');
+    document.getElementById('bulkRestorePCList').innerHTML = listHtml;
+    document.getElementById('bulkRestoreModal').classList.remove('hidden');
+    
+    // Store IDs for later use
+    window.bulkRestorePCIds = selectedIds;
+}
 
-    // Show loading state
-    const button = event.target;
+function closeBulkRestorePCModal() {
+    document.getElementById('bulkRestoreModal').classList.add('hidden');
+    window.bulkRestorePCIds = null;
+}
+
+function confirmBulkRestorePC() {
+    if (!window.bulkRestorePCIds) return;
+    
+    const button = document.getElementById('confirmBulkRestorePCBtn');
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
     button.disabled = true;
@@ -511,14 +563,14 @@ function bulkRestoreArchivedPCUnits() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            ids: selectedIds,
+            ids: window.bulkRestorePCIds,
             room_id: <?php echo $room_id; ?>
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('success', `Successfully restored ${selectedIds.length} PC unit(s)`);
+            showAlert('success', `Successfully restored ${window.bulkRestorePCIds.length} PC unit(s)`);
             setTimeout(() => location.reload(), 1000);
         } else {
             showAlert('error', data.message || 'Failed to restore PC units');
@@ -593,6 +645,12 @@ function confirmRestore() {
 document.getElementById('restoreModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeRestoreModal();
+    }
+});
+
+document.getElementById('bulkRestoreModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkRestorePCModal();
     }
 });
 

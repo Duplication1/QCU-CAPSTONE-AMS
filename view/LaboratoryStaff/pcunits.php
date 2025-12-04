@@ -449,7 +449,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     
     if ($action === 'bulk_edit_pc_units') {
         $ids = json_decode($_POST['ids'] ?? '[]', true);
+        $terminal_number = trim($_POST['terminal_number'] ?? '');
         $status = trim($_POST['status'] ?? '');
+        $new_room_id = isset($_POST['room_id']) && $_POST['room_id'] !== '' ? intval($_POST['room_id']) : null;
         $notes = trim($_POST['notes'] ?? '');
         
         if (empty($ids) || !is_array($ids)) {
@@ -457,7 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             exit;
         }
         
-        if (empty($status) && empty($notes)) {
+        if (empty($terminal_number) && empty($status) && $new_room_id === null && empty($notes)) {
             echo json_encode(['success' => false, 'message' => 'Please provide at least one field to update']);
             exit;
         }
@@ -467,10 +469,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $params = [];
             $types = '';
             
+            if (!empty($terminal_number)) {
+                $updates[] = 'terminal_number = ?';
+                $params[] = $terminal_number;
+                $types .= 's';
+            }
+            
             if (!empty($status)) {
                 $updates[] = 'status = ?';
                 $params[] = $status;
                 $types .= 's';
+            }
+            
+            if ($new_room_id !== null) {
+                $updates[] = 'room_id = ?';
+                $params[] = $new_room_id;
+                $types .= 'i';
             }
             
             if (!empty($notes)) {
@@ -480,10 +494,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             }
             
             $placeholders = str_repeat('?,', count($ids) - 1) . '?';
-            $sql = "UPDATE pc_units SET " . implode(', ', $updates) . " WHERE id IN ($placeholders) AND room_id = ?";
+            $sql = "UPDATE pc_units SET " . implode(', ', $updates) . " WHERE id IN ($placeholders)";
             
-            $params = array_merge($params, $ids, [$room_id]);
-            $types .= str_repeat('i', count($ids)) . 'i';
+            $params = array_merge($params, $ids);
+            $types .= str_repeat('i', count($ids));
             
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
@@ -510,6 +524,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
         exit;
+    }
+}
+
+// Get all buildings for bulk edit
+$buildings = [];
+$buildings_query = $conn->query("SELECT id, name FROM buildings ORDER BY name");
+if ($buildings_query) {
+    while ($building_row = $buildings_query->fetch_assoc()) {
+        $buildings[] = $building_row;
+    }
+}
+
+// Get all rooms for bulk edit
+$all_rooms = [];
+$all_rooms_query = $conn->query("SELECT id, name, building_id FROM rooms ORDER BY name");
+if ($all_rooms_query) {
+    while ($room_row = $all_rooms_query->fetch_assoc()) {
+        $all_rooms[] = $room_row;
     }
 }
 
@@ -651,6 +683,9 @@ main {
                 </div>
                 <div class="flex items-center gap-2">
                     <div id="pc-bulk-actions" class="hidden flex items-center gap-2">
+                        <button onclick="editSelectedAssetTags()" class="px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors">
+                            <i class="fa-solid fa-tag mr-1"></i>Edit Asset Tags
+                        </button>
                         <button onclick="openBulkEditModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">
                             <i class="fa-solid fa-edit mr-1"></i>Edit Selected
                         </button>
@@ -909,49 +944,97 @@ main {
 
 <!-- Bulk Edit Modal -->
 <div id="bulkEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-            <h3 class="text-xl font-semibold text-white">Bulk Edit PC Units</h3>
+            <h3 class="text-xl font-semibold text-white flex items-center justify-between">
+                <span><i class="fa-solid fa-edit mr-2"></i>Bulk Edit PC Units</span>
+                <button onclick="closeBulkEditModal()" class="text-white hover:text-gray-200">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </h3>
         </div>
         <form id="bulkEditForm" class="p-6">
-            <div class="mb-4">
-                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <p class="text-sm text-gray-700">
-                        <i class="fa-solid fa-info-circle text-blue-600 mr-1"></i>
-                        Editing <strong id="bulkEditCount">0</strong> PC Unit(s)
-                    </p>
-                </div>
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    <span id="bulkEditCount">0</span> PC unit(s) selected. Only fill in the fields you want to update. Empty fields will remain unchanged.
+                </p>
             </div>
-            <div class="space-y-4">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Terminal Number -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Status <span class="text-gray-500 text-xs">(Leave unchanged if empty)</span>
+                    <label for="bulkEditTerminalNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                        Terminal Number
+                    </label>
+                    <input type="text" id="bulkEditTerminalNumber" name="terminal_number" 
+                           placeholder="Keep current values"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="bulkEditStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
                     </label>
                     <select id="bulkEditStatus" name="status" 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">-- No Change --</option>
+                        <option value="">Keep current values</option>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
-                        <option value="Maintenance">Maintenance</option>
+                        <option value="Under Maintenance">Under Maintenance</option>
+                        <option value="Retired">Retired</option>
+                        <option value="Archive">Archive</option>
                     </select>
                 </div>
+
+                <!-- Building (Filter) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Notes <span class="text-gray-500 text-xs">(Leave empty to keep existing notes)</span>
+                    <label for="bulkEditBuildingId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Building (Filter)
+                    </label>
+                    <select id="bulkEditBuildingId" onchange="updateBulkEditPCRoomFilter()" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Buildings</option>
+                        <?php foreach ($buildings as $building): ?>
+                            <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Room -->
+                <div>
+                    <label for="bulkEditRoomId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Transfer to Room
+                    </label>
+                    <select id="bulkEditRoomId" name="room_id" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current rooms</option>
+                        <?php foreach ($all_rooms as $room_option): ?>
+                            <option value="<?php echo $room_option['id']; ?>" data-building-id="<?php echo $room_option['building_id']; ?>"><?php echo htmlspecialchars($room_option['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Notes (Full Width) -->
+                <div class="md:col-span-2">
+                    <label for="bulkEditNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                        Notes
                     </label>
                     <textarea id="bulkEditNotes" name="notes" rows="4"
-                              placeholder="Enter notes to update all selected PC units..."
+                              placeholder="Keep existing notes"
                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
+
+            <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" onclick="closeBulkEditModal()" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                     Cancel
                 </button>
                 <button type="button" onclick="submitBulkEdit()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fa-solid fa-save mr-2"></i>Update PC Units
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-save mr-2"></i>Update Selected PC Units
                 </button>
             </div>
         </form>
@@ -1213,6 +1296,21 @@ if (pcLimitSelect) {
     });
 }
 
+// Edit selected asset tags
+function editSelectedAssetTags() {
+    const selectedCheckboxes = document.querySelectorAll('.pc-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showNotification('error', 'Please select at least one PC unit to edit asset tags');
+        return;
+    }
+    
+    const pcIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    
+    // Redirect to edit asset tags page with selected IDs
+    const idsParam = pcIds.join(',');
+    window.location.href = 'edit_asset_tag_pcunit.php?pc_ids=' + idsParam;
+}
+
 // Bulk edit functions
 function openBulkEditModal() {
     const selectedIds = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
@@ -1220,7 +1318,10 @@ function openBulkEditModal() {
     
     document.getElementById('bulkEditCount').textContent = selectedIds.length;
     document.getElementById('bulkEditStatus').value = '';
+    document.getElementById('bulkEditBuildingId').value = '';
+    document.getElementById('bulkEditRoomId').value = '';
     document.getElementById('bulkEditNotes').value = '';
+    updateBulkEditPCRoomFilter();
     document.getElementById('bulkEditModal').classList.remove('hidden');
 }
 
@@ -1228,9 +1329,45 @@ function closeBulkEditModal() {
     document.getElementById('bulkEditModal').classList.add('hidden');
 }
 
+// Update room filter in bulk edit modal based on selected building
+function updateBulkEditPCRoomFilter() {
+    const buildingSelect = document.getElementById('bulkEditBuildingId');
+    const roomSelect = document.getElementById('bulkEditRoomId');
+    
+    if (!buildingSelect || !roomSelect) return;
+    
+    const selectedBuilding = buildingSelect.value;
+    const options = roomSelect.querySelectorAll('option');
+    
+    // Show/hide room options based on building
+    options.forEach(option => {
+        if (option.value === '') {
+            // Always show "Keep current rooms"
+            option.style.display = '';
+        } else {
+            const buildingId = option.getAttribute('data-building-id');
+            if (!selectedBuilding || buildingId === selectedBuilding) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
+    
+    // Reset room selection if current selection is now hidden
+    const currentSelection = roomSelect.value;
+    if (currentSelection && currentSelection !== '') {
+        const currentOption = roomSelect.querySelector(`option[value="${currentSelection}"]`);
+        if (currentOption && currentOption.style.display === 'none') {
+            roomSelect.value = '';
+        }
+    }
+}
+
 function submitBulkEdit() {
     const selectedIds = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
     const status = document.getElementById('bulkEditStatus').value;
+    const roomId = document.getElementById('bulkEditRoomId').value;
     const notes = document.getElementById('bulkEditNotes').value.trim();
     
     if (selectedIds.length === 0) {
@@ -1238,7 +1375,7 @@ function submitBulkEdit() {
         return;
     }
     
-    if (!status && !notes) {
+    if (!status && !roomId && !notes) {
         showNotification('error', 'Please provide at least one field to update');
         return;
     }
@@ -1248,6 +1385,7 @@ function submitBulkEdit() {
     formData.append('action', 'bulk_edit_pc_units');
     formData.append('ids', JSON.stringify(selectedIds));
     if (status) formData.append('status', status);
+    if (roomId) formData.append('room_id', roomId);
     if (notes) formData.append('notes', notes);
     
     fetch('', {

@@ -48,7 +48,10 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Pagination for archived assets
 $archived_assets_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$archived_assets_limit = 5;
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+// Handle "all" entries
+if ($per_page <= 0) $per_page = 999999; // Show all
+$archived_assets_limit = $per_page;
 $archived_assets_offset = ($archived_assets_page - 1) * $archived_assets_limit;
 
 // Count total archived assets
@@ -136,60 +139,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
     
-    if ($action === 'get_asset_qrcodes') {
-        try {
-            $asset_ids = json_decode($_POST['asset_ids'] ?? '[]', true);
-            
-            if (empty($asset_ids) || !is_array($asset_ids)) {
-                echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
-                exit;
-            }
-            
-            $stmt = $conn->prepare("SELECT id, asset_tag, asset_name, asset_type, qr_code FROM assets WHERE id IN (" . str_repeat('?,', count($asset_ids) - 1) . "?)");
-            $stmt->bind_param(str_repeat('i', count($asset_ids)), ...$asset_ids);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $assets_data = [];
-            
-            while ($row = $result->fetch_assoc()) {
-                $assets_data[] = [
-                    'id' => $row['id'],
-                    'asset_tag' => $row['asset_tag'],
-                    'asset_name' => $row['asset_name'],
-                    'asset_type' => $row['asset_type'],
-                    'qr_code' => $row['qr_code']
-                ];
-            }
-            $stmt->close();
-            
-            echo json_encode(['success' => true, 'assets' => $assets_data]);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
-        }
-        exit;
-    }
+    // Add any future AJAX handlers here
 }
 
 include '../components/layout_header.php';
 ?>
 
 <style>
-html, body {
-    height: 100vh;
-    overflow: hidden;
-}
-#app-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 main {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
     padding: 0.5rem;
+    background-color: #f9fafb;
+    min-height: 100vh;
 }
 .overflow-x-auto {
     overflow: visible !important;
@@ -202,8 +162,8 @@ tbody tr {
 }
 </style>
 
-<main class="flex-1 overflow-auto">
-    <div id="app-container" class="h-full flex flex-col">
+<main>
+    <div class="flex-1 flex flex-col">
         <!-- Breadcrumb -->
         <div class="mb-4">
             <nav class="flex" aria-label="Breadcrumb">
@@ -269,18 +229,30 @@ tbody tr {
         <div class="bg-white rounded shadow-sm border border-gray-200">
             <!-- Search Bar -->
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div class="flex items-center gap-4">
-                    <div class="flex-1">
-                        <input type="text" id="search-input" placeholder="Search by asset name, tag, brand, or model..." 
-                               value="<?php echo htmlspecialchars($search); ?>" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <form method="GET" action="" id="filterForm">
+                    <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <input type="text" name="search" id="search-input" placeholder="Search by asset name, tag, brand, or model..." 
+                                   value="<?php echo htmlspecialchars($search); ?>" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700">Show:</label>
+                            <select name="per_page" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <option value="10" <?php echo ($per_page == 10) ? 'selected' : ''; ?>>10</option>
+                                <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>25</option>
+                                <option value="100" <?php echo ($per_page == 100) ? 'selected' : ''; ?>>100</option>
+                                <option value="0" <?php echo ($per_page == 999999) ? 'selected' : ''; ?>>All</option>
+                            </select>
+                        </div>
+                        <?php if (!empty($search)): ?>
+                        <a href="?room_id=<?php echo $room_id; ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            <i class="fa-solid fa-times mr-1"></i>Clear
+                        </a>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($search)): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        <i class="fa-solid fa-times mr-1"></i>Clear
-                    </a>
-                    <?php endif; ?>
-                </div>
+                </form>
             </div>
             <div class="px-4 py-3 bg-gradient-to-r from-red-50 to-red-100 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -291,9 +263,6 @@ tbody tr {
                     </span>
                 </div>
                 <div id="archived-assets-bulk-actions" class="hidden flex items-center gap-2">
-                    <button onclick="bulkPrintQRArchivedAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors">
-                        <i class="fa-solid fa-qrcode mr-1"></i>Print QR Codes
-                    </button>
                     <button onclick="bulkRestoreArchivedAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors">
                         <i class="fa-solid fa-rotate-left mr-1"></i>Restore Selected
                     </button>
@@ -378,7 +347,7 @@ tbody tr {
                 </div>
                 <div class="flex items-center space-x-1">
                     <?php if ($archived_assets_page > 1): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         <i class="fa-solid fa-chevron-left mr-1"></i>Previous
                     </a>
@@ -389,14 +358,14 @@ tbody tr {
                     $end_page = min($total_archived_assets_pages, $archived_assets_page + 2);
                     for ($i = $start_page; $i <= $end_page; $i++):
                     ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium <?php echo $i === $archived_assets_page ? 'text-blue-600 bg-blue-50 border-blue-500' : 'text-gray-500 bg-white border-gray-300'; ?> border rounded-md hover:bg-gray-50">
                         <?php echo $i; ?>
                     </a>
                     <?php endfor; ?>
 
                     <?php if ($archived_assets_page < $total_archived_assets_pages): ?>
-                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" 
+                    <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $archived_assets_page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>&per_page=<?php echo $_GET['per_page'] ?? 10; ?>" 
                        class="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         Next<i class="fa-solid fa-chevron-right ml-1"></i>
                     </a>
@@ -436,62 +405,39 @@ tbody tr {
     </div>
 </div>
 
-<!-- QR Code Print Modal -->
-<div id="qrPrintModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-xl font-semibold text-white">Print QR Codes</h3>
-            <button onclick="closeQRPrintModal()" class="text-white hover:text-gray-200">
-                <i class="fa-solid fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <div id="qrPrintContent" class="grid grid-cols-3 gap-4">
-                <!-- QR codes will be dynamically inserted here -->
+<!-- Bulk Restore Confirmation Modal -->
+<div id="bulkRestoreModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class="fa-solid fa-rotate-left text-green-600 text-2xl"></i>
             </div>
-            <div class="flex gap-3 justify-end mt-6 print:hidden">
-                <button onclick="closeQRPrintModal()" 
-                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Restore Multiple Assets?</h3>
+            <p class="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to restore <strong id="bulkRestoreCount">0</strong> asset(s)?
+            </p>
+            <div id="bulkRestoreList" class="bg-gray-50 p-3 rounded-lg border max-h-32 overflow-y-auto mb-4">
+                <!-- Asset tags will be listed here -->
+            </div>
+            <p class="text-xs text-gray-500 text-center mb-6">
+                The assets will be available again.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeBulkRestoreModal()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                     Cancel
                 </button>
-                <button onclick="window.print()" 
-                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                    <i class="fa-solid fa-print mr-2"></i>Print QR Codes
+                <button id="confirmBulkRestoreBtn" onclick="confirmBulkRestore()" 
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Restore All
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #qrPrintContent, #qrPrintContent * {
-        visibility: visible;
-    }
-    #qrPrintContent {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        padding: 20px;
-    }
-    .qr-item {
-        page-break-inside: avoid;
-        border: 1px solid #000;
-        padding: 10px;
-        text-align: center;
-    }
-}
-</style>
-
 <script>
-// Asset Kebab Menu Functions
+// Asset Menu Functions
 function toggleAssetMenu(id) {
     event.stopPropagation();
     const menu = document.getElementById('asset-menu-' + id);
@@ -525,18 +471,16 @@ document.getElementById('search-input').addEventListener('input', function() {
             url.searchParams.delete('search');
         }
         url.searchParams.delete('page'); // Reset to page 1
+        // Preserve per_page parameter
+        const perPage = new URLSearchParams(window.location.search).get('per_page');
+        if (perPage) {
+            url.searchParams.set('per_page', perPage);
+        }
         window.location.href = url.toString();
     }, 1000);
 });
 
 // Bulk actions for Archived Assets
-function bulkPrintQRArchivedAssets() {
-    const selectedIds = Array.from(document.querySelectorAll('.archived-asset-checkbox:checked')).map(cb => cb.value);
-    if (selectedIds.length === 0) return;
-    
-    openQRPrintModalForAssets(selectedIds);
-}
-
 function bulkRestoreArchivedAssets() {
     const selectedIds = Array.from(document.querySelectorAll('.archived-asset-checkbox:checked')).map(cb => cb.value);
     if (selectedIds.length === 0) {
@@ -549,12 +493,25 @@ function bulkRestoreArchivedAssets() {
         return asset ? asset.asset_tag : id;
     });
 
-    if (!confirm(`Are you sure you want to restore ${selectedIds.length} asset(s)?\n\nAssets: ${assetTags.join(', ')}\n\nRestored assets will be available again.`)) {
-        return;
-    }
+    // Open modal instead of confirm
+    document.getElementById('bulkRestoreCount').textContent = selectedIds.length;
+    const listHtml = assetTags.map(tag => `<span class="inline-block bg-white px-2 py-1 rounded border text-sm mr-1 mb-1">${tag}</span>`).join('');
+    document.getElementById('bulkRestoreList').innerHTML = listHtml;
+    document.getElementById('bulkRestoreModal').classList.remove('hidden');
+    
+    // Store IDs for later use
+    window.bulkRestoreAssetIds = selectedIds;
+}
 
-    // Show loading state
-    const button = event.target;
+function closeBulkRestoreModal() {
+    document.getElementById('bulkRestoreModal').classList.add('hidden');
+    window.bulkRestoreAssetIds = null;
+}
+
+function confirmBulkRestore() {
+    if (!window.bulkRestoreAssetIds) return;
+    
+    const button = document.getElementById('confirmBulkRestoreBtn');
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Restoring...';
     button.disabled = true;
@@ -565,14 +522,14 @@ function bulkRestoreArchivedAssets() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            ids: selectedIds,
+            ids: window.bulkRestoreAssetIds,
             room_id: <?php echo $room_id; ?>
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('success', `Successfully restored ${selectedIds.length} asset(s)`);
+            showAlert('success', `Successfully restored ${window.bulkRestoreAssetIds.length} asset(s)`);
             setTimeout(() => location.reload(), 1000);
         } else {
             showAlert('error', data.message || 'Failed to restore assets');
@@ -650,6 +607,12 @@ document.getElementById('restoreAssetModal')?.addEventListener('click', function
     }
 });
 
+document.getElementById('bulkRestoreModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkRestoreModal();
+    }
+});
+
 // Select all functionality
 document.getElementById('select-all-archived-assets')?.addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('.archived-asset-checkbox');
@@ -687,55 +650,6 @@ function toggleArchivedAssetsBulkActions() {
             bulkActions.classList.add('hidden');
         }
     }
-}
-
-// Open QR Print Modal for multiple assets
-async function openQRPrintModalForAssets(assetIds) {
-    try {
-        const formData = new URLSearchParams();
-        formData.append('ajax', '1');
-        formData.append('action', 'get_asset_qrcodes');
-        formData.append('asset_ids', JSON.stringify(assetIds));
-        
-        const response = await fetch(location.href, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.assets) {
-            const qrContent = document.getElementById('qrPrintContent');
-            qrContent.innerHTML = '';
-            
-            result.assets.forEach(asset => {
-                const qrItem = document.createElement('div');
-                qrItem.className = 'qr-item';
-                qrItem.innerHTML = `
-                    <div class="qr-code mb-2">${asset.qr_code}</div>
-                    <div class="asset-info text-xs">
-                        <div class="font-semibold">${asset.asset_tag}</div>
-                        <div class="text-gray-600">${asset.asset_name}</div>
-                        <div class="text-gray-500">${asset.asset_type}</div>
-                    </div>
-                `;
-                qrContent.appendChild(qrItem);
-            });
-            
-            document.getElementById('qrPrintModal').classList.remove('hidden');
-        } else {
-            alert(result.message || 'Failed to load QR codes');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while loading QR codes');
-    }
-}
-
-function closeQRPrintModal() {
-    document.getElementById('qrPrintModal').classList.add('hidden');
-    // Reload page after closing print modal
-    window.location.reload();
 }
 
 // Alert function

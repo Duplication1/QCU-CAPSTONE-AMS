@@ -43,6 +43,43 @@ if (!$room) {
     exit();
 }
 
+// Fetch asset categories
+$categories = [];
+$category_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+$category_result = $conn->query($category_query);
+if ($category_result && $category_result->num_rows > 0) {
+    while ($row = $category_result->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
+// Get all buildings for filter
+$buildings = [];
+$buildings_query = $conn->query("SELECT id, name FROM buildings ORDER BY name");
+if ($buildings_query) {
+    while ($building_row = $buildings_query->fetch_assoc()) {
+        $buildings[] = $building_row;
+    }
+}
+
+// Get all rooms for transfer
+$rooms = [];
+$rooms_query = $conn->query("SELECT id, name, building_id FROM rooms ORDER BY name");
+if ($rooms_query) {
+    while ($room_row = $rooms_query->fetch_assoc()) {
+        $rooms[] = $room_row;
+    }
+}
+
+// Get all rooms with building info for JavaScript
+$all_rooms_for_js = [];
+$all_rooms_query = $conn->query("SELECT r.id, r.name, r.building_id, b.name as building_name FROM rooms r LEFT JOIN buildings b ON r.building_id = b.id ORDER BY r.name");
+if ($all_rooms_query) {
+    while ($room_row = $all_rooms_query->fetch_assoc()) {
+        $all_rooms_for_js[] = $room_row;
+    }
+}
+
 // Fetch assets with search, filter, and pagination
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_status = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
@@ -468,6 +505,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $asset_type = trim($_POST['asset_type'] ?? 'Hardware');
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
+        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
@@ -527,6 +565,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $check->close();
                 
                 // Generate unique QR code for this asset
+                $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                $scan_url = $base_url . '/view/public/scan_asset.php?id=';
+                // Note: ID will be appended after insert
                 $qr_data = json_encode([
                     'asset_tag' => $asset_tag,
                     'asset_name' => $asset_name,
@@ -539,8 +580,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
                 
                 // Insert asset with QR code
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssissssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, end_of_life, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('ssssssisssiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $end_of_life, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
                 
                 if ($stmt->execute()) {
                     $created_count++;
@@ -740,6 +781,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 echo json_encode(['success' => true, 'message' => "$affected asset(s) restored successfully"]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to restore assets']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+    
+    if ($action === 'bulk_update_assets') {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
+            exit;
+        }
+        
+        // Collect update fields
+        $updates = [];
+        $params = [];
+        $types = '';
+        
+        if (isset($_POST['asset_name']) && $_POST['asset_name'] !== '') {
+            $updates[] = 'asset_name = ?';
+            $params[] = $_POST['asset_name'];
+            $types .= 's';
+        }
+        
+        if (isset($_POST['asset_type']) && $_POST['asset_type'] !== '') {
+            $updates[] = 'asset_type = ?';
+            $params[] = $_POST['asset_type'];
+            $types .= 's';
+        }
+        
+        if (isset($_POST['room_id']) && $_POST['room_id'] !== '') {
+            $updates[] = 'room_id = ?';
+            // Handle "No Room" as NULL
+            $room_value = $_POST['room_id'] === '0' ? null : intval($_POST['room_id']);
+            $params[] = $room_value;
+            $types .= 'i';
+        }
+        
+        if (isset($_POST['status']) && $_POST['status'] !== '') {
+            $updates[] = 'status = ?';
+            $params[] = $_POST['status'];
+            $types .= 's';
+        }
+        
+        if (isset($_POST['condition']) && $_POST['condition'] !== '') {
+            $updates[] = 'condition = ?';
+            $params[] = $_POST['condition'];
+            $types .= 's';
+        }
+        
+        if (isset($_POST['is_borrowable']) && $_POST['is_borrowable'] !== '') {
+            $updates[] = 'is_borrowable = ?';
+            $params[] = intval($_POST['is_borrowable']);
+            $types .= 'i';
+        }
+        
+        if (isset($_POST['notes']) && $_POST['notes'] !== '') {
+            $updates[] = 'notes = ?';
+            $params[] = $_POST['notes'];
+            $types .= 's';
+        }
+        
+        if (empty($updates)) {
+            echo json_encode(['success' => false, 'message' => 'No fields to update']);
+            exit;
+        }
+        
+        try {
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $sql = "UPDATE assets SET " . implode(', ', $updates) . ", updated_by = ? WHERE id IN ($placeholders)";
+            
+            $stmt = $conn->prepare($sql);
+            $updated_by = $_SESSION['user_id'];
+            
+            // Build final parameters: update values + updated_by + ids
+            $types .= 'i' . str_repeat('i', count($ids));
+            $final_params = array_merge($params, [$updated_by], $ids);
+            
+            $stmt->bind_param($types, ...$final_params);
+            $success = $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => "$affected asset(s) updated successfully"]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update assets']);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -1001,7 +1131,10 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_status = isset($_GET['filter_status']) ? trim($_GET['filter_status']) : '';
 $show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] === '1';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$limit = 6;
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+// Handle "all" entries
+if ($per_page <= 0) $per_page = 999999; // Show all
+$limit = $per_page;
 $offset = ($page - 1) * $limit;
 
 // Count total assets
@@ -1115,28 +1248,15 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-html, body {
-    height: 100vh;
-    overflow: hidden;
-}
-#app-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 main {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
     padding: 0.5rem;
     background-color: #f9fafb;
+    min-height: 100vh;
 }
 </style>
 
 <main>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col">
         
         <!-- Breadcrumb -->
         <div class="mb-4">
@@ -1195,18 +1315,56 @@ main {
         <!-- All Assets Section -->
         <!-- Assets Search Bar -->
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
-            <div class="flex gap-3">
+            <form method="GET" action="" id="assetFilterForm" class="flex gap-3">
                 <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
                 <div class="flex-1">
-                    <input type="text" id="assetSearchInput" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" name="search" id="assetSearchInput" value="<?php echo htmlspecialchars($search); ?>" 
                            placeholder="Search by asset tag, name, brand, or model..." 
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
+                <select name="per_page" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="10" <?php echo ($per_page == 10) ? 'selected' : ''; ?>>Show 10</option>
+                    <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>Show 25</option>
+                    <option value="100" <?php echo ($per_page == 100) ? 'selected' : ''; ?>>Show 100</option>
+                    <option value="0" <?php echo ($per_page == 999999) ? 'selected' : ''; ?>>Show All</option>
+                </select>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-search"></i>
+                </button>
                 <?php if (!empty($search)): ?>
                 <a href="?room_id=<?php echo $room_id; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                     <i class="fa-solid fa-times mr-2"></i>Clear
                 </a>
                 <?php endif; ?>
+            </form>
+        </div>
+        
+        <!-- Bulk Actions Bar -->
+        <div id="asset-bulk-actions-bar" class="hidden bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600">
+                    <span id="asset-selected-count">0</span> selected
+                </span>
+                <button onclick="openBulkEditAssetModal()" 
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-edit mr-2"></i>Edit Selected
+                </button>
+                <button onclick="editSelectedAssetTags()" 
+                        class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors">
+                    <i class="fa-solid fa-tag mr-2"></i>Edit Asset Tags
+                </button>
+                <button onclick="bulkPrintQRAssets()" 
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-qrcode mr-2"></i>Print QR Codes
+                </button>
+                <button onclick="bulkArchiveAssets()" 
+                        class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors">
+                    <i class="fa-solid fa-archive mr-2"></i>Archive Selected
+                </button>
+                <button onclick="clearAssetSelection()" 
+                        class="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-300 transition-colors">
+                    Clear
+                </button>
             </div>
         </div>
         <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 overflow-hidden">
@@ -1219,14 +1377,6 @@ main {
                     </span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div id="asset-bulk-actions" class="hidden flex items-center gap-2">
-                        <button onclick="bulkPrintQRAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded transition-colors">
-                            <i class="fa-solid fa-qrcode mr-1"></i>Print QR Codes
-                        </button>
-                        <button onclick="bulkArchiveAssets()" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors">
-                            <i class="fa-solid fa-archive mr-1"></i>Archive Selected
-                        </button>
-                    </div>
                     <button onclick="openImportRoomAssetsModal()" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors">
                         <i class="fa-solid fa-file-import mr-1"></i>Import Room Assets
                     </button>
@@ -1369,7 +1519,7 @@ main {
                 </div>
                 <div class="flex items-center gap-2">
                     <?php if ($page > 1): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $per_page != 10 ? '&per_page=' . ($per_page == 999999 ? 0 : $per_page) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                             <i class="fa-solid fa-chevron-left"></i> Previous
                         </a>
@@ -1378,9 +1528,10 @@ main {
                     <?php 
                     $start_page = max(1, $page - 2);
                     $end_page = min($total_pages, $page + 2);
+                    $per_page_param = $per_page != 10 ? '&per_page=' . ($per_page == 999999 ? 0 : $per_page) : '';
                     
                     if ($start_page > 1): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $per_page_param; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">1</a>
                         <?php if ($start_page > 2): ?>
                             <span class="px-2 text-gray-500">...</span>
@@ -1388,7 +1539,7 @@ main {
                     <?php endif; ?>
                     
                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $per_page_param; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded <?php echo $i === $page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?> transition-colors">
                             <?php echo $i; ?>
                         </a>
@@ -1398,12 +1549,12 @@ main {
                         <?php if ($end_page < $total_pages - 1): ?>
                             <span class="px-2 text-gray-500">...</span>
                         <?php endif; ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $per_page_param; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"><?php echo $total_pages; ?></a>
                     <?php endif; ?>
                     
                     <?php if ($page < $total_pages): ?>
-                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
+                        <a href="?room_id=<?php echo $room_id; ?>&page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $per_page_param; ?><?php echo isset($_GET['pc_page']) ? '&pc_page=' . $_GET['pc_page'] : ''; ?><?php echo !empty($pc_search) ? '&pc_search=' . urlencode($pc_search) : ''; ?>" 
                            class="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
                             Next <i class="fa-solid fa-chevron-right"></i>
                         </a>
@@ -1923,6 +2074,168 @@ main {
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Bulk Edit Assets Modal -->
+<div id="bulkEditAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white flex items-center justify-between">
+                <span><i class="fa-solid fa-edit mr-2"></i>Bulk Edit Assets</span>
+                <button onclick="closeBulkEditAssetModal()" class="text-white hover:text-gray-200">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </h3>
+        </div>
+        <form id="bulkEditAssetForm" class="p-6">
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    <span id="bulkEditAssetCount">0</span> asset(s) selected. Only fill in the fields you want to update. Empty fields will remain unchanged.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Asset Name (Category) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Name (Category)
+                    </label>
+                    <div class="searchable-dropdown relative">
+                        <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors flex items-center justify-between bg-white">
+                            <span class="selected-text text-gray-400">Keep current values</span>
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <select id="bulkEditAssetName" name="asset_name" class="hidden">
+                            <option value="">Keep current values</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white border-b border-gray-200 p-2">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Search categories...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="">
+                                <em class="text-gray-400">Keep current values</em>
+                            </div>
+                            <?php foreach ($categories as $cat): ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="<?php echo htmlspecialchars($cat['name']); ?>">
+                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Type -->
+                <div>
+                    <label for="bulkEditAssetType" class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Type
+                    </label>
+                    <select id="bulkEditAssetType" name="asset_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Equipment">Equipment</option>
+                    </select>
+                </div>
+
+                <!-- Building (Filter for Rooms) -->
+                <div>
+                    <label for="bulkEditBuildingId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Building (Filter)
+                    </label>
+                    <select id="bulkEditBuildingId" onchange="updateBulkEditRoomFilter()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Buildings</option>
+                        <?php foreach ($buildings as $building): ?>
+                            <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Room (Transfer) -->
+                <div>
+                    <label for="bulkEditRoomId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Room (Transfer)
+                    </label>
+                    <select id="bulkEditRoomId" name="room_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="0">No Room</option>
+                        <?php foreach ($rooms as $r): ?>
+                            <option value="<?php echo $r['id']; ?>" data-building-id="<?php echo $r['building_id']; ?>"><?php echo htmlspecialchars($r['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="bulkEditAssetStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    <select id="bulkEditAssetStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Under Maintenance">Under Maintenance</option>
+                        <option value="Damaged">Damaged</option>
+                        <option value="For Repair">For Repair</option>
+                        <option value="Retired">Retired</option>
+                    </select>
+                </div>
+
+                <!-- Condition -->
+                <div>
+                    <label for="bulkEditAssetCondition" class="block text-sm font-medium text-gray-700 mb-2">
+                        Condition
+                    </label>
+                    <select id="bulkEditAssetCondition" name="condition" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                        <option value="Non-Functional">Non-Functional</option>
+                    </select>
+                </div>
+
+                <!-- Borrowable -->
+                <div>
+                    <label for="bulkEditAssetIsBorrowable" class="block text-sm font-medium text-gray-700 mb-2">
+                        Borrowable Status
+                    </label>
+                    <select id="bulkEditAssetIsBorrowable" name="is_borrowable" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="1">Borrowable</option>
+                        <option value="0">Not Borrowable</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notes (full width) -->
+            <div class="mt-4">
+                <label for="bulkEditAssetNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                </label>
+                <textarea id="bulkEditAssetNotes" name="notes" rows="3" 
+                          placeholder="Leave empty to keep current notes"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeBulkEditAssetModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="bulkEditAssetBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-save mr-2"></i>Update Selected Assets
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -2811,6 +3124,157 @@ function bulkArchiveAssets() {
     });
 }
 
+// Bulk Edit Assets Modal Functions
+function openBulkEditAssetModal() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit');
+        return;
+    }
+    
+    document.getElementById('bulkEditAssetCount').textContent = selectedCheckboxes.length;
+    document.getElementById('bulkEditAssetModal').classList.remove('hidden');
+}
+
+function closeBulkEditAssetModal() {
+    document.getElementById('bulkEditAssetModal').classList.add('hidden');
+    document.getElementById('bulkEditAssetForm').reset();
+    
+    // Reset the asset name dropdown if it exists
+    const bulkEditAssetName = document.getElementById('bulkEditAssetName');
+    if (bulkEditAssetName) {
+        bulkEditAssetName.value = '';
+        const dropdown = bulkEditAssetName.parentElement ? bulkEditAssetName.parentElement.querySelector('.searchable-dropdown') : null;
+        if (dropdown) {
+            const selectedText = dropdown.querySelector('.selected-text');
+            if (selectedText) {
+                selectedText.textContent = 'Keep current values';
+                selectedText.className = 'selected-text text-gray-400';
+            }
+        }
+    }
+    
+    // Reset building and room filters
+    const bulkEditBuildingId = document.getElementById('bulkEditBuildingId');
+    if (bulkEditBuildingId) {
+        bulkEditBuildingId.value = '';
+    }
+    updateBulkEditRoomFilter();
+}
+
+// All rooms data for filtering in bulk edit
+const allRoomsData = <?php echo json_encode($all_rooms_for_js); ?>;
+
+// Update room filter in bulk edit modal based on selected building
+function updateBulkEditRoomFilter() {
+    const buildingSelect = document.getElementById('bulkEditBuildingId');
+    const roomSelect = document.getElementById('bulkEditRoomId');
+    
+    if (!buildingSelect || !roomSelect) return;
+    
+    const selectedBuilding = buildingSelect.value;
+    const options = roomSelect.querySelectorAll('option');
+    
+    // Show/hide room options based on building
+    options.forEach(option => {
+        if (option.value === '' || option.value === '0') {
+            // Always show "Keep current values" and "No Room"
+            option.style.display = '';
+        } else {
+            const buildingId = option.getAttribute('data-building-id');
+            if (!selectedBuilding || buildingId === selectedBuilding) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
+    
+    // Reset room selection if current selection is now hidden
+    const currentSelection = roomSelect.value;
+    if (currentSelection && currentSelection !== '' && currentSelection !== '0') {
+        const currentOption = roomSelect.querySelector(`option[value="${currentSelection}"]`);
+        if (currentOption && currentOption.style.display === 'none') {
+            roomSelect.value = '';
+        }
+    }
+}
+
+// Bulk Edit Assets Form Submit
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkEditAssetForm = document.getElementById('bulkEditAssetForm');
+    if (bulkEditAssetForm) {
+        bulkEditAssetForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                showAlert('error', 'No assets selected');
+                return;
+            }
+            
+            const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+            
+            // Collect form data
+            const asset_name = document.getElementById('bulkEditAssetName').value;
+            const asset_type = document.getElementById('bulkEditAssetType').value;
+            const room_id = document.getElementById('bulkEditRoomId').value;
+            const status = document.getElementById('bulkEditAssetStatus').value;
+            const condition = document.getElementById('bulkEditAssetCondition').value;
+            const is_borrowable = document.getElementById('bulkEditAssetIsBorrowable').value;
+            const notes = document.getElementById('bulkEditAssetNotes').value.trim();
+            
+            // Check if at least one field is filled
+            if (!asset_name && !asset_type && room_id === '' && !status && !condition && !is_borrowable && !notes) {
+                showAlert('error', 'Please fill in at least one field to update');
+                return;
+            }
+            
+            const button = document.getElementById('bulkEditAssetBtn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Updating...';
+            button.disabled = true;
+            
+            try {
+                const formData = new URLSearchParams();
+                formData.append('ajax', '1');
+                formData.append('action', 'bulk_update_assets');
+                formData.append('ids', JSON.stringify(assetIds));
+                if (asset_name) formData.append('asset_name', asset_name);
+                if (asset_type) formData.append('asset_type', asset_type);
+                if (room_id !== '') formData.append('room_id', room_id);
+                if (status) formData.append('status', status);
+                if (condition) formData.append('condition', condition);
+                if (is_borrowable) formData.append('is_borrowable', is_borrowable);
+                if (notes) formData.append('notes', notes);
+                
+                const response = await fetch('', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('success', data.message);
+                    closeBulkEditAssetModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showAlert('error', data.message || 'Failed to update assets');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while updating assets');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        });
+    }
+});
+
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -2823,9 +3287,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Populate dropdowns with existing categories
     updateSearchableDropdownOptions('assetName');
     updateSearchableDropdownOptions('bulkAssetName');
+    updateSearchableDropdownOptions('bulkEditAssetName');
     
     // Handle category dropdown changes for all asset name selects
-    const categorySelects = ['assetName', 'bulkAssetName'];
+    const categorySelects = ['assetName', 'bulkAssetName', 'bulkEditAssetName'];
     categorySelects.forEach(selectId => {
         const select = document.getElementById(selectId);
         if (select) {
@@ -2888,41 +3353,64 @@ function updateSelectAllAssets() {
 
 function toggleAssetBulkActions() {
     const checkedCount = document.querySelectorAll('.asset-checkbox:checked').length;
-    const bulkActions = document.getElementById('asset-bulk-actions');
+    const bulkActionsBar = document.getElementById('asset-bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('asset-selected-count');
     
-    if (bulkActions) {
+    if (bulkActionsBar && selectedCountSpan) {
+        selectedCountSpan.textContent = checkedCount;
         if (checkedCount > 0) {
-            bulkActions.classList.remove('hidden');
+            bulkActionsBar.classList.remove('hidden');
         } else {
-            bulkActions.classList.add('hidden');
+            bulkActionsBar.classList.add('hidden');
         }
     }
+}
+
+// Clear asset selection
+function clearAssetSelection() {
+    const selectAllAssets = document.getElementById('select-all-assets');
+    const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+    
+    if (selectAllAssets) {
+        selectAllAssets.checked = false;
+    }
+    
+    assetCheckboxes.forEach(cb => {
+        cb.checked = false;
+    });
+    
+    toggleAssetBulkActions();
+}
+
+// Edit selected asset tags
+function editSelectedAssetTags() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit asset tags');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    
+    // Redirect to edit asset tags page with selected IDs and room_id
+    const idsParam = assetIds.join(',');
+    const roomId = '<?php echo $room_id; ?>';
+    window.location.href = 'edit_asset_tag_roomassets.php?room_id=' + roomId + '&asset_ids=' + idsParam;
 }
 
 // Asset search with debouncing
 let assetSearchTimeout;
 const assetSearchInput = document.getElementById('assetSearchInput');
+const assetFilterForm = document.getElementById('assetFilterForm');
 
-if (assetSearchInput) {
+if (assetSearchInput && assetFilterForm) {
     assetSearchInput.addEventListener('input', function() {
         clearTimeout(assetSearchTimeout);
-        const query = this.value.trim();
         
         assetSearchTimeout = setTimeout(() => {
-            // Update URL without page reload
-            const url = new URL(window.location);
-            if (query) {
-                url.searchParams.set('search', query);
-            } else {
-                url.searchParams.delete('search');
-            }
-            // Reset to page 1 when searching
-            url.searchParams.delete('page');
-            url.searchParams.delete('pc_page');
-            url.searchParams.delete('pc_search');
-            
-            window.location.href = url.toString();
-        }, 1000); // 1000ms debounce
+            // Submit the form to apply the search
+            assetFilterForm.submit();
+        }, 800); // Wait 800ms after user stops typing
     });
 }
 

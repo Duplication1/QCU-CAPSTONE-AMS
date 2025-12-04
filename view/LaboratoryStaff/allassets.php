@@ -111,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
         $serial_number = trim($_POST['serial_number'] ?? '');
+        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
@@ -122,17 +123,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         
         try {
             // Insert asset first to get ID
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, end_of_life, room_id, status, `condition`, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssissi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $created_by);
+            $stmt->bind_param('sssssssissi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $end_of_life, $room_id, $status, $condition, $created_by);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
             
             if ($success) {
                 // Generate QR code with scan URL
-                $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
-                $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $new_id;
+                $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
                 
                 // Update asset with QR code
@@ -244,6 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $asset_type = trim($_POST['asset_type'] ?? 'Hardware');
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
+        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
@@ -290,8 +292,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $check->close();
                 
                 // Insert asset first to get ID
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssissii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $is_borrowable, $created_by);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, end_of_life, room_id, status, `condition`, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('ssssssissii', $asset_tag, $asset_name, $asset_type, $brand, $model, $end_of_life, $room_id, $status, $condition, $is_borrowable, $created_by);
                 
                 if ($stmt->execute()) {
                     $new_id = $conn->insert_id;
@@ -299,8 +301,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     $created_asset_ids[] = $new_id;
                     
                     // Generate QR code with scan URL
-                    $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
-                    $scan_url = $base_url . '/QCU-CAPSTONE-AMS/view/public/scan_asset.php?id=' . $new_id;
+                    $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                    $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
                     $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
                     
                     // Update asset with QR code
@@ -356,6 +358,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Lookup category ID from asset name
+            $category_id = null;
+            if (!empty($asset_name)) {
+                $category_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+                $category_stmt->bind_param('s', $asset_name);
+                $category_stmt->execute();
+                $category_result = $category_stmt->get_result();
+                if ($category_result->num_rows > 0) {
+                    $category_id = $category_result->fetch_assoc()['id'];
+                }
+                $category_stmt->close();
+            }
+            
             // Check for duplicate asset_tag on a different asset
             $dup = $conn->prepare("SELECT id FROM assets WHERE asset_tag = ? AND id <> ? LIMIT 1");
             $dup->bind_param('si', $asset_tag, $id);
@@ -368,9 +383,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             }
             $dup->close();
 
-            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, room_id = ?, status = ?, `condition` = ?, is_borrowable = ?, updated_by = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, room_id = ?, status = ?, `condition` = ?, is_borrowable = ?, category = ?, updated_by = ? WHERE id = ?");
             $updated_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssissiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $is_borrowable, $updated_by, $id);
+            $stmt->bind_param('ssssssississi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $is_borrowable, $category_id, $updated_by, $id);
             $success = $stmt->execute();
             $stmt->close();
             
@@ -745,10 +760,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $changed_fields = [];
         
         if (isset($_POST['asset_name']) && $_POST['asset_name'] !== '') {
+            $asset_name = trim($_POST['asset_name']);
             $updates[] = 'asset_name = ?';
-            $params[] = trim($_POST['asset_name']);
+            $params[] = $asset_name;
             $types .= 's';
-            $changed_fields['asset_name'] = trim($_POST['asset_name']);
+            $changed_fields['asset_name'] = $asset_name;
+            
+            // Also update category field with category ID
+            $category_id = null;
+            $category_stmt = $conn->prepare("SELECT id FROM asset_categories WHERE name = ?");
+            $category_stmt->bind_param('s', $asset_name);
+            $category_stmt->execute();
+            $category_result = $category_stmt->get_result();
+            if ($category_result->num_rows > 0) {
+                $category_id = $category_result->fetch_assoc()['id'];
+            }
+            $category_stmt->close();
+            
+            $updates[] = 'category = ?';
+            $params[] = $category_id;
+            $types .= 'i';
+            $changed_fields['category'] = $category_id;
         }
         
         if (isset($_POST['asset_type']) && $_POST['asset_type'] !== '') {
@@ -803,7 +835,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             
             // Fetch old values for each asset before updating
             $placeholders_select = implode(',', array_fill(0, count($asset_ids), '?'));
-            $select_sql = "SELECT id, asset_tag, asset_name, asset_type, room_id, status, `condition`, is_borrowable FROM assets WHERE id IN ($placeholders_select)";
+            $select_sql = "SELECT id, asset_tag, asset_name, asset_type, room_id, status, `condition`, is_borrowable, category FROM assets WHERE id IN ($placeholders_select)";
             error_log("Select SQL: " . $select_sql);
             
             $select_stmt = $conn->prepare($select_sql);
@@ -853,6 +885,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 error_log("Asset name or room changed, regenerating asset tags");
                 
                 foreach ($old_values as $asset_id => $old_data) {
+                    // Skip asset tag regeneration for assets without categories (Excel imports)
+                    if (empty($old_data['category'])) {
+                        error_log("Skipping asset tag regeneration for asset $asset_id (no category - Excel import)");
+                        continue;
+                    }
+                    
                     // Get the current values (after update)
                     $current_asset_name = isset($changed_fields['asset_name']) ? $changed_fields['asset_name'] : $old_data['asset_name'];
                     $current_room_id = isset($changed_fields['room_id']) ? $changed_fields['room_id'] : $old_data['room_id'];
@@ -2212,6 +2250,19 @@ main {
                     </select>
                 </div>
 
+                <!-- Building -->
+                <div>
+                    <label for="bulkEditBuildingId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Building (Filter)
+                    </label>
+                    <select id="bulkEditBuildingId" onchange="updateBulkEditRoomFilter()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Buildings</option>
+                        <?php foreach ($buildings as $building): ?>
+                            <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
                 <!-- Room -->
                 <div>
                     <label for="bulkEditRoomId" class="block text-sm font-medium text-gray-700 mb-2">
@@ -2221,7 +2272,7 @@ main {
                         <option value="">Keep current values</option>
                         <option value="0">No Room</option>
                         <?php foreach ($rooms as $room): ?>
-                            <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
+                            <option value="<?php echo $room['id']; ?>" data-building-id="<?php echo $room['building_id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -3973,9 +4024,51 @@ function initializeBulkEditDropdowns() {
         if (dropdown) {
             const selectedText = dropdown.querySelector('.selected-text');
             if (selectedText) {
-                selectedText.textContent = 'Select Category';
-                selectedText.className = 'selected-text text-gray-500';
+                selectedText.textContent = 'Keep current values';
+                selectedText.className = 'selected-text text-gray-400';
             }
+        }
+    }
+    
+    // Reset building and room filters
+    const bulkEditBuildingId = document.getElementById('bulkEditBuildingId');
+    if (bulkEditBuildingId) {
+        bulkEditBuildingId.value = '';
+    }
+    updateBulkEditRoomFilter();
+}
+
+// Update room filter in bulk edit modal based on selected building
+function updateBulkEditRoomFilter() {
+    const buildingSelect = document.getElementById('bulkEditBuildingId');
+    const roomSelect = document.getElementById('bulkEditRoomId');
+    
+    if (!buildingSelect || !roomSelect) return;
+    
+    const selectedBuilding = buildingSelect.value;
+    const options = roomSelect.querySelectorAll('option');
+    
+    // Show/hide room options based on building
+    options.forEach(option => {
+        if (option.value === '' || option.value === '0') {
+            // Always show "Keep current values" and "No Room"
+            option.style.display = '';
+        } else {
+            const buildingId = option.getAttribute('data-building-id');
+            if (!selectedBuilding || buildingId === selectedBuilding) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
+    
+    // Reset room selection if current selection is now hidden
+    const currentSelection = roomSelect.value;
+    if (currentSelection && currentSelection !== '' && currentSelection !== '0') {
+        const currentOption = roomSelect.querySelector(`option[value="${currentSelection}"]`);
+        if (currentOption && currentOption.style.display === 'none') {
+            roomSelect.value = '';
         }
     }
 }

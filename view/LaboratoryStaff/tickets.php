@@ -255,12 +255,15 @@ if (!empty($filterRoom)) {
 
 $whereClause = implode(' AND ', $whereConditions);
 
-$query = "SELECT i.id, i.user_id, i.category, r.name AS room, i.pc_id AS terminal, i.title, i.description, 
+$query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number AS terminal, i.title, i.description, 
                  i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
-                 u.full_name AS reporter_name
+                 u.full_name AS reporter_name, i.component_asset_id,
+                 a.asset_name AS component_name, a.asset_tag AS component_tag
           FROM issues i
           LEFT JOIN users u ON u.id = i.user_id
           LEFT JOIN rooms r ON r.id = i.room_id
+          LEFT JOIN pc_units p ON p.id = i.pc_id
+          LEFT JOIN assets a ON a.id = i.component_asset_id
           WHERE {$whereClause}
           ORDER BY 
             CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
@@ -360,6 +363,7 @@ include '../components/layout_header.php';
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Technician</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Room</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Component</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Created</th>
@@ -402,6 +406,15 @@ include '../components/layout_header.php';
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                     <?php echo htmlspecialchars($ticket['terminal'] ?? '-'); ?>
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                    <?php 
+                                    if ($ticket['component_name']) {
+                                        echo '<span class="text-blue-700" title="' . htmlspecialchars($ticket['component_tag'] ?? '') . '">' . htmlspecialchars($ticket['component_name']) . '</span>';
+                                    } else {
+                                        echo '<span class="text-gray-400 italic">-</span>';
+                                    }
+                                    ?>
                                 </td>
                                 <td class="px-3 py-2 text-xs text-gray-900">
                                     <?php echo htmlspecialchars($ticket['title'] ?? '-'); ?>
@@ -650,6 +663,10 @@ function viewTicket(ticketId) {
                         <div>
                             <p class="text-sm font-medium text-gray-500">Terminal</p>
                             <p class="text-base text-gray-900">${ticket.terminal || '-'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Component</p>
+                            <p class="text-base text-gray-900">${ticket.component_name ? ticket.component_name + (ticket.component_tag ? ' (' + ticket.component_tag + ')' : '') : '-'}</p>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-500">Priority</p>

@@ -24,17 +24,29 @@ $description = trim($_POST['description'] ?? '');
 $building_id = $_POST['building_id'] ?? null;
 $room_id = $_POST['room_id'] ?? null;
 $pc_id = $_POST['pc_id'] ?? null;
+$component_asset_id = !empty($_POST['component_asset_id']) ? intval($_POST['component_asset_id']) : null;
+
+// Handle hardware-specific fields
+$hardware_component = $_POST['hardware_component'] ?? null;
+$hardware_component_other = $_POST['hardware_component_other'] ?? null;
+$software_name = $_POST['software_name'] ?? null;
+$network_issue_type = $_POST['network_issue_type'] ?? null;
+$network_issue_type_other = $_POST['network_issue_type_other'] ?? null;
+$laboratory_concern_type = $_POST['laboratory_concern_type'] ?? null;
+$laboratory_concern_other = $_POST['laboratory_concern_other'] ?? null;
+$other_concern_category = $_POST['other_concern_category'] ?? null;
+$other_concern_other = $_POST['other_concern_other'] ?? null;
 
 if ($category==='' || $title==='') {
   echo json_encode(['success'=>false,'message'=>'Missing required fields']); exit;
 }
 
 // insert into issues
-$stmt = $conn->prepare("INSERT INTO issues (category, title, description, building_id, room_id, pc_id, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
-if (!$stmt) { echo json_encode(['success'=>false,'message'=>'DB prepare failed']); exit; }
+$stmt = $conn->prepare("INSERT INTO issues (category, title, description, building_id, room_id, pc_id, component_asset_id, hardware_component, hardware_component_other, software_name, network_issue_type, network_issue_type_other, laboratory_concern_type, laboratory_concern_other, other_concern_category, other_concern_other, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
+if (!$stmt) { echo json_encode(['success'=>false,'message'=>'DB prepare failed: ' . $conn->error]); exit; }
 $user_id = $_SESSION['user_id'] ?? null;
 $priority = $_POST['priority'] ?? 'Medium';
-$stmt->bind_param('sssssiss', $category, $title, $description, $building_id, $room_id, $pc_id, $priority, $user_id);
+$stmt->bind_param('sssiiisssssssssssi', $category, $title, $description, $building_id, $room_id, $pc_id, $component_asset_id, $hardware_component, $hardware_component_other, $software_name, $network_issue_type, $network_issue_type_other, $laboratory_concern_type, $laboratory_concern_other, $other_concern_category, $other_concern_other, $priority, $user_id);
 $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();

@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
         $serial_number = trim($_POST['serial_number'] ?? '');
+        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
@@ -54,23 +55,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
-            // Generate QR code data
-            $qr_data = json_encode([
-                'asset_tag' => $asset_tag,
-                'asset_name' => $asset_name,
-                'asset_type' => $asset_type,
-                'room_id' => $room_id
-            ]);
-            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-            
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            // Insert asset first to get ID
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, end_of_life, room_id, status, `condition`, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by);
+            $stmt->bind_param('sssssssissi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $end_of_life, $room_id, $status, $condition, $created_by);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
             
             if ($success) {
+                // Generate QR code with scan URL
+                $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
+                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                
+                // Update asset with QR code
+                $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                $update_qr->bind_param('si', $qr_code_url, $new_id);
+                $update_qr->execute();
+                $update_qr->close();
+                
                 echo json_encode(['success' => true, 'message' => 'Asset created successfully', 'id' => $new_id]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to create asset']);
@@ -169,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $asset_type = trim($_POST['asset_type'] ?? 'Hardware');
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
+        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
@@ -214,23 +219,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 }
                 $check->close();
                 
-                // Generate unique QR code
-                $qr_data = json_encode([
-                    'asset_tag' => $asset_tag,
-                    'asset_name' => $asset_name,
-                    'asset_type' => $asset_type,
-                    'room_id' => $room_id,
-                    'brand' => $brand,
-                    'model' => $model
-                ]);
-                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-                
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('sssssisssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $is_borrowable, $created_by);
+                // Insert asset first to get ID
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, end_of_life, room_id, status, `condition`, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('ssssssssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $end_of_life, $room_id, $status, $condition, $is_borrowable, $created_by);
                 
                 if ($stmt->execute()) {
+                    $new_id = $conn->insert_id;
                     $created_count++;
-                    $created_asset_ids[] = $conn->insert_id;
+                    $created_asset_ids[] = $new_id;
+                    
+                    // Generate QR code with scan URL
+                    $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                    $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
+                    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+                    
+                    // Update asset with QR code
+                    $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                    $update_qr->bind_param('si', $qr_code_url, $new_id);
+                    $update_qr->execute();
+                    $update_qr->close();
                 } else {
                     $failed[] = $asset_tag . ' (insert failed)';
                 }
@@ -866,6 +873,14 @@ main {
                 <span class="text-sm text-gray-600">
                     <span id="selectedCount">0</span> selected
                 </span>
+                <button onclick="openBulkEditModal()" 
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-edit mr-2"></i>Edit Selected
+                </button>
+                <button onclick="editSelectedAssetTags()" 
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-tag mr-2"></i>Edit Asset Tags
+                </button>
                 <button onclick="printSelectedQRCodes()" 
                         class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors">
                     <i class="fa-solid fa-qrcode mr-2"></i>Print QR Codes
@@ -1213,14 +1228,15 @@ main {
                            placeholder="e.g., SN123456789">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End of Life</label>
+                    <input type="date" id="endOfLife" name="end_of_life"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Room</label>
-                    <select id="roomId" name="room_id" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">No Room</option>
-                        <?php foreach ($rooms as $room): ?>
-                            <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="text" value="NOROOM (Standby)" disabled
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                    <input type="hidden" id="roomId" name="room_id" value="">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -1262,9 +1278,19 @@ main {
                         <div class="text-sm text-green-900">
                             <p class="font-medium mb-1">Bulk Asset Creation</p>
                             <p>Create multiple assets with sequential numbering and unique QR codes.</p>
-                            <p class="mt-1 text-xs">Example: 11-23-2025-LAPTOP-IK501-001 through 11-23-2025-LAPTOP-IK501-020</p>
+                            <p class="mt-1 text-xs">Example: 11-23-2025-LAPTOP-NOROOM-001 through 11-23-2025-LAPTOP-NOROOM-020</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Asset Tag Preview at Top -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fa-solid fa-tag mr-1 text-blue-500"></i>Asset Tag Preview
+                    </label>
+                    <input type="text" id="bulkAssetTagPreview" readonly
+                           class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono text-gray-700"
+                           placeholder="Asset tags will appear here...">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -1316,14 +1342,6 @@ main {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Room Number <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" id="bulkRoomNumber" name="bulk_room_number" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., IK501">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
                             Quantity <span class="text-red-500">*</span>
                         </label>
                         <input type="number" id="bulkQuantity" name="bulk_quantity" 
@@ -1371,14 +1389,29 @@ main {
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Room</label>
-                        <select id="bulkRoomId" name="bulk_room_id" 
+                        <label class="block text-sm font-medium text-gray-700 mb-2">End of Life</label>
+                        <input type="date" id="bulkEndOfLife" name="bulk_end_of_life"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+                        <select id="bulkCondition" name="bulk_condition" 
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">No Room</option>
-                            <?php foreach ($rooms as $room): ?>
-                                <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
-                            <?php endforeach; ?>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good" selected>Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Non-Functional">Non-Functional</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Room</label>
+                        <input type="text" value="NOROOM (Standby)" disabled
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        <input type="hidden" id="bulkRoomId" name="bulk_room_id" value="">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -1391,12 +1424,8 @@ main {
                     </div>
                 </div>
 
-                <div class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-3">
-                    <i class="fa-solid fa-lightbulb mr-1"></i>
-                    <strong>Preview:</strong> <span id="assetTagPreview">11-23-2025-LAPTOP-IK501-001, 11-23-2025-LAPTOP-IK501-002, ...</span>
-                </div>
                 <div>
-                    <label class="flex items-center cursor-pointer mt-4">
+                    <label class="flex items-center cursor-pointer">
                         <input type="checkbox" id="bulkIsBorrowable" name="bulk_is_borrowable" value="1"
                                class="mr-2 text-blue-600 focus:ring-blue-500">
                         <span class="text-sm text-gray-700">Allow these assets to be borrowed</span>
@@ -1664,6 +1693,129 @@ main {
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Bulk Edit Modal -->
+<div id="bulkEditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-semibold text-white flex items-center justify-between">
+                <span><i class="fa-solid fa-edit mr-2"></i>Bulk Edit Standby Assets</span>
+                <button onclick="closeBulkEditModal()" class="text-white hover:text-gray-200">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </h3>
+        </div>
+        <form id="bulkEditForm" class="p-6">
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-800">
+                    <i class="fa-solid fa-info-circle mr-2"></i>
+                    <span id="bulkEditCount">0</span> standby asset(s) selected. Only fill in the fields you want to update. Empty fields will remain unchanged.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Asset Name (Category) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Name (Category)
+                    </label>
+                    <div class="searchable-dropdown relative">
+                        <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors flex items-center justify-between bg-white">
+                            <span class="selected-text text-gray-400">Keep current values</span>
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <select id="bulkEditAssetName" name="asset_name" class="hidden">
+                            <option value="">Keep current values</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white border-b border-gray-200 p-2">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Search categories...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="">
+                                <em class="text-gray-400">Keep current values</em>
+                            </div>
+                            <?php foreach ($categories as $cat): ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="<?php echo htmlspecialchars($cat['name']); ?>">
+                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Type -->
+                <div>
+                    <label for="bulkEditAssetType" class="block text-sm font-medium text-gray-700 mb-2">
+                        Asset Type
+                    </label>
+                    <select id="bulkEditAssetType" name="asset_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Equipment">Equipment</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="bulkEditStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    <select id="bulkEditStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Under Maintenance">Under Maintenance</option>
+                        <option value="Damaged">Damaged</option>
+                        <option value="For Repair">For Repair</option>
+                    </select>
+                </div>
+
+                <!-- Condition -->
+                <div>
+                    <label for="bulkEditCondition" class="block text-sm font-medium text-gray-700 mb-2">
+                        Condition
+                    </label>
+                    <select id="bulkEditCondition" name="condition" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+
+                <!-- Borrowable -->
+                <div>
+                    <label for="bulkEditIsBorrowable" class="block text-sm font-medium text-gray-700 mb-2">
+                        Borrowable Status
+                    </label>
+                    <select id="bulkEditIsBorrowable" name="is_borrowable" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Keep current values</option>
+                        <option value="1">Borrowable</option>
+                        <option value="0">Not Borrowable</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeBulkEditModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="bulkEditBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fa-solid fa-save mr-2"></i>Update Selected Assets
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1983,12 +2135,14 @@ function closeQRPrintModal() {
 // Update Starting Number for Bulk Assets
 async function updateBulkStartNumber() {
     const assetName = document.getElementById('bulkAssetName')?.value?.trim();
-    const roomNumber = document.getElementById('bulkRoomNumber')?.value?.trim();
     const startNumberField = document.getElementById('bulkStartNumber');
     
-    if (!assetName || !roomNumber || !startNumberField) {
+    if (!assetName || !startNumberField) {
         return;
     }
+    
+    // For standby assets, always use NOROOM
+    const roomNumber = 'NOROOM';
     
     try {
         const formData = new URLSearchParams();
@@ -2036,7 +2190,6 @@ function toggleAssetBulkMode() {
 // Auto-generate asset tag for single asset mode
 async function generateAssetTag() {
     const assetName = document.getElementById('assetName')?.value?.trim();
-    const roomId = document.getElementById('roomId')?.value;
     const assetTagField = document.getElementById('assetTag');
     
     if (!assetName || !assetTagField) {
@@ -2044,21 +2197,8 @@ async function generateAssetTag() {
         return;
     }
     
-    // Get room name from select option
-    const roomSelect = document.getElementById('roomId');
-    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
-    const roomName = selectedOption?.text || 'No Room';
-    
-    // Extract room number or use 'NOROOM' if no room selected
-    let roomNumber = 'NOROOM';
-    if (roomId && roomName && roomName !== 'No Room') {
-        const roomMatch = roomName.match(/([A-Z0-9]+)/);
-        if (roomMatch) {
-            roomNumber = roomMatch[1];
-        } else {
-            roomNumber = roomName.replace(/\s+/g, '').toUpperCase();
-        }
-    }
+    // For standby assets, always use NOROOM
+    const roomNumber = 'NOROOM';
     
     try {
         // Get current date
@@ -2102,7 +2242,6 @@ async function generateAssetTag() {
         const year = today.getFullYear();
         const formattedDate = `${month}-${day}-${year}`;
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
-        const roomNumber = roomId ? 'ROOM' : 'NOROOM';
         assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
     }
 }
@@ -2111,26 +2250,33 @@ async function generateAssetTag() {
 function updateAssetTagPreview() {
     const date = document.getElementById('bulkAcquisitionDate')?.value || '<?php echo date('Y-m-d'); ?>';
     const assetName = document.getElementById('bulkAssetName')?.value || 'LAPTOP';
-    const roomNumber = document.getElementById('bulkRoomNumber')?.value || 'IK501';
     const quantity = parseInt(document.getElementById('bulkQuantity')?.value || 1);
     const startNumber = parseInt(document.getElementById('bulkStartNumber')?.value || 1);
     
+    // For standby assets, always use NOROOM
+    const roomNumber = 'NOROOM';
+    
     const dateParts = date.split('-');
     const formattedDate = `${dateParts[1]}-${dateParts[2]}-${dateParts[0]}`;
+    const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
     
-    const preview = document.getElementById('assetTagPreview');
+    const preview = document.getElementById('bulkAssetTagPreview');
     if (preview) {
+        if (!assetName) {
+            preview.value = 'Please select asset name...';
+            return;
+        }
         if (quantity <= 3) {
             const tags = [];
             for (let i = 0; i < quantity; i++) {
                 const num = String(startNumber + i).padStart(3, '0');
-                tags.push(`${formattedDate}-${assetName}-${roomNumber}-${num}`);
+                tags.push(`${formattedDate}-${assetNamePrefix}-${roomNumber}-${num}`);
             }
-            preview.textContent = tags.join(', ');
+            preview.value = tags.join(', ');
         } else {
             const firstNum = String(startNumber).padStart(3, '0');
             const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
-            preview.textContent = `${formattedDate}-${assetName}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetName}-${roomNumber}-${lastNum}`;
+            preview.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${roomNumber}-${lastNum} (${quantity} assets)`;
         }
     }
 }
@@ -2147,15 +2293,16 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('action', 'bulk_create_assets');
         formData.append('acquisition_date', document.getElementById('bulkAcquisitionDate').value);
         formData.append('asset_name', document.getElementById('bulkAssetName').value);
-        formData.append('room_number', document.getElementById('bulkRoomNumber').value);
+        formData.append('room_number', 'NOROOM');
         formData.append('quantity', document.getElementById('bulkQuantity').value);
         formData.append('start_number', document.getElementById('bulkStartNumber').value);
         formData.append('asset_type', document.getElementById('bulkAssetType').value);
         formData.append('brand', document.getElementById('bulkBrand').value);
         formData.append('model', document.getElementById('bulkModel').value);
-        formData.append('room_id', document.getElementById('bulkRoomId').value);
+        formData.append('end_of_life', document.getElementById('bulkEndOfLife').value);
+        formData.append('room_id', '');
         formData.append('status', document.getElementById('bulkStatus').value);
-        formData.append('condition', 'Good');
+        formData.append('condition', document.getElementById('bulkCondition').value);
         formData.append('is_borrowable', document.getElementById('bulkIsBorrowable').checked ? '1' : '0');
     } else {
         formData.append('action', 'create_asset');
@@ -2165,7 +2312,8 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
         formData.append('brand', document.getElementById('brand').value);
         formData.append('model', document.getElementById('model').value);
         formData.append('serial_number', document.getElementById('serialNumber').value);
-        formData.append('room_id', document.getElementById('roomId').value);
+        formData.append('end_of_life', document.getElementById('endOfLife').value);
+        formData.append('room_id', '');
         formData.append('status', document.getElementById('status').value);
         formData.append('condition', document.getElementById('condition').value);
         formData.append('is_borrowable', document.getElementById('isBorrowable').checked ? '1' : '0');
@@ -2412,6 +2560,21 @@ async function printSelectedQRCodes() {
     await openQRPrintModalForAssets(assetIds);
 }
 
+// Edit selected asset tags
+function editSelectedAssetTags() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit');
+        return;
+    }
+    
+    const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    
+    // Redirect to edit asset tags page with selected IDs
+    const idsParam = assetIds.join(',');
+    window.location.href = 'edit_asset_tag_standbyassets.php?asset_ids=' + idsParam;
+}
+
 // Close QR Print Modal
 function closeQRPrintModal() {
     document.getElementById('qrPrintModal').classList.add('hidden');
@@ -2652,16 +2815,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Add event listener for room selection to trigger asset tag generation
-    const roomSelect = document.getElementById('roomId');
-    if (roomSelect) {
-        roomSelect.addEventListener('change', function() {
-            const assetName = document.getElementById('assetName')?.value;
-            if (assetName) {
-                generateAssetTag();
+    // For bulk mode, update start number and preview when asset name changes
+    const bulkAssetName = document.getElementById('bulkAssetName');
+    if (bulkAssetName) {
+        bulkAssetName.addEventListener('change', function() {
+            if (this.value && this.value !== '__add_new__') {
+                updateBulkStartNumber();
+                updateAssetTagPreview();
             }
         });
     }
+    
+    // Update preview when other bulk fields change
+    const bulkPreviewFields = ['bulkAcquisitionDate', 'bulkQuantity', 'bulkStartNumber'];
+    bulkPreviewFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updateAssetTagPreview);
+            field.addEventListener('input', updateAssetTagPreview);
+        }
+    });
 });
 
 // Initialize searchable dropdowns
@@ -2947,6 +3120,116 @@ function updateSearchableDropdownOptions(selectId, categories) {
         });
     }
 }
+
+// Bulk Edit Functions
+function openBulkEditModal() {
+    const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        showAlert('error', 'Please select at least one asset to edit');
+        return;
+    }
+    
+    document.getElementById('bulkEditCount').textContent = selectedCheckboxes.length;
+    document.getElementById('bulkEditModal').classList.remove('hidden');
+    
+    // Initialize bulk edit dropdowns
+    initializeBulkEditDropdowns();
+}
+
+function closeBulkEditModal() {
+    document.getElementById('bulkEditModal').classList.add('hidden');
+    document.getElementById('bulkEditForm').reset();
+}
+
+// Initialize bulk edit dropdowns
+function initializeBulkEditDropdowns() {
+    const bulkEditAssetName = document.getElementById('bulkEditAssetName');
+    if (bulkEditAssetName) {
+        bulkEditAssetName.value = '';
+        const dropdown = bulkEditAssetName.closest('.searchable-dropdown');
+        if (dropdown) {
+            const selectedText = dropdown.querySelector('.selected-text');
+            if (selectedText) {
+                selectedText.textContent = 'Keep current values';
+                selectedText.className = 'selected-text text-gray-400';
+            }
+        }
+    }
+}
+
+// Bulk Edit Form Submit
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkEditForm = document.getElementById('bulkEditForm');
+    if (bulkEditForm) {
+        bulkEditForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                showAlert('error', 'No assets selected');
+                return;
+            }
+            
+            const assetIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+            
+            const formData = new URLSearchParams();
+            formData.append('ajax', '1');
+            formData.append('action', 'bulk_update');
+            formData.append('asset_ids', JSON.stringify(assetIds));
+            
+            // Only append fields that have values (not empty)
+            const assetName = document.getElementById('bulkEditAssetName').value;
+            if (assetName) formData.append('asset_name', assetName);
+            
+            const assetType = document.getElementById('bulkEditAssetType').value;
+            if (assetType) formData.append('asset_type', assetType);
+            
+            const status = document.getElementById('bulkEditStatus').value;
+            if (status) formData.append('status', status);
+            
+            const condition = document.getElementById('bulkEditCondition').value;
+            if (condition) formData.append('condition', condition);
+            
+            const isBorrowable = document.getElementById('bulkEditIsBorrowable').value;
+            if (isBorrowable !== '') formData.append('is_borrowable', isBorrowable);
+            
+            // Check if at least one field is being updated
+            if (!assetName && !assetType && !status && !condition && isBorrowable === '') {
+                showAlert('error', 'Please select at least one field to update');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('bulkEditBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Updating...';
+            
+            try {
+                const response = await fetch(location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('success', result.message);
+                    closeBulkEditModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('error', result.message || 'Failed to update assets');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while updating assets');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+});
 </script>
 
 <?php include '../components/layout_footer.php'; ?>

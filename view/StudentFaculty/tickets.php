@@ -264,6 +264,7 @@ $pcStmt->close();
 
         <form id="issueForm" class="space-y-3" method="post">
             <input type="hidden" name="category" id="issueCategory" value="">
+            <input type="hidden" name="component_asset_id" id="componentAssetId" value="">
             
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Building: *</label>
@@ -299,13 +300,11 @@ $pcStmt->close();
             <div id="hardwareComponentField" class="hidden">
                 <label class="block text-sm font-medium text-gray-700">Hardware Component: *</label>
                 <select name="hardware_component" id="hardwareComponent" class="mt-1 block w-full border rounded px-3 py-2">
-                    <option value="">Select component</option>
-                    <option value="Keyboard">Keyboard</option>
-                    <option value="Mouse">Mouse</option>
-                    <option value="Monitor">Monitor</option>
-                    <option value="CPU/System Unit">CPU/System Unit</option>
-                    <option value="Others">Others</option>
+                    <option value="">Select terminal first</option>
                 </select>
+                <div id="componentLoading" class="hidden mt-2 text-sm text-gray-500">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading components...
+                </div>
             </div>
 
             <!-- Hardware Component Others Field (only when "Others" is selected) -->
@@ -486,6 +485,11 @@ function handleIssueClick(issueType) {
             issueTitleField?.classList.remove('hidden');
             issueTitleInput?.setAttribute('required','required');
             document.getElementById('issueCategory').value = 'hardware';
+            // Load components if terminal is already selected
+            const terminalSelect = document.getElementById('terminal');
+            if (terminalSelect && terminalSelect.value) {
+                loadHardwareComponents(terminalSelect.value);
+            }
             break;
             
         case 'software':
@@ -665,14 +669,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.style.display = 'none';
             }
         });
-        // Reset terminal
+        // Reset terminal and components
         document.getElementById('terminal').value = '';
+        resetHardwareComponents();
+        updatePreview();
+    });
+    
+    // Load hardware components when terminal is selected
+    document.getElementById('terminal').addEventListener('change', function() {
+        const pcId = this.value;
+        if (pcId && document.getElementById('issueCategory').value === 'hardware') {
+            loadHardwareComponents(pcId);
+        }
         updatePreview();
     });
     
     // Toggle "Others" text field for Hardware Component
     if (hardwareComponent) {
         hardwareComponent.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const componentId = selectedOption?.getAttribute('data-component-id') || '0';
+            document.getElementById('componentAssetId').value = componentId;
+            
             if (this.value === 'Others') {
                 hardwareOthersField.classList.remove('hidden');
                 hardwareComponentOther.setAttribute('required', 'required');
@@ -734,6 +752,69 @@ document.addEventListener('click', function(e) {
         closeIssueModal();
     }
 });
+
+// Load hardware components for selected PC
+async function loadHardwareComponents(pcId) {
+    const componentSelect = document.getElementById('hardwareComponent');
+    const loadingDiv = document.getElementById('componentLoading');
+    const hardwareOthersField = document.getElementById('hardwareOthersField');
+    const hardwareComponentOther = document.getElementById('hardwareComponentOther');
+    
+    // Show loading
+    loadingDiv.classList.remove('hidden');
+    componentSelect.disabled = true;
+    
+    // Reset
+    componentSelect.innerHTML = '<option value="">Loading...</option>';
+    hardwareOthersField.classList.add('hidden');
+    hardwareComponentOther.removeAttribute('required');
+    hardwareComponentOther.value = '';
+    
+    try {
+        const response = await fetch(`../../controller/get_pc_components.php?pc_id=${pcId}`);
+        const data = await response.json();
+        
+        if (data.success && data.components && data.components.length > 0) {
+            componentSelect.innerHTML = '<option value="">Select component</option>';
+            
+            data.components.forEach(component => {
+                const option = document.createElement('option');
+                option.value = component.asset_tag;
+                option.textContent = `${component.name}${component.brand ? ' - ' + component.brand : ''}${component.model ? ' ' + component.model : ''}`;
+                option.setAttribute('data-component-id', component.id);
+                componentSelect.appendChild(option);
+            });
+            
+            // Add "Others" option
+            const othersOption = document.createElement('option');
+            othersOption.value = 'Others';
+            othersOption.textContent = 'Others (Not listed)';
+            othersOption.setAttribute('data-component-id', '0');
+            componentSelect.appendChild(othersOption);
+        } else {
+            componentSelect.innerHTML = '<option value="">No components found</option><option value="Others" data-component-id="0">Others</option>';
+        }
+    } catch (error) {
+        console.error('Error loading components:', error);
+        componentSelect.innerHTML = '<option value="">Error loading components</option><option value="Others">Others</option>';
+    } finally {
+        loadingDiv.classList.add('hidden');
+        componentSelect.disabled = false;
+    }
+}
+
+// Reset hardware components dropdown
+function resetHardwareComponents() {
+    const componentSelect = document.getElementById('hardwareComponent');
+    const hardwareOthersField = document.getElementById('hardwareOthersField');
+    const hardwareComponentOther = document.getElementById('hardwareComponentOther');
+    
+    componentSelect.innerHTML = '<option value="">Select terminal first</option>';
+    componentSelect.disabled = false;
+    hardwareOthersField.classList.add('hidden');
+    hardwareComponentOther.removeAttribute('required');
+    hardwareComponentOther.value = '';
+}
 </script>
 
 <!-- Borrowing Equipment Modal -->
@@ -1663,7 +1744,8 @@ document.addEventListener('DOMContentLoaded', function(){
       try {
         return JSON.parse(text);
       } catch (err) {
-        throw new Error('Invalid server response');
+        console.error('Server response:', text);
+        throw new Error('Invalid server response: ' + text.substring(0, 100));
       }
     })
     .then(json => {

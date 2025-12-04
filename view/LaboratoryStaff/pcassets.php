@@ -125,9 +125,9 @@ $avail_offset = ($avail_page - 1) * $avail_limit;
 // Get filter parameters
 $category_filter = isset($_GET['category_filter']) ? intval($_GET['category_filter']) : 0;
 
-// Fetch categories for filter dropdown
+// Fetch categories for filter dropdown (only PC categories)
 $categories = [];
-$cat_query = $conn->prepare("SELECT id, name FROM asset_categories ORDER BY name ASC");
+$cat_query = $conn->prepare("SELECT id, name FROM asset_categories WHERE is_pc_category = 1 ORDER BY name ASC");
 $cat_query->execute();
 $cat_result = $cat_query->get_result();
 while ($row = $cat_result->fetch_assoc()) {
@@ -196,7 +196,7 @@ html, body {
 }
 main {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     padding: 0.5rem;
@@ -205,7 +205,7 @@ main {
 </style>
 
 <main>
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex flex-col">
         
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
@@ -253,7 +253,7 @@ main {
         </div>
 
         <!-- Two Column Layout -->
-        <div class="flex-1 flex gap-3 overflow-hidden">
+        <div class="flex gap-3 min-h-[600px]">
             
             <!-- Left Column - Assigned Components -->
             <div class="flex-1 flex flex-col bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
