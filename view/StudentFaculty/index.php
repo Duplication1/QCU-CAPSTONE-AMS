@@ -140,7 +140,7 @@ include '../components/layout_header.php';
                     <p class="text-xl font-bold text-gray-900"><?php echo $ticketsStats['total'] ?? 0; ?></p>
                 </div>
                 <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center">
-                    <i class="fas fa-ticket text-white text-sm"></i>
+                    <i class="fas fa-ticket text-[#1E3A8A] text-sm"></i>
                 </div>
             </div>
             <p class="text-xs mobile-text-sm text-yellow-600 font-medium">
@@ -156,7 +156,7 @@ include '../components/layout_header.php';
                     <p class="text-xl font-bold text-gray-900"><?php echo $borrowingStats['total'] ?? 0; ?></p>
                 </div>
                 <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center">
-                    <i class="fas fa-box text-white text-sm"></i>
+                    <i class="fas fa-box text-[#1E3A8A] text-sm"></i>
                 </div>
             </div>
             <p class="text-xs mobile-text-sm text-purple-600 font-medium">
@@ -172,7 +172,7 @@ include '../components/layout_header.php';
                     <p class="text-xl font-bold text-gray-900"><?php echo $ticketsStats['resolved'] ?? 0; ?></p>
                 </div>
                 <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center">
-                    <i class="fas fa-check-circle text-white text-sm"></i>
+                    <i class="fas fa-check-circle text-[#1E3A8A] text-sm"></i>
                 </div>
             </div>
             <p class="text-xs mobile-text-sm text-blue-600 font-medium">
@@ -188,7 +188,7 @@ include '../components/layout_header.php';
                     <p class="text-xl font-bold text-gray-900"><?php echo $borrowingStats['approved'] ?? 0; ?></p>
                 </div>
                 <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center">
-                    <i class="fas fa-check text-white text-sm"></i>
+                    <i class="fas fa-check text-[#1E3A8A] text-sm"></i>
                 </div>
             </div>
             <p class="text-xs mobile-text-sm text-green-600 font-medium">

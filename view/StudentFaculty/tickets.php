@@ -159,7 +159,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[150px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-computer text-white text-base"></i>
+                        <i class="fa-solid fa-computer text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Hardware Issue</h3>
@@ -173,7 +173,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-microchip text-white text-base"></i>
+                        <i class="fa-solid fa-microchip text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Software Issue</h3>
@@ -187,7 +187,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-globe text-white text-base"></i>
+                        <i class="fa-solid fa-globe text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Network Issue</h3>
@@ -201,7 +201,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-box text-white text-base"></i>
+                        <i class="fa-solid fa-box text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Borrow Equipment</h3>
@@ -215,7 +215,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-building text-white text-base"></i>
+                        <i class="fa-solid fa-building text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Laboratory Concern</h3>
@@ -229,7 +229,7 @@ $pcStmt->close();
                 class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-flag text-white text-base"></i>
+                        <i class="fa-solid fa-flag text-[#1E3A8A] text-base"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-800">Other</h3>
