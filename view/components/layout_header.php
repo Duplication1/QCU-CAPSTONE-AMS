@@ -46,6 +46,8 @@ $page_title = "AMS - " . $current_role . " Dashboard";
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="../../node_modules/datatables.net-dt/css/dataTables.dataTables.min.css">
 
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
     <!-- jQuery (required for DataTables) -->
     <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
     <!-- DataTables JavaScript -->

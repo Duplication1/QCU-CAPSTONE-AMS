@@ -143,112 +143,101 @@ $pcStmt->close();
     <?php include '../components/session_messages.php'; ?>
     
     <!-- Header Section -->
-    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mb-2 flex-shrink-0">
-        <h2 class="text-lg font-bold text-gray-800">
+    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mb-6 flex-shrink-0">
+        <h2 class="text-xl font-bold text-gray-800">
             Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
         </h2>
-        <p class="text-[10px] text-gray-500 mt-1">Choose from the available options below.</p>
+        <p class="text-sm text-gray-500 mt-1">Choose from the available options below.</p>
     </div>
 
     <!-- Options Grid -->
     <div class="flex-1 overflow-y-auto">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
             <!-- Hardware Issue -->
             <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-computer text-[#1E3A8A] text-sm"></i>
+                class="bg-white rounded shadow-sm p-6 min-h-[150px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-computer text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Hardware Issue</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            Computer, printer, or equipment problems.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Hardware Issue</h3>
+                        <p class="text-xs text-gray-500 mt-1">Computer, printer, or equipment problems.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Software Issue -->
             <div onclick="handleIssueClick('software')" 
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-microchip text-[#1E3A8A] text-sm"></i>
+                class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-microchip text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Software Issue</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            Application crashes, system errors.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Software Issue</h3>
+                        <p class="text-xs text-gray-500 mt-1">Application crashes, system errors.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Network Issue -->
             <div onclick="handleIssueClick('network')" 
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-globe text-[#1E3A8A] text-sm"></i>
+                class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-globe text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Network Issue</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            Internet connectivity, Wi-Fi issues.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Network Issue</h3>
+                        <p class="text-xs text-gray-500 mt-1">Internet connectivity, Wi-Fi issues.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Borrow Equipment -->
             <div onclick="openBorrowingModal()" 
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-box text-[#1E3A8A] text-sm"></i>
+                class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-box text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Borrow Equipment</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            Request to borrow laboratory equipment.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Borrow Equipment</h3>
+                        <p class="text-xs text-gray-500 mt-1">Request to borrow laboratory equipment.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Laboratory Concern -->
             <div onclick="handleIssueClick('laboratory')" 
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-building text-[#1E3A8A] text-sm"></i>
+                class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-building text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Laboratory Concern</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            Lab facility access, safety issues.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Laboratory Concern</h3>
+                        <p class="text-xs text-gray-500 mt-1">Lab facility access, safety issues.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Other -->
-            <div onclick="handleIssueClick('hardware')" 
-                class="bg-white rounded shadow-sm p-3 cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-flag text-[#1E3A8A] text-sm"></i>
+            <div onclick="handleIssueClick('other')" 
+                class="bg-white rounded shadow-sm p-6 min-h-[140px] cursor-pointer transition border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md"><br>
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-[#1E3A8A] bg-opacity-10 rounded flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-flag text-white text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-800">Other</h3>
-                        <p class="text-[10px] text-gray-500 mt-1">
-                            General questions, account issues.
-                        </p>
+                        <h3 class="text-sm font-semibold text-gray-800">Other</h3>
+                        <p class="text-xs text-gray-500 mt-1">General questions, account issues.</p>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </main>
