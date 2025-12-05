@@ -143,7 +143,7 @@ $pcStmt->close();
     <?php include '../components/session_messages.php'; ?>
     
     <!-- Header Section -->
-    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mb-6 flex-shrink-0">
+    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mb-4 flex-shrink-0">
         <h2 class="text-xl font-bold text-gray-800">
             Hi <?php echo htmlspecialchars($_SESSION['name'] ?? 'Student'); ?>, what do you need help with?
         </h2>
