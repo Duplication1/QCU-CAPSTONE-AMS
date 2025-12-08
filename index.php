@@ -12,6 +12,100 @@
     <style>
         * {
             font-family: 'Poppins', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        /* Dark mode variables */
+        .dark {
+            color-scheme: dark;
+        }
+        
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        .dark nav {
+            background-color: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .dark .hero-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        .dark .feature-card,
+        .dark .bg-white {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        
+        .dark .text-gray-900 { color: #f1f5f9; }
+        .dark .text-gray-800 { color: #e2e8f0; }
+        .dark .text-gray-700 { color: #cbd5e1; }
+        .dark .text-gray-600 { color: #94a3b8; }
+        .dark .text-gray-500 { color: #64748b; }
+        
+        .dark .text-blue-900 { color: #fde047; } /* Yellow-300 for QCU AMS in dark mode */
+        
+        .dark .bg-gray-50 { background-color: #0f172a; }
+        .dark .bg-gray-100 { background-color: #1e293b; }
+        .dark .bg-gray-200 { background-color: #334155; }
+        
+        .dark .from-blue-50 { --tw-gradient-from: #1e293b; }
+        .dark .to-indigo-50 { --tw-gradient-to: #0f172a; }
+        
+        .dark .team-section {
+            background: linear-gradient(to bottom right, #1e293b, #0f172a);
+        }
+        
+        .dark .border-gray-100 { border-color: #334155; }
+        .dark .border-gray-200 { border-color: #475569; }
+        .dark .border-gray-300 { border-color: #475569; }
+        
+        .dark .shadow-lg,
+        .dark .shadow-md,
+        .dark .shadow-xl,
+        .dark .shadow-2xl {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark .feature-card:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Dark mode toggle button */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #cbd5e1;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .dark .theme-toggle {
+            background: #475569;
+        }
+        
+        .theme-toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dark .theme-toggle-slider {
+            transform: translateX(30px);
+            background: #1e293b;
         }
         
         /* Hero gradient animation */
@@ -22,9 +116,7 @@
         }
         
         .hero-gradient {
-            background: linear-gradient(-45deg, #1E3A8A, #3B82F6, #6366F1, #1E40AF);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            background: #1E3A8A;
         }
         
         /* Floating animation */
@@ -87,7 +179,7 @@
                     <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
                     <div>
                         <h1 class="text-xl font-bold text-blue-900">QCU AMS</h1>
-                        <p class="text-xs text-gray-600">Asset Management System</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Asset Management System</p>
                     </div>
                 </div>
                 
@@ -97,6 +189,15 @@
                     <a href="#features" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Features</a>
                     <a href="#about" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">About</a>
                     <a href="#contact" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contact</a>
+                    
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="theme-toggle" aria-label="Toggle dark mode">
+                        <div class="theme-toggle-slider">
+                            <i class="fa-solid fa-sun text-yellow-500 text-xs dark-mode-icon-light"></i>
+                            <i class="fa-solid fa-moon text-blue-400 text-xs dark-mode-icon-dark hidden"></i>
+                        </div>
+                    </button>
+                    
                     <a href="view/employee_login.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium">
                         <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
                     </a>
@@ -116,6 +217,18 @@
                 <a href="#features" class="block text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">Features</a>
                 <a href="#about" class="block text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">About</a>
                 <a href="#contact" class="block text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">Contact</a>
+                
+                <!-- Dark Mode Toggle Mobile -->
+                <div class="flex items-center justify-between py-2">
+                    <span class="text-gray-700 font-medium">Dark Mode</span>
+                    <button onclick="toggleDarkMode()" class="theme-toggle" aria-label="Toggle dark mode">
+                        <div class="theme-toggle-slider">
+                            <i class="fa-solid fa-sun text-yellow-500 text-xs dark-mode-icon-light"></i>
+                            <i class="fa-solid fa-moon text-blue-400 text-xs dark-mode-icon-dark hidden"></i>
+                        </div>
+                    </button>
+                </div>
+                
                 <a href="view/employee_login.php" class="block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium text-center">
                     <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
                 </a>
@@ -373,7 +486,7 @@
     </section>
 
     <!-- Our Team Section -->
-    <section id="team" class="py-20 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+    <section id="team" class="team-section py-20 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">Our Team</h2>
@@ -592,7 +705,7 @@
                     <div class="flex items-center gap-3 mb-4">
                         <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-12 w-12">
                         <div>
-                            <h3 class="font-bold text-lg">QCU AMS</h3>
+                            <h3 class="font-bold text-lg text-blue-900">QCU AMS</h3>
                             <p class="text-sm text-gray-400">Asset Management</p>
                         </div>
                     </div>
@@ -646,6 +759,36 @@
 
     <!-- Mobile Menu Script -->
     <script>
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            updateDarkModeIcons(isDark);
+        }
+        
+        function updateDarkModeIcons(isDark) {
+            const lightIcons = document.querySelectorAll('.dark-mode-icon-light');
+            const darkIcons = document.querySelectorAll('.dark-mode-icon-dark');
+            
+            if (isDark) {
+                lightIcons.forEach(icon => icon.classList.add('hidden'));
+                darkIcons.forEach(icon => icon.classList.remove('hidden'));
+            } else {
+                lightIcons.forEach(icon => icon.classList.remove('hidden'));
+                darkIcons.forEach(icon => icon.classList.add('hidden'));
+            }
+        }
+        
+        // Check for saved dark mode preference
+        (function() {
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.documentElement.classList.add('dark');
+                updateDarkModeIcons(true);
+            }
+        })();
+        
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         

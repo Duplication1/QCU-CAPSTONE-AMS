@@ -1664,7 +1664,7 @@ main {
     </div>
 </div>
 <!-- Add Asset Modal -->
-<div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+<div id="addAssetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-25">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
             <h3 class="text-xl font-semibold text-white">Add New Asset</h3>

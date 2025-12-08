@@ -314,15 +314,28 @@ include '../components/layout_header.php';
 
             <div>
                 <label class="block text-[10px] font-medium text-gray-700 mb-1">New Password</label>
-                <input type="password" id="newPassword" name="new_password" required
+                <input type="password" id="newPassword" name="new_password" required oninput="validateNewPassword()"
                     class="w-full px-3 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
-                <p class="text-[10px] text-gray-500 mt-1">Minimum 8 characters</p>
             </div>
 
             <div>
                 <label class="block text-[10px] font-medium text-gray-700 mb-1">Confirm New Password</label>
                 <input type="password" id="confirmPassword" name="confirm_password" required
                     class="w-full px-3 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#1E3A8A]">
+                <div id="password_requirements" class="mt-2 space-y-1 bg-gray-50 p-2 rounded">
+                    <div id="req_length" class="text-[10px] text-gray-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle text-[5px]"></i>
+                        <span>At least 8 characters</span>
+                    </div>
+                    <div id="req_capital" class="text-[10px] text-gray-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle text-[5px]"></i>
+                        <span>Contains capital letter (A-Z)</span>
+                    </div>
+                    <div id="req_special" class="text-[10px] text-gray-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle text-[5px]"></i>
+                        <span>Contains special character (!@#$%^&*)</span>
+                    </div>
+                </div>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -415,6 +428,42 @@ function closeChangePasswordModal() {
     document.getElementById('changePasswordForm').reset();
 }
 
+function validateNewPassword() {
+    const password = document.getElementById('newPassword').value;
+    
+    // Check length requirement
+    const reqLength = document.getElementById('req_length');
+    if (password.length >= 8) {
+        reqLength.className = 'text-[10px] text-green-600 flex items-center gap-1.5';
+        reqLength.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>At least 8 characters</span>';
+    } else {
+        reqLength.className = 'text-[10px] text-gray-500 flex items-center gap-1.5';
+        reqLength.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>At least 8 characters</span>';
+    }
+    
+    // Check capital letter requirement
+    const capitalRegex = /[A-Z]/;
+    const reqCapital = document.getElementById('req_capital');
+    if (capitalRegex.test(password)) {
+        reqCapital.className = 'text-[10px] text-green-600 flex items-center gap-1.5';
+        reqCapital.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>Contains capital letter (A-Z)</span>';
+    } else {
+        reqCapital.className = 'text-[10px] text-gray-500 flex items-center gap-1.5';
+        reqCapital.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>Contains capital letter (A-Z)</span>';
+    }
+    
+    // Check special character requirement
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    const reqSpecial = document.getElementById('req_special');
+    if (specialCharRegex.test(password)) {
+        reqSpecial.className = 'text-[10px] text-green-600 flex items-center gap-1.5';
+        reqSpecial.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>Contains special character (!@#$%^&*)</span>';
+    } else {
+        reqSpecial.className = 'text-[10px] text-gray-500 flex items-center gap-1.5';
+        reqSpecial.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>Contains special character (!@#$%^&*)</span>';
+    }
+}
+
 // Handle password change form submission
 document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -432,6 +481,20 @@ document.getElementById('changePasswordForm').addEventListener('submit', async f
     // Validate password length
     if (newPassword.length < 8) {
         showToast('Password must be at least 8 characters', 'error');
+        return;
+    }
+    
+    // Validate capital letter
+    const capitalRegex = /[A-Z]/;
+    if (!capitalRegex.test(newPassword)) {
+        showToast('Password must contain at least one capital letter (A-Z)', 'error');
+        return;
+    }
+    
+    // Validate special character
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!specialCharRegex.test(newPassword)) {
+        showToast('Password must contain at least one special character (!@#$%^&*)', 'error');
         return;
     }
     

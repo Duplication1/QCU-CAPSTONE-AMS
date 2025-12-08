@@ -733,72 +733,178 @@ main {
 </div>
 
 <!-- Add User Modal -->
-<div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-    <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-40" style="background-color: rgba(0,0,0,0.4);" onclick="closeAddUserModal()"></div>
-    <div class="relative bg-white rounded-lg shadow-2xl max-w-3xl w-11/12 md:w-3/4 p-6 z-50">
-        <div class="flex items-start gap-4">
-            <!-- <div class="flex-shrink-0 flex flex-col items-center gap-2">
-                <div id="add_profile_photo_container" class="w-20 h-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center cursor-pointer" role="button" tabindex="0" aria-label="Upload profile photo" title="Upload profile photo" onclick="triggerAddProfileUpload()" onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); triggerAddProfileUpload(); }">
-                    <img id="add_profile_photo_img" src="" alt="avatar" class="w-full h-full object-cover" style="display:none;" />
-                    <span id="add_profile_initial" class="text-gray-500 text-xs uppercase tracking-wide">Add photo</span>
+<div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm z-40" onclick="closeAddUserModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full z-50">
+        <!-- Header -->
+        <div class="bg-white px-6 py-5 rounded-t-2xl border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">Create New User</h3>
+                    <p class="text-sm text-gray-600 mt-1">Add a new account to the system</p>
                 </div>
-                <input id="add_profile_file" name="profile_photo" type="file" accept="image/*" class="hidden" onchange="previewAddProfileFile(event)" />
-            </div> -->
-            <div class="flex-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xl font-semibold">Create New User</h3>
-                        <p class="text-sm text-gray-600">Add a new account and set an initial password</p>
-                    </div>
-                </div>
-
-                <form id="addUserForm" onsubmit="return submitAddUser(event)" class="mt-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-gray-600">Name</label>
-                            <div class="flex gap-2 mt-2">
-                                <input id="add_first_name" name="first_name" placeholder="First Name" class="w-1/2 border rounded px-3 py-2" required />
-                                <input id="add_last_name" name="last_name" placeholder="Last Name" class="w-1/2 border rounded px-3 py-2" required />
-                            </div>
-                        </div>
-                        <div>
-                       
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-gray-600">ID Number</label>
-                            <input id="add_id_number" name="id_number" type="text" inputmode="numeric" pattern="[0-9\-]*" class="w-full border rounded px-3 py-2 mt-2" oninput="validateIdNumberInput(this, 'add_id_error')" />
-                            <span id="add_id_error" class="text-xs text-red-600 hidden">*Use numbers only</span>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-600">Email address</label>
-                            <input id="add_email" name="email" type="email" class="w-full border rounded px-3 py-2 mt-2" required />
-                        </div>
-
-
-                        <div>
-                            <label class="block text-xs text-gray-600">Role</label>
-                            <select id="add_role" name="role" class="w-full border rounded px-3 py-2 mt-2" required>
-                                <option value="Administrator">Administrator</option>
-                                <option value="Technician">Technician</option>
-                                <option value="LaboratoryStaff">LaboratoryStaff</option>
-                                <option value="Student">Student</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-gray-600">Password</label>
-                            <input id="add_password" name="password" type="password" class="w-full border rounded px-3 py-2 mt-2" required />
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex items-center justify-end gap-3">
-                        <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 rounded bg-gray-100">Cancel</button>
-                        <button type="submit" id="addUserSaveBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Create</button>
-                    </div>
-                </form>
+                <button type="button" onclick="closeAddUserModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-all">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
             </div>
         </div>
+
+        <!-- Form Content -->
+        <form id="addUserForm" onsubmit="return submitAddUser(event)" class="p-6">
+            <!-- Personal Information Section -->
+            <div class="mb-5">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-user text-[#1E3A8A] text-sm"></i>
+                    Personal Information
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <input id="add_first_name" name="first_name" placeholder="First Name" 
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" required />
+                            </div>
+                            <div>
+                                <input id="add_last_name" name="last_name" placeholder="Last Name" 
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            ID Number
+                        </label>
+                        <div>
+                            <input id="add_id_number" name="id_number" type="text" inputmode="numeric" pattern="[0-9\-]*" placeholder="e.g. 22-0311"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" 
+                                oninput="validateIdNumberInput(this, 'add_id_error')" />
+                        </div>
+                        <span id="add_id_error" class="text-xs text-red-600 mt-1 hidden flex items-center gap-1">
+                            <i class="fa-solid fa-exclamation-circle"></i>Use numbers only
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            Email Address <span class="text-red-500">*</span>
+                        </label>
+                        <div>
+                            <input id="add_email" name="email" type="email" placeholder="user@example.com"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" required />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information Section -->
+            <div class="mb-5">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-[#1E3A8A] text-sm"></i>
+                    Account Information
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            Role <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <select id="add_role" name="role" 
+                                class="w-full px-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all appearance-none bg-white" required>
+                                <option value="">Select a role...</option>
+                                <option value="Administrator">Administrator</option>
+                                <option value="Technician">Technician</option>
+                                <option value="LaboratoryStaff">Laboratory Staff</option>
+                                <option value="Student">Student</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="mb-5">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-[#1E3A8A] text-sm"></i>
+                    Security
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input id="add_password" name="password" type="password" placeholder="Enter password"
+                                class="w-full px-3 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" 
+                                required oninput="validateAddPassword()" />
+                            <button type="button" onclick="togglePasswordVisibility('add_password', 'toggle_add_password')" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggle_add_password" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="add_password_requirements" class="mt-2 space-y-1 bg-gray-50 p-2 rounded">
+                            <div id="add_req_length" class="text-xs text-gray-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle text-[5px]"></i>
+                                <span>At least 8 characters</span>
+                            </div>
+                            <div id="add_req_capital" class="text-xs text-gray-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle text-[5px]"></i>
+                                <span>Contains capital letter (A-Z)</span>
+                            </div>
+                            <div id="add_req_special" class="text-xs text-gray-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle text-[5px]"></i>
+                                <span>Contains special character (!@#$%^&*)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+                            Confirm Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input id="add_confirm_password" name="confirm_password" type="password" placeholder="Re-enter password"
+                                class="w-full px-3 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all" 
+                                required oninput="validateAddPassword()" />
+                            <button type="button" onclick="togglePasswordVisibility('add_confirm_password', 'toggle_add_confirm_password')" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i id="toggle_add_confirm_password" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <div id="add_password_match_error" class="text-xs text-red-600 bg-red-50 px-2 py-1.5 rounded hidden flex items-center gap-1.5">
+                                <i class="fa-solid fa-exclamation-circle"></i>
+                                <span>Passwords do not match</span>
+                            </div>
+                            <div id="add_password_match_success" class="text-xs text-green-600 bg-green-50 px-2 py-1.5 rounded hidden flex items-center gap-1.5">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Passwords match</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-5 border-t border-gray-200 mt-6">
+                <button type="button" onclick="closeAddUserModal()" 
+                    class="px-6 py-2.5 text-sm rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-times"></i>
+                    Cancel
+                </button>
+                <button type="submit" id="addUserSaveBtn" 
+                    class="px-6 py-2.5 text-sm rounded-lg bg-[#1E3A8A] text-white font-semibold hover:bg-[#2563EB] hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Create User
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -2480,8 +2586,41 @@ async function submitAddUser(e) {
         const first = (form.querySelector('input[name="first_name"]')||{}).value || '';
         const last = (form.querySelector('input[name="last_name"]')||{}).value || '';
         const pwd = (form.querySelector('input[name="password"]')||{}).value || '';
+        const confirmPwd = document.getElementById('add_confirm_password').value || '';
+        
+        // Validate password is not empty
         if (!pwd.trim()) {
             showTopAlert('error', 'Password is required');
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        
+        // Validate password length
+        if (pwd.length < 8) {
+            showTopAlert('error', 'Password must be at least 8 characters long');
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        
+        // Validate capital letter
+        const capitalRegex = /[A-Z]/;
+        if (!capitalRegex.test(pwd)) {
+            showTopAlert('error', 'Password must contain at least one capital letter (A-Z)');
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        
+        // Validate special character
+        const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+        if (!specialCharRegex.test(pwd)) {
+            showTopAlert('error', 'Password must contain at least one special character (!@#$%^&*)');
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        
+        // Validate passwords match
+        if (pwd !== confirmPwd) {
+            showTopAlert('error', 'Passwords do not match');
             if (btn) btn.disabled = false;
             return false;
         }
@@ -2547,6 +2686,77 @@ function previewAddProfileFile(e) {
 function triggerAddProfileUpload() {
     const input = document.getElementById('add_profile_file');
     if (input) input.click();
+}
+
+// Validate password requirements for add user modal
+function validateAddPassword() {
+    const password = document.getElementById('add_password').value;
+    const confirmPassword = document.getElementById('add_confirm_password').value;
+    
+    // Check length requirement
+    const reqLength = document.getElementById('add_req_length');
+    if (password.length >= 8) {
+        reqLength.className = 'text-xs text-green-600 flex items-center gap-1.5';
+        reqLength.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>At least 8 characters</span>';
+    } else {
+        reqLength.className = 'text-xs text-gray-500 flex items-center gap-1.5';
+        reqLength.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>At least 8 characters</span>';
+    }
+    
+    // Check capital letter requirement
+    const capitalRegex = /[A-Z]/;
+    const reqCapital = document.getElementById('add_req_capital');
+    if (capitalRegex.test(password)) {
+        reqCapital.className = 'text-xs text-green-600 flex items-center gap-1.5';
+        reqCapital.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>Contains capital letter (A-Z)</span>';
+    } else {
+        reqCapital.className = 'text-xs text-gray-500 flex items-center gap-1.5';
+        reqCapital.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>Contains capital letter (A-Z)</span>';
+    }
+    
+    // Check special character requirement
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    const reqSpecial = document.getElementById('add_req_special');
+    if (specialCharRegex.test(password)) {
+        reqSpecial.className = 'text-xs text-green-600 flex items-center gap-1.5';
+        reqSpecial.innerHTML = '<i class="fa-solid fa-check-circle"></i><span>Contains special character (!@#$%^&*)</span>';
+    } else {
+        reqSpecial.className = 'text-xs text-gray-500 flex items-center gap-1.5';
+        reqSpecial.innerHTML = '<i class="fa-solid fa-circle text-[5px]"></i><span>Contains special character (!@#$%^&*)</span>';
+    }
+    
+    // Check if passwords match (only if confirm password field has value)
+    const matchError = document.getElementById('add_password_match_error');
+    const matchSuccess = document.getElementById('add_password_match_success');
+    
+    if (confirmPassword.length > 0) {
+        if (password === confirmPassword) {
+            matchError.classList.add('hidden');
+            matchSuccess.classList.remove('hidden');
+        } else {
+            matchError.classList.remove('hidden');
+            matchSuccess.classList.add('hidden');
+        }
+    } else {
+        matchError.classList.add('hidden');
+        matchSuccess.classList.add('hidden');
+    }
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
 }
 
 // Filter menu toggle

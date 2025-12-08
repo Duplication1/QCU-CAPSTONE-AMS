@@ -640,11 +640,10 @@ main {
 </main>
 
 <!-- Update Condition Modal -->
-<div id="updateConditionModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeUpdateConditionModal()"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+<div id="updateConditionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-50 z-0" onclick="closeUpdateConditionModal()"></div>
+    
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] overflow-y-auto z-10">
             <form id="updateConditionForm" onsubmit="updateCondition(event)">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="flex items-start mb-4">
@@ -705,15 +704,13 @@ main {
                 </div>
             </form>
         </div>
-    </div>
 </div>
 
 <!-- Bulk Update Modal -->
-<div id="bulkUpdateModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeBulkUpdateModal()"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+<div id="bulkUpdateModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-50 z-0" onclick="closeBulkUpdateModal()"></div>
+    
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] overflow-y-auto z-10">
             <form id="bulkUpdateForm" onsubmit="bulkUpdateCondition(event)">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="flex items-start mb-4">
@@ -775,34 +772,31 @@ main {
                 </div>
             </form>
         </div>
-    </div>
 </div>
 
 <!-- Alert Modal -->
-<div id="alertModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeAlertModal()"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div id="alertIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
-                        <i class="fa-solid fa-check-circle text-2xl"></i>
-                    </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="alertTitle">Notice</h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-500" id="alertMessage"></p>
-                        </div>
+<div id="alertModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-50 z-0" onclick="closeAlertModal()"></div>
+    
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden z-10">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+                <div id="alertIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                    <i class="fa-solid fa-check-circle text-2xl"></i>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="alertTitle">Notice</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500" id="alertMessage"></p>
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" onclick="closeAlertModal()" 
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#1E3A8A] text-base font-medium text-white hover:bg-[#153570] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] sm:w-auto sm:text-sm">
-                    OK
-                </button>
-            </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" onclick="closeAlertModal()" 
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#1E3A8A] text-base font-medium text-white hover:bg-[#153570] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] sm:w-auto sm:text-sm">
+                OK
+            </button>
         </div>
     </div>
 </div>
