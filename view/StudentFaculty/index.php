@@ -109,7 +109,7 @@ include '../components/layout_header.php';
     <?php include '../components/session_messages.php'; ?>
 
     <!-- Welcome Section -->
-    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 mb-2 mobile-mb-2 flex-shrink-0">
+    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mobile-p-6 mb-2 mobile-mb-2 flex-shrink-0">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-lg mobile-text-lg font-bold text-gray-800">

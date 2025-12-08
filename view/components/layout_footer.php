@@ -1,6 +1,8 @@
             </div>
         </div>
 
+        <!-- Font Awesome 6 CDN -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- jQuery (required for DataTables) -->
         <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
         <!-- DataTables JavaScript -->

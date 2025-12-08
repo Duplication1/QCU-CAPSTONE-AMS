@@ -117,6 +117,10 @@
         
         .hero-gradient {
             background: #1E3A8A;
+<<<<<<< HEAD
+=======
+            background-size: 400% 400%;
+>>>>>>> 14b90a3cb03ab18ce465d310e5382ffa6df5d8cd
         }
         
         /* Floating animation */
@@ -178,8 +182,13 @@
                 <div class="flex items-center gap-3">
                     <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
                     <div>
+<<<<<<< HEAD
                         <h1 class="text-xl font-bold text-blue-900">QCU AMS</h1>
                         <p class="text-xs text-gray-600 dark:text-gray-400">Asset Management System</p>
+=======
+                        <h1 class="text-xl font-bold text-blue-900">Quezon City University</h1>
+                        <p class="text-xs text-gray-600">Asset Management System</p>
+>>>>>>> 14b90a3cb03ab18ce465d310e5382ffa6df5d8cd
                     </div>
                 </div>
                 
@@ -525,7 +534,7 @@
                         <div class="team-slide absolute transition-all duration-500" data-index="2" style="width: 240px;">
                             <div class="bg-white rounded-2xl shadow-xl p-6 text-center border-2 border-blue-400">
                                 <div class="w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden">
-                                    <img src="assets/images/albason2.jpg" alt="Albason" class="w-full h-full object-cover">
+                                    <img src="assets/images/albason.jpg" alt="Albason" class="w-full h-full object-cover">
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Albason</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Main Developer</p>
@@ -541,7 +550,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Paeste</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation</p>
+                                <p class="text-gray-600 text-xs">Assistant Project Manager</p>
                             </div>
                         </div>
                         
@@ -553,7 +562,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Bangayan</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation</p>
+                                <p class="text-gray-600 text-xs">Researcher</p>
                             </div>
                         </div>
                         
@@ -589,7 +598,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Estabillo</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation</p>
+                                <p class="text-gray-600 text-xs">UI/UX Designer</p>
                             </div>
                         </div>
                         
@@ -601,7 +610,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Peralta</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation  </p>
+                                <p class="text-gray-600 text-xs">Researcher  </p>
                             </div>
                         </div>
                         
@@ -613,7 +622,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Ronquillo</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation  </p>
+                                <p class="text-gray-600 text-xs">UI/UX Designer  </p>
                             </div>
                         </div>
                         
@@ -637,7 +646,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Naron</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">Documentation</p>
+                                <p class="text-gray-600 text-xs">Researcher</p>
                             </div>
                         </div>
                         
@@ -649,7 +658,7 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-1">Viñas</h3>
                                 <p class="text-blue-600 font-semibold text-sm mb-1">Member</p>
-                                <p class="text-gray-600 text-xs">UI Designer</p>
+                                <p class="text-gray-600 text-xs">Front End Designer</p>
                             </div>
                         </div>
                     </div>

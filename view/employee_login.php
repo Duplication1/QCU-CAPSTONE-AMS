@@ -116,12 +116,12 @@
   <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 <?php echo $showSuccessModal ? '' : 'hidden'; ?>">
     <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
       <div class="mb-4">
-        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30">
-          <i class="fa-solid fa-check text-3xl text-green-600 dark:text-green-400"></i>
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30" style="background-color: #dcfce7;">
+          <i class="fa-solid fa-check text-3xl text-green-600 dark:text-green-400" style="color: #16a34a;"></i>
         </div>
       </div>
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Login Successful!</h3>
-      <p class="text-gray-800 dark:text-gray-300 mb-4 font-medium">Successfully logged in as <span class="font-bold text-[#1E3A8A] dark:text-yellow-400" id="userRoleText"></span></p>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2" style="color: #111827;">Login Successful!</h3>
+      <p class="text-gray-800 dark:text-gray-300 mb-4" style="color: #1f2937;">Successfully logged in as <span class="font-bold text-green-600" id="userRoleText" style="color: #16a34a;"></span></p>
       <div class="flex justify-center">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
       </div>
