@@ -14,11 +14,7 @@ if ($conn->connect_error) {
 }
 
 // Get the base URL (adjust this to your actual domain)
-<<<<<<< HEAD
 $base_url = 'http://192.168.1.58/QCU-CAPSTONE-AMS';  // Using local network IP
-=======
-$base_url = 'http://172.20.10.2/QCU-CAPSTONE-AMS';  // Using local network IP
->>>>>>> 14b90a3cb03ab18ce465d310e5382ffa6df5d8cd
 $scan_url_base = $base_url . '/view/public/scan_asset.php?id=';
 
 echo "Starting QR code update...\n\n";

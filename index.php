@@ -117,10 +117,7 @@
         
         .hero-gradient {
             background: #1E3A8A;
-<<<<<<< HEAD
-=======
             background-size: 400% 400%;
->>>>>>> 14b90a3cb03ab18ce465d310e5382ffa6df5d8cd
         }
         
         /* Floating animation */
@@ -182,13 +179,8 @@
                 <div class="flex items-center gap-3">
                     <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
                     <div>
-<<<<<<< HEAD
                         <h1 class="text-xl font-bold text-blue-900">QCU AMS</h1>
                         <p class="text-xs text-gray-600 dark:text-gray-400">Asset Management System</p>
-=======
-                        <h1 class="text-xl font-bold text-blue-900">Quezon City University</h1>
-                        <p class="text-xs text-gray-600">Asset Management System</p>
->>>>>>> 14b90a3cb03ab18ce465d310e5382ffa6df5d8cd
                     </div>
                 </div>
                 
