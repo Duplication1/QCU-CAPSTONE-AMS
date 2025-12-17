@@ -199,7 +199,7 @@
                         </div>
                     </button>
                     
-                    <a href="view/employee_login.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium">
+                    <a href="view/login.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium">
                         <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
                     </a>
                 </div>
@@ -230,7 +230,7 @@
                     </button>
                 </div>
                 
-                <a href="view/employee_login.php" class="block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium text-center">
+                <a href="view/login.php" class="block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium text-center">
                     <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
                 </a>
             </div>
@@ -250,7 +250,7 @@
                         Streamline asset tracking, maintenance, and reporting with Quezon City University's comprehensive Asset Management System.
                     </p>
                     <div class="flex flex-wrap gap-4">
-                        <a href="view/employee_login.php" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg">
+                        <a href="view/login.php" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg">
                             <i class="fa-solid fa-rocket mr-2"></i>Get Started
                         </a>
                         <a href="#features" class="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-all">
@@ -451,7 +451,7 @@
                     <i class="fa-solid fa-user-tie text-5xl mb-4"></i>
                     <h3 class="text-2xl font-bold mb-3">Administrator</h3>
                     <p class="text-red-100 mb-4">Full system control and management</p>
-                    <a href="view/employee_login.php" class="inline-block bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors">
+                    <a href="view/login.php" class="inline-block bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors">
                         Login <i class="fa-solid fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -460,7 +460,7 @@
                     <i class="fa-solid fa-user-gear text-5xl mb-4"></i>
                     <h3 class="text-2xl font-bold mb-3">Laboratory Staff</h3>
                     <p class="text-yellow-100 mb-4">Asset and borrowing management</p>
-                    <a href="view/employee_login.php" class="inline-block bg-white text-yellow-600 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-50 transition-colors">
+                    <a href="view/login.php" class="inline-block bg-white text-yellow-600 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-50 transition-colors">
                         Login <i class="fa-solid fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -469,7 +469,7 @@
                     <i class="fa-solid fa-screwdriver-wrench text-5xl mb-4"></i>
                     <h3 class="text-2xl font-bold mb-3">Technician</h3>
                     <p class="text-purple-100 mb-4">Ticket and maintenance handling</p>
-                    <a href="view/employee_login.php" class="inline-block bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-colors">
+                    <a href="view/login.php" class="inline-block bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-colors">
                         Login <i class="fa-solid fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -478,7 +478,7 @@
                     <i class="fa-solid fa-graduation-cap text-5xl mb-4"></i>
                     <h3 class="text-2xl font-bold mb-3">Student/Faculty</h3>
                     <p class="text-blue-100 mb-4">Asset borrowing and requests</p>
-                    <a href="view/student_login.php" class="inline-block bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+                    <a href="view/login.php" class="inline-block bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
                         Login <i class="fa-solid fa-arrow-right ml-2"></i>
                     </a>
                 </div>

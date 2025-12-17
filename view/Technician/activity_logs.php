@@ -8,7 +8,7 @@ session_start();
 
 // Check if user is logged in and has Technician role
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Technician') {
-    header("Location: ../employee_login.php");
+    header("Location: ../login.php");
     exit();
 }
 

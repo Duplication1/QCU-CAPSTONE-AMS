@@ -37,15 +37,7 @@ header("Pragma: no-cache");
 session_start();
 $_SESSION['success'] = "You have been successfully logged out.";
 
-// Redirect based on user role
-$employeeRoles = ['Administrator', 'Technician', 'Laboratory Staff', 'Faculty'];
-if ($userRole === 'Student') {
-    header("Location: ../view/student_login.php");
-} elseif (in_array($userRole, $employeeRoles)) {
-    header("Location: ../view/employee_login.php");
-} else {
-    // Default to student login if role is unknown
-    header("Location: ../view/student_login.php");
-}
+// Redirect to unified login page
+header("Location: ../view/login.php");
 exit();
 ?>

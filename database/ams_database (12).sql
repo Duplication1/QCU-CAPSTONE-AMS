@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 04, 2025 at 01:42 PM
+-- Generation Time: Dec 17, 2025 at 01:10 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -199,7 +199,17 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (153, 5, 'create', 'ticket', 48, 'Submitted hardware ticket: dsads', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36', '2025-12-04 12:31:22'),
 (154, 3, 'assign', 'ticket', 48, 'Assigned ticket #48 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:36:58'),
 (155, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:37:00'),
-(156, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:37:06');
+(156, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:37:06'),
+(157, 2, 'update_condition', NULL, NULL, 'Updated asset condition: 12-04-2025-IK503-CABLE-002 (CABLE) from \'Good\' to \'Excellent\'', NULL, NULL, '2025-12-04 12:43:18'),
+(158, 2, 'update', 'ticket', 48, 'Changed ticket #48 status to Resolved', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:43:33'),
+(159, 2, 'update', 'ticket', 48, 'Changed ticket #48 status to Closed', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:43:37'),
+(160, 2, 'update', 'ticket', 48, 'Changed ticket #48 status to Resolved', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 12:43:39'),
+(161, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 10:16:23'),
+(162, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 10:20:14'),
+(163, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 10:20:18'),
+(164, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 10:20:21'),
+(165, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 10:20:25'),
+(166, 5, 'create', 'ticket', 49, 'Submitted hardware ticket: DSADSA', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-05 15:23:11');
 
 -- --------------------------------------------------------
 
@@ -480,7 +490,7 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (1114, '12-04-2025-IK503-WEBCAM-001', 'WEBCAM', 'Hardware', '80', '', '', '', NULL, 9, 384, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1114', NULL, 3, NULL, '2025-12-04 11:47:13', '2025-12-04 11:47:13'),
 (1115, '01-01-1970-IK503-HDMI-001', 'HDMI', 'Hardware', '71', '', '', '', NULL, 13, 435, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1115', NULL, 3, NULL, '2025-12-04 11:52:03', '2025-12-04 11:52:03'),
 (1116, '12-04-2025-IK503-ADAPTER-002', 'ADAPTER', 'Hardware', '14', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1116', NULL, 3, NULL, '2025-12-04 12:01:33', '2025-12-04 12:08:35'),
-(1117, '12-04-2025-IK503-CABLE-002', 'CABLE', 'Hardware', '13', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1117', NULL, 3, NULL, '2025-12-04 12:01:33', '2025-12-04 12:01:33'),
+(1117, '12-04-2025-IK503-CABLE-002', 'CABLE', 'Hardware', '13', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Excellent', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1117', NULL, 3, 2, '2025-12-04 12:01:33', '2025-12-04 12:43:18'),
 (1118, '12-04-2025-IK503-CASE-002', 'CASE', 'Hardware', '77', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1118', NULL, 3, NULL, '2025-12-04 12:01:33', '2025-12-04 12:01:33'),
 (1119, '12-04-2025-IK503-COMPUTER TABLE-002', 'COMPUTER TABLE', 'Hardware', '73', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1119', NULL, 3, NULL, '2025-12-04 12:01:33', '2025-12-04 12:01:33'),
 (1120, '12-04-2025-IK503-CPU-002', 'CPU', 'Hardware', '75', '', '', '', NULL, 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Available', 'Good', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1120', NULL, 3, NULL, '2025-12-04 12:01:33', '2025-12-04 12:01:33'),
@@ -1608,7 +1618,8 @@ CREATE TABLE `issues` (
 --
 
 INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `component_asset_id`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `assigned_group`, `is_archived`, `archived_at`, `building_id`) VALUES
-(48, 5, 'hardware', 13, 485, '12-04-2025-IK503-CABLE-002', 1117, '', '', '', '', '', '', '', '', 'dsads', '', 'Medium', 'In Progress', '2025-12-04 12:31:22', '2025-12-04 12:36:58', 'John Technician', NULL, NULL, 0, NULL, 1);
+(48, 5, 'hardware', 13, 485, '12-04-2025-IK503-CABLE-002', 1117, '', '', '', '', '', '', '', '', 'dsads', '', 'Medium', 'Resolved', '2025-12-04 12:31:22', '2025-12-04 12:43:39', 'John Technician', NULL, NULL, 0, NULL, 1),
+(49, 5, 'hardware', 13, 488, '12-04-2025-IK503-CABLE-005', 1171, '', '', '', '', '', '', '', '', 'DSADSA', 'DSADSA', 'Medium', 'Open', '2025-12-05 15:23:11', '2025-12-05 15:23:11', NULL, NULL, NULL, 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -1743,7 +1754,16 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (88, 3, '2025-12-04 12:16:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (89, 5, '2025-12-04 12:21:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (90, 3, '2025-12-04 12:26:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
-(91, 2, '2025-12-04 12:37:06', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop');
+(91, 2, '2025-12-04 12:37:06', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(92, 5, '2025-12-05 10:14:59', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(93, 2, '2025-12-05 10:16:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(94, 2, '2025-12-05 10:20:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(95, 3, '2025-12-05 10:20:25', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(96, 5, '2025-12-05 15:22:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(97, 5, '2025-12-17 11:45:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(98, 1, '2025-12-17 11:45:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(99, 1, '2025-12-17 12:06:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(100, 30, '2025-12-17 12:09:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -1850,7 +1870,27 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `relat
 (121, 5, 'Ticket #48 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 48, 0, '2025-12-04 12:31:22'),
 (122, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsads', 'info', 'issue', 48, 0, '2025-12-04 12:31:22'),
 (123, 5, 'Ticket #48 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58'),
-(124, 2, 'New Ticket Assigned #48', 'You have been assigned to a hardware ticket: \"dsads\". Please review and take action.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58');
+(124, 2, 'New Ticket Assigned #48', 'You have been assigned to a hardware ticket: \"dsads\". Please review and take action.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58'),
+(125, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:33'),
+(126, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 0, '2025-12-04 12:43:37'),
+(127, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:39'),
+(128, 5, 'Ticket #49 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 49, 0, '2025-12-05 15:23:11'),
+(129, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DSADSA', 'info', 'issue', 49, 0, '2025-12-05 15:23:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `used` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1931,6 +1971,37 @@ INSERT INTO `pc_units` (`id`, `room_id`, `building_id`, `terminal_number`, `asse
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `registration_requests`
+--
+
+CREATE TABLE `registration_requests` (
+  `id` int(11) NOT NULL,
+  `id_number` varchar(50) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('Student','Faculty','Technician','Laboratory Staff','Administrator') NOT NULL,
+  `security_question_1` varchar(255) NOT NULL,
+  `security_answer_1` varchar(255) NOT NULL,
+  `security_question_2` varchar(255) NOT NULL,
+  `security_answer_2` varchar(255) NOT NULL,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `requested_at` datetime DEFAULT current_timestamp(),
+  `reviewed_at` datetime DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `registration_requests`
+--
+
+INSERT INTO `registration_requests` (`id`, `id_number`, `full_name`, `email`, `password`, `role`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`, `status`, `requested_at`, `reviewed_at`, `reviewed_by`, `rejection_reason`) VALUES
+(1, '22-0350', 'Kim F. Gamot', 'kimgamot@gmail.com', '$2y$10$Dzt2k5eAaoU/gdpTrjFwfOREkczmXd1e0JINpJgvLKspHjrfCqKKm', 'Student', 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6', 'Approved', '2025-12-17 19:58:34', '2025-12-17 20:09:16', 1, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `rooms`
 --
 
@@ -1971,21 +2042,26 @@ CREATE TABLE `users` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
   `last_login` datetime DEFAULT NULL,
-  `e_signature` varchar(255) DEFAULT NULL
+  `e_signature` varchar(255) DEFAULT NULL,
+  `security_question_1` varchar(255) DEFAULT NULL,
+  `security_answer_1` varchar(255) DEFAULT NULL,
+  `security_question_2` varchar(255) DEFAULT NULL,
+  `security_answer_2` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-12-03 11:35:04', '2025-12-03 11:35:04', NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-12-04 20:37:06', '2025-12-04 20:37:06', NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-12-04 20:26:03', '2025-12-04 20:26:03', NULL),
-(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-12-04 20:21:09', '2025-12-04 20:21:09', 'signature_5_1764382897.png'),
-(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL),
-(29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL);
+INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`) VALUES
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-12-17 20:06:15', '2025-12-17 20:06:15', NULL, NULL, NULL, NULL, NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2025-12-05 18:20:18', '2025-12-05 18:20:18', NULL, NULL, NULL, NULL, NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2025-12-05 18:20:25', '2025-12-05 18:20:25', NULL, NULL, NULL, NULL, NULL),
+(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL, NULL, NULL, NULL, NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-12-17 19:45:09', '2025-12-17 19:45:09', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
+(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL, NULL, NULL, NULL, NULL),
+(29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL, NULL, NULL, NULL, NULL),
+(30, '22-0350', '$2y$10$cNGBGPw7BYAQ.9d6GdKvXuYXzYdVo2XwfJGo7nMfGgfjNs.5bBv3O', 'Kim F. Gamot', 'kimgamot@gmail.com', 'Student', 'Active', '2025-12-17 20:09:16', '2025-12-17 20:09:54', '2025-12-17 20:09:54', NULL, 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6');
 
 --
 -- Indexes for dumped tables
@@ -2071,6 +2147,15 @@ ALTER TABLE `notifications`
   ADD KEY `idx_created_at` (`created_at`);
 
 --
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `token` (`token`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `expires_at` (`expires_at`);
+
+--
 -- Indexes for table `pc_units`
 --
 ALTER TABLE `pc_units`
@@ -2080,6 +2165,15 @@ ALTER TABLE `pc_units`
   ADD KEY `building_id` (`building_id`),
   ADD KEY `idx_created_by` (`created_by`),
   ADD KEY `idx_asset_tag` (`asset_tag`);
+
+--
+-- Indexes for table `registration_requests`
+--
+ALTER TABLE `registration_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_id_number` (`id_number`),
+  ADD KEY `status` (`status`),
+  ADD KEY `reviewed_by` (`reviewed_by`);
 
 --
 -- Indexes for table `rooms`
@@ -2107,7 +2201,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=157;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=167;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -2149,25 +2243,37 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT for table `issues`
 --
 ALTER TABLE `issues`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=130;
+
+--
+-- AUTO_INCREMENT for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `pc_units`
 --
 ALTER TABLE `pc_units`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=535;
+
+--
+-- AUTO_INCREMENT for table `registration_requests`
+--
+ALTER TABLE `registration_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -2179,7 +2285,7 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- Constraints for dumped tables
@@ -2196,6 +2302,18 @@ ALTER TABLE `asset_history`
 --
 ALTER TABLE `issues`
   ADD CONSTRAINT `fk_issues_component_asset` FOREIGN KEY (`component_asset_id`) REFERENCES `assets` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD CONSTRAINT `fk_password_reset_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `registration_requests`
+--
+ALTER TABLE `registration_requests`
+  ADD CONSTRAINT `fk_reviewed_by_user` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `rooms`

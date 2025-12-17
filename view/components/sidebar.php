@@ -27,6 +27,13 @@ $navigation_items = [
             'href' => 'users.php'
         ],
         [
+            'id' => 'registration-requests',
+            'label' => 'Registration Requests',
+            'icon' => 'fa-solid fa-user-check',
+            'color' => 'yellow',
+            'href' => 'registration_requests.php'
+        ],
+        [
             'id' => 'reports',
             'label' => 'Reports',
             'icon' => 'fa-solid fa-file-lines',

@@ -3,40 +3,65 @@ session_start();
 
 // Check for login success
 $showSuccessModal = false;
+$userRole = '';
 $redirectUrl = '';
 if (isset($_SESSION['login_success']) && $_SESSION['login_success'] === true) {
     $showSuccessModal = true;
-    $redirectUrl = $_SESSION['redirect_url'] ?? 'StudentFaculty/index.php';
+    $userRole = $_SESSION['role'];
+    $redirectUrl = $_SESSION['redirect_url'];
     unset($_SESSION['login_success']);
     unset($_SESSION['redirect_url']);
 }
 
-// Get error message if exists
-$error_message = $_SESSION['error_message'] ?? '';
-unset($_SESSION['error_message']);
+// If already logged in, redirect to appropriate dashboard
+if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$showSuccessModal) {
+    switch ($_SESSION['role']) {
+        case 'Administrator':
+            header("Location: Administrator/index.php");
+            exit();
+        case 'Technician':
+            header("Location: Technician/index.php");
+            exit();
+        case 'Laboratory Staff':
+            header("Location: LaboratoryStaff/index.php");
+            exit();
+        case 'Student':
+        case 'Faculty':
+            header("Location: StudentFaculty/index.php");
+            exit();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMS - Student Login</title>
-  <link rel="stylesheet" href="../assets/css/output.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMS - Login</title>
+  <link rel="stylesheet" href="../assets/css/output.css" />
   <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Include Poppins font in your <head> if not already included -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwind.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    .tab-button {
+      transition: all 0.3s ease;
+    }
+    .tab-button.active {
+      background-color: #1E3A8A;
+      color: white;
+    }
+    .tab-button:not(.active) {
+      background-color: #E5E7EB;
+      color: #4B5563;
+    }
+    .tab-button:not(.active):hover {
+      background-color: #D1D5DB;
+    }
+  </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 bg-gray-100 font-[Poppins]" style="background-image: url('../assets/images/image 7.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
-
-  <div class="relative w-full max-w-sm">
-    <!-- Logo (fixed, no animation) -->
+  <div class="relative w-full max-w-md">
+    <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
       <img src="../assets/images/qcu-logo.png" alt="QCU Logo"
            class="w-20 h-20 rounded-full shadow-lg border-4 border-white dark:border-[#071127]">
@@ -46,29 +71,37 @@ unset($_SESSION['error_message']);
     <div class="bg-white rounded-xl shadow-2xl p-6 pt-14">
       <!-- Header -->
       <div class="text-center mb-6">
-        <h1 class="text-xl sm:text-2xl font-bold text-[#1E3A8A]">Student Login</h1>
-        <p class="text-sm font-normal text-black">Access your student portal</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-[#1E3A8A]">Asset Management System</h1>
+        <p class="text-sm font-normal text-black mt-1">Welcome! Please login to continue</p>
       </div>
+
+      <?php
+      // Display error message if exists
+      if (isset($_SESSION['error_message'])) {
+          echo '<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">' .
+               '<i class="fa-solid fa-circle-exclamation"></i>' .
+               htmlspecialchars($_SESSION['error_message']) . '</div>';
+          unset($_SESSION['error_message']);
+      }
+      
+      // Display success message if exists
+      if (isset($_SESSION['success'])) {
+          echo '<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">' .
+               '<i class="fa-solid fa-circle-check"></i>' .
+               htmlspecialchars($_SESSION['success']) . '</div>';
+          unset($_SESSION['success']);
+      }
+      ?>
 
       <!-- Login Form -->
       <form action="../controller/login_controller.php" method="POST" class="space-y-5">
-        <input type="hidden" name="login_type" value="student">
-
-        <?php if (!empty($error_message)): ?>
-        <!-- Error Message -->
-        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-          <i class="fa-solid fa-circle-exclamation mr-2"></i>
-          <?php echo htmlspecialchars($error_message); ?>
-        </div>
-        <?php endif; ?>
-
-        <!-- Student Number -->
+        <!-- ID Number -->
         <div>
           <label for="id_number" class="block text-sm font-medium text-black mb-2">
-            Student Number <span class="text-red-500">*</span>
+            ID Number <span class="text-red-500">*</span>
           </label>
           <input type="text" id="id_number" name="id_number" required autocomplete="off"
-                 placeholder="Enter your student number"
+                 placeholder="Enter your ID number"
                  class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
         </div>
 
@@ -90,6 +123,16 @@ unset($_SESSION['error_message']);
                 class="w-full py-2.5 bg-[#1E3A8A] hover:bg-[#172c6e] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition">
           Login
         </button>
+
+        <!-- Additional Links -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm">
+          <a href="forgot_password.php" class="text-[#1E3A8A] hover:underline">
+            <i class="fa-solid fa-key mr-1"></i>Forgot Password?
+          </a>
+          <a href="register.php" class="text-[#1E3A8A] hover:underline">
+            <i class="fa-solid fa-user-plus mr-1"></i>Create Account
+          </a>
+        </div>
       </form>
 
       <!-- Footer -->
@@ -108,7 +151,9 @@ unset($_SESSION['error_message']);
         </div>
       </div>
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2" style="color: #111827;">Login Successful!</h3>
-      <p class="text-gray-800 dark:text-gray-300 mb-4" style="color: #1f2937;">Welcome back, you'll be redirected shortly...</p>
+      <p class="text-gray-800 dark:text-gray-300 mb-4" style="color: #1f2937;">
+        Successfully logged in as <span class="font-bold text-green-600" id="userRoleText" style="color: #16a34a;"></span>
+      </p>
       <div class="flex justify-center">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A]"></div>
       </div>
@@ -126,10 +171,11 @@ unset($_SESSION['error_message']);
       icon.classList.toggle('fa-eye-slash');
     }
 
-    // Auto redirect after successful login
     <?php if ($showSuccessModal): ?>
+    document.getElementById('successModal').classList.remove('hidden');
+    document.getElementById('userRoleText').textContent = <?php echo json_encode($userRole); ?>;
     setTimeout(function() {
-      window.location.href = '<?php echo $redirectUrl; ?>';
+      window.location.href = <?php echo json_encode($redirectUrl); ?>;
     }, 2000);
     <?php endif; ?>
   </script>

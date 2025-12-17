@@ -6,7 +6,7 @@ require_once '../../model/Database.php';
 // Check if user is logged in and has Laboratory Staff role
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     $_SESSION['error_message'] = "Unauthorized access. Please log in as Laboratory Staff.";
-    header("Location: ../employee_login.php");
+    header("Location: ../login.php");
     exit();
 }
 
