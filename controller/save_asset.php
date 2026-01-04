@@ -45,17 +45,11 @@ try {
     $asset->brand = $_POST['brand'] ?? null;
     $asset->model = $_POST['model'] ?? null;
     $asset->serial_number = $_POST['serial_number'] ?? null;
-    $asset->specifications = $_POST['specifications'] ?? null;
     $asset->room_id = !empty($_POST['room_id']) ? $_POST['room_id'] : null;
-    $asset->location = $_POST['location'] ?? null;
-    $asset->terminal_number = $_POST['terminal_number'] ?? null;
     $asset->status = $_POST['status'] ?? 'Available';
     $asset->condition = $_POST['condition'] ?? 'Good';
     $asset->is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
-    $asset->purchase_date = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $asset->purchase_cost = !empty($_POST['purchase_cost']) ? $_POST['purchase_cost'] : null;
-    $asset->supplier = $_POST['supplier'] ?? null;
-    $asset->warranty_expiry = !empty($_POST['warranty_expiry']) ? $_POST['warranty_expiry'] : null;
     $asset->notes = $_POST['notes'] ?? null;
     $asset->created_by = $_SESSION['user_id'];
     $asset->updated_by = $_SESSION['user_id'];

@@ -213,15 +213,13 @@ if ($asset_id <= 0) {
             b.name as building_name,
             ac.name as category_name,
             pu.terminal_number,
-            u1.full_name as created_by_name,
-            u2.full_name as assigned_to_name
+            u1.full_name as created_by_name
         FROM assets a
         LEFT JOIN rooms r ON a.room_id = r.id
         LEFT JOIN buildings b ON r.building_id = b.id
         LEFT JOIN asset_categories ac ON a.category = ac.id
         LEFT JOIN pc_units pu ON a.pc_unit_id = pu.id
         LEFT JOIN users u1 ON a.created_by = u1.id
-        LEFT JOIN users u2 ON a.assigned_to = u2.id
         WHERE a.id = ?
     ");
     
@@ -512,24 +510,6 @@ if ($asset_id <= 0) {
                                 <i class="fas fa-map-marker-alt mr-1"></i>
                                 <?php echo htmlspecialchars($asset['building_name'] . ' - ' . $asset['room_name']); ?>
                             </p>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($asset['terminal_number']): ?>
-                        <div>
-                            <span class="text-gray-600">Terminal Number:</span>
-                            <p class="font-semibold text-gray-800"><?php echo htmlspecialchars($asset['terminal_number']); ?></p>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($asset['purchase_date']): ?>
-                        <div>
-                            <span class="text-gray-600">Purchase Date:</span>
-                            <p class="font-semibold text-gray-800"><?php echo date('M d, Y', strtotime($asset['purchase_date'])); ?></p>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($asset['warranty_expiry']): ?>
-                        <div>
-                            <span class="text-gray-600">Warranty Expiry:</span>
-                            <p class="font-semibold text-gray-800"><?php echo date('M d, Y', strtotime($asset['warranty_expiry'])); ?></p>
                         </div>
                         <?php endif; ?>
                         <?php if ($asset['is_borrowable']): ?>

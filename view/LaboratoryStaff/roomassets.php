@@ -53,6 +53,26 @@ if ($category_result && $category_result->num_rows > 0) {
     }
 }
 
+// Fetch brands
+$brands = [];
+$brands_query = "SELECT id, name FROM asset_brand_categories ORDER BY name ASC";
+$brands_result = $conn->query($brands_query);
+if ($brands_result && $brands_result->num_rows > 0) {
+    while ($row = $brands_result->fetch_assoc()) {
+        $brands[] = $row;
+    }
+}
+
+// Fetch models with brand relationship
+$models = [];
+$models_query = "SELECT m.id, m.name, m.brand_id, b.name as brand_name FROM asset_model_categories m JOIN asset_brand_categories b ON m.brand_id = b.id ORDER BY b.name, m.name ASC";
+$models_result = $conn->query($models_query);
+if ($models_result && $models_result->num_rows > 0) {
+    while ($row = $models_result->fetch_assoc()) {
+        $models[] = $row;
+    }
+}
+
 // Get all buildings for filter
 $buildings = [];
 $buildings_query = $conn->query("SELECT id, name FROM buildings ORDER BY name");
@@ -102,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     $action = $_POST['action'] ?? '';
     
     
-    if ($action === 'create_asset') {
+    if ($action === 'create_pc_unit') {
         $terminal_number = trim($_POST['terminal_number'] ?? '');
         $status = trim($_POST['status'] ?? 'Active');
         $notes = trim($_POST['notes'] ?? '');
@@ -361,6 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     
     
     if ($action === 'create_asset') {
+        $acquisition_date = trim($_POST['acquisition_date'] ?? '');
         $asset_tag = trim($_POST['asset_tag'] ?? '');
         $asset_name = trim($_POST['asset_name'] ?? '');
         $asset_type = trim($_POST['asset_type'] ?? 'Hardware');
@@ -369,10 +390,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $serial_number = trim($_POST['serial_number'] ?? '');
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
+        $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
         
-        if (empty($asset_tag) || empty($asset_name)) {
-            echo json_encode(['success' => false, 'message' => 'Asset tag and name are required']);
+        if (empty($asset_name)) {
+            echo json_encode(['success' => false, 'message' => 'Asset name is required']);
             exit;
+        }
+        
+        // Auto-generate asset tag if not provided
+        if (empty($asset_tag)) {
+            $date_prefix = date('m-d-Y');
+            if (!empty($acquisition_date)) {
+                $date_parts = explode('-', $acquisition_date);
+                if (count($date_parts) === 3) {
+                    $date_prefix = $date_parts[1] . '-' . $date_parts[2] . '-' . $date_parts[0];
+                }
+            }
+            
+            $asset_name_prefix = substr($asset_name, 0, min(10, strlen($asset_name)));
+            $asset_name_prefix = strtoupper(str_replace(' ', '', $asset_name_prefix));
+            
+            $room_number = 'NOROOM';
+            if (!empty($room['name'])) {
+                if (preg_match('/([A-Z0-9]+)/', $room['name'], $matches)) {
+                    $room_number = $matches[1];
+                } else {
+                    $room_number = strtoupper(str_replace(' ', '', substr($room['name'], 0, 8)));
+                }
+            }
+            
+            // Find next number for this asset name
+            $pattern = "%-{$asset_name_prefix}-%";
+            $query = $conn->prepare("SELECT asset_tag FROM assets WHERE asset_tag LIKE ?");
+            $query->bind_param('s', $pattern);
+            $query->execute();
+            $result = $query->get_result();
+            
+            $max_number = 0;
+            while ($row = $result->fetch_assoc()) {
+                if (preg_match('/-(\d{3})$/', $row['asset_tag'], $matches)) {
+                    $num = intval($matches[1]);
+                    if ($num > $max_number) {
+                        $max_number = $num;
+                    }
+                }
+            }
+            $query->close();
+            
+            $next_number = str_pad($max_number + 1, 3, '0', STR_PAD_LEFT);
+            $asset_tag = "{$date_prefix}-{$asset_name_prefix}-{$room_number}-{$next_number}";
         }
         
         // Lookup category ID
@@ -399,14 +465,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             ]);
             $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
             
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssisssi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
+            $stmt->bind_param('ssssssisssiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
             $success = $stmt->execute();
             $new_id = $conn->insert_id;
             $stmt->close();
             
             if ($success) {
+                // Log to activity_logs
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $created_by,
+                    'create',
+                    'asset',
+                    $new_id,
+                    "Created asset: {$asset_tag} - {$asset_name} in room {$room['name']}"
+                );
+                
                 echo json_encode(['success' => true, 'message' => 'Asset created successfully', 'id' => $new_id]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to create asset']);
@@ -505,7 +581,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $asset_type = trim($_POST['asset_type'] ?? 'Hardware');
         $brand = trim($_POST['brand'] ?? '');
         $model = trim($_POST['model'] ?? '');
-        $end_of_life = !empty($_POST['end_of_life']) ? trim($_POST['end_of_life']) : null;
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
@@ -580,12 +655,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
                 
                 // Insert asset with QR code
-                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, end_of_life, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param('ssssssisssiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $end_of_life, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
+                $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, room_id, status, `condition`, qr_code, created_by, category, is_borrowable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param('sssssisssiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id, $is_borrowable);
                 
                 if ($stmt->execute()) {
+                    $new_asset_id = $conn->insert_id;
                     $created_count++;
-                    $created_asset_ids[] = $conn->insert_id;
+                    $created_asset_ids[] = $new_asset_id;
+                    
+                    // Log to activity_logs
+                    require_once '../../model/ActivityLog.php';
+                    ActivityLog::record(
+                        $created_by,
+                        'create',
+                        'asset',
+                        $new_asset_id,
+                        "Created asset: {$asset_tag} - {$asset_name} in room {$room['name']}"
+                    );
                 } else {
                     $failed[] = $asset_tag . ' (insert failed)';
                 }
@@ -635,6 +721,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'update',
+                    'asset',
+                    $id,
+                    "Updated asset: {$asset_tag} - {$asset_name} in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => 'Asset updated successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to update asset']);
@@ -654,6 +748,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Fetch asset info before archiving for logging
+            $info_stmt = $conn->prepare("SELECT asset_tag, asset_name FROM assets WHERE id = ? AND room_id = ?");
+            $info_stmt->bind_param('ii', $id, $room_id);
+            $info_stmt->execute();
+            $asset_info = $info_stmt->get_result()->fetch_assoc();
+            $info_stmt->close();
+            
             $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id = ? AND room_id = ?");
             $updated_by = $_SESSION['user_id'];
             $stmt->bind_param('iii', $updated_by, $id, $room_id);
@@ -661,6 +762,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'archive',
+                    'asset',
+                    $id,
+                    "Archived asset: {$asset_info['asset_tag']} - {$asset_info['asset_name']} in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => 'Asset archived successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to archive asset']);
@@ -710,12 +819,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Fetch asset info before deleting for logging
+            $info_stmt = $conn->prepare("SELECT asset_tag, asset_name FROM assets WHERE id = ? AND room_id = ?");
+            $info_stmt->bind_param('ii', $id, $room_id);
+            $info_stmt->execute();
+            $asset_info = $info_stmt->get_result()->fetch_assoc();
+            $info_stmt->close();
+            
             $stmt = $conn->prepare("DELETE FROM assets WHERE id = ? AND room_id = ?");
             $stmt->bind_param('ii', $id, $room_id);
             $success = $stmt->execute();
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'delete',
+                    'asset',
+                    $id,
+                    "Deleted asset: {$asset_info['asset_tag']} - {$asset_info['asset_name']} in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => 'Asset deleted successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to delete asset']);
@@ -747,6 +871,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'archive',
+                    'asset',
+                    null,
+                    "Bulk archived {$affected} asset(s) in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => "$affected asset(s) archived successfully"]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to archive assets']);
@@ -778,6 +910,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'restore',
+                    'asset',
+                    null,
+                    "Bulk restored {$affected} asset(s) in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => "$affected asset(s) restored successfully"]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to restore assets']);
@@ -867,6 +1007,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $stmt->close();
             
             if ($success) {
+                require_once '../../model/ActivityLog.php';
+                ActivityLog::record(
+                    $_SESSION['user_id'],
+                    'update',
+                    'asset',
+                    null,
+                    "Bulk updated {$affected} asset(s) in room {$room['name']}"
+                );
                 echo json_encode(['success' => true, 'message' => "$affected asset(s) updated successfully"]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to update assets']);
@@ -935,6 +1083,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             echo json_encode(['success' => true, 'message' => 'Category added successfully', 'id' => $new_id, 'name' => $category_name]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to add category']);
+        }
+        exit;
+    }
+    
+    if ($action === 'add_brand') {
+        $brand_name = trim($_POST['brand_name'] ?? '');
+        
+        if (empty($brand_name)) {
+            echo json_encode(['success' => false, 'message' => 'Brand name is required']);
+            exit;
+        }
+        
+        // Check if brand already exists
+        $check_stmt = $conn->prepare("SELECT id FROM asset_brand_categories WHERE name = ?");
+        $check_stmt->bind_param('s', $brand_name);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        
+        if ($check_stmt->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'Brand already exists']);
+            $check_stmt->close();
+            exit;
+        }
+        $check_stmt->close();
+        
+        // Add new brand
+        $insert_stmt = $conn->prepare("INSERT INTO asset_brand_categories (name) VALUES (?)");
+        $insert_stmt->bind_param('s', $brand_name);
+        $success = $insert_stmt->execute();
+        $new_id = $conn->insert_id;
+        $insert_stmt->close();
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Brand added successfully', 'brand_id' => $new_id]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to add brand']);
+        }
+        exit;
+    }
+    
+    if ($action === 'add_model') {
+        $model_name = trim($_POST['model_name'] ?? '');
+        $brand_id = intval($_POST['brand_id'] ?? 0);
+        
+        if (empty($model_name)) {
+            echo json_encode(['success' => false, 'message' => 'Model name is required']);
+            exit;
+        }
+        
+        if ($brand_id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Brand is required']);
+            exit;
+        }
+        
+        // Check if brand exists
+        $brand_check = $conn->prepare("SELECT id FROM asset_brand_categories WHERE id = ?");
+        $brand_check->bind_param('i', $brand_id);
+        $brand_check->execute();
+        $brand_check->store_result();
+        
+        if ($brand_check->num_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid brand']);
+            $brand_check->close();
+            exit;
+        }
+        $brand_check->close();
+        
+        // Check if model already exists for this brand
+        $check_stmt = $conn->prepare("SELECT id FROM asset_model_categories WHERE name = ? AND brand_id = ?");
+        $check_stmt->bind_param('si', $model_name, $brand_id);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        
+        if ($check_stmt->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'Model already exists for this brand']);
+            $check_stmt->close();
+            exit;
+        }
+        $check_stmt->close();
+        
+        // Add new model
+        $insert_stmt = $conn->prepare("INSERT INTO asset_model_categories (name, brand_id) VALUES (?, ?)");
+        $insert_stmt->bind_param('si', $model_name, $brand_id);
+        $success = $insert_stmt->execute();
+        $new_id = $conn->insert_id;
+        $insert_stmt->close();
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Model added successfully', 'model_id' => $new_id]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to add model']);
         }
         exit;
     }
@@ -1598,7 +1837,7 @@ main {
             <!-- Single Mode Fields -->
             <div id="singleAssetModeFields" class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag <span class="text-red-500">*</span></label>
                     <input type="text" id="assetTag" name="asset_tag" readonly
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            placeholder="Auto-generated">
@@ -1613,10 +1852,10 @@ main {
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name <span class="text-red-500">*</span></label>
                     <div class="searchable-dropdown relative">
                         <div class="dropdown-display flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors">
-                            <span class="selected-text text-gray-500">Select Category</span>
+                            <span class="dropdown-selected-text text-gray-500">Select Category</span>
                             <i class="fa-solid fa-chevron-down text-gray-400"></i>
                         </div>
                         <div class="dropdown-options absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
@@ -1645,16 +1884,52 @@ main {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                    <input type="text" id="brand" name="brand"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., Dell, HP">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Brand <span class="text-red-500">*</span></label>
+                    <div class="searchable-dropdown">
+                        <select id="brand" name="brand" class="hidden" onchange="updateModelDropdownFromBrand('brand', 'model')">
+                            <option value="">Select Brand</option>
+                            <?php foreach ($brands as $brand): ?>
+                                <option value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                    <?php echo htmlspecialchars($brand['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                            <span class="dropdown-selected-text text-gray-500">Select Brand</span>
+                        </div>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white p-2 border-b">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search brands...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                + Add New Brand
+                            </div>
+                            <?php foreach ($brands as $brand): ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer" data-value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                    <?php echo htmlspecialchars($brand['name']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                    <input type="text" id="model" name="model"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="e.g., OptiPlex 7090">
+                    <div class="searchable-dropdown">
+                        <select id="model" name="model" class="hidden">
+                            <option value="">Select Model</option>
+                        </select>
+                        <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                            <span class="dropdown-selected-text text-gray-500">Select Model</span>
+                        </div>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white p-2 border-b">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search models...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                + Add New Model
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Serial Number</label>
@@ -1799,15 +2074,51 @@ main {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                        <input type="text" id="bulkBrand" name="bulk_brand"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., Dell, HP">
+                        <div class="searchable-dropdown">
+                            <select id="bulkBrand" name="bulk_brand" class="hidden" onchange="updateModelDropdownFromBrand('bulkBrand', 'bulkModel')">
+                                <option value="">Select Brand</option>
+                                <?php foreach ($brands as $brand): ?>
+                                    <option value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                        <?php echo htmlspecialchars($brand['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                                <span class="dropdown-selected-text text-gray-500">Select Brand</span>
+                            </div>
+                            <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div class="sticky top-0 bg-white p-2 border-b">
+                                    <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search brands...">
+                                </div>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                    + Add New Brand
+                                </div>
+                                <?php foreach ($brands as $brand): ?>
+                                    <div class="dropdown-option px-4 py-2 cursor-pointer" data-value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                        <?php echo htmlspecialchars($brand['name']); ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                        <input type="text" id="bulkModel" name="bulk_model"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="e.g., Latitude 5420">
+                        <div class="searchable-dropdown">
+                            <select id="bulkModel" name="bulk_model" class="hidden">
+                                <option value="">Select Model</option>
+                            </select>
+                            <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                                <span class="dropdown-selected-text text-gray-500">Select Model</span>
+                            </div>
+                            <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div class="sticky top-0 bg-white p-2 border-b">
+                                    <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search models...">
+                                </div>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                    + Add New Model
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1878,12 +2189,12 @@ main {
             <input type="hidden" id="editAssetId" name="id">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag <span class="text-red-500">*</span></label>
                     <input type="text" id="editAssetTag" name="asset_tag" required
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Name <span class="text-red-500">*</span></label>
                     <input type="text" id="editAssetName" name="asset_name" required
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
@@ -1902,13 +2213,51 @@ main {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                    <input type="text" id="editBrand" name="brand"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="searchable-dropdown">
+                        <select id="editBrand" name="brand" class="hidden" onchange="updateModelDropdownFromBrand('editBrand', 'editModel')">
+                            <option value="">Select Brand</option>
+                            <?php foreach ($brands as $brand): ?>
+                                <option value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                    <?php echo htmlspecialchars($brand['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                            <span class="dropdown-selected-text text-gray-500">Select Brand</span>
+                        </div>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white p-2 border-b">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search brands...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                + Add New Brand
+                            </div>
+                            <?php foreach ($brands as $brand): ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer" data-value="<?php echo htmlspecialchars($brand['name']); ?>" data-brand-id="<?php echo $brand['id']; ?>">
+                                    <?php echo htmlspecialchars($brand['name']); ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                    <input type="text" id="editModel" name="model"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="searchable-dropdown">
+                        <select id="editModel" name="model" class="hidden">
+                            <option value="">Select Model</option>
+                        </select>
+                        <div class="dropdown-display w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer bg-white" tabindex="0">
+                            <span class="dropdown-selected-text text-gray-500">Select Model</span>
+                        </div>
+                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="sticky top-0 bg-white p-2 border-b">
+                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Search models...">
+                            </div>
+                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                + Add New Model
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Serial Number</label>
@@ -2044,6 +2393,53 @@ main {
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Add Brand Modal -->
+<div id="addBrandModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-bold text-white">Add New Brand</h3>
+        </div>
+        <form id="addBrandForm" class="p-6">
+            <div class="mb-4">
+                <label for="newBrandName" class="block text-sm font-medium text-gray-700 mb-2">Brand Name <span class="text-red-500">*</span></label>
+                <input type="text" id="newBrandName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter brand name" required>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeAddBrandModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="button" onclick="addNewBrand()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Brand</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Model Modal -->
+<div id="addModelModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h3 class="text-xl font-bold text-white">Add New Model</h3>
+        </div>
+        <form id="addModelForm" class="p-6">
+            <div class="mb-4">
+                <label for="newModelBrand" class="block text-sm font-medium text-gray-700 mb-2">Brand <span class="text-red-500">*</span></label>
+                <select id="newModelBrand" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Brand</option>
+                    <?php foreach ($brands as $brand): ?>
+                        <option value="<?php echo $brand['id']; ?>"><?php echo htmlspecialchars($brand['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="newModelName" class="block text-sm font-medium text-gray-700 mb-2">Model Name <span class="text-red-500">*</span></label>
+                <input type="text" id="newModelName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter model name" required>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeAddModelModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="button" onclick="addNewModel()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Model</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -2309,6 +2705,41 @@ main {
 </style>
 
 <script>
+// All models data for brand-model relationship
+const allModelsData = <?php echo json_encode($models); ?>;
+
+// Update model dropdown based on selected brand
+function updateModelDropdown(brandSelectId, modelSelectId) {
+    const brandSelect = document.getElementById(brandSelectId);
+    const modelSelect = document.getElementById(modelSelectId);
+    const selectedOption = brandSelect.options[brandSelect.selectedIndex];
+    const selectedBrandId = selectedOption ? selectedOption.getAttribute('data-brand-id') : null;
+    
+    // Clear current model options
+    modelSelect.innerHTML = '<option value="">Select Model</option>';
+    
+    if (!selectedBrandId) {
+        modelSelect.innerHTML = '<option value="">Select Brand First</option>';
+        return;
+    }
+    
+    // Filter models by selected brand
+    const filteredModels = allModelsData.filter(model => model.brand_id == selectedBrandId);
+    
+    if (filteredModels.length === 0) {
+        modelSelect.innerHTML = '<option value="">No models available for this brand</option>';
+        return;
+    }
+    
+    // Add model options
+    filteredModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.name;
+        option.textContent = model.name;
+        modelSelect.appendChild(option);
+    });
+}
+
 // No tab switching needed - single page view
 
 // Modal functions
@@ -2682,8 +3113,21 @@ function editAsset(asset) {
     document.getElementById('editAssetTag').value = asset.asset_tag;
     document.getElementById('editAssetName').value = asset.asset_name;
     document.getElementById('editAssetType').value = asset.asset_type;
-    document.getElementById('editBrand').value = asset.brand || '';
-    document.getElementById('editModel').value = asset.model || '';
+    
+    // Set brand in hidden select and update searchable dropdown display
+    const editBrandSelect = document.getElementById('editBrand');
+    editBrandSelect.value = asset.brand || '';
+    updateSearchableDropdownDisplay('editBrand', asset.brand || '');
+    
+    // Trigger model dropdown update with brand-model relationship
+    updateModelDropdownFromBrand('editBrand', 'editModel');
+    
+    // Set model after dropdown is populated
+    setTimeout(() => {
+        const editModelSelect = document.getElementById('editModel');
+        editModelSelect.value = asset.model || '';
+        updateSearchableDropdownDisplay('editModel', asset.model || '');
+    }, 100);
     document.getElementById('editSerialNumber').value = asset.serial_number || '';
     document.getElementById('editStatus').value = asset.status;
     document.getElementById('editCondition').value = asset.condition;
@@ -3146,10 +3590,10 @@ function closeBulkEditAssetModal() {
         bulkEditAssetName.value = '';
         const dropdown = bulkEditAssetName.parentElement ? bulkEditAssetName.parentElement.querySelector('.searchable-dropdown') : null;
         if (dropdown) {
-            const selectedText = dropdown.querySelector('.selected-text');
+            const selectedText = dropdown.querySelector('.dropdown-selected-text');
             if (selectedText) {
                 selectedText.textContent = 'Keep current values';
-                selectedText.className = 'selected-text text-gray-400';
+                selectedText.className = 'dropdown-selected-text text-gray-400';
             }
         }
     }
@@ -3423,7 +3867,7 @@ function initializeSearchableDropdowns() {
         const options = dropdown.querySelector('.dropdown-options');
         const searchInput = dropdown.querySelector('.dropdown-search');
         const selectElement = dropdown.parentElement.querySelector('select');
-        const selectedText = dropdown.querySelector('.selected-text');
+        const selectedText = dropdown.querySelector('.dropdown-selected-text');
         
         // Toggle dropdown on display click
         display.addEventListener('click', function(e) {
@@ -3460,8 +3904,19 @@ function initializeSearchableDropdowns() {
                 const value = this.getAttribute('data-value');
                 const text = this.textContent.trim();
                 
+                // Check for "Add New" actions
                 if (value === '__add_new__') {
-                    openAddCategoryModal(selectElement.id);
+                    const selectId = selectElement.id;
+                    
+                    // Determine which modal to open based on the select ID
+                    if (selectId.includes('assetName') || selectId.includes('AssetName')) {
+                        openAddCategoryModal(selectId);
+                    } else if (selectId.includes('brand') || selectId.includes('Brand')) {
+                        openAddBrandModal(selectId);
+                    } else if (selectId.includes('model') || selectId.includes('Model')) {
+                        openAddModelModal(selectId);
+                    }
+                    
                     options.classList.add('hidden');
                     return;
                 }
@@ -3471,7 +3926,7 @@ function initializeSearchableDropdowns() {
                 
                 // Update display text
                 selectedText.textContent = text;
-                selectedText.className = 'selected-text text-gray-900';
+                selectedText.className = 'dropdown-selected-text text-gray-900';
                 
                 // Close dropdown
                 options.classList.add('hidden');
@@ -3527,11 +3982,11 @@ function filterDropdownOptions(optionsContainer, searchTerm) {
 function updateSearchableDropdownDisplay(selectId, value) {
     const select = document.getElementById(selectId);
     const dropdown = select.parentElement.querySelector('.searchable-dropdown');
-    const selectedText = dropdown.querySelector('.selected-text');
+    const selectedText = dropdown.querySelector('.dropdown-selected-text');
     
     if (value) {
         selectedText.textContent = value;
-        selectedText.className = 'selected-text text-gray-900';
+        selectedText.className = 'dropdown-selected-text text-gray-900';
         select.value = value;
     } else {
         selectedText.textContent = 'Select Category';
@@ -3589,9 +4044,9 @@ async function updateSearchableDropdownOptions(selectId) {
                     select.value = value;
                     
                     // Update display text
-                    const selectedText = dropdown.querySelector('.selected-text');
+                    const selectedText = dropdown.querySelector('.dropdown-selected-text');
                     selectedText.textContent = text;
-                    selectedText.className = 'selected-text text-gray-900';
+                    selectedText.className = 'dropdown-selected-text text-gray-900';
                     
                     // Close dropdown
                     const options = dropdown.querySelector('.dropdown-options');
@@ -3671,9 +4126,9 @@ async function addNewCategory() {
             // Add click handler
             option.addEventListener('click', function() {
                 select.value = categoryName;
-                const selectedText = dropdown.querySelector('.selected-text');
+                const selectedText = dropdown.querySelector('.dropdown-selected-text');
                 selectedText.textContent = categoryName;
-                selectedText.className = 'selected-text text-gray-900';
+                selectedText.className = 'dropdown-selected-text text-gray-900';
                 const options = dropdown.querySelector('.dropdown-options');
                 options.classList.add('hidden');
                 select.dispatchEvent(new Event('change'));
@@ -3776,6 +4231,306 @@ async function addNewCategory() {
             if (select.value === categoryName) {
                 updateSearchableDropdownDisplay(window.currentCategorySource, '');
             }
+        }
+    }
+}
+
+// Brand modal functions
+function openAddBrandModal(triggeredBy) {
+    document.getElementById('addBrandModal').classList.remove('hidden');
+    document.getElementById('newBrandName').focus();
+    document.getElementById('addBrandModal').setAttribute('data-triggered-by', triggeredBy);
+}
+
+function closeAddBrandModal() {
+    document.getElementById('addBrandModal').classList.add('hidden');
+    document.getElementById('newBrandName').value = '';
+}
+
+async function addNewBrand() {
+    const brandName = document.getElementById('newBrandName').value.trim();
+    
+    if (!brandName) {
+        showAlert('error', 'Please enter a brand name');
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'add_brand');
+        formData.append('brand_name', brandName);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            closeAddBrandModal();
+            
+            // Add brand to all brand dropdowns
+            const brandSelects = ['brand', 'bulkBrand', 'editBrand'];
+            const triggeredBy = document.getElementById('addBrandModal').getAttribute('data-triggered-by');
+            
+            brandSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const option = document.createElement('option');
+                    option.value = brandName;
+                    option.textContent = brandName;
+                    option.setAttribute('data-brand-id', result.brand_id);
+                    select.appendChild(option);
+                    
+                    // Also update searchable dropdown options
+                    const dropdown = select.closest('.searchable-dropdown');
+                    if (dropdown) {
+                        const dropdownOptions = dropdown.querySelector('.dropdown-options');
+                        if (dropdownOptions) {
+                            const optionDiv = document.createElement('div');
+                            optionDiv.className = 'dropdown-option px-4 py-2 cursor-pointer';
+                            optionDiv.setAttribute('data-value', brandName);
+                            optionDiv.setAttribute('data-brand-id', result.brand_id);
+                            optionDiv.textContent = brandName;
+                            dropdownOptions.appendChild(optionDiv);
+                            
+                            // Add click handler
+                            optionDiv.addEventListener('click', function() {
+                                select.value = brandName;
+                                const displayText = dropdown.querySelector('.dropdown-selected-text');
+                                if (displayText) {
+                                    displayText.textContent = brandName;
+                                    displayText.className = 'dropdown-selected-text text-gray-900';
+                                }
+                                dropdownOptions.classList.add('hidden');
+                                select.dispatchEvent(new Event('change'));
+                            });
+                        }
+                    }
+                    
+                    // Set as selected if this is the triggering dropdown
+                    if (selectId === triggeredBy) {
+                        select.value = brandName;
+                        const displayText = dropdown?.querySelector('.dropdown-selected-text');
+                        if (displayText) {
+                            displayText.textContent = brandName;
+                            displayText.className = 'dropdown-selected-text text-gray-900';
+                        }
+                    }
+                }
+            });
+        } else {
+            showAlert('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while adding the brand');
+    }
+}
+
+// Model modal functions
+function openAddModelModal(triggeredBy) {
+    document.getElementById('addModelModal').classList.remove('hidden');
+    document.getElementById('newModelName').focus();
+    document.getElementById('addModelModal').setAttribute('data-triggered-by', triggeredBy);
+    
+    // Pre-select brand if available from the triggering dropdown
+    const brandSelectId = triggeredBy.replace('Model', 'Brand').replace('model', 'brand');
+    const brandSelect = document.getElementById(brandSelectId);
+    const modelBrandSelect = document.getElementById('newModelBrand');
+    
+    if (brandSelect && modelBrandSelect) {
+        const selectedOption = brandSelect.options[brandSelect.selectedIndex];
+        const brandId = selectedOption?.getAttribute('data-brand-id');
+        if (brandId) {
+            modelBrandSelect.value = brandId;
+        }
+    }
+}
+
+function closeAddModelModal() {
+    document.getElementById('addModelModal').classList.add('hidden');
+    document.getElementById('newModelName').value = '';
+    document.getElementById('newModelBrand').value = '';
+}
+
+async function addNewModel() {
+    const modelName = document.getElementById('newModelName').value.trim();
+    const brandId = document.getElementById('newModelBrand').value;
+    
+    if (!modelName) {
+        showAlert('error', 'Please enter a model name');
+        return;
+    }
+    
+    if (!brandId) {
+        showAlert('error', 'Please select a brand');
+        return;
+    }
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('ajax', '1');
+        formData.append('action', 'add_model');
+        formData.append('model_name', modelName);
+        formData.append('brand_id', brandId);
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            closeAddModelModal();
+            
+            // Update allModelsData global array
+            allModelsData.push({
+                id: result.model_id,
+                name: modelName,
+                brand_id: brandId
+            });
+            
+            // Update model dropdowns that match the selected brand
+            const modelSelects = ['model', 'bulkModel', 'editModel'];
+            const triggeredBy = document.getElementById('addModelModal').getAttribute('data-triggered-by');
+            
+            modelSelects.forEach(selectId => {
+                const brandSelectId = selectId.replace('Model', 'Brand').replace('model', 'brand');
+                const brandSelect = document.getElementById(brandSelectId);
+                const modelSelect = document.getElementById(selectId);
+                
+                if (brandSelect && modelSelect) {
+                    const selectedOption = brandSelect.options[brandSelect.selectedIndex];
+                    const currentBrandId = selectedOption?.getAttribute('data-brand-id');
+                    
+                    // Only add to dropdowns with matching brand
+                    if (currentBrandId === brandId) {
+                        const option = document.createElement('option');
+                        option.value = modelName;
+                        option.textContent = modelName;
+                        modelSelect.appendChild(option);
+                        
+                        // Also update searchable dropdown options
+                        const dropdown = modelSelect.closest('.searchable-dropdown');
+                        if (dropdown) {
+                            const dropdownOptions = dropdown.querySelector('.dropdown-options');
+                            if (dropdownOptions) {
+                                const optionDiv = document.createElement('div');
+                                optionDiv.className = 'dropdown-option px-4 py-2 cursor-pointer';
+                                optionDiv.setAttribute('data-value', modelName);
+                                optionDiv.textContent = modelName;
+                                dropdownOptions.appendChild(optionDiv);
+                                
+                                // Add click handler
+                                optionDiv.addEventListener('click', function() {
+                                    modelSelect.value = modelName;
+                                    const displayText = dropdown.querySelector('.dropdown-selected-text');
+                                    if (displayText) {
+                                        displayText.textContent = modelName;
+                                        displayText.className = 'dropdown-selected-text text-gray-900';
+                                    }
+                                    dropdownOptions.classList.add('hidden');
+                                    modelSelect.dispatchEvent(new Event('change'));
+                                });
+                            }
+                        }
+                        
+                        // Set as selected if this is the triggering dropdown
+                        if (selectId === triggeredBy) {
+                            modelSelect.value = modelName;
+                            const displayText = dropdown?.querySelector('.dropdown-selected-text');
+                            if (displayText) {
+                                displayText.textContent = modelName;
+                                displayText.className = 'dropdown-selected-text text-gray-900';
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            showAlert('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while adding the model');
+    }
+}
+
+// Update model dropdown based on brand selection
+function updateModelDropdownFromBrand(brandSelectId, modelSelectId) {
+    const brandSelect = document.getElementById(brandSelectId);
+    const modelSelect = document.getElementById(modelSelectId);
+    const selectedOption = brandSelect.options[brandSelect.selectedIndex];
+    const selectedBrandId = selectedOption ? selectedOption.getAttribute('data-brand-id') : null;
+    
+    // Clear current model options
+    modelSelect.innerHTML = '<option value="">Select Model</option>';
+    
+    // Also update searchable dropdown
+    const modelDropdown = modelSelect.closest('.searchable-dropdown');
+    if (modelDropdown) {
+        const dropdownOptions = modelDropdown.querySelector('.dropdown-options');
+        const existingOptions = dropdownOptions.querySelectorAll('.dropdown-option:not([data-value="__add_new__"])');
+        existingOptions.forEach(opt => opt.remove());
+        
+        // Reset display
+        const displayText = modelDropdown.querySelector('.dropdown-selected-text');
+        if (displayText) {
+            displayText.textContent = 'Select Model';
+            displayText.className = 'dropdown-selected-text text-gray-500';
+        }
+    }
+    
+    if (!selectedBrandId) {
+        return;
+    }
+    
+    // Filter models by selected brand
+    const filteredModels = allModelsData.filter(model => model.brand_id == selectedBrandId);
+    
+    if (filteredModels.length === 0) {
+        return;
+    }
+    
+    // Add model options to select
+    filteredModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.name;
+        option.textContent = model.name;
+        modelSelect.appendChild(option);
+    });
+    
+    // Add model options to searchable dropdown
+    if (modelDropdown) {
+        const dropdownOptions = modelDropdown.querySelector('.dropdown-options');
+        if (dropdownOptions) {
+            const addNewOption = dropdownOptions.querySelector('[data-value="__add_new__"]');
+            
+            filteredModels.forEach(model => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'dropdown-option px-4 py-2 cursor-pointer';
+                optionDiv.setAttribute('data-value', model.name);
+                optionDiv.textContent = model.name;
+                dropdownOptions.appendChild(optionDiv);
+                
+                // Add click handler
+                optionDiv.addEventListener('click', function() {
+                    modelSelect.value = model.name;
+                    const displayText = modelDropdown.querySelector('.dropdown-selected-text');
+                    if (displayText) {
+                        displayText.textContent = model.name;
+                        displayText.className = 'dropdown-selected-text text-gray-900';
+                    }
+                    dropdownOptions.classList.add('hidden');
+                    modelSelect.dispatchEvent(new Event('change'));
+                });
+            });
         }
     }
 }

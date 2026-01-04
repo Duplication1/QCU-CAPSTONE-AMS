@@ -47,7 +47,6 @@ fputcsv($output, [
     'Condition',
     'End of Life',
     'Days Past EOL',
-    'Purchase Date',
     'Purchase Cost',
     'Disposal Reason',
     'Notes'
@@ -61,22 +60,25 @@ $disposal_query = "
         a.*,
         r.name as room_name,
         b.name as building_name,
+        ac.end_of_life as category_lifespan,
+        DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) as end_of_life,
         CASE 
-            WHEN a.end_of_life IS NOT NULL AND a.end_of_life < ? THEN 'End of Life Reached'
+            WHEN ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ? THEN 'End of Life Reached'
             WHEN a.`condition` IN ('Poor', 'Non-Functional') THEN 'Poor Condition'
             ELSE 'Other'
         END as disposal_reason,
-        DATEDIFF(?, a.end_of_life) as days_past_eol
+        DATEDIFF(?, DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR)) as days_past_eol
     FROM assets a
     LEFT JOIN rooms r ON a.room_id = r.id
     LEFT JOIN buildings b ON r.building_id = b.id
+    LEFT JOIN asset_categories ac ON a.category = ac.id
     WHERE 
         a.status NOT IN ('Disposed', 'Archive', 'Archived')
         AND (
-            (a.end_of_life IS NOT NULL AND a.end_of_life < ?)
+            (ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ?)
             OR a.`condition` IN ('Poor', 'Non-Functional')
         )
-    ORDER BY a.end_of_life ASC, a.asset_name ASC
+    ORDER BY DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) ASC, a.asset_name ASC
 ";
 
 $stmt = $conn->prepare($disposal_query);
@@ -100,7 +102,6 @@ while ($row = $result->fetch_assoc()) {
         $row['condition'],
         $row['end_of_life'] ? date('Y-m-d', strtotime($row['end_of_life'])) : 'Not Set',
         $row['days_past_eol'] > 0 ? $row['days_past_eol'] : '0',
-        $row['purchase_date'] ? date('Y-m-d', strtotime($row['purchase_date'])) : 'N/A',
         $row['purchase_cost'] ? number_format($row['purchase_cost'], 2) : 'N/A',
         $row['disposal_reason'],
         $row['notes'] ?? ''

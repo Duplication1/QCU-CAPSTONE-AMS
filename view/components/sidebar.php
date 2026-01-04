@@ -107,14 +107,33 @@ $navigation_items = [
                     'href' => 'standbyassets.php'
                 ],
                 [
+                    'id' => 'disposal',
+                    'label' => 'Disposal',
+                    'href' => 'disposal.php'
+                ]
+            ]
+        ],
+        [
+            'id' => 'categories',
+            'label' => 'Categories',
+            'icon' => 'fa-solid fa-tags',
+            'color' => 'blue',
+            'href' => 'pc_categories.php',
+            'submenu' => [
+                [
                     'id' => 'pc-categories',
                     'label' => 'PC Categories',
                     'href' => 'pc_categories.php'
                 ],
                 [
-                    'id' => 'disposal',
-                    'label' => 'Disposal',
-                    'href' => 'disposal.php'
+                    'id' => 'brand-categories',
+                    'label' => 'Brand Categories',
+                    'href' => 'brand_categories.php'
+                ],
+                [
+                    'id' => 'model-categories',
+                    'label' => 'Model Categories',
+                    'href' => 'model_categories.php'
                 ]
             ]
         ]
@@ -240,7 +259,7 @@ $new_tickets_count = 0;
 if ($current_role === 'Laboratory Staff' && isset($conn)) {
     try {
         $ticket_count_query = "SELECT COUNT(*) as count FROM issues 
-                              WHERE (assigned_group IS NULL OR assigned_group = '') 
+                              WHERE (assigned_technician IS NULL OR assigned_technician = '') 
                               AND status = 'Open' 
                               AND category != 'borrow'";
         

@@ -239,7 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             $model = trim($_POST["component_model_{$category_id}"] ?? '');
                             $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
                             $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
-                            $end_of_life = !empty($_POST["component_eol_{$category_id}"]) ? $_POST["component_eol_{$category_id}"] : null;
                             $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
                             $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
@@ -271,8 +270,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                             }
 
                             // Insert asset first to get ID
-                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                            $asset_stmt->bind_param('sssssiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
+                            $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?)");
+                            $asset_stmt->bind_param('sssssiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $created_by, $category_id);
 
                             if ($asset_stmt->execute()) {
                                 $asset_id = $conn->insert_id;
@@ -397,7 +396,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         $model = trim($_POST["component_model_{$category_id}"] ?? '');
                         $serial = trim($_POST["component_serial_{$category_id}"] ?? '');
                         $condition = trim($_POST["component_condition_{$category_id}"] ?? 'Good');
-                        $end_of_life = !empty($_POST["component_eol_{$category_id}"]) ? $_POST["component_eol_{$category_id}"] : null;
                         $component_date = trim($_POST["component_date_{$category_id}"] ?? $asset_date);
                         $component_date_formatted = date('m-d-Y', strtotime($component_date));
 
@@ -419,8 +417,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                         $check_asset->close();
 
                         // Insert asset first to get ID
-                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, end_of_life, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)");
-                        $asset_stmt->bind_param('sssssiissii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $end_of_life, $created_by, $category_id);
+                        $asset_stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, pc_unit_id, status, `condition`, created_by, category) VALUES (?, ?, 'Hardware', ?, ?, ?, ?, ?, 'Available', ?, ?, ?)");
+                        $asset_stmt->bind_param('sssssiisii', $asset_tag, $asset_name, $brand, $model, $serial, $room_id, $new_id, $condition, $created_by, $category_id);
 
                         if ($asset_stmt->execute()) {
                             $asset_id = $conn->insert_id;

@@ -25,7 +25,7 @@ try {
 
 // Fetch dashboard data
 // Unassigned issues
-$unassignedIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE (assigned_group IS NULL OR assigned_group = '') AND status = 'Open' AND category != 'borrow'")->fetch_assoc()['count'];
+$unassignedIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE (assigned_technician IS NULL OR assigned_technician = '') AND status = 'Open' AND category != 'borrow'")->fetch_assoc()['count'];
 
 // In Progress issues
 $inProgressIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'In Progress'")->fetch_assoc()['count'];
@@ -40,7 +40,7 @@ $assetsInUse = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status =
 $assetsCritical = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Non-Functional', 'Poor')")->fetch_assoc()['count'];
 
 // Attention needed assets
-$needsAttention = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Fair' OR next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)")->fetch_assoc()['count'];
+$needsAttention = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Fair'")->fetch_assoc()['count'];
 
 // Healthy assets (Good and Excellent condition)
 $healthyAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` IN ('Good', 'Excellent')")->fetch_assoc()['count'];
@@ -49,7 +49,14 @@ $healthyAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condi
 $totalAssets = $conn->query("SELECT COUNT(*) as count FROM assets")->fetch_assoc()['count'];
 
 // End of Life - Assets expiring within 6 months
-$assetsNearEOL = $conn->query("SELECT COUNT(*) as count FROM assets WHERE end_of_life IS NOT NULL AND end_of_life <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) AND end_of_life >= CURDATE()")->fetch_assoc()['count'];
+$assetsNearEOL = $conn->query("
+    SELECT COUNT(*) as count 
+    FROM assets a
+    LEFT JOIN asset_categories ac ON a.category = ac.id
+    WHERE ac.end_of_life IS NOT NULL 
+    AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) 
+    AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) >= CURDATE()
+")->fetch_assoc()['count'];
 
 // Fetch buildings dynamically from database
 $buildingsData = [];
@@ -101,7 +108,7 @@ if ($recent_logs_result && $recent_logs_result->num_rows > 0) {
 
 // Get count of new unassigned tickets
 $new_tickets_query = "SELECT COUNT(*) as count FROM issues 
-                      WHERE (assigned_group IS NULL OR assigned_group = '') 
+                      WHERE (assigned_technician IS NULL OR assigned_technician = '') 
                       AND status = 'Open' 
                       AND category != 'borrow'";
 $new_tickets_result = $conn->query($new_tickets_query);

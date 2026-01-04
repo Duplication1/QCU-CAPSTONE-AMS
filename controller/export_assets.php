@@ -44,14 +44,10 @@ try {
         'brand',
         'model',
         'serial_number',
-        'specifications',
         'status',
         'condition',
         'is_borrowable',
-        'purchase_date',
         'purchase_cost',
-        'supplier',
-        'warranty_expiry',
         'notes',
         'created_at'
     ]);
@@ -66,14 +62,10 @@ try {
             $asset['brand'] ?? '',
             $asset['model'] ?? '',
             $asset['serial_number'] ?? '',
-            $asset['specifications'] ?? '',
             $asset['status'],
             $asset['condition'],
             $asset['is_borrowable'] ? 'Yes' : 'No',
-            $asset['purchase_date'] ?? '',
             $asset['purchase_cost'] ?? '',
-            $asset['supplier'] ?? '',
-            $asset['warranty_expiry'] ?? '',
             $asset['notes'] ?? '',
             $asset['created_at']
         ]);

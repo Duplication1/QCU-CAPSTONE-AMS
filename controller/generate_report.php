@@ -98,9 +98,7 @@ function generateAssetsReport($conn, $output) {
         a.condition,
         r.name as room_name,
         b.name as building_name,
-        a.purchase_date, 
         a.purchase_cost,
-        a.warranty_expiry,
         a.is_borrowable
     FROM assets a
     LEFT JOIN rooms r ON a.room_id = r.id
@@ -122,9 +120,7 @@ function generateAssetsReport($conn, $output) {
             $row['condition'],
             $row['room_name'] ?? 'N/A',
             $row['building_name'] ?? 'N/A',
-            $row['purchase_date'] ?? 'N/A',
             $row['purchase_cost'] ?? 'N/A',
-            $row['warranty_expiry'] ?? 'N/A',
             $row['is_borrowable'] ? 'Yes' : 'No'
         ]);
     }

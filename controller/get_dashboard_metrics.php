@@ -31,7 +31,7 @@ try {
     $metrics = [];
     
     // Unassigned issues
-    $result = $conn->query("SELECT COUNT(*) as count FROM issues WHERE (assigned_group IS NULL OR assigned_group = '') AND status = 'Open' AND category != 'borrow'");
+    $result = $conn->query("SELECT COUNT(*) as count FROM issues WHERE (assigned_technician IS NULL OR assigned_technician = '') AND status = 'Open' AND category != 'borrow'");
     $metrics['unassignedIssues'] = $result->fetch_assoc()['count'];
     
     // In Progress issues
@@ -56,7 +56,7 @@ try {
     $metrics['assetsCritical'] = $result->fetch_assoc()['count'];
     
     // Attention needed assets
-    $result = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Fair' OR next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
+    $result = $conn->query("SELECT COUNT(*) as count FROM assets WHERE `condition` = 'Fair'");
     $metrics['needsAttention'] = $result->fetch_assoc()['count'];
     
     // Healthy assets (Good and Excellent condition)
@@ -68,7 +68,14 @@ try {
     $metrics['totalAssets'] = $result->fetch_assoc()['count'];
     
     // End of Life - Assets expiring within 6 months
-    $result = $conn->query("SELECT COUNT(*) as count FROM assets WHERE end_of_life IS NOT NULL AND end_of_life <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) AND end_of_life >= CURDATE()");
+    $result = $conn->query("
+        SELECT COUNT(*) as count 
+        FROM assets a
+        LEFT JOIN asset_categories ac ON a.category = ac.id
+        WHERE ac.end_of_life IS NOT NULL 
+        AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH) 
+        AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) >= CURDATE()
+    ");
     $metrics['assetsNearEOL'] = $result->fetch_assoc()['count'];
     
     // Fetch recent 5 activity logs

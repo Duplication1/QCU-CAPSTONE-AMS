@@ -32,29 +32,32 @@ $disposal_query = "
         r.name as room_name,
         r.building_id,
         b.name as building_name,
+        ac.end_of_life as category_lifespan,
+        DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) as end_of_life,
         CASE 
-            WHEN a.end_of_life IS NOT NULL AND a.end_of_life < ? THEN 'End of Life Reached'
+            WHEN ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ? THEN 'End of Life Reached'
             WHEN a.`condition` IN ('Poor', 'Non-Functional') THEN 'Poor Condition'
             ELSE 'Other'
         END as disposal_reason,
-        DATEDIFF(?, a.end_of_life) as days_past_eol
+        DATEDIFF(?, DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR)) as days_past_eol
     FROM assets a
     LEFT JOIN rooms r ON a.room_id = r.id
     LEFT JOIN buildings b ON r.building_id = b.id
+    LEFT JOIN asset_categories ac ON a.category = ac.id
     WHERE 
         a.status NOT IN ('Disposed', 'Archive', 'Archived')
         AND (
-            (a.end_of_life IS NOT NULL AND a.end_of_life < ?)
+            (ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ?)
             OR a.`condition` IN ('Poor', 'Non-Functional')
         )
     ORDER BY 
         CASE 
-            WHEN a.end_of_life < ? THEN 1
+            WHEN ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ? THEN 1
             WHEN a.`condition` = 'Non-Functional' THEN 2
             WHEN a.`condition` = 'Poor' THEN 3
             ELSE 4
         END,
-        a.end_of_life ASC,
+        DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) ASC,
         a.asset_name ASC
 ";
 
@@ -76,15 +79,16 @@ if ($category_result && $category_result->num_rows > 0) {
 // Get counts by disposal reason
 $count_query = "
     SELECT 
-        SUM(CASE WHEN end_of_life IS NOT NULL AND end_of_life < ? THEN 1 ELSE 0 END) as eol_count,
-        SUM(CASE WHEN `condition` = 'Poor' THEN 1 ELSE 0 END) as poor_count,
-        SUM(CASE WHEN `condition` = 'Non-Functional' THEN 1 ELSE 0 END) as non_functional_count,
+        SUM(CASE WHEN ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ? THEN 1 ELSE 0 END) as eol_count,
+        SUM(CASE WHEN a.`condition` = 'Poor' THEN 1 ELSE 0 END) as poor_count,
+        SUM(CASE WHEN a.`condition` = 'Non-Functional' THEN 1 ELSE 0 END) as non_functional_count,
         COUNT(*) as total_count
-    FROM assets
-    WHERE status NOT IN ('Disposed', 'Archive', 'Archived')
+    FROM assets a
+    LEFT JOIN asset_categories ac ON a.category = ac.id
+    WHERE a.status NOT IN ('Disposed', 'Archive', 'Archived')
         AND (
-            (end_of_life IS NOT NULL AND end_of_life < ?)
-            OR `condition` IN ('Poor', 'Non-Functional')
+            (ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) < ?)
+            OR a.`condition` IN ('Poor', 'Non-Functional')
         )
 ";
 $count_stmt = $conn->prepare($count_query);

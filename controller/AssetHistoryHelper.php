@@ -71,19 +71,20 @@ class AssetHistoryHelper {
     
     /**
      * Log asset location change
+     * DEPRECATED: Location column removed from assets table
      */
-    public function logLocationChange($asset_id, $old_location, $new_location, $performed_by = null) {
-        $description = "Location changed from $old_location to $new_location";
-        return $this->assetHistory->logHistory(
-            $asset_id,
-            'Location Changed',
-            'location',
-            $old_location,
-            $new_location,
-            $description,
-            $performed_by
-        );
-    }
+    // public function logLocationChange($asset_id, $old_location, $new_location, $performed_by = null) {
+    //     $description = "Location changed from $old_location to $new_location";
+    //     return $this->assetHistory->logHistory(
+    //         $asset_id,
+    //         'Location Changed',
+    //         'location',
+    //         $old_location,
+    //         $new_location,
+    //         $description,
+    //         $performed_by
+    //     );
+    // }
     
     /**
      * Log asset room change (including building info)

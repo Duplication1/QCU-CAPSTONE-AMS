@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         
         if ($action === 'add_pc_category') {
             $category_name = trim($_POST['category_name'] ?? '');
+            $end_of_life = !empty($_POST['end_of_life']) ? intval($_POST['end_of_life']) : null;
             
             if (empty($category_name)) {
                 echo json_encode(['success' => false, 'message' => 'Category name is required']);
@@ -53,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $check_stmt->close();
             
             // Insert new PC category
-            $insert_stmt = $conn->prepare("INSERT INTO asset_categories (name, is_pc_category) VALUES (?, 1)");
-            $insert_stmt->bind_param('s', $category_name);
+            $insert_stmt = $conn->prepare("INSERT INTO asset_categories (name, is_pc_category, end_of_life) VALUES (?, 1, ?)");
+            $insert_stmt->bind_param('si', $category_name, $end_of_life);
             
             if ($insert_stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'PC category added successfully', 'id' => $conn->insert_id]);
@@ -118,6 +119,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 echo json_encode(['success' => false, 'message' => 'Failed to delete PC category']);
             }
             $delete_stmt->close();
+            exit();
+        }
+        
+        if ($action === 'update_end_of_life') {
+            $category_id = intval($_POST['category_id'] ?? 0);
+            $end_of_life = !empty($_POST['end_of_life']) ? intval($_POST['end_of_life']) : null;
+            
+            if ($category_id <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Invalid category ID']);
+                exit();
+            }
+            
+            $update_stmt = $conn->prepare("UPDATE asset_categories SET end_of_life = ? WHERE id = ?");
+            $update_stmt->bind_param('ii', $end_of_life, $category_id);
+            
+            if ($update_stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'End of life updated successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update end of life']);
+            }
+            $update_stmt->close();
             exit();
         }
         
@@ -272,6 +294,7 @@ input:disabled + .slider {
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">#</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Category ID</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Category Name</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">End of Life (Years)</th>
                         <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">PC Component</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                         <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider">Actions</th>
@@ -295,6 +318,20 @@ input:disabled + .slider {
                             <div class="flex items-center">
                                 <i class="fa-solid fa-tag mr-2 text-gray-400"></i>
                                 <span class="font-medium"><?php echo htmlspecialchars($category['name']); ?></span>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <?php if ($category['end_of_life']): ?>
+                                    <span class="text-xs font-medium text-gray-700"><?php echo $category['end_of_life']; ?> years</span>
+                                <?php else: ?>
+                                    <span class="text-xs text-gray-400 italic">Not set</span>
+                                <?php endif; ?>
+                                <button onclick="editEndOfLife(<?php echo $category['id']; ?>, <?php echo $category['end_of_life'] ?? 'null'; ?>)"
+                                        class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" 
+                                        title="Edit End of Life">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </button>
                             </div>
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap text-center">
@@ -338,7 +375,7 @@ input:disabled + .slider {
                     else:
                     ?>
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-box-open text-5xl mb-3 opacity-30"></i>
                             <p class="text-lg font-semibold">No categories found</p>
                             <p class="text-sm">Add your first PC component category to get started</p>
@@ -368,6 +405,17 @@ input:disabled + .slider {
                    placeholder="e.g., CPU, RAM, Monitor"
                    onkeypress="if(event.key === 'Enter') addPCCategory()">
             <p class="text-xs text-gray-500 mt-1">This will be automatically marked as a PC component</p>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">End of Life (Years)</label>
+            <input type="number" id="newCategoryEndOfLife" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent"
+                   placeholder="e.g., 5"
+                   min="1"
+                   step="1"
+                   onkeypress="if(event.key === 'Enter') addPCCategory()">
+            <p class="text-xs text-gray-500 mt-1">Expected lifespan in years for assets in this category</p>
         </div>
         
         <div class="flex justify-end gap-3">
@@ -409,6 +457,41 @@ input:disabled + .slider {
             <button onclick="confirmRenameCategory()" 
                     class="px-4 py-2 bg-[#1E3A8A] text-white rounded-md hover:bg-[#153570] text-sm font-medium">
                 <i class="fa-solid fa-save mr-2"></i>Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit End of Life Modal -->
+<div id="editEndOfLifeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative mx-auto p-6 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Edit End of Life</h3>
+            <button onclick="closeEditEndOfLifeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Expected Lifespan (Years)</label>
+            <input type="hidden" id="editEndOfLifeCategoryId">
+            <input type="number" id="editEndOfLifeValue" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent"
+                   placeholder="e.g., 5"
+                   min="1"
+                   step="1"
+                   onkeypress="if(event.key === 'Enter') confirmUpdateEndOfLife()">
+            <p class="text-xs text-gray-500 mt-1">Leave empty to remove end of life for this category</p>
+        </div>
+        
+        <div class="flex justify-end gap-3">
+            <button onclick="closeEditEndOfLifeModal()" 
+                    class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium">
+                Cancel
+            </button>
+            <button onclick="confirmUpdateEndOfLife()" 
+                    class="px-4 py-2 bg-[#1E3A8A] text-white rounded-md hover:bg-[#153570] text-sm font-medium">
+                <i class="fa-solid fa-save mr-2"></i>Update
             </button>
         </div>
     </div>
@@ -460,10 +543,12 @@ function openAddCategoryModal() {
 function closeAddCategoryModal() {
     document.getElementById('addCategoryModal').classList.add('hidden');
     document.getElementById('newCategoryName').value = '';
+    document.getElementById('newCategoryEndOfLife').value = '';
 }
 
 async function addPCCategory() {
     const categoryName = document.getElementById('newCategoryName').value.trim().toUpperCase();
+    const endOfLife = document.getElementById('newCategoryEndOfLife').value.trim();
     
     if (!categoryName) {
         showAlert('error', 'Please enter a category name');
@@ -475,6 +560,9 @@ async function addPCCategory() {
         formData.append('ajax', '1');
         formData.append('action', 'add_pc_category');
         formData.append('category_name', categoryName);
+        if (endOfLife) {
+            formData.append('end_of_life', endOfLife);
+        }
         
         const response = await fetch(location.href, {
             method: 'POST',
@@ -587,6 +675,53 @@ async function confirmRenameCategory() {
     }
 }
 
+// Edit End of Life
+function editEndOfLife(categoryId, currentValue) {
+    document.getElementById('editEndOfLifeCategoryId').value = categoryId;
+    document.getElementById('editEndOfLifeValue').value = currentValue || '';
+    document.getElementById('editEndOfLifeModal').classList.remove('hidden');
+    document.getElementById('editEndOfLifeValue').focus();
+}
+
+function closeEditEndOfLifeModal() {
+    document.getElementById('editEndOfLifeModal').classList.add('hidden');
+    document.getElementById('editEndOfLifeCategoryId').value = '';
+    document.getElementById('editEndOfLifeValue').value = '';
+}
+
+async function confirmUpdateEndOfLife() {
+    const categoryId = document.getElementById('editEndOfLifeCategoryId').value;
+    const endOfLife = document.getElementById('editEndOfLifeValue').value.trim();
+    
+    try {
+        const formData = new FormData();
+        formData.append('ajax', '1');
+        formData.append('action', 'update_end_of_life');
+        formData.append('category_id', categoryId);
+        if (endOfLife) {
+            formData.append('end_of_life', endOfLife);
+        }
+        
+        const response = await fetch(location.href, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            closeEditEndOfLifeModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while updating end of life');
+    }
+}
+
 // Delete Category
 function deleteCategory(categoryId, categoryName) {
     document.getElementById('deleteCategoryId').value = categoryId;
@@ -655,6 +790,10 @@ document.getElementById('renameCategoryModal')?.addEventListener('click', functi
 
 document.getElementById('deleteCategoryModal')?.addEventListener('click', function(e) {
     if (e.target === this) closeDeleteCategoryModal();
+});
+
+document.getElementById('editEndOfLifeModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEditEndOfLifeModal();
 });
 </script>
 
