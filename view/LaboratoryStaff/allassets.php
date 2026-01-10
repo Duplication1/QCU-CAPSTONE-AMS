@@ -24,7 +24,7 @@ if (!isset($conn)) {
 
 // Fetch asset categories
 $categories = [];
-$category_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+$category_query = "SELECT id, name, end_of_life FROM asset_categories ORDER BY name ASC";
 $category_result = $conn->query($category_query);
 if ($category_result && $category_result->num_rows > 0) {
     while ($row = $category_result->fetch_assoc()) {
@@ -303,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $current_number = $start_number + $i;
                 $padded_number = str_pad($current_number, 3, '0', STR_PAD_LEFT);
                 
-                $asset_tag = "{$formatted_date}-{$asset_name_prefix}-{$room_number}-{$padded_number}";
+                $asset_tag = "{$formatted_date}-{$asset_name_prefix}-{$padded_number}";
                 $asset_name = "{$asset_name_prefix} #{$current_number}";
                 
                 // Check if asset tag already exists
@@ -464,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $asset_info = $info_stmt->get_result()->fetch_assoc();
             $info_stmt->close();
             
-            $stmt = $conn->prepare("UPDATE assets SET status = 'Archived', updated_by = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id = ?");
             $updated_by = $_SESSION['user_id'];
             $stmt->bind_param('ii', $updated_by, $id);
             $success = $stmt->execute();
@@ -853,7 +853,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     
     if ($action === 'get_categories') {
         $categories_data = [];
-        $cat_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+        $cat_query = "SELECT id, name, end_of_life FROM asset_categories ORDER BY name ASC";
         $cat_result = $conn->query($cat_query);
         if ($cat_result && $cat_result->num_rows > 0) {
             while ($row = $cat_result->fetch_assoc()) {
@@ -874,7 +874,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         
         try {
             $placeholders = str_repeat('?,', count($asset_ids) - 1) . '?';
-            $stmt = $conn->prepare("UPDATE assets SET status = 'Archived', updated_by = ? WHERE id IN ($placeholders)");
+            $stmt = $conn->prepare("UPDATE assets SET status = 'Archive', updated_by = ? WHERE id IN ($placeholders)");
             $updated_by = $_SESSION['user_id'];
             $params = array_merge([$updated_by], $asset_ids);
             $types = 'i' . str_repeat('i', count($asset_ids));
@@ -1335,7 +1335,7 @@ $total_pages = ceil($total_assets / $limit);
 
 // Fetch assets using the same filter function
 $assets = [];
-$query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON a.room_id = r.id WHERE " . $where_conditions;
+$query_sql = "SELECT a.*, r.name as room_name, ac.end_of_life FROM assets a LEFT JOIN rooms r ON a.room_id = r.id LEFT JOIN asset_categories ac ON a.asset_name = ac.name WHERE " . $where_conditions;
 $query_sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
 
 // Add pagination parameters to existing filter parameters
@@ -1524,6 +1524,7 @@ main {
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Type</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Brand/Model</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Serial Number</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">End of Life</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Room</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Condition</th>
@@ -1545,7 +1546,7 @@ main {
                         </tr>
                     <?php else: ?>
                         <?php foreach ($assets as $index => $asset): ?>
-                            <tr class="hover:bg-blue-50 transition-colors">
+                            <tr class="hover:bg-blue-50 transition-colors" data-id="<?php echo $asset['id']; ?>">
                                 <td class="px-3 py-2 text-center">
                                     <input type="checkbox" class="asset-checkbox rounded cursor-pointer" value="<?php echo $asset['id']; ?>" onchange="updateSelectAllState(); updateBulkActions();">
                                 </td>
@@ -1578,6 +1579,15 @@ main {
                                     <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['serial_number'] ?: 'N/A'); ?></div>
                                 </td>
                                 <td class="px-3 py-2 text-xs text-gray-700">
+                                    <?php if (!empty($asset['end_of_life'])): ?>
+                                        <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded">
+                                            <?php echo htmlspecialchars($asset['end_of_life']); ?> Years
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-gray-400">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-3 py-2 text-xs text-gray-700">
                                     <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['room_name'] ?: 'Standby'); ?></div>
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
@@ -1591,12 +1601,12 @@ main {
                                         'Disposed' => 'bg-red-100 text-red-700',
                                         'Lost' => 'bg-red-100 text-red-700',
                                         'Damaged' => 'bg-orange-100 text-orange-700',
-                                        'Archived' => 'bg-purple-100 text-purple-700'
+                                        'Archive' => 'bg-purple-100 text-purple-700'
                                     ];
                                     $status_value = isset($asset['status']) && trim($asset['status']) !== '' ? $asset['status'] : 'Available';
                                     $status_class = $status_colors[$status_value] ?? 'bg-gray-100 text-gray-700';
                                     ?>
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded <?php echo $status_class; ?>">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded <?php echo $status_class; ?>" data-status-badge>
                                         <?php echo htmlspecialchars($status_value); ?>
                                     </span>
                                 </td>
@@ -1874,7 +1884,12 @@ main {
                         <select id="assetName" name="asset_name" class="hidden">
                             <option value="">Select Category</option>
                             <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                <option value="<?php echo htmlspecialchars($category['name']); ?>">
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                    <?php if (!empty($category['end_of_life'])): ?>
+                                        (<?php echo $category['end_of_life']; ?> YEARS)
+                                    <?php endif; ?>
+                                </option>
                             <?php endforeach; ?>
                             <option value="__add_new__">+ Add New Category</option>
                         </select>
@@ -1894,6 +1909,9 @@ main {
                                     <?php foreach ($categories as $category): ?>
                                         <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                             <?php echo htmlspecialchars($category['name']); ?>
+                                            <?php if (!empty($category['end_of_life'])): ?>
+                                                <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -2003,7 +2021,8 @@ main {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                     <select id="condition" name="condition" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium bg-blue-50 text-blue-700 border-blue-300"
+                            onchange="updateConditionColor(this)">
                         <option value="Excellent">Excellent</option>
                         <option value="Good" selected>Good</option>
                         <option value="Fair">Fair</option>
@@ -2058,7 +2077,12 @@ main {
                             <select id="bulkAssetName" name="bulk_asset_name" class="hidden">
                                 <option value="">Select Category</option>
                                 <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                    <option value="<?php echo htmlspecialchars($category['name']); ?>">
+                                        <?php echo htmlspecialchars($category['name']); ?>
+                                        <?php if (!empty($category['end_of_life'])): ?>
+                                            (<?php echo $category['end_of_life']; ?> YEARS)
+                                        <?php endif; ?>
+                                    </option>
                                 <?php endforeach; ?>
                                 <option value="__add_new__">+ Add New Category</option>
                             </select>
@@ -2078,6 +2102,9 @@ main {
                                         <?php foreach ($categories as $category): ?>
                                             <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                                 <?php echo htmlspecialchars($category['name']); ?>
+                                                <?php if (!empty($category['end_of_life'])): ?>
+                                                    <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                                <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -2266,7 +2293,7 @@ main {
             <input type="hidden" id="editAssetId" name="id">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag <span class="text-red-500">*</span></label>
                     <input type="text" id="editAssetTag" name="asset_tag" required
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
@@ -2276,7 +2303,12 @@ main {
                         <select id="editAssetName" name="asset_name" class="hidden">
                             <option value="">Select Category</option>
                             <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['name']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                <option value="<?php echo htmlspecialchars($category['name']); ?>">
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                    <?php if (!empty($category['end_of_life'])): ?>
+                                        (<?php echo $category['end_of_life']; ?> YEARS)
+                                    <?php endif; ?>
+                                </option>
                             <?php endforeach; ?>
                             <option value="__add_new__">+ Add New Category</option>
                         </select>
@@ -2296,6 +2328,9 @@ main {
                                     <?php foreach ($categories as $category): ?>
                                         <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                             <?php echo htmlspecialchars($category['name']); ?>
+                                            <?php if (!empty($category['end_of_life'])): ?>
+                                                <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -2393,18 +2428,21 @@ main {
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select id="editStatus" name="status" 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="Active">Active</option>
                         <option value="Available">Available</option>
                         <option value="In Use">In Use</option>
                         <option value="Under Maintenance">Under Maintenance</option>
                         <option value="Retired">Retired</option>
-                        <option value="Damaged">Damaged</option>
+                        <option value="Disposed">Disposed</option>
+                        <option value="Lost">Lost</option>
+                        <option value="Broken">Broken</option>
+                        <option value="Archive">Archive</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                     <select id="editCondition" name="condition" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                            onchange="updateConditionColor(this)">
                         <option value="Excellent">Excellent</option>
                         <option value="Good">Good</option>
                         <option value="Fair">Fair</option>
@@ -2659,8 +2697,11 @@ main {
                         <option value="Available">Available</option>
                         <option value="In Use">In Use</option>
                         <option value="Under Maintenance">Under Maintenance</option>
-                        <option value="Damaged">Damaged</option>
-                        <option value="For Repair">For Repair</option>
+                        <option value="Retired">Retired</option>
+                        <option value="Disposed">Disposed</option>
+                        <option value="Lost">Lost</option>
+                        <option value="Broken">Broken</option>
+                        <option value="Archive">Archive</option>
                     </select>
                 </div>
 
@@ -3140,11 +3181,11 @@ async function generateAssetTag() {
         
         if (result.success) {
             const nextNumber = String(result.next_number).padStart(3, '0');
-            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${nextNumber}`;
             assetTagField.value = assetTag;
         } else {
             // Fallback to basic format if server request fails
-            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            const assetTag = `${formattedDate}-${assetNamePrefix}-001`;
             assetTagField.value = assetTag;
         }
     } catch (error) {
@@ -3156,8 +3197,7 @@ async function generateAssetTag() {
         const year = today.getFullYear();
         const formattedDate = `${month}-${day}-${year}`;
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
-        const roomNumber = roomId ? 'ROOM' : 'NOROOM';
-        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-001`;
     }
 }
 
@@ -3201,13 +3241,13 @@ function updateAssetTagPreview() {
         const tags = [];
         for (let i = 0; i < quantity; i++) {
             const num = String(startNumber + i).padStart(3, '0');
-            tags.push(`${formattedDate}-${assetNamePrefix}-${roomNumber}-${num}`);
+            tags.push(`${formattedDate}-${assetNamePrefix}-${num}`);
         }
         previewField.value = tags.join(', ');
     } else {
         const firstNum = String(startNumber).padStart(3, '0');
         const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
-        previewField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${roomNumber}-${lastNum}`;
+        previewField.value = `${formattedDate}-${assetNamePrefix}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${lastNum}`;
     }
 }
 
@@ -3354,6 +3394,7 @@ function editAsset(asset) {
     document.getElementById('editRoomId').value = asset.room_id || '';
     document.getElementById('editStatus').value = asset.status;
     document.getElementById('editCondition').value = asset.condition;
+    updateConditionColor(document.getElementById('editCondition'));
     document.getElementById('editIsBorrowable').checked = asset.is_borrowable == '1';
     document.getElementById('editAssetModal').classList.remove('hidden');
     document.getElementById('editAssetTag').focus();
@@ -3516,7 +3557,37 @@ async function confirmArchiveAsset() {
         
         if (result.success) {
             showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
+            closeArchiveAssetModal();
+            
+            const row = document.querySelector(`tr[data-id="${currentArchiveAssetId}"]`);
+            if (row) {
+                // Check if show_archived filter is enabled
+                const urlParams = new URLSearchParams(window.location.search);
+                const showArchived = urlParams.get('show_archived') === '1';
+                
+                if (showArchived) {
+                    // If showing archived assets, just update the badge
+                    const statusBadge = row.querySelector('[data-status-badge]');
+                    if (statusBadge) {
+                        statusBadge.className = 'px-2 py-1 inline-flex text-xs leading-5 font-medium rounded bg-purple-100 text-purple-700';
+                        statusBadge.textContent = 'Archive';
+                    }
+                    
+                    // Add a subtle animation to show the change
+                    row.style.backgroundColor = '#f3f4f6';
+                    setTimeout(() => {
+                        row.style.transition = 'background-color 2s ease';
+                        row.style.backgroundColor = '';
+                    }, 100);
+                } else {
+                    // If not showing archived, remove the row with animation
+                    row.style.transition = 'opacity 0.3s ease';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                    }, 300);
+                }
+            }
         } else {
             showAlert('error', result.message);
             button.innerHTML = originalText;
@@ -3566,7 +3637,47 @@ async function confirmBulkArchive() {
         
         if (result.success) {
             showAlert('success', result.message);
-            setTimeout(() => window.location.reload(), 1000);
+            closeBulkArchiveModal();
+            
+            // Check if show_archived filter is enabled
+            const urlParams = new URLSearchParams(window.location.search);
+            const showArchived = urlParams.get('show_archived') === '1';
+            
+            // Update or remove rows based on filter
+            window.bulkArchiveAssetIds.forEach(assetId => {
+                const row = document.querySelector(`tr[data-id="${assetId}"]`);
+                if (row) {
+                    if (showArchived) {
+                        // If showing archived assets, just update the badge
+                        const statusBadge = row.querySelector('[data-status-badge]');
+                        if (statusBadge) {
+                            statusBadge.className = 'px-2 py-1 inline-flex text-xs leading-5 font-medium rounded bg-purple-100 text-purple-700';
+                            statusBadge.textContent = 'Archive';
+                        }
+                        
+                        // Uncheck the checkbox
+                        const checkbox = row.querySelector('.asset-checkbox');
+                        if (checkbox) checkbox.checked = false;
+                        
+                        // Add a subtle animation to show the change
+                        row.style.backgroundColor = '#f3f4f6';
+                        setTimeout(() => {
+                            row.style.transition = 'background-color 2s ease';
+                            row.style.backgroundColor = '';
+                        }, 100);
+                    } else {
+                        // If not showing archived, remove the row with animation
+                        row.style.transition = 'opacity 0.3s ease';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.remove();
+                        }, 300);
+                    }
+                }
+            });
+            
+            // Clear bulk selection
+            clearSelection();
         } else {
             showAlert('error', result.message);
             button.innerHTML = originalText;
@@ -4051,6 +4162,28 @@ function showAlert(type, message) {
     setTimeout(() => alertDiv.remove(), 3000);
 }
 
+// Update condition select color based on value
+function updateConditionColor(selectElement) {
+    const value = selectElement.value;
+    const colorClasses = {
+        'Excellent': 'bg-green-50 text-green-700 border-green-300',
+        'Good': 'bg-blue-50 text-blue-700 border-blue-300',
+        'Fair': 'bg-yellow-50 text-yellow-700 border-yellow-300',
+        'Poor': 'bg-orange-50 text-orange-700 border-orange-300',
+        'Non-Functional': 'bg-red-50 text-red-700 border-red-300'
+    };
+    
+    // Remove all color classes
+    Object.values(colorClasses).forEach(cls => {
+        cls.split(' ').forEach(c => selectElement.classList.remove(c));
+    });
+    
+    // Add new color classes
+    if (colorClasses[value]) {
+        colorClasses[value].split(' ').forEach(cls => selectElement.classList.add(cls));
+    }
+}
+
 // Close menus when clicking outside
 document.addEventListener('click', function(e) {
     if (!e.target.closest('[id^="menu-"]') && !e.target.closest('button')) {
@@ -4268,7 +4401,20 @@ async function updateSearchableDropdownOptions(selectId) {
                 const option = document.createElement('div');
                 option.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
                 option.setAttribute('data-value', category.name);
-                option.textContent = category.name;
+                
+                // Display name with end_of_life if available
+                let displayText = category.name;
+                if (category.end_of_life) {
+                    displayText += ' ';
+                    const eolSpan = document.createElement('span');
+                    eolSpan.className = 'text-gray-500';
+                    eolSpan.textContent = `(${category.end_of_life} YEARS)`;
+                    option.textContent = category.name + ' ';
+                    option.appendChild(eolSpan);
+                } else {
+                    option.textContent = category.name;
+                }
+                
                 dropdownList.appendChild(option);
                 
                 // Re-attach click event
@@ -4307,7 +4453,11 @@ async function updateSearchableDropdownOptions(selectId) {
             result.categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category.name;
-                option.textContent = category.name;
+                let displayText = category.name;
+                if (category.end_of_life) {
+                    displayText += ` (${category.end_of_life} YEARS)`;
+                }
+                option.textContent = displayText;
                 select.appendChild(option);
             });
             const addNewSelectOption = document.createElement('option');

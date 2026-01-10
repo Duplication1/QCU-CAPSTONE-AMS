@@ -24,7 +24,7 @@ if (!isset($conn)) {
 
 // Fetch asset categories
 $categories = [];
-$category_query = "SELECT id, name FROM asset_categories ORDER BY name ASC";
+$category_query = "SELECT id, name, end_of_life FROM asset_categories ORDER BY name ASC";
 $category_result = $conn->query($category_query);
 if ($category_result && $category_result->num_rows > 0) {
     while ($row = $category_result->fetch_assoc()) {
@@ -231,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 $current_number = $start_number + $i;
                 $padded_number = str_pad($current_number, 3, '0', STR_PAD_LEFT);
                 
-                $asset_tag = "{$formatted_date}-{$asset_name_prefix}-{$room_number}-{$padded_number}";
+                $asset_tag = "{$formatted_date}-{$asset_name_prefix}-{$padded_number}";
                 $asset_name = "{$asset_name_prefix} #{$current_number}";
                 
                 // Check if asset tag already exists
@@ -874,7 +874,7 @@ $total_pages = ceil($total_assets / $limit);
 
 // Fetch standby assets (not assigned to any room) - always include all assets for client-side filtering
 $assets = [];
-$query_sql = "SELECT a.*, r.name as room_name FROM assets a LEFT JOIN rooms r ON a.room_id = r.id WHERE (a.room_id IS NULL OR a.room_id = 0)";
+$query_sql = "SELECT a.*, r.name as room_name, ac.end_of_life FROM assets a LEFT JOIN rooms r ON a.room_id = r.id LEFT JOIN asset_categories ac ON a.asset_name = ac.name WHERE (a.room_id IS NULL OR a.room_id = 0)";
 $params = [];
 $types = '';
 
@@ -1070,6 +1070,7 @@ main {
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Type</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Brand/Model</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Serial Number</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">End of Life</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Room</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">Condition</th>
@@ -1131,6 +1132,15 @@ main {
                                 </td>
                                 <td class="px-3 py-2 text-xs text-gray-700">
                                     <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['serial_number'] ?: 'N/A'); ?></div>
+                                </td>
+                                <td class="px-3 py-2 text-xs text-gray-700">
+                                    <?php if (!empty($asset['end_of_life'])): ?>
+                                        <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded">
+                                            <?php echo htmlspecialchars($asset['end_of_life']); ?> Years
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-gray-400">N/A</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-3 py-2 text-xs text-gray-700">
                                     <div class="max-w-xs truncate"><?php echo htmlspecialchars($asset['room_name'] ?: 'Standby'); ?></div>
@@ -1349,6 +1359,9 @@ main {
                                     <?php foreach ($categories as $category): ?>
                                         <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                             <?php echo htmlspecialchars($category['name']); ?>
+                                            <?php if (!empty($category['end_of_life'])): ?>
+                                                <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -1444,7 +1457,8 @@ main {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                     <select id="condition" name="condition" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium bg-blue-50 text-blue-700 border-blue-300"
+                            onchange="updateConditionColor(this)">
                         <option value="Excellent">Excellent</option>
                         <option value="Good" selected>Good</option>
                         <option value="Fair">Fair</option>
@@ -1521,6 +1535,9 @@ main {
                                         <?php foreach ($categories as $category): ?>
                                             <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                                 <?php echo htmlspecialchars($category['name']); ?>
+                                                <?php if (!empty($category['end_of_life'])): ?>
+                                                    <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                                <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -1711,6 +1728,9 @@ main {
                                     <?php foreach ($categories as $category): ?>
                                         <div class="dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm" data-value="<?php echo htmlspecialchars($category['name']); ?>">
                                             <?php echo htmlspecialchars($category['name']); ?>
+                                            <?php if (!empty($category['end_of_life'])): ?>
+                                                <span class="text-gray-500">(<?php echo $category['end_of_life']; ?> YEARS)</span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -1809,7 +1829,8 @@ main {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                     <select id="editCondition" name="condition" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                            onchange="updateConditionColor(this)">
                         <option value="Excellent">Excellent</option>
                         <option value="Good">Good</option>
                         <option value="Fair">Fair</option>
@@ -2570,11 +2591,11 @@ async function generateAssetTag() {
         
         if (result.success) {
             const nextNumber = String(result.next_number).padStart(3, '0');
-            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${nextNumber}`;
+            const assetTag = `${formattedDate}-${assetNamePrefix}-${nextNumber}`;
             assetTagField.value = assetTag;
         } else {
             // Fallback to basic format if server request fails
-            const assetTag = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+            const assetTag = `${formattedDate}-${assetNamePrefix}-001`;
             assetTagField.value = assetTag;
         }
     } catch (error) {
@@ -2586,7 +2607,7 @@ async function generateAssetTag() {
         const year = today.getFullYear();
         const formattedDate = `${month}-${day}-${year}`;
         const assetNamePrefix = assetName.substring(0, Math.min(10, assetName.length)).toUpperCase().replace(/\s+/g, '');
-        assetTagField.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-001`;
+        assetTagField.value = `${formattedDate}-${assetNamePrefix}-001`;
     }
 }
 
@@ -2614,13 +2635,13 @@ function updateAssetTagPreview() {
             const tags = [];
             for (let i = 0; i < quantity; i++) {
                 const num = String(startNumber + i).padStart(3, '0');
-                tags.push(`${formattedDate}-${assetNamePrefix}-${roomNumber}-${num}`);
+                tags.push(`${formattedDate}-${assetNamePrefix}-${num}`);
             }
             preview.value = tags.join(', ');
         } else {
             const firstNum = String(startNumber).padStart(3, '0');
             const lastNum = String(startNumber + quantity - 1).padStart(3, '0');
-            preview.value = `${formattedDate}-${assetNamePrefix}-${roomNumber}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${roomNumber}-${lastNum} (${quantity} assets)`;
+            preview.value = `${formattedDate}-${assetNamePrefix}-${firstNum} ... ${formattedDate}-${assetNamePrefix}-${lastNum} (${quantity} assets)`;
         }
     }
 }
@@ -2724,6 +2745,7 @@ function editAsset(asset) {
     document.getElementById('editRoomId').value = asset.room_id || '';
     document.getElementById('editStatus').value = asset.status;
     document.getElementById('editCondition').value = asset.condition;
+    updateConditionColor(document.getElementById('editCondition'));
     document.getElementById('editIsBorrowable').checked = asset.is_borrowable == '1';
     document.getElementById('editAssetModal').classList.remove('hidden');
     document.getElementById('editAssetTag').focus();
@@ -2970,6 +2992,28 @@ function showAlert(type, message) {
     document.body.appendChild(alertDiv);
     
     setTimeout(() => alertDiv.remove(), 3000);
+}
+
+// Update condition select color based on value
+function updateConditionColor(selectElement) {
+    const value = selectElement.value;
+    const colorClasses = {
+        'Excellent': 'bg-green-50 text-green-700 border-green-300',
+        'Good': 'bg-blue-50 text-blue-700 border-blue-300',
+        'Fair': 'bg-yellow-50 text-yellow-700 border-yellow-300',
+        'Poor': 'bg-orange-50 text-orange-700 border-orange-300',
+        'Non-Functional': 'bg-red-50 text-red-700 border-red-300'
+    };
+    
+    // Remove all color classes
+    Object.values(colorClasses).forEach(cls => {
+        cls.split(' ').forEach(c => selectElement.classList.remove(c));
+    });
+    
+    // Add new color classes
+    if (colorClasses[value]) {
+        colorClasses[value].split(' ').forEach(cls => selectElement.classList.add(cls));
+    }
 }
 
 // Import Excel functions
@@ -3425,7 +3469,11 @@ async function refreshCategoryDropdowns() {
                     result.categories.forEach(category => {
                         const option = document.createElement('option');
                         option.value = category.name;
-                        option.textContent = category.name;
+                        let displayText = category.name;
+                        if (category.end_of_life) {
+                            displayText += ` (${category.end_of_life} YEARS)`;
+                        }
+                        option.textContent = displayText;
                         select.insertBefore(option, select.options[select.options.length - 1]);
                     });
                     
@@ -3465,7 +3513,17 @@ function updateSearchableDropdownOptions(selectId, categories) {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'dropdown-option px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm';
             optionDiv.setAttribute('data-value', category.name);
-            optionDiv.textContent = category.name;
+            
+            // Display name with end_of_life if available
+            if (category.end_of_life) {
+                optionDiv.textContent = category.name + ' ';
+                const eolSpan = document.createElement('span');
+                eolSpan.className = 'text-gray-500';
+                eolSpan.textContent = `(${category.end_of_life} YEARS)`;
+                optionDiv.appendChild(eolSpan);
+            } else {
+                optionDiv.textContent = category.name;
+            }
             
             dropdownList.appendChild(optionDiv);
             
