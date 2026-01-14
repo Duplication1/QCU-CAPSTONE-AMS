@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 04, 2026 at 09:08 AM
+-- Generation Time: Jan 14, 2026 at 09:26 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -228,7 +228,37 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (182, 3, 'create', 'asset', 2019, 'Created asset: 01-04-2026-CABLE-NOROOM-054 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 07:53:35'),
 (183, 3, 'update', 'asset', 2019, 'Updated asset: 01-04-2026-CABLE-NOROOM-054 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 07:59:21'),
 (184, 3, 'archive', 'asset', 2019, 'Archived asset: 01-04-2026-CABLE-NOROOM-054 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 07:59:30'),
-(185, 3, 'create', 'asset', 2020, 'Created standby asset: 01-04-2026-ADAPTER-NOROOM-053 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 08:00:00');
+(185, 3, 'create', 'asset', 2020, 'Created standby asset: 01-04-2026-ADAPTER-NOROOM-053 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 08:00:00'),
+(186, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:08:19'),
+(187, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:08:30'),
+(188, 3, 'create', 'asset', 2021, 'Created asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:09:24'),
+(189, 3, 'update', 'asset', 2021, 'Updated asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:09:38'),
+(190, 3, 'archive', 'asset', 2021, 'Archived asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:09:48'),
+(191, 3, 'archive', 'asset', 2021, 'Archived asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:24:02'),
+(192, 3, 'archive', 'asset', 2021, 'Archived asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:24:11'),
+(193, 3, 'archive', 'asset', 2021, 'Archived asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-04 13:24:43'),
+(194, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:12:10'),
+(195, 3, 'create', 'asset', 2022, 'Created asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:16:29'),
+(196, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:53:43'),
+(197, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:56:32'),
+(198, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:56:42'),
+(199, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 05:56:50'),
+(200, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36', '2026-01-10 06:02:25'),
+(201, 3, 'archive', 'asset', 2022, 'Archived asset: 01-10-2026-ADAPTER-054 - ADAPTER', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 06:05:12'),
+(202, 3, 'archive', 'asset', 2021, 'Archived asset: 01-04-2026-CABLE-NOROOM-055 - CABLE', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-10 06:06:33'),
+(203, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:52:10'),
+(204, 3, 'assign', 'ticket', 50, 'Assigned ticket #50 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:52:30'),
+(205, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:54:24'),
+(206, 1, 'view', 'report', NULL, 'Previewed tickets report (2025-12-15 to 2026-01-14)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:57:25'),
+(207, 1, 'view', 'report', NULL, 'Previewed borrowing report (2025-12-15 to 2026-01-14)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:57:27'),
+(208, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-15 to 2026-01-14)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:57:29'),
+(209, 1, 'view', 'report', NULL, 'Previewed activity_logs report (2025-12-15 to 2026-01-14)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 03:57:30'),
+(210, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:33'),
+(211, 3, 'update', 'asset', 0, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(212, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:03'),
+(213, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:08'),
+(214, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:12'),
+(215, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 08:23:16');
 
 -- --------------------------------------------------------
 
@@ -1202,10 +1232,10 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (1816, '12-04-2025-IK503-VGA-040', 'VGA', 'Hardware', '70', '', '', '', 13, 523, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1816', NULL, 3, NULL, '2025-12-04 12:01:36', '2025-12-04 12:01:36'),
 (1817, '12-04-2025-IK503-WEBCAM-040', 'WEBCAM', 'Hardware', '80', '', '', '', 13, 523, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1817', NULL, 3, NULL, '2025-12-04 12:01:36', '2025-12-04 12:01:36'),
 (1818, '12-04-2025-IK503-ADAPTER-041', 'ADAPTER', 'Hardware', '14', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1818', NULL, 3, NULL, '2025-12-04 12:01:36', '2025-12-04 12:01:36'),
-(1819, '12-04-2025-IK503-CABLE-041', 'CABLE', 'Hardware', '13', 'ACER', '1', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1819', NULL, 3, 3, '2025-12-04 12:01:37', '2026-01-04 07:09:09'),
-(1820, '12-04-2025-IK503-CASE-041', 'CASE', 'Hardware', '77', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1820', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
-(1821, '12-04-2025-IK503-COMPUTER TABLE-041', 'COMPUTER TABLE', 'Hardware', '73', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1821', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
-(1822, '12-04-2025-IK503-CPU-041', 'CPU', 'Hardware', '75', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1822', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
+(1819, '12-04-2025-IK503-CABLE-041', 'CABLE', 'Hardware', '13', 'ACER', '1', '', 13, 524, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1819', NULL, 3, 3, '2025-12-04 12:01:37', '2026-01-14 04:13:52'),
+(1820, '12-04-2025-IK503-CASE-041', 'CASE', 'Hardware', '77', '', '', '', 13, 524, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1820', NULL, 3, NULL, '2025-12-04 12:01:37', '2026-01-14 04:13:52'),
+(1821, '12-04-2025-IK503-COMPUTER TABLE-041', 'COMPUTER TABLE', 'Hardware', '73', '', '', '', 13, 524, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1821', NULL, 3, NULL, '2025-12-04 12:01:37', '2026-01-14 04:13:52'),
+(1822, '12-04-2025-IK503-CPU-041', 'CPU', 'Hardware', '75', '', '', '', 13, 524, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1822', NULL, 3, NULL, '2025-12-04 12:01:37', '2026-01-14 04:13:52'),
 (1823, '12-04-2025-IK503-GPU-041', 'GPU', 'Hardware', '76', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1823', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
 (1824, '12-04-2025-IK503-HDMI-041', 'HDMI', 'Hardware', '71', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1824', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
 (1825, '12-04-2025-IK503-HEADSET-041', 'HEADSET', 'Hardware', '79', '', '', '', 13, 524, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D1825', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
@@ -1400,11 +1430,13 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (2013, '12-04-2025-IK503-STORAGE-051', 'STORAGE', 'Hardware', '12', '', '', '', 13, 534, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2013', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
 (2014, '12-04-2025-IK503-VGA-051', 'VGA', 'Hardware', '70', '', '', '', 13, 534, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2014', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
 (2015, '12-04-2025-IK503-WEBCAM-051', 'WEBCAM', 'Hardware', '80', '', '', '', 13, 534, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2Flocalhost%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2015', NULL, 3, NULL, '2025-12-04 12:01:37', '2025-12-04 12:01:37'),
-(2016, '01-04-2026-ADAPTER-NOROOM-052', 'ADAPTER', 'Hardware', NULL, 'ACER', '1', '1', NULL, NULL, NULL, '', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2016', NULL, 3, 3, '2026-01-04 07:17:26', '2026-01-04 07:17:37'),
-(2017, '01-04-2026-CABLE-NOROOM-052', 'CABLE', 'Hardware', NULL, 'ACER', '1', '', NULL, NULL, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2017', NULL, 3, NULL, '2026-01-04 07:21:56', '2026-01-04 07:21:56'),
-(2018, '01-04-2026-CABLE-IK503-053', 'CABLE', 'Furniture', '13', 'ACER', '1', '', 13, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2201-04-2026-CABLE-IK503-053%22%2C%22asset_name%22%3A%22CABLE%22%2C%22asset_type%22%3A%22Furniture%22%2C%22room_id%22%3A13%2C%22room_name%22%3A%22IK503%22%7D', NULL, 3, NULL, '2026-01-04 07:29:11', '2026-01-04 07:29:11'),
-(2019, '01-04-2026-CABLE-NOROOM-054', 'CABLE', 'Hardware', '13', '1', '1', '4', NULL, NULL, NULL, '', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2019', NULL, 3, 3, '2026-01-04 07:53:35', '2026-01-04 07:59:30'),
-(2020, '01-04-2026-ADAPTER-NOROOM-053', 'ADAPTER', 'Hardware', NULL, '1', '1', '2', NULL, NULL, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2020', NULL, 3, NULL, '2026-01-04 08:00:00', '2026-01-04 08:00:00');
+(2016, '01-04-2026-ADAPTER-NOROOM-052', 'ADAPTER', 'Hardware', NULL, 'ACER', '1', '1', NULL, NULL, NULL, '', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2016', NULL, 3, 3, '2026-01-04 07:17:26', '2026-01-14 04:13:52'),
+(2017, '01-04-2026-CABLE-NOROOM-052', 'CABLE', 'Hardware', NULL, 'ACER', '1', '', NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2017', NULL, 3, NULL, '2026-01-04 07:21:56', '2026-01-14 04:13:52'),
+(2018, '01-04-2026-CABLE-IK503-053', 'CABLE', 'Furniture', '13', 'ACER', '1', '', 13, NULL, NULL, 'Available', 'Poor', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22asset_tag%22%3A%2201-04-2026-CABLE-IK503-053%22%2C%22asset_name%22%3A%22CABLE%22%2C%22asset_type%22%3A%22Furniture%22%2C%22room_id%22%3A13%2C%22room_name%22%3A%22IK503%22%7D', NULL, 3, NULL, '2026-01-04 07:29:11', '2026-01-14 04:13:52'),
+(2019, '01-04-2026-CABLE-NOROOM-054', 'CABLE', 'Hardware', '13', '1', '1', '4', NULL, NULL, NULL, '', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2019', NULL, 3, 3, '2026-01-04 07:53:35', '2026-01-14 04:13:52'),
+(2020, '01-04-2026-ADAPTER-NOROOM-053', 'ADAPTER', 'Hardware', NULL, '1', '1', '2', NULL, NULL, NULL, 'Available', 'Poor', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2020', NULL, 3, NULL, '2026-01-04 08:00:00', '2026-01-14 04:13:52'),
+(2021, '01-04-2026-CABLE-NOROOM-055', 'CABLE', 'Hardware', '13', 'ACER', '1', 'N', NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2021', NULL, 3, 3, '2026-01-04 13:09:24', '2026-01-10 06:06:33'),
+(2022, '01-10-2026-ADAPTER-054', 'ADAPTER', 'Hardware', NULL, 'ACER', '1', '', NULL, NULL, NULL, 'Archive', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D2022', NULL, 3, 3, '2026-01-10 05:16:29', '2026-01-10 06:05:12');
 
 -- --------------------------------------------------------
 
@@ -1508,7 +1540,7 @@ INSERT INTO `asset_categories` (`id`, `name`, `end_of_life`, `created_at`, `upda
 (11, 'SERVER', 5, '2025-11-28 03:37:54', '2026-01-04 08:07:47', 0),
 (12, 'STORAGE', 5, '2025-11-28 03:37:54', '2026-01-04 08:07:52', 1),
 (13, 'CABLE', 5, '2025-11-28 03:37:54', '2026-01-04 08:06:53', 1),
-(14, 'ADAPTER', 5, '2025-11-28 03:37:54', '2026-01-04 06:31:53', 1),
+(14, 'ADAPTER', 4, '2025-11-28 03:37:54', '2026-01-10 05:31:32', 1),
 (15, 'OTHER', 5, '2025-11-28 03:37:54', '2026-01-04 08:07:26', 0),
 (66, 'TABLE', 5, '2025-11-28 09:38:30', '2026-01-04 08:07:57', 0),
 (68, 'MOTHERBOARD', 5, '2025-12-02 10:05:50', '2026-01-04 08:07:21', 1),
@@ -1577,7 +1609,16 @@ INSERT INTO `asset_history` (`id`, `asset_id`, `action_type`, `field_changed`, `
 (124, 927, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 11:01:36'),
 (125, 928, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 11:01:36'),
 (126, 929, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 11:01:36'),
-(127, 930, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 11:01:36');
+(127, 930, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-04 11:01:36'),
+(128, 1819, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(129, 1820, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(130, 1821, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(131, 1822, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(132, 2016, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(133, 2017, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(134, 2018, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(135, 2019, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52'),
+(136, 2020, 'Condition Changed', 'Condition', 'Good', 'Poor', 'Condition changed from Good to Poor', 3, 'Maria Lab Staff', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 04:13:52');
 
 -- --------------------------------------------------------
 
@@ -1689,7 +1730,109 @@ CREATE TABLE `issues` (
 INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `component_asset_id`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `submitted_by`, `is_archived`, `archived_at`, `building_id`) VALUES
 (48, 5, 'hardware', 13, 485, '12-04-2025-IK503-CABLE-002', 1117, '', '', '', '', '', '', '', '', 'dsads', '', 'Medium', 'Resolved', '2025-12-04 12:31:22', '2025-12-04 12:43:39', 'John Technician', NULL, 0, NULL, 1),
 (49, 5, 'hardware', 13, 488, '12-04-2025-IK503-CABLE-005', 1171, '', '', '', '', '', '', '', '', 'DSADSA', 'DSADSA', 'Medium', 'Open', '2025-12-05 15:23:11', '2025-12-05 15:23:11', NULL, NULL, 0, NULL, 1),
-(50, 5, 'hardware', 13, 515, '12-04-2025-IK503-POWERSUPPLY-032', 1667, '', '', '', '', '', '', '', '', 'DAS', 'DSADA', 'Medium', 'In Progress', '2025-12-24 13:32:34', '2025-12-24 13:32:59', 'John Technician', NULL, 0, NULL, 1);
+(50, 5, 'hardware', 13, 515, '12-04-2025-IK503-POWERSUPPLY-032', 1667, '', '', '', '', '', '', '', '', 'DAS', 'DSADA', 'Medium', 'In Progress', '2025-12-24 13:32:34', '2026-01-14 03:52:30', 'John Technician', NULL, 0, NULL, 1),
+(51, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor display flickering', 'Monitor display flickering intermittently', 'Medium', 'Resolved', '2025-01-05 01:15:00', '2025-01-08 06:30:00', NULL, NULL, 0, NULL, NULL),
+(52, 5, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard malfunction', 'Keyboard keys not responding properly', 'Low', 'Resolved', '2025-01-12 02:20:00', '2025-01-15 03:00:00', NULL, NULL, 0, NULL, NULL),
+(53, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse scroll issue', 'Mouse scroll wheel stopped working', 'Low', 'Resolved', '2025-01-18 05:45:00', '2025-01-20 01:30:00', NULL, NULL, 0, NULL, NULL),
+(54, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PC won\'t boot', 'Computer won\'t boot - power supply issue', 'High', 'Resolved', '2025-02-02 00:30:00', '2025-02-05 08:00:00', NULL, NULL, 0, NULL, NULL),
+(55, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer paper jam', 'Printer paper jam - mechanical problem', 'Medium', 'Resolved', '2025-02-08 03:00:00', '2025-02-09 02:00:00', NULL, NULL, 0, NULL, NULL),
+(56, 4, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU overheating', 'CPU overheating - fan failure', 'High', 'Resolved', '2025-02-14 06:20:00', '2025-02-18 05:00:00', NULL, NULL, 0, NULL, NULL),
+(57, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Hard drive clicking', 'Hard drive making clicking noise', 'High', 'Resolved', '2025-02-20 01:00:00', '2025-02-24 07:30:00', NULL, NULL, 0, NULL, NULL),
+(58, 9, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB ports failed', 'USB ports not working', 'Medium', 'Resolved', '2025-02-26 02:30:00', '2025-02-28 03:00:00', NULL, NULL, 0, NULL, NULL),
+(59, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor dead pixels', 'Monitor screen has dead pixels', 'Low', 'Resolved', '2025-03-03 00:45:00', '2025-03-06 06:00:00', NULL, NULL, 0, NULL, NULL),
+(60, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM failure', 'RAM failure - system crashes', 'High', 'Resolved', '2025-03-10 03:30:00', '2025-03-14 02:00:00', NULL, NULL, 0, NULL, NULL),
+(61, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Projector bulb out', 'Projector bulb burnt out', 'Medium', 'Resolved', '2025-03-17 05:00:00', '2025-03-20 01:30:00', NULL, NULL, 0, NULL, NULL),
+(62, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery not charging', 'Laptop battery not charging', 'Medium', 'Resolved', '2025-03-25 07:20:00', '2025-03-28 03:00:00', NULL, NULL, 0, NULL, NULL),
+(63, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU artifacts', 'Graphics card artifacts on screen', 'High', 'Resolved', '2025-04-02 01:00:00', '2025-04-06 06:30:00', NULL, NULL, 0, NULL, NULL),
+(64, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard damage', 'Keyboard liquid damage', 'Medium', 'Resolved', '2025-04-08 02:15:00', '2025-04-10 05:00:00', NULL, NULL, 0, NULL, NULL),
+(65, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Motherboard failure', 'Motherboard failure - no POST', 'High', 'Resolved', '2025-04-12 00:30:00', '2025-04-18 08:00:00', NULL, NULL, 0, NULL, NULL),
+(66, 9, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Webcam issue', 'Webcam not detected', 'Low', 'Resolved', '2025-04-19 03:00:00', '2025-04-22 02:00:00', NULL, NULL, 0, NULL, NULL),
+(67, 2, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power adapter issue', 'Power adapter overheating', 'Medium', 'Resolved', '2025-04-24 06:30:00', '2025-04-26 03:30:00', NULL, NULL, 0, NULL, NULL),
+(68, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker crackling', 'Speakers producing crackling sound', 'Low', 'Resolved', '2025-04-28 01:45:00', '2025-04-30 02:00:00', NULL, NULL, 0, NULL, NULL),
+(69, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD full', 'Hard drive full - storage failure', 'Medium', 'Resolved', '2025-05-02 02:00:00', '2025-05-05 07:00:00', NULL, NULL, 0, NULL, NULL),
+(70, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD drive issue', 'CD/DVD drive not reading discs', 'Low', 'Resolved', '2025-05-07 03:30:00', '2025-05-09 02:00:00', NULL, NULL, 0, NULL, NULL),
+(71, 6, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Network card dead', 'Network card failure', 'High', 'Resolved', '2025-05-11 05:15:00', '2025-05-15 06:00:00', NULL, NULL, 0, NULL, NULL),
+(72, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor color issue', 'Monitor color distortion', 'Medium', 'Resolved', '2025-05-16 01:00:00', '2025-05-19 03:00:00', NULL, NULL, 0, NULL, NULL),
+(73, 7, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan noise', 'Cooling fan making loud noise', 'Medium', 'Resolved', '2025-05-21 06:00:00', '2025-05-23 02:30:00', NULL, NULL, 0, NULL, NULL),
+(74, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BIOS battery', 'BIOS battery dead', 'Low', 'Resolved', '2025-05-25 02:45:00', '2025-05-27 05:00:00', NULL, NULL, 0, NULL, NULL),
+(75, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDMI not working', 'HDMI port not working', 'Medium', 'Resolved', '2025-05-29 00:30:00', '2025-05-31 03:00:00', NULL, NULL, 0, NULL, NULL),
+(76, 5, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD failure', 'SSD failure - data corruption', 'High', 'Resolved', '2025-06-03 01:15:00', '2025-06-08 08:00:00', NULL, NULL, 0, NULL, NULL),
+(77, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchpad dead', 'Touchpad not responsive', 'Medium', 'Resolved', '2025-06-10 03:00:00', '2025-06-12 06:00:00', NULL, NULL, 0, NULL, NULL),
+(78, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer leak', 'Printer ink cartridge leaked', 'Low', 'Resolved', '2025-06-15 05:30:00', '2025-06-17 02:00:00', NULL, NULL, 0, NULL, NULL),
+(79, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack broken', 'Audio jack broken', 'Low', 'Resolved', '2025-06-20 02:00:00', '2025-06-22 03:30:00', NULL, NULL, 0, NULL, NULL),
+(80, 4, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor flickering', 'External monitor flickering', 'Medium', 'Resolved', '2025-06-26 06:15:00', '2025-06-28 05:00:00', NULL, NULL, 0, NULL, NULL),
+(81, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Overheating CPU', 'Thermal paste dried out - overheating', 'High', 'Resolved', '2025-07-02 00:45:00', '2025-07-06 07:00:00', NULL, NULL, 0, NULL, NULL),
+(82, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case fan broken', 'Case fan broken', 'Medium', 'Resolved', '2025-07-08 02:30:00', '2025-07-10 03:00:00', NULL, NULL, 0, NULL, NULL),
+(83, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM slot issue', 'RAM slot failure', 'High', 'Resolved', '2025-07-12 05:00:00', '2025-07-16 06:30:00', NULL, NULL, 0, NULL, NULL),
+(84, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power button stuck', 'Power button stuck', 'Low', 'Resolved', '2025-07-18 01:15:00', '2025-07-20 02:00:00', NULL, NULL, 0, NULL, NULL),
+(85, 3, 'software', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver issues', 'Graphics driver causing artifacts', 'Medium', 'Resolved', '2025-07-21 03:45:00', '2025-07-23 05:00:00', NULL, NULL, 0, NULL, NULL),
+(86, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB hub dead', 'USB hub malfunction', 'Low', 'Resolved', '2025-07-24 06:00:00', '2025-07-26 03:30:00', NULL, NULL, 0, NULL, NULL),
+(87, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse receiver lost', 'Wireless mouse receiver lost', 'Low', 'Resolved', '2025-07-27 02:00:00', '2025-07-29 01:00:00', NULL, NULL, 0, NULL, NULL),
+(88, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor stand issue', 'Monitor stand broken', 'Low', 'Resolved', '2025-07-30 07:30:00', '2025-07-31 06:00:00', NULL, NULL, 0, NULL, NULL),
+(89, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD bad sectors', 'Hard drive bad sectors detected', 'High', 'Resolved', '2025-08-01 01:00:00', '2025-08-05 08:00:00', NULL, NULL, 0, NULL, NULL),
+(90, 9, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight dead', 'Keyboard backlight not working', 'Low', 'Resolved', '2025-08-06 02:30:00', '2025-08-08 03:00:00', NULL, NULL, 0, NULL, NULL),
+(91, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU throttling', 'CPU thermal throttling', 'High', 'Resolved', '2025-08-09 05:15:00', '2025-08-13 06:30:00', NULL, NULL, 0, NULL, NULL),
+(92, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SATA cable loose', 'SATA cable loose - boot issues', 'Medium', 'Resolved', '2025-08-14 00:45:00', '2025-08-16 02:00:00', NULL, NULL, 0, NULL, NULL),
+(93, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Laptop hinge broken', 'Laptop hinge broken', 'Medium', 'Resolved', '2025-08-17 03:00:00', '2025-08-20 05:30:00', NULL, NULL, 0, NULL, NULL),
+(94, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer roller worn', 'Printer roller worn out', 'Medium', 'Resolved', '2025-08-21 06:30:00', '2025-08-23 03:00:00', NULL, NULL, 0, NULL, NULL),
+(95, 6, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Display cable damaged', 'Display cable damaged', 'Medium', 'Resolved', '2025-08-24 01:00:00', '2025-08-27 02:30:00', NULL, NULL, 0, NULL, NULL),
+(96, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth failure', 'Bluetooth adapter failure', 'Low', 'Resolved', '2025-08-28 02:45:00', '2025-08-30 03:00:00', NULL, NULL, 0, NULL, NULL),
+(97, 7, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Memory leak', 'Memory leak causing slowdown', 'Medium', 'Resolved', '2025-08-31 07:00:00', '2025-08-31 08:30:00', NULL, NULL, 0, NULL, NULL),
+(98, 9, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU fan stopped', 'GPU fan not spinning', 'High', 'Resolved', '2025-09-02 00:30:00', '2025-09-06 07:00:00', NULL, NULL, 0, NULL, NULL),
+(99, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU buzzing', 'PSU making buzzing noise', 'Medium', 'Resolved', '2025-09-07 02:00:00', '2025-09-09 03:30:00', NULL, NULL, 0, NULL, NULL),
+(100, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen cracked', 'Laptop screen cracked', 'High', 'Resolved', '2025-09-10 05:00:00', '2025-09-15 06:00:00', NULL, NULL, 0, NULL, NULL),
+(101, 3, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Ethernet port damaged', 'Ethernet port damaged', 'Medium', 'Resolved', '2025-09-16 01:15:00', '2025-09-18 02:30:00', NULL, NULL, 0, NULL, NULL),
+(102, 8, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery swollen', 'Battery swollen - safety hazard', 'High', 'Resolved', '2025-09-19 03:00:00', '2025-09-22 08:00:00', NULL, NULL, 0, NULL, NULL),
+(103, 6, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooling failure', 'Cooling system failure', 'High', 'Resolved', '2025-09-23 06:30:00', '2025-09-26 07:00:00', NULL, NULL, 0, NULL, NULL),
+(104, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchscreen issue', 'Touchscreen not calibrated', 'Low', 'Resolved', '2025-09-27 02:00:00', '2025-09-28 03:00:00', NULL, NULL, 0, NULL, NULL),
+(105, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD tray stuck', 'Optical drive tray stuck', 'Low', 'Resolved', '2025-09-29 05:45:00', '2025-09-30 02:00:00', NULL, NULL, 0, NULL, NULL),
+(106, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio crackling', 'Audio crackling - sound card issue', 'Medium', 'Resolved', '2025-09-30 07:00:00', '2025-09-30 08:30:00', NULL, NULL, 0, NULL, NULL),
+(107, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'VGA port damaged', 'VGA port bent pins', 'Low', 'Resolved', '2025-09-30 08:45:00', '2025-09-30 09:30:00', NULL, NULL, 0, NULL, NULL),
+(108, 5, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Capacitor bulging', 'Motherboard capacitor bulging', 'High', 'Resolved', '2025-10-01 01:00:00', '2025-10-07 08:00:00', NULL, NULL, 0, NULL, NULL),
+(109, 3, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM overheating', 'RAM overheating', 'High', 'Resolved', '2025-10-08 02:30:00', '2025-10-12 06:00:00', NULL, NULL, 0, NULL, NULL),
+(110, 8, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'WiFi antenna loose', 'WiFi antenna disconnected', 'Medium', 'Resolved', '2025-10-13 03:15:00', '2025-10-15 05:00:00', NULL, NULL, 0, NULL, NULL),
+(111, 6, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD clicking', 'Hard drive clicking - imminent failure', 'High', 'Resolved', '2025-10-16 00:45:00', '2025-10-20 07:30:00', NULL, NULL, 0, NULL, NULL),
+(112, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight failure', 'Display backlight failure', 'High', 'Resolved', '2025-10-21 05:00:00', '2025-10-24 03:00:00', NULL, NULL, 0, NULL, NULL),
+(113, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard spill', 'Keyboard spill damage', 'Medium', 'Resolved', '2025-10-25 06:30:00', '2025-10-27 02:30:00', NULL, NULL, 0, NULL, NULL),
+(114, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power cable frayed', 'Power cable frayed', 'Medium', 'Resolved', '2025-10-28 01:00:00', '2025-10-29 03:00:00', NULL, NULL, 0, NULL, NULL),
+(115, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DC jack issue', 'Laptop not charging - DC jack issue', 'High', 'Resolved', '2025-10-30 02:45:00', '2025-10-30 07:00:00', NULL, NULL, 0, NULL, NULL),
+(116, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan bearing worn', 'Fan bearing worn out', 'Medium', 'Resolved', '2025-10-30 08:00:00', '2025-10-31 06:00:00', NULL, NULL, 0, NULL, NULL),
+(117, 3, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU dying', 'Graphics glitches - GPU dying', 'High', 'Resolved', '2025-10-31 07:30:00', '2025-10-31 09:00:00', NULL, NULL, 0, NULL, NULL),
+(118, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CMOS battery', 'CMOS battery replacement needed', 'Low', 'Resolved', '2025-10-31 09:15:00', '2025-10-31 10:00:00', NULL, NULL, 0, NULL, NULL),
+(119, 6, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD wear critical', 'SSD wear level critical', 'High', 'Resolved', '2025-11-02 00:30:00', '2025-11-08 08:00:00', NULL, NULL, 0, NULL, NULL),
+(120, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor OSD broken', 'Monitor OSD buttons broken', 'Low', 'Resolved', '2025-11-09 02:00:00', '2025-11-11 03:00:00', NULL, NULL, 0, NULL, NULL),
+(121, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Thermal sensor dead', 'Thermal sensor malfunction', 'Medium', 'Resolved', '2025-11-12 05:30:00', '2025-11-15 06:00:00', NULL, NULL, 0, NULL, NULL),
+(122, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer head clogged', 'Printer head clogged', 'Medium', 'Resolved', '2025-11-16 01:15:00', '2025-11-18 02:30:00', NULL, NULL, 0, NULL, NULL),
+(123, 2, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU memory issue', 'GPU memory artifacts', 'High', 'Resolved', '2025-11-19 03:00:00', '2025-11-23 07:00:00', NULL, NULL, 0, NULL, NULL),
+(124, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case latch broken', 'Case panel latch broken', 'Low', 'Resolved', '2025-11-24 06:00:00', '2025-11-25 02:00:00', NULL, NULL, 0, NULL, NULL),
+(125, 3, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Slot damaged', 'Expansion slot damaged', 'Medium', 'Resolved', '2025-11-26 02:30:00', '2025-11-28 05:00:00', NULL, NULL, 0, NULL, NULL),
+(126, 8, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dust buildup', 'Dust buildup causing overheating', 'Medium', 'Resolved', '2025-11-29 00:45:00', '2025-11-29 08:00:00', NULL, NULL, 0, NULL, NULL),
+(127, 6, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen flickering', 'Screen flickering - inverter issue', 'High', 'Resolved', '2025-11-29 08:30:00', '2025-11-30 06:00:00', NULL, NULL, 0, NULL, NULL),
+(128, 4, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB-C loose', 'USB-C port loose connection', 'Medium', 'Resolved', '2025-11-30 07:00:00', '2025-11-30 09:00:00', NULL, NULL, 0, NULL, NULL),
+(129, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power surge damage', 'Power surge damage', 'High', 'Resolved', '2025-11-30 09:30:00', '2025-11-30 10:30:00', NULL, NULL, 0, NULL, NULL),
+(130, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Pump failure', 'Liquid cooling pump failure', 'High', 'Resolved', '2025-11-30 11:00:00', '2025-11-30 12:00:00', NULL, NULL, 0, NULL, NULL),
+(131, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SMART errors', 'HDD S.M.A.R.T. errors', 'High', 'Resolved', '2025-12-01 01:00:00', '2025-12-06 07:00:00', NULL, NULL, 0, NULL, NULL),
+(132, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Color calibration', 'Monitor color calibration off', 'Low', 'Resolved', '2025-12-07 02:30:00', '2025-12-09 03:00:00', NULL, NULL, 0, NULL, NULL),
+(133, 3, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM timing issues', 'RAM timing issues', 'Medium', 'Resolved', '2025-12-10 05:00:00', '2025-12-13 06:30:00', NULL, NULL, 0, NULL, NULL),
+(134, 8, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard ghosting', 'Keyboard ghosting keys', 'Medium', 'Resolved', '2025-12-14 00:45:00', '2025-12-16 02:00:00', NULL, NULL, 0, NULL, NULL),
+(135, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan speed sensor', 'Fan speed sensor failure', 'Low', 'Resolved', '2025-12-17 03:15:00', '2025-12-19 05:00:00', NULL, NULL, 0, NULL, NULL),
+(136, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth drops', 'Bluetooth connectivity drops', 'Low', 'Resolved', '2025-12-20 06:30:00', '2025-12-22 03:00:00', NULL, NULL, 0, NULL, NULL),
+(137, 7, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU aging', 'PSU capacitor aging', 'High', 'Resolved', '2025-12-23 01:00:00', '2025-12-27 08:00:00', NULL, NULL, 0, NULL, NULL),
+(138, 9, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'No display signal', 'Display port no signal', 'Medium', 'Resolved', '2025-12-28 02:00:00', '2025-12-29 03:30:00', NULL, NULL, 0, NULL, NULL),
+(139, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Privacy shutter', 'Webcam privacy shutter stuck', 'Low', 'Resolved', '2025-12-29 05:00:00', '2025-12-30 02:00:00', NULL, NULL, 0, NULL, NULL),
+(140, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU thermal paste', 'GPU thermal paste degraded', 'High', 'Resolved', '2025-12-30 03:00:00', '2025-12-30 08:00:00', NULL, NULL, 0, NULL, NULL),
+(141, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker distortion', 'Speaker distortion at high volume', 'Low', 'Resolved', '2025-12-30 08:30:00', '2025-12-31 02:00:00', NULL, NULL, 0, NULL, NULL),
+(142, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery health low', 'Battery health below 50%', 'Medium', 'Resolved', '2025-12-31 03:00:00', '2025-12-31 06:00:00', NULL, NULL, 0, NULL, NULL),
+(143, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Trackpad clicking', 'Trackpad clicking mechanism broken', 'Medium', 'Resolved', '2025-12-31 07:00:00', '2025-12-31 09:00:00', NULL, NULL, 0, NULL, NULL),
+(144, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD vibration', 'Hard drive vibration excessive', 'Medium', 'Resolved', '2025-12-31 10:00:00', '2025-12-31 12:00:00', NULL, NULL, 0, NULL, NULL),
+(145, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor no backlight', 'Monitor no backlight', 'High', 'Open', '2026-01-02 01:00:00', '2026-01-02 01:00:00', NULL, NULL, 0, NULL, NULL),
+(146, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM not detected', 'RAM not detected in slot 2', 'High', 'In Progress', '2026-01-03 02:30:00', '2026-01-03 02:30:00', NULL, NULL, 0, NULL, NULL),
+(147, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooler loose', 'CPU cooler loose mounting', 'Medium', 'Resolved', '2026-01-04 03:00:00', '2026-01-06 06:00:00', NULL, NULL, 0, NULL, NULL),
+(148, 5, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver crash', 'Network card driver crash', 'Medium', 'Open', '2026-01-07 05:30:00', '2026-01-07 05:30:00', NULL, NULL, 0, NULL, NULL),
+(149, 3, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Toner low', 'Printer toner low warning', 'Low', 'Resolved', '2026-01-08 00:45:00', '2026-01-09 02:00:00', NULL, NULL, 0, NULL, NULL),
+(150, 8, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB disconnect', 'USB device keeps disconnecting', 'Medium', 'In Progress', '2026-01-10 06:00:00', '2026-01-10 06:00:00', NULL, NULL, 0, NULL, NULL),
+(151, 6, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Resolution resets', 'Screen resolution resets on reboot', 'Low', 'Open', '2026-01-12 01:15:00', '2026-01-12 01:15:00', NULL, NULL, 0, NULL, NULL),
+(152, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack issue', 'Audio jack intermittent connection', 'Low', 'Resolved', '2026-01-13 02:30:00', '2026-01-14 03:00:00', NULL, NULL, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1821,7 +1964,16 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (108, 3, '2025-12-29 13:15:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (109, 5, '2026-01-03 03:12:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (110, 2, '2026-01-03 03:12:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
-(111, 3, '2026-01-04 06:11:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop');
+(111, 3, '2026-01-04 06:11:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(112, 3, '2026-01-04 13:08:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(113, 3, '2026-01-10 05:12:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(114, 5, '2026-01-14 03:48:41', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(115, 3, '2026-01-14 03:52:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(116, 1, '2026-01-14 03:54:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(117, 3, '2026-01-14 04:13:33', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(118, 2, '2026-01-14 05:26:08', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(119, 1, '2026-01-14 05:26:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(120, 2, '2026-01-14 08:23:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -1930,14 +2082,16 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `relat
 (123, 5, 'Ticket #48 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58'),
 (124, 2, 'New Ticket Assigned #48', 'You have been assigned to a hardware ticket: \"dsads\". Please review and take action.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58'),
 (125, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:33'),
-(126, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 0, '2025-12-04 12:43:37'),
+(126, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 1, '2025-12-04 12:43:37'),
 (127, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:39'),
-(128, 5, 'Ticket #49 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 49, 0, '2025-12-05 15:23:11'),
+(128, 5, 'Ticket #49 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 49, 1, '2025-12-05 15:23:11'),
 (129, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DSADSA', 'info', 'issue', 49, 0, '2025-12-05 15:23:11'),
-(130, 5, 'Ticket #50 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 50, 0, '2025-12-24 13:32:34'),
+(130, 5, 'Ticket #50 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 50, 1, '2025-12-24 13:32:34'),
 (131, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DAS', 'info', 'issue', 50, 0, '2025-12-24 13:32:34'),
-(132, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 0, '2025-12-24 13:33:00'),
-(133, 2, 'New Ticket Assigned #50', 'You have been assigned to a hardware ticket: \"DAS\". Please review and take action.', 'info', 'issue', 50, 0, '2025-12-24 13:33:00');
+(132, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 1, '2025-12-24 13:33:00'),
+(133, 2, 'New Ticket Assigned #50', 'You have been assigned to a hardware ticket: \"DAS\". Please review and take action.', 'info', 'issue', 50, 0, '2025-12-24 13:33:00'),
+(134, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 0, '2026-01-14 03:52:30'),
+(135, 2, 'New Ticket Assigned #50', 'You have been assigned to a hardware ticket: \"DAS\". Please review and take action.', 'info', 'issue', 50, 0, '2026-01-14 03:52:30');
 
 -- --------------------------------------------------------
 
@@ -2116,11 +2270,11 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2025-12-17 20:06:15', '2025-12-17 20:06:15', NULL, NULL, NULL, NULL, NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-01-03 11:12:38', '2026-01-03 11:12:38', NULL, NULL, NULL, NULL, NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-01-04 14:11:14', '2026-01-04 14:11:14', NULL, NULL, NULL, NULL, NULL),
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-01-14 13:26:16', '2026-01-14 13:26:16', NULL, NULL, NULL, NULL, NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-01-14 16:23:16', '2026-01-14 16:23:16', NULL, NULL, NULL, NULL, NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-01-14 12:13:33', '2026-01-14 12:13:33', NULL, NULL, NULL, NULL, NULL),
 (4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL, NULL, NULL, NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-01-03 11:12:10', '2026-01-03 11:12:10', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-01-14 11:48:41', '2026-01-14 11:48:41', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
 (6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL, NULL, NULL, NULL, NULL),
 (29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL, NULL, NULL, NULL, NULL),
 (30, '22-0350', '$2y$10$cNGBGPw7BYAQ.9d6GdKvXuYXzYdVo2XwfJGo7nMfGgfjNs.5bBv3O', 'Kim F. Gamot', 'kimgamot@gmail.com', 'Student', 'Active', '2025-12-17 20:09:16', '2025-12-17 20:09:54', '2025-12-17 20:09:54', NULL, 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6');
@@ -2277,13 +2431,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=186;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=216;
 
 --
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2021;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2023;
 
 --
 -- AUTO_INCREMENT for table `asset_borrowing`
@@ -2307,7 +2461,7 @@ ALTER TABLE `asset_categories`
 -- AUTO_INCREMENT for table `asset_history`
 --
 ALTER TABLE `asset_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT for table `asset_maintenance`
@@ -2331,19 +2485,19 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT for table `issues`
 --
 ALTER TABLE `issues`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
 
 --
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`

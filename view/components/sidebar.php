@@ -45,7 +45,19 @@ $navigation_items = [
             'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',
             'color' => 'blue',
-            'href' => 'analytics.php'
+            'href' => 'analytics.php',
+            'submenu' => [
+                [
+                    'id' => 'overview-analytics',
+                    'label' => 'Overview Analytics',
+                    'href' => 'analytics.php'
+                ],
+                [
+                    'id' => 'predictive-analytics',
+                    'label' => 'Predictive Analytics',
+                    'href' => 'predictive_analytics.php'
+                ]
+            ]
         ]
     ],
     'LaboratoryStaff' => [

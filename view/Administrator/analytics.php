@@ -44,10 +44,10 @@ $staffingGap = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE
 $staffingGapPrevMonth = $conn->query("SELECT COUNT(*) as count FROM asset_borrowing WHERE status = 'Pending' AND borrowed_date < DATE_SUB(NOW(), INTERVAL 1 MONTH)")->fetch_assoc()['count'];
 $staffingGapChange = $staffingGapPrevMonth > 0 ? round((($staffingGap - $staffingGapPrevMonth) / $staffingGapPrevMonth) * 100, 1) : 0;
 
-// License Expirations - Maintenance due
-$licenseExpirations = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetch_assoc()['count'];
-$licenseExpirationsPrevMonth = $conn->query("SELECT COUNT(*) as count FROM assets WHERE next_maintenance_date <= DATE_ADD(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), INTERVAL 30 DAY)")->fetch_assoc()['count'];
-$licenseExpChange = $licenseExpirationsPrevMonth > 0 ? round((($licenseExpirations - $licenseExpirationsPrevMonth) / $licenseExpirationsPrevMonth) * 100, 1) : 0;
+// License Expirations - Maintenance due (column removed)
+$licenseExpirations = 0;
+$licenseExpirationsPrevMonth = 0;
+$licenseExpChange = 0;
 
 // Trending Assets - Last 6 months alert data
 $trendingAlerts = $conn->query("
