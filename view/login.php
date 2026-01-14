@@ -58,8 +58,41 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$
       background-color: #D1D5DB;
     }
   </style>
+
+<script>
+  
+window.onload = function() {
+  const images = [
+    "../assets/images/loginbg1.jpg",
+    "../assets/images/loginbg2.jpg",
+    "../assets/images/loginbg3.jpg",
+    "../assets/images/loginbg4.jpg",
+    "../assets/images/loginbg5.jpg",
+    "../assets/images/loginbg6.jpg"
+  ];
+
+  let currentIndex = 0;
+  const body = document.body;
+
+  function changeBackground() {
+    body.style.backgroundImage = `url('${images[currentIndex]}')`;
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center";
+    body.style.backgroundRepeat = "no-repeat";
+
+    currentIndex = (currentIndex + 1) % images.length;
+  }
+
+  setInterval(changeBackground, 5000);
+  changeBackground();
+};
+
+</script>
+
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 bg-gray-100 font-[Poppins]" style="background-image: url('../assets/images/image 7.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="relative min-h-screen flex items-center justify-center p-6 bg-gray-100 font-[Poppins]"
+      style="background-image: url('../assets/images/loginbg1.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+      <div class="absolute inset-0 bg-[#1E3A8A] opacity-40 z-0"></div>
   <div class="relative w-full max-w-md">
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
