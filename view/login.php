@@ -57,10 +57,35 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$
     .tab-button:not(.active):hover {
       background-color: #D1D5DB;
     }
+
+       /* Background slideshow layers */
+    .bg-slideshow {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1; /* behind everything */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 3s ease-in-out;
+    }
+    .bg-slideshow.active {
+      opacity: 1;
+    }
+
+    /* Optional overlay tint */
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: #694cc9ff;
+      opacity: 0.09;
+      z-index: 0;
+    }
   </style>
 
 <script>
-  
+
 window.onload = function() {
   const images = [
     "../assets/images/loginbg1.jpg",
@@ -93,6 +118,8 @@ window.onload = function() {
 <body class="relative min-h-screen flex items-center justify-center p-6 bg-gray-100 font-[Poppins]"
       style="background-image: url('../assets/images/loginbg1.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
       <div class="absolute inset-0 bg-[#1E3A8A] opacity-40 z-0"></div>
+
+      <!-- Background layers --> <div id="bg1" class="bg-slideshow active"></div> <div id="bg2" class="bg-slideshow"></div> <div class="bg-overlay"></div>
   <div class="relative w-full max-w-md">
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
