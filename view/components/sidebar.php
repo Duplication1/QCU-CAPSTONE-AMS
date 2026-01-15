@@ -56,6 +56,11 @@ $navigation_items = [
                     'id' => 'predictive-analytics',
                     'label' => 'Predictive Analytics',
                     'href' => 'predictive_analytics.php'
+                ],
+                [
+                    'id' => 'building-analytics',
+                    'label' => 'Building Analytics',
+                    'href' => 'building_analytics.php'
                 ]
             ]
         ]
