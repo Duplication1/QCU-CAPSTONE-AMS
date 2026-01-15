@@ -119,7 +119,7 @@ window.onload = function() {
       style="background-image: url('../assets/images/loginbg1.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
       <div class="absolute inset-0 bg-[#1E3A8A] opacity-40 z-0"></div>
 
-      <!-- Background layers --> <div id="bg1" class="bg-slideshow active"></div> <div id="bg2" class="bg-slideshow"></div> <div class="bg-overlay"></div>
+  <!-- Background layers --> <div id="bg1" class="bg-slideshow active"></div> <div id="bg2" class="bg-slideshow"></div> <div class="bg-overlay"></div>
   <div class="relative w-full max-w-md">
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">

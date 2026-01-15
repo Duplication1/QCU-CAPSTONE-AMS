@@ -18,11 +18,29 @@ include '../components/layout_header.php';
 
 <!-- Main Content -->
 <main class="p-6 bg-gray-50 min-h-screen">
+
     <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md p-6 mb-6" style="background: linear-gradient(to right, #2563eb, #1d4ed8);">
-        <h2 class="text-2xl font-bold text-white" style="color: white;">Welcome, <?php echo htmlspecialchars($_SESSION['full_name']); ?>!</h2>
-        <p class="text-blue-100 mt-2" style="color: #dbeafe;">Manage equipment maintenance, repairs, and ensure optimal asset performance.</p>
-    </div>
+
+<div class="bg-white rounded-lg shadow-sm p-5 mb-6 flex items-center gap-3">
+  <!-- Icon (Heroicon: Wrench / Cog style) -->
+<svg xmlns="http://www.w3.org/2000/svg" 
+     class="h-8 w-8 text-[#1E3A8A]" 
+     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+        d="M10.325 4.317c.426-1.756 2.924-2.09 3.9-.563l.149.25a2.5 2.5 0 01-.563 3.9l-1.414 1.414a2.5 2.5 0 01-3.9-.563l-.25-.149a2.5 2.5 0 01.563-3.9l1.414-1.414zM19.071 19.071a2.5 2.5 0 01-3.9.563l-.25-.149a2.5 2.5 0 01-.563-3.9l1.414-1.414a2.5 2.5 0 013.9.563l.149.25a2.5 2.5 0 01-.563 3.9l-1.414 1.414z" />
+</svg>
+
+  <!-- Text -->
+  <div>
+    <h2 class="text-xl font-bold text-[#1E3A8A]">
+      Welcome, <?php echo htmlspecialchars($_SESSION['full_name']); ?>!
+    </h2>
+    <p class="text-sm mt-1 text-[#1E3A8A]">
+      Manage equipment maintenance, repairs, and ensure optimal asset performance.
+    </p>
+  </div>
+</div>
+
 
     <!-- Dashboard Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -123,41 +141,44 @@ include '../components/layout_header.php';
         </div>
     </div>
 
-    <!-- Dashboard Overview -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <!-- Work Queue -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Work Queue</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Pending Maintenance</span>
-                    <span class="text-xl font-bold text-orange-600">--</span>
-                </div>
-                <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                    <span class="text-sm text-gray-600">Open Repair Requests</span>
-                    <span class="text-xl font-bold text-red-600">--</span>
-                </div>
-                <div class="flex justify-between items-center py-3">
-                    <span class="text-sm text-gray-600">Inspections Due</span>
-                    <span class="text-xl font-bold text-blue-600">--</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
-            <div class="space-y-3">
-                <div class="flex items-start p-3 bg-gray-50 rounded-lg">
-                    <div class="w-2 h-2 bg-green-500 rounded-full mr-3 mt-1.5"></div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800">Technician Portal Access</p>
-                        <p class="text-sm text-gray-600 mt-1">Ready to begin maintenance tasks</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Dashboard Overview -->
+<div class="flex flex-col lg:flex-row gap-4 mb-6">
+  <!-- Work Queue (60%) -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 w-full lg:flex-[0.68]">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Work Queue</h3>
+    <div class="space-y-3">
+      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+        <span class="text-sm text-gray-600">Pending Maintenance</span>
+        <span class="text-xl font-bold text-orange-600">--</span>
+      </div>
+      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+        <span class="text-sm text-gray-600">Open Repair Requests</span>
+        <span class="text-xl font-bold text-red-600">--</span>
+      </div>
+      <div class="flex justify-between items-center py-3">
+        <span class="text-sm text-gray-600">Inspections Due</span>
+        <span class="text-xl font-bold text-blue-600">--</span>
+      </div>
     </div>
+  </div>
+
+<!-- Recent Activity -->
+<div class="bg-[#1E3A8A] rounded-lg shadow-sm border border-gray-200 p-5 w-full lg:flex-[0.32]">
+  <h3 class="text-lg font-semibold text-white mb-4">Recent Activity</h3><hr>
+  <div class="space-y-3">
+    <div class="flex items-start p-3 bg-blue-900 rounded-lg 
+                hover:bg-gray-200 hover:bg-opacity-30 
+                transition-colors duration-200">
+      <div class="w-2 h-2 bg-green-400 rounded-full mr-3 mt-1.5"></div>
+      <div>
+        <p class="text-sm font-semibold text-white">Technician Portal Access</p>
+        <p class="text-sm text-blue-100 mt-1">Ready to begin maintenance tasks</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
 
     <!-- Priority Tasks -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
