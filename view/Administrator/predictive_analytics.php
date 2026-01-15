@@ -28,9 +28,9 @@ include '../components/layout_header.php';
                 display: inline-block;
                 width: 20px;
                 height: 20px;
-                border: 3px solid rgba(30, 58, 138, 0.3);
+                border: 3px solid rgba(99, 102, 241, 0.3);
                 border-radius: 50%;
-                border-top-color: #1E3A8A;
+                border-top-color: #6366f1;
                 animation: spin 1s ease-in-out infinite;
             }
             @keyframes spin {
@@ -51,7 +51,7 @@ include '../components/layout_header.php';
                 margin-left: 4px;
             }
             .tooltip-icon:hover {
-                background: #1E3A8A;
+                background: #6366f1;
                 color: white;
             }
             .info-badge {
@@ -81,7 +81,7 @@ include '../components/layout_header.php';
                         <p class="text-sm text-gray-500 mt-2" id="loadingSubtext">Analyzing your asset data...</p>
                         <div class="mt-4">
                             <div class="w-64 mx-auto bg-gray-200 rounded-full h-2">
-                                <div id="progressBar" class="bg-blue-900 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                             </div>
                             <p class="text-xs text-gray-500 mt-2" id="progressText">0%</p>
                         </div>
@@ -107,14 +107,14 @@ include '../components/layout_header.php';
                             <p class="text-xs text-gray-600 mt-4">Assets likely to fail soon - check these first!</p>
                         </div>
 
-                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-blue-900 p-6">
+                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-6">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-600 flex items-center">
                                         Overall Health Score
                                     </p>
                                     <div class="flex items-baseline mt-2">
-                                        <p id="avgConditionScore" class="text-3xl font-bold text-blue-900">-</p>
+                                        <p id="avgConditionScore" class="text-3xl font-bold text-blue-600">-</p>
                                         <p class="text-lg text-gray-500 ml-1">/100</p>
                                     </div>
                                 </div>
@@ -354,7 +354,7 @@ include '../components/layout_header.php';
                             </ul>
                         </div>
                         <div class="mt-6 space-x-3">
-                            <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-900 hover:bg-blue-950 text-white rounded-lg">
+                            <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
                                 Try Again
                             </button>
                             <button onclick="window.location.href='index.php'" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
@@ -386,7 +386,7 @@ include '../components/layout_header.php';
                            avgCondition >= 60 ? 'Good - Most assets doing fine' :
                            avgCondition >= 40 ? 'Fair - Some attention needed' :
                            'Poor - Many assets need help!';
-            let healthColor = avgCondition >= 80 ? 'text-green-600' : avgCondition >= 60 ? 'text-blue-900' : avgCondition >= 40 ? 'text-yellow-600' : 'text-red-600';
+            let healthColor = avgCondition >= 80 ? 'text-green-600' : avgCondition >= 60 ? 'text-blue-600' : avgCondition >= 40 ? 'text-yellow-600' : 'text-red-600';
             document.getElementById('healthExplanation').textContent = healthText;
             document.getElementById('healthExplanation').className = `text-xs font-medium mt-1 ${healthColor}`;
             
@@ -476,13 +476,13 @@ include '../components/layout_header.php';
                         {
                             label: 'Historical',
                             data: historicalScores,
-                            borderColor: '#1E3A8A',
-                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 3,
                             tension: 0.4,
                             fill: true,
                             pointRadius: 5,
-                            pointBackgroundColor: '#1E3A8A'
+                            pointBackgroundColor: '#3b82f6'
                         },
                         {
                             label: 'Predicted',
@@ -563,7 +563,7 @@ include '../components/layout_header.php';
                         {
                             label: 'Historical Issues',
                             data: historicalCounts,
-                            backgroundColor: '#1E3A8A',
+                            backgroundColor: '#8b5cf6',
                             borderRadius: 6
                         },
                         {
@@ -663,7 +663,7 @@ include '../components/layout_header.php';
                         {
                             label: 'Asset Count',
                             data: data.map(d => d.count),
-                            backgroundColor: '#1E3A8A',
+                            backgroundColor: '#a78bfa',
                             borderRadius: 6,
                             yAxisID: 'y'
                         },
