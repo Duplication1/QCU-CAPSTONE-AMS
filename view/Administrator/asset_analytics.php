@@ -49,6 +49,10 @@ if (!$room) {
 // Search and pagination
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $show = isset($_GET['show']) ? $_GET['show'] : '25';
+$filter_status = isset($_GET['status']) ? $_GET['status'] : '';
+$filter_condition = isset($_GET['condition']) ? $_GET['condition'] : '';
+$filter_risk = isset($_GET['risk']) ? $_GET['risk'] : '';
+$filter_borrowable = isset($_GET['borrowable']) ? $_GET['borrowable'] : '';
 $limit = ($show === 'all') ? PHP_INT_MAX : max(1, intval($show));
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $limit;
@@ -67,6 +71,25 @@ if (!empty($search)) {
     $types .= 'sss';
 }
 
+if (!empty($filter_status)) {
+    $count_query .= " AND a.status = ?";
+    $params[] = $filter_status;
+    $types .= 's';
+}
+
+if (!empty($filter_condition)) {
+    $count_query .= " AND a.condition = ?";
+    $params[] = $filter_condition;
+    $types .= 's';
+}
+
+if (!empty($filter_borrowable)) {
+    $is_borrowable_val = ($filter_borrowable === 'yes') ? 1 : 0;
+    $count_query .= " AND a.is_borrowable = ?";
+    $params[] = $is_borrowable_val;
+    $types .= 'i';
+}
+
 $count_stmt = $conn->prepare($count_query);
 $count_stmt->bind_param($types, ...$params);
 $count_stmt->execute();
@@ -82,7 +105,10 @@ $query = "SELECT
     a.id,
     a.asset_tag,
     a.asset_name,
-    a.category,
+    COALESCE(ac.name, a.category) as category,
+    ac.end_of_life,
+    DATE_ADD(a.created_at, INTERVAL COALESCE(ac.end_of_life, 5) YEAR) as replacement_date,
+    TIMESTAMPDIFF(MONTH, NOW(), DATE_ADD(a.created_at, INTERVAL COALESCE(ac.end_of_life, 5) YEAR)) as months_remaining,
     a.status,
     a.condition,
     a.created_at as date_acquired,
@@ -93,8 +119,15 @@ $query = "SELECT
     COUNT(DISTINCT CASE WHEN ab.status = 'returned' THEN ab.id END) as returned_borrowings,
     COUNT(DISTINCT ah.id) as history_count,
     MAX(ah.created_at) as last_change,
-    (SELECT COUNT(*) FROM issues WHERE component_asset_id = a.id) as asset_issues
+    (SELECT COUNT(*) FROM issues WHERE component_asset_id = a.id) as asset_issues,
+    CASE 
+        WHEN a.condition = 'Poor' OR a.condition = 'Non-Functional' THEN 'Critical'
+        WHEN a.condition = 'Fair' AND (SELECT COUNT(*) FROM issues WHERE component_asset_id = a.id AND status != 'resolved') > 0 THEN 'High'
+        WHEN a.condition = 'Fair' OR (SELECT COUNT(*) FROM issues WHERE component_asset_id = a.id AND status != 'resolved') > 0 THEN 'Medium'
+        ELSE 'Low'
+    END as risk_level
 FROM assets a
+LEFT JOIN asset_categories ac ON a.category = ac.id
 LEFT JOIN asset_borrowing ab ON a.id = ab.asset_id
 LEFT JOIN asset_history ah ON a.id = ah.asset_id
 WHERE a.room_id = ?";
@@ -110,7 +143,35 @@ if (!empty($search)) {
     $types .= 'sss';
 }
 
-$query .= " GROUP BY a.id ORDER BY a.asset_tag ASC LIMIT ? OFFSET ?";
+if (!empty($filter_status)) {
+    $query .= " AND a.status = ?";
+    $params[] = $filter_status;
+    $types .= 's';
+}
+
+if (!empty($filter_condition)) {
+    $query .= " AND a.condition = ?";
+    $params[] = $filter_condition;
+    $types .= 's';
+}
+
+if (!empty($filter_borrowable)) {
+    $is_borrowable_val = ($filter_borrowable === 'yes') ? 1 : 0;
+    $query .= " AND a.is_borrowable = ?";
+    $params[] = $is_borrowable_val;
+    $types .= 'i';
+}
+
+$query .= " GROUP BY a.id";
+
+// Apply risk level filter after GROUP BY using HAVING
+if (!empty($filter_risk)) {
+    $query .= " HAVING risk_level = ?";
+    $params[] = $filter_risk;
+    $types .= 's';
+}
+
+$query .= " ORDER BY a.asset_tag ASC LIMIT ? OFFSET ?";
 $params[] = $limit;
 $params[] = $offset;
 $types .= 'ii';
@@ -250,6 +311,62 @@ main {
                     <label class="text-sm text-gray-700">entries</label>
                 </div>
             </div>
+            
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filterStatus" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="Available" <?= $filter_status == 'Available' ? 'selected' : '' ?>>Available</option>
+                        <option value="In Use" <?= $filter_status == 'In Use' ? 'selected' : '' ?>>In Use</option>
+                        <option value="Under Maintenance" <?= $filter_status == 'Under Maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
+                        <option value="Retired" <?= $filter_status == 'Retired' ? 'selected' : '' ?>>Retired</option>
+                        <option value="Disposed" <?= $filter_status == 'Disposed' ? 'selected' : '' ?>>Disposed</option>
+                        <option value="Lost" <?= $filter_status == 'Lost' ? 'selected' : '' ?>>Lost</option>
+                        <option value="Broken" <?= $filter_status == 'Broken' ? 'selected' : '' ?>>Broken</option>
+                        <option value="Archive" <?= $filter_status == 'Archive' ? 'selected' : '' ?>>Archive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Condition</label>
+                    <select id="filterCondition" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Conditions</option>
+                        <option value="Excellent" <?= $filter_condition == 'Excellent' ? 'selected' : '' ?>>Excellent</option>
+                        <option value="Good" <?= $filter_condition == 'Good' ? 'selected' : '' ?>>Good</option>
+                        <option value="Fair" <?= $filter_condition == 'Fair' ? 'selected' : '' ?>>Fair</option>
+                        <option value="Poor" <?= $filter_condition == 'Poor' ? 'selected' : '' ?>>Poor</option>
+                        <option value="Non-Functional" <?= $filter_condition == 'Non-Functional' ? 'selected' : '' ?>>Non-Functional</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Risk Level</label>
+                    <select id="filterRisk" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Risk Levels</option>
+                        <option value="Critical" <?= $filter_risk == 'Critical' ? 'selected' : '' ?>>Critical</option>
+                        <option value="High" <?= $filter_risk == 'High' ? 'selected' : '' ?>>High</option>
+                        <option value="Medium" <?= $filter_risk == 'Medium' ? 'selected' : '' ?>>Medium</option>
+                        <option value="Low" <?= $filter_risk == 'Low' ? 'selected' : '' ?>>Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Borrowable</label>
+                    <select id="filterBorrowable" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Assets</option>
+                        <option value="yes" <?= $filter_borrowable == 'yes' ? 'selected' : '' ?>>Borrowable Only</option>
+                        <option value="no" <?= $filter_borrowable == 'no' ? 'selected' : '' ?>>Non-Borrowable Only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <?php if (!empty($filter_status) || !empty($filter_condition) || !empty($filter_risk) || !empty($filter_borrowable)): ?>
+            <div class="mb-3">
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm">
+                    <i class="fa-solid fa-filter-circle-xmark mr-2"></i>Clear All Filters
+                </button>
+            </div>
+            <?php endif; ?>
+            
             <form method="GET" action="" class="flex gap-3">
                 <input type="hidden" name="room_id" value="<?= $room_id ?>">
                 <input type="hidden" name="show" value="<?= htmlspecialchars($show) ?>">
@@ -280,8 +397,10 @@ main {
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Time Remaining</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Borrowings</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Issues</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">History</th>
@@ -291,7 +410,7 @@ main {
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php if (empty($assets)): ?>
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="10" class="px-6 py-12 text-center">
                                     <i class="fa-solid fa-box-open text-6xl text-gray-300 mb-4"></i>
                                     <p class="text-gray-500 text-lg">No assets found in this room</p>
                                 </td>
@@ -309,7 +428,41 @@ main {
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <span class="text-sm text-gray-700"><?= htmlspecialchars($asset['category']) ?></span>
+                                        <span class="text-sm text-gray-700"><?= htmlspecialchars($asset['category'] ?? 'N/A') ?></span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <?php
+                                        $months_remaining = $asset['months_remaining'];
+                                        $replacement_date = $asset['replacement_date'];
+                                        
+                                        if ($months_remaining !== null) {
+                                            if ($months_remaining < 0) {
+                                                $months_overdue = abs($months_remaining);
+                                                echo '<div class="text-sm font-semibold text-red-600">Overdue</div>';
+                                                echo '<div class="text-xs text-gray-500">' . $months_overdue . ' month' . ($months_overdue != 1 ? 's' : '') . ' past EOL</div>';
+                                            } elseif ($months_remaining <= 3) {
+                                                echo '<div class="text-sm font-semibold text-orange-600">' . $months_remaining . ' months</div>';
+                                                echo '<div class="text-xs text-gray-500">Replace soon</div>';
+                                            } elseif ($months_remaining <= 12) {
+                                                $years = floor($months_remaining / 12);
+                                                $remaining_months = $months_remaining % 12;
+                                                echo '<div class="text-sm font-semibold text-yellow-600">';
+                                                if ($years > 0) echo $years . ' yr ' . $remaining_months . ' mo';
+                                                else echo $months_remaining . ' months';
+                                                echo '</div>';
+                                                echo '<div class="text-xs text-gray-500">' . date('M Y', strtotime($replacement_date)) . '</div>';
+                                            } else {
+                                                $years = floor($months_remaining / 12);
+                                                $remaining_months = $months_remaining % 12;
+                                                echo '<div class="text-sm font-semibold text-green-600">';
+                                                echo $years . ' yr' . ($remaining_months > 0 ? ' ' . $remaining_months . ' mo' : '');
+                                                echo '</div>';
+                                                echo '<div class="text-xs text-gray-500">' . date('M Y', strtotime($replacement_date)) . '</div>';
+                                            }
+                                        } else {
+                                            echo '<span class="text-sm text-gray-400">N/A</span>';
+                                        }
+                                        ?>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span class="badge badge-<?= strtolower($asset['status']) ?>">
@@ -319,6 +472,26 @@ main {
                                     <td class="px-6 py-4 text-center">
                                         <span class="badge badge-<?= strtolower($asset['condition']) ?>">
                                             <?= ucfirst($asset['condition']) ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <?php
+                                        $risk_level = $asset['risk_level'];
+                                        $risk_colors = [
+                                            'Critical' => 'bg-red-100 text-red-800 border-red-200',
+                                            'High' => 'bg-orange-100 text-orange-800 border-orange-200',
+                                            'Medium' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                            'Low' => 'bg-green-100 text-green-800 border-green-200'
+                                        ];
+                                        $risk_icons = [
+                                            'Critical' => 'fa-exclamation-triangle',
+                                            'High' => 'fa-exclamation-circle',
+                                            'Medium' => 'fa-info-circle',
+                                            'Low' => 'fa-check-circle'
+                                        ];
+                                        ?>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border <?= $risk_colors[$risk_level] ?>">
+                                            <i class="fa-solid <?= $risk_icons[$risk_level] ?> mr-1"></i><?= $risk_level ?>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
@@ -375,14 +548,14 @@ main {
                 </div>
                 <div class="flex gap-2">
                     <?php if ($page > 1): ?>
-                        <a href="?room_id=<?= $room_id ?>&page=<?= $page - 1 ?>&show=<?= urlencode($show) ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                        <a href="?room_id=<?= $room_id ?>&page=<?= $page - 1 ?>&show=<?= urlencode($show) ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($filter_status) ? '&status=' . urlencode($filter_status) : '' ?><?= !empty($filter_condition) ? '&condition=' . urlencode($filter_condition) : '' ?><?= !empty($filter_risk) ? '&risk=' . urlencode($filter_risk) : '' ?><?= !empty($filter_borrowable) ? '&borrowable=' . urlencode($filter_borrowable) : '' ?>" 
                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <i class="fa-solid fa-chevron-left mr-1"></i>Previous
                         </a>
                     <?php endif; ?>
                     
                     <?php if ($page < $total_pages): ?>
-                        <a href="?room_id=<?= $room_id ?>&page=<?= $page + 1 ?>&show=<?= urlencode($show) ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                        <a href="?room_id=<?= $room_id ?>&page=<?= $page + 1 ?>&show=<?= urlencode($show) ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($filter_status) ? '&status=' . urlencode($filter_status) : '' ?><?= !empty($filter_condition) ? '&condition=' . urlencode($filter_condition) : '' ?><?= !empty($filter_risk) ? '&risk=' . urlencode($filter_risk) : '' ?><?= !empty($filter_borrowable) ? '&borrowable=' . urlencode($filter_borrowable) : '' ?>" 
                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             Next<i class="fa-solid fa-chevron-right ml-1"></i>
                         </a>
@@ -407,6 +580,41 @@ function changeShowEntries(value) {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.set('show', value);
     urlParams.set('page', '1'); // Reset to first page
+    window.location.search = urlParams.toString();
+}
+
+// Apply filters
+function applyFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = document.getElementById('filterStatus').value;
+    const condition = document.getElementById('filterCondition').value;
+    const risk = document.getElementById('filterRisk').value;
+    const borrowable = document.getElementById('filterBorrowable').value;
+    
+    // Remove existing filter params
+    urlParams.delete('status');
+    urlParams.delete('condition');
+    urlParams.delete('risk');
+    urlParams.delete('borrowable');
+    
+    // Add new filter params if they have values
+    if (status) urlParams.set('status', status);
+    if (condition) urlParams.set('condition', condition);
+    if (risk) urlParams.set('risk', risk);
+    if (borrowable) urlParams.set('borrowable', borrowable);
+    
+    urlParams.set('page', '1'); // Reset to first page
+    window.location.search = urlParams.toString();
+}
+
+// Clear all filters
+function clearFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete('status');
+    urlParams.delete('condition');
+    urlParams.delete('risk');
+    urlParams.delete('borrowable');
+    urlParams.set('page', '1');
     window.location.search = urlParams.toString();
 }
 
