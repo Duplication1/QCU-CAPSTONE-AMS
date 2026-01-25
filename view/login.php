@@ -68,7 +68,7 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$
       background-position: center;
       background-repeat: no-repeat;
       opacity: 0;
-      transition: opacity 3s ease-in-out;
+      transition: opacity 1.5s ease-in-out;
     }
     .bg-slideshow.active {
       opacity: 1;
@@ -81,6 +81,39 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$
       background-color: #694cc9ff;
       opacity: 0.09;
       z-index: 0;
+    }
+
+    /* Slideshow indicators */
+    .slideshow-indicators {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .indicator-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .indicator-dot:hover {
+      background-color: rgba(255, 255, 255, 0.7);
+      transform: scale(1.2);
+    }
+
+    .indicator-dot.active {
+      background-color: #1E3A8A;
+      border-color: white;
+      transform: scale(1.3);
     }
   </style>
 
@@ -97,19 +130,69 @@ window.onload = function() {
   ];
 
   let currentIndex = 0;
-  const body = document.body;
+  let autoPlayInterval;
+  const bg1 = document.getElementById('bg1');
+  const bg2 = document.getElementById('bg2');
+  let activeBg = bg1;
+  let inactiveBg = bg2;
 
-  function changeBackground() {
-    body.style.backgroundImage = `url('${images[currentIndex]}')`;
-    body.style.backgroundSize = "cover";
-    body.style.backgroundPosition = "center";
-    body.style.backgroundRepeat = "no-repeat";
+  // Set initial background
+  bg1.style.backgroundImage = `url('${images[0]}')`;
+  bg1.classList.add('active');
 
-    currentIndex = (currentIndex + 1) % images.length;
+  function updateIndicators() {
+    document.querySelectorAll('.indicator-dot').forEach((dot, index) => {
+      if (index === currentIndex) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
   }
 
-  setInterval(changeBackground, 5000);
-  changeBackground();
+  function changeBackground(index = null) {
+    if (index !== null) {
+      currentIndex = index;
+    } else {
+      currentIndex = (currentIndex + 1) % images.length;
+    }
+
+    // Prepare the inactive background with the new image
+    inactiveBg.style.backgroundImage = `url('${images[currentIndex]}')`;
+    
+    // Fade out active, fade in inactive
+    activeBg.classList.remove('active');
+    inactiveBg.classList.add('active');
+    
+    // Swap references
+    [activeBg, inactiveBg] = [inactiveBg, activeBg];
+    
+    // Update indicators
+    updateIndicators();
+  }
+
+  function startAutoPlay() {
+    autoPlayInterval = setInterval(() => changeBackground(), 5000);
+  }
+
+  function stopAutoPlay() {
+    clearInterval(autoPlayInterval);
+  }
+
+  function goToSlide(index) {
+    stopAutoPlay();
+    changeBackground(index);
+    startAutoPlay();
+  }
+
+  // Initialize indicators
+  updateIndicators();
+  
+  // Start auto-play
+  startAutoPlay();
+
+  // Expose goToSlide function globally for onclick handlers
+  window.goToSlide = goToSlide;
 };
 
 </script>
@@ -120,6 +203,17 @@ window.onload = function() {
       <div class="absolute inset-0 bg-[#1E3A8A] opacity-40 z-0"></div>
 
   <!-- Background layers --> <div id="bg1" class="bg-slideshow active"></div> <div id="bg2" class="bg-slideshow"></div> <div class="bg-overlay"></div>
+  
+  <!-- Slideshow Indicators -->
+  <div class="slideshow-indicators">
+    <div class="indicator-dot active" onclick="goToSlide(0)"></div>
+    <div class="indicator-dot" onclick="goToSlide(1)"></div>
+    <div class="indicator-dot" onclick="goToSlide(2)"></div>
+    <div class="indicator-dot" onclick="goToSlide(3)"></div>
+    <div class="indicator-dot" onclick="goToSlide(4)"></div>
+    <div class="indicator-dot" onclick="goToSlide(5)"></div>
+  </div>
+
   <div class="relative w-full max-w-md">
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">

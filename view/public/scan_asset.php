@@ -816,7 +816,7 @@ if ($asset_id <= 0) {
                 });
             }
             
-            // Clear PC selection
+            // Clear PC selection   
             pcSelect.value = '';
             pcSelect.disabled = true;
             pcSelect.innerHTML = '<option value="">Select Room First</option>';
