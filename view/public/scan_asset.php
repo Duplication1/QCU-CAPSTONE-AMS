@@ -309,14 +309,35 @@ if ($asset_id <= 0) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: 
+                linear-gradient(180deg, rgba(0, 4, 255, 0) 0%, rgba(0, 4, 255, 1) 100%),
+                url('../../assets/images/lab.png') center/cover no-repeat fixed;
             min-height: 100vh;
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 2, 149, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        .glass-card h2, .glass-card h3, .glass-card p, .glass-card span, .glass-card div {
+            color: white;
+        }
+        .glass-card .text-gray-600, .glass-card .text-gray-700, .glass-card .text-gray-800 {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        .login-container .glass-card {
+            background: rgba(0, 2, 149, 0.1);
+        }
+        .login-container label {
+            color: white;
+        }
+        .login-container input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        input, select, textarea {
+            color: black !important;
         }
         .status-badge {
             display: inline-block;
@@ -363,16 +384,32 @@ if ($asset_id <= 0) {
             gap: 0.5rem;
             flex-wrap: wrap;
         }
+        .qcu-logo {
+            width: 150px;
+            height: 150px;
+            margin: 100px auto 1rem;
+    
+            border-radius: 50%;
+            padding: 8px;
+           
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white mb-2">
-                <i class="fas fa-qrcode mr-3"></i>Asset Information
+            <div class="qcu-logo">
+                <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-full h-full object-contain">
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-1">
+                Quezon City University
             </h1>
-            <p class="text-white text-opacity-90">Quezon City University - Asset Management System</p>
+            <p class="text-white text-opacity-90 text-lg">Asset Information</p>
             <?php if ($is_logged_in): ?>
             <div class="mt-4 flex items-center justify-center gap-4 text-white">
                 <span class="text-sm">
@@ -390,33 +427,34 @@ if ($asset_id <= 0) {
 
         <?php if (isset($show_login) && $show_login): ?>
             <!-- Login Form -->
-            <div class="glass-card p-8 login-form">
-                <div class="text-center mb-6">
-                    <i class="fas fa-lock text-5xl text-blue-600 mb-4"></i>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Login Required</h2>
-                    <p class="text-gray-600">Please login to view asset information</p>
+            <div class="login-container">
+                <div class="glass-card p-8">
+                    <form id="loginForm" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <input type="text" name="id_number" required placeholder="Enter your ID number"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" name="password" required placeholder="Enter your password"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all">
+                        </div>
+                        
+                        <div id="loginError" class="hidden text-red-600 text-sm bg-red-50 p-3 rounded-lg"></div>
+                        
+                        <button type="submit" 
+                                style="background-color: #113FB9;"
+                                class="w-full text-white py-3 px-4 rounded-lg hover:opacity-90 transition-all font-semibold text-lg shadow-md">
+                            Login
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-6 text-white text-sm">
+                        © <?php echo date('Y'); ?> A Test Management System
+                    </div>
                 </div>
-                
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
-                        <input type="text" name="id_number" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" name="password" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    
-                    <div id="loginError" class="hidden text-red-600 text-sm"></div>
-                    
-                    <button type="submit" 
-                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Login
-                    </button>
-                </form>
             </div>
         <?php elseif (isset($error)): ?>
             <!-- Error State -->
@@ -452,18 +490,23 @@ if ($asset_id <= 0) {
                                     echo $asset['status'] === 'Available' ? 'green' : 
                                          ($asset['status'] === 'In Use' ? 'blue' : 
                                          ($asset['status'] === 'Disposed' ? 'red' : 'yellow')); 
-                                ?>-100 text-<?php 
-                                    echo $asset['status'] === 'Available' ? 'green' : 
-                                         ($asset['status'] === 'In Use' ? 'blue' : 
-                                         ($asset['status'] === 'Disposed' ? 'red' : 'yellow')); 
-                                ?>-800">
+                                ?>-400 text-<?php 
+                                    echo $asset['status'] === 'Available' ? 'white' : 
+                                         ($asset['status'] === 'In Use' ? 'white' : 
+                                         ($asset['status'] === 'Disposed' ? 'white' : 'black')); 
+                                ?>">
                                     <i class="fas fa-circle text-xs mr-1"></i>
                                     <?php echo htmlspecialchars($asset['status']); ?>
                                 </div>
                             </div>
                             <div>
                                 <span class="text-gray-600 text-sm">Condition:</span>
-                                <div class="status-badge bg-gray-100 text-gray-800">
+                                <div class="status-badge bg-<?php 
+                                    echo $asset['condition'] === 'Excellent' ? 'green-700' : 
+                                         ($asset['condition'] === 'Good' ? 'blue-700' : 
+                                         ($asset['condition'] === 'Fair' ? 'yellow-600' : 
+                                         ($asset['condition'] === 'Poor' ? 'orange-600' : 'red-600'))); 
+                                ?> text-white">
                                     <?php echo htmlspecialchars($asset['condition']); ?>
                                 </div>
                             </div>
@@ -693,11 +736,11 @@ if ($asset_id <= 0) {
                                         echo $borrow['status'] === 'Approved' ? 'green' : 
                                              ($borrow['status'] === 'Pending' ? 'yellow' : 
                                              ($borrow['status'] === 'Returned' ? 'blue' : 'red')); 
-                                    ?>-100 text-<?php 
-                                        echo $borrow['status'] === 'Approved' ? 'green' : 
-                                             ($borrow['status'] === 'Pending' ? 'yellow' : 
-                                             ($borrow['status'] === 'Returned' ? 'blue' : 'red')); 
-                                    ?>-800">
+                                    ?>-400 text-<?php 
+                                        echo $borrow['status'] === 'Approved' ? 'white' : 
+                                             ($borrow['status'] === 'Pending' ? 'black' : 
+                                             ($borrow['status'] === 'Returned' ? 'white' : 'white')); 
+                                    ?>">
                                         <?php echo htmlspecialchars($borrow['status']); ?>
                                     </span>
                                 </td>
@@ -767,12 +810,14 @@ if ($asset_id <= 0) {
             <?php endif; ?>
         <?php endif; ?>
 
+        <?php if (!isset($show_login)): ?>
         <!-- Footer -->
         <div class="text-center text-white mt-8">
             <p class="text-sm opacity-90">
                 Powered by QCU Asset Management System &copy; <?php echo date('Y'); ?>
             </p>
         </div>
+        <?php endif; ?>
     </div>
     
     <script>
