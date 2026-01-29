@@ -86,7 +86,7 @@ include '../components/layout_header.php';
                         <i class="fa-solid fa-inbox text-4xl text-gray-300 mb-2"></i>
                         <p class="text-gray-600 text-sm">No borrowing requests found.</p>
                         <p class="text-gray-500 text-[10px] mt-1">Start by borrowing equipment from the home page.</p>
-                        <a href="index.php" class="mt-3 inline-block bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white px-4 py-1.5 rounded text-xs">
+                        <a href="tickets.php?action=borrow" class="mt-3 inline-block bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white px-4 py-1.5 rounded text-xs">
                             <i class="fa-solid fa-plus mr-1"></i>Create Request
                         </a>
                     </div>
@@ -103,7 +103,7 @@ include '../components/layout_header.php';
                                     <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Borrow Date</th>
                                     <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Return Date</th>
                                     <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Action</th>
+                                    <th class="px-3 py-2 text-center text-[10px] font-medium text-gray-500 uppercase">Action</th>
                                 </tr>
                             </thead>
 
@@ -159,6 +159,9 @@ include '../components/layout_header.php';
                                             <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" class="bg-[#1E3A8A] hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] transition-colors">
                                               <i class="fa-solid fa-eye mr-0.5"></i>View
                                             </button>
+                                            <button onclick="printRequest(<?php echo $request['id']; ?>)" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-[10px] transition-colors">
+                                              <i class="fa-solid fa-print mr-0.5"></i>Print
+                                            </button>
                                             <?php if ($request['status'] === 'Pending'): ?>
                                             <button onclick="showCancelModal(<?php echo $request['id']; ?>)" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] transition-colors">
                                               <i class="fa-solid fa-xmark mr-0.5"></i>Cancel
@@ -172,12 +175,13 @@ include '../components/layout_header.php';
                         </table>
                     </div>
 
-                    <!-- Pagination (only shows when more than 10 requests) -->
-                    <div id="paginationContainer" class="bg-gray-50 px-3 py-2 border-t border-gray-200 mt-2 rounded-b hidden">
-                        <div class="flex justify-center">
-                            <nav id="pagination" class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <!-- Pagination buttons will be inserted here by JavaScript -->
-                            </nav>
+                    <!-- Pagination Controls -->
+                    <div class="mt-3 flex justify-between items-center bg-white rounded border border-gray-200 p-3">
+                        <div class="text-[10px] text-gray-600">
+                            Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRequests">0</span> requests
+                        </div>
+                        <div id="paginationButtons" class="flex gap-1">
+                            <!-- Pagination buttons will be inserted here -->
                         </div>
                     </div>
 
@@ -419,81 +423,99 @@ function updatePagination() {
     // Show only current page rows
     filteredRows.slice(start, end).forEach(row => row.style.display = '');
     
+    // Update showing text
+    const showStart = totalItems > 0 ? start + 1 : 0;
+    const showEnd = end;
+    document.getElementById('showingStart').textContent = showStart;
+    document.getElementById('showingEnd').textContent = showEnd;
+    document.getElementById('totalRequests').textContent = totalItems;
+    
     // Update pagination buttons
     renderPaginationButtons(totalPages);
 }
 
 function renderPaginationButtons(totalPages) {
-    const pagination = document.getElementById('pagination');
-    const paginationContainer = document.getElementById('paginationContainer');
-    if (!pagination) return;
+    const container = document.getElementById('paginationButtons');
+    if (!container) return;
     
-    pagination.innerHTML = '';
+    container.innerHTML = '';
     
-    // Only show pagination if there are more than 10 items (more than 1 page)
-    if (totalPages <= 1) {
-        paginationContainer.classList.add('hidden');
-        return;
-    }
-    paginationContainer.classList.remove('hidden');
+    if (totalPages <= 1) return;
     
-    // Calculate which page numbers to show
+    // Previous button
+    const prevBtn = createPageButton('‹', currentPage > 1, () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    });
+    container.appendChild(prevBtn);
+    
+    // Page number buttons
     const maxButtons = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
     
-    // Adjust if we're near the end
     if (endPage - startPage < maxButtons - 1) {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
     
-    // Add ellipsis and first page if needed
     if (startPage > 1) {
-        pagination.appendChild(createPageButton('1', true, () => goToPage(1)));
+        container.appendChild(createPageButton(1, true, () => { currentPage = 1; updatePagination(); }));
         if (startPage > 2) {
             const dots = document.createElement('span');
-            dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+            dots.className = 'px-2 text-[10px] text-gray-500';
             dots.textContent = '...';
-            pagination.appendChild(dots);
+            container.appendChild(dots);
         }
     }
     
-    // Page number buttons
     for (let i = startPage; i <= endPage; i++) {
-        const btn = createPageButton(i.toString(), true, () => goToPage(i));
-        if (i === currentPage) {
-            btn.className = 'relative inline-flex items-center px-4 py-2 border border-[#1E3A8A] bg-[#1E3A8A] text-sm font-medium text-white';
-        }
-        pagination.appendChild(btn);
+        const btn = createPageButton(i, true, () => {
+            currentPage = i;
+            updatePagination();
+        }, i === currentPage);
+        container.appendChild(btn);
     }
     
-    // Add ellipsis and last page if needed
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
             const dots = document.createElement('span');
-            dots.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+            dots.className = 'px-2 text-[10px] text-gray-500';
             dots.textContent = '...';
-            pagination.appendChild(dots);
+            container.appendChild(dots);
         }
-        pagination.appendChild(createPageButton(totalPages.toString(), true, () => goToPage(totalPages)));
+        container.appendChild(createPageButton(totalPages, true, () => { currentPage = totalPages; updatePagination(); }));
     }
+    
+    // Next button
+    const nextBtn = createPageButton('›', currentPage < totalPages, () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        }
+    });
+    container.appendChild(nextBtn);
 }
 
-function createPageButton(text, enabled, onClick) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = enabled 
-        ? 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] transition-colors duration-150'
-        : 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed';
-    btn.textContent = text;
-    btn.disabled = !enabled;
-    if (enabled) btn.onclick = onClick;
-    return btn;
-}
-
-function goToPage(page) {
-    currentPage = page;
-    updatePagination();
+function createPageButton(text, enabled, onClick, isActive = false) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.className = `px-2 py-1 text-[10px] rounded transition-colors ${
+        isActive 
+            ? 'bg-[#1E3A8A] text-white' 
+            : enabled 
+                ? 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300' 
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+    }`;
+    
+    if (enabled && !isActive) {
+        button.onclick = onClick;
+    } else if (!enabled) {
+        button.disabled = true;
+    }
+    
+    return button;
 }
 
 // View Request Details
@@ -761,6 +783,162 @@ function showToast(message, type = 'success') {
         toast.style.transition = 'opacity 0.3s';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+// Print Request
+async function printRequest(requestId) {
+    try {
+        const response = await fetch(`../../controller/get_request_details.php?id=${requestId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const request = data.request;
+            
+            // Create printable content
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Borrowing Request #${request.id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                        .header h1 { margin: 0; font-size: 24px; }
+                        .header p { margin: 5px 0; font-size: 12px; }
+                        .section { margin: 20px 0; }
+                        .section h3 { border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
+                        .row { display: flex; margin: 5px 0; }
+                        .label { font-weight: bold; width: 180px; }
+                        .value { flex: 1; }
+                        .status { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+                        .status.pending { background: #fef3c7; color: #92400e; }
+                        .status.approved { background: #d1fae5; color: #065f46; }
+                        .status.borrowed { background: #dbeafe; color: #1e40af; }
+                        .status.returned { background: #f3f4f6; color: #374151; }
+                        .status.overdue { background: #fee2e2; color: #991b1b; }
+                        .status.cancelled { background: #fee2e2; color: #991b1b; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>QUEZON CITY UNIVERSITY</h1>
+                        <p>Asset Management System</p>
+                        <h2>EQUIPMENT BORROWING REQUEST</h2>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Request Information</h3>
+                        <div class="row">
+                            <div class="label">Request ID:</div>
+                            <div class="value">#${request.id}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Status:</div>
+                            <div class="value"><span class="status ${request.status.toLowerCase()}">${request.status}</span></div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Request Date:</div>
+                            <div class="value">${new Date(request.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Borrower Information</h3>
+                        <div class="row">
+                            <div class="label">Name:</div>
+                            <div class="value">${request.borrower_name}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Asset Details</h3>
+                        <div class="row">
+                            <div class="label">Asset Tag:</div>
+                            <div class="value">${request.asset_tag}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Asset Name:</div>
+                            <div class="value">${request.asset_name}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Type:</div>
+                            <div class="value">${request.asset_type}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Brand/Model:</div>
+                            <div class="value">${request.brand || 'N/A'} ${request.model || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Borrowing Details</h3>
+                        <div class="row">
+                            <div class="label">Borrow Date:</div>
+                            <div class="value">${new Date(request.borrowed_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Expected Return Date:</div>
+                            <div class="value">${new Date(request.expected_return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                        ${request.actual_return_date ? `
+                        <div class="row">
+                            <div class="label">Actual Return Date:</div>
+                            <div class="value">${new Date(request.actual_return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                        ` : ''}
+                        <div class="row">
+                            <div class="label">Purpose:</div>
+                            <div class="value">${request.purpose || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    ${request.approved_by_name ? `
+                    <div class="section">
+                        <h3>Approval Information</h3>
+                        <div class="row">
+                            <div class="label">Approved By:</div>
+                            <div class="value">${request.approved_by_name}</div>
+                        </div>
+                        <div class="row">
+                            <div class="label">Approval Date:</div>
+                            <div class="value">${new Date(request.approved_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${request.return_notes ? `
+                    <div class="section">
+                        <h3>Return Information</h3>
+                        ${request.returned_condition ? `
+                        <div class="row">
+                            <div class="label">Returned Condition:</div>
+                            <div class="value">${request.returned_condition}</div>
+                        </div>
+                        ` : ''}
+                        <div class="row">
+                            <div class="label">Return Notes:</div>
+                            <div class="value">${request.return_notes}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </body>
+                </html>
+            `;
+            
+            // Open print window
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        } else {
+            showToast('Error loading request details', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred while printing', 'error');
+    }
 }
 </script>
 

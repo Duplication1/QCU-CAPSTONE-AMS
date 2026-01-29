@@ -421,17 +421,6 @@ $panel_title = $panel_titles[$current_role] ?? 'Student Portal';
         </div>
         <?php endforeach; ?>
     </nav>
-
-    <!-- Logout at Bottom -->
-    <div class="border-t border-gray-200 p-4 flex-shrink-0">
-        <a href="../../controller/logout_controller.php" class="group/item flex items-center px-3 py-2.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200">
-            <div class="flex-shrink-0">
-                <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
-            </div>
-            <span class="ml-3 nav-text transition-all duration-300 whitespace-nowrap min-w-0 
-                         lg:opacity-0 lg:w-0 lg:group-hover:opacity-100 lg:group-hover:w-auto">Logout</span>
-        </a>
-    </div>
 </aside>
 
 <script>

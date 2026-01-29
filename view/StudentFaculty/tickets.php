@@ -49,6 +49,16 @@ $pcStmt->close();
 <style>
     body, html { overflow: hidden !important; height: 100vh; }
     
+    /* Red asterisk for required fields */
+    label:has(+ input[required])::after,
+    label:has(+ select[required])::after,
+    label:has(+ textarea[required])::after,
+    label.required::after {
+        content: ' *';
+        color: #ef4444;
+        font-weight: bold;
+    }
+    
     /* DataTable container styling */
     #assetsTableContainer {
         width: 100%;
@@ -243,21 +253,24 @@ $pcStmt->close();
 </main>
 
 <!-- Single Dynamic Issue Modal -->
-<div id="issueModal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black opacity-50" onclick="closeIssueModal()"></div>
-    <div class="relative bg-white rounded shadow-lg w-full max-w-xl z-10 p-4 mx-4 my-auto max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3">
-            <h3 id="modalTitle" class="text-sm font-semibold text-gray-800">Submit Issue</h3>
-            <button type="button" onclick="closeIssueModal()" class="text-gray-600 hover:text-gray-800 text-xl" aria-label="Close">&times;</button>
-        </div>
+<div id="issueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeIssueModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden transform transition-all">
+        <!-- Close Button -->
+        <button type="button" onclick="closeIssueModal()" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+        
+        <!-- Modal Body -->
+        <div class="overflow-hidden p-6">
 
-        <form id="issueForm" class="space-y-3" method="post">
+        <form id="issueForm" class="space-y-4" method="post">
             <input type="hidden" name="category" id="issueCategory" value="">
             <input type="hidden" name="component_asset_id" id="componentAssetId" value="">
             
             <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Building: *</label>
-                <select id="building" name="building_id" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Building</label>
+                <select id="building" name="building_id" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" required>
                     <option value="" disabled selected>Select building</option>
                     <?php foreach ($buildings as $building): ?>
                         <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
@@ -266,8 +279,8 @@ $pcStmt->close();
             </div>
 
             <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Room: *</label>
-                <select id="room" name="room_id" class="mt-1 block w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Room</label>
+                <select id="room" name="room_id" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" required>
                     <option value="" disabled selected>Select room</option>
                     <?php foreach ($rooms as $room): ?>
                         <option value="<?php echo $room['id']; ?>" data-building="<?php echo $room['building_id']; ?>" data-name="<?php echo htmlspecialchars($room['name']); ?>"><?php echo htmlspecialchars($room['name']); ?></option>
@@ -276,8 +289,8 @@ $pcStmt->close();
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Terminal No: *</label>
-                <select id="terminal" name="pc_id" class="mt-1 block w-full border rounded px-3 py-2" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Terminal No</label>
+                <select id="terminal" name="pc_id" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" required>
                     <option value="" disabled selected>Select terminal</option>
                     <?php foreach ($pcs as $pc): ?>
                         <option value="<?php echo $pc['id']; ?>" data-room="<?php echo $pc['room_id']; ?>" data-name="<?php echo htmlspecialchars($pc['terminal_number']); ?>"><?php echo htmlspecialchars($pc['terminal_number']); ?></option>
@@ -287,8 +300,8 @@ $pcStmt->close();
 
             <!-- Hardware Component Field (only for Hardware issues) -->
             <div id="hardwareComponentField" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Hardware Component: *</label>
-                <select name="hardware_component" id="hardwareComponent" class="mt-1 block w-full border rounded px-3 py-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Hardware Component</label>
+                <select name="hardware_component" id="hardwareComponent" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all">
                     <option value="">Select terminal first</option>
                 </select>
                 <div id="componentLoading" class="hidden mt-2 text-sm text-gray-500">
@@ -298,20 +311,20 @@ $pcStmt->close();
 
             <!-- Hardware Component Others Field (only when "Others" is selected) -->
             <div id="hardwareOthersField" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Specify Hardware Component: *</label>
-                <input name="hardware_component_other" id="hardwareComponentOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="e.g., Headset, Webcam, Printer">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Specify Hardware Component</label>
+                <input name="hardware_component_other" id="hardwareComponentOther" type="text" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="e.g., Headset, Webcam, Printer">
             </div>
 
             <!-- Software Name Field (only for Software issues) -->
             <div id="softwareNameField" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Software Name: *</label>
-                <input name="software_name" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="e.g., Microsoft Office, Adobe Photoshop">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Software Name</label>
+                <input name="software_name" type="text" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="e.g., Microsoft Office, Adobe Photoshop">
             </div>
 
             <!-- Network Issue Type Field (only for Network issues) -->
             <div id="networkTypeField" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Network Issue Type:</label>
-                <select name="network_issue_type" id="networkIssueType" class="mt-1 block w-full border rounded px-3 py-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Network Issue Type</label>
+                <select name="network_issue_type" id="networkIssueType" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all">
                     <option value="">Select issue type</option>
                     <option value="No Connection">No Connection</option>
                     <option value="Slow Internet">Slow Internet</option>
@@ -322,14 +335,14 @@ $pcStmt->close();
 
             <!-- Network Issue Others Field (only when "Others" is selected) -->
             <div id="networkOthersField" class="hidden">
-                <label class="block text-sm font-medium text-gray-700">Specify Network Issue: *</label>
-                <input name="network_issue_type_other" id="networkIssueTypeOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="e.g., Port blocked, DNS issue, VPN problem">
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Specify Network Issue</label>
+                <input name="network_issue_type_other" id="networkIssueTypeOther" type="text" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="e.g., Port blocked, DNS issue, VPN problem">
             </div>
 
             <!-- Laboratory Concern Fields (only for Laboratory issues) -->
             <div id="laboratoryFieldsContainer" class="hidden space-y-4">
                  <div>
-                     <label class="block text-sm font-medium text-gray-700">Concern Type: *</label>
+                     <label class="block text-sm font-medium text-gray-700">Concern Type</label>
                      <!-- removed static required; JS will set required when Laboratory is selected -->
                      <select name="laboratory_concern_type" id="laboratoryConcernType" class="mt-1 block w-full border rounded px-3 py-2">
                           <option value="">Select concern type</option>
@@ -345,7 +358,7 @@ $pcStmt->close();
                   </div>
 
                  <div id="laboratoryConcernOthersField" class="hidden">
-                     <label class="block text-sm font-medium text-gray-700">Specify Concern: *</label>
+                     <label class="block text-sm font-medium text-gray-700">Specify Concern</label>
                      <input name="laboratory_concern_other" id="laboratoryConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe your concern">
                  </div>
              </div>
@@ -353,7 +366,7 @@ $pcStmt->close();
             <!-- Other Concern Fields (only for Other issues) -->
             <div id="otherFieldsContainer" class="hidden space-y-4">
                  <div>
-                     <label class="block text-sm font-medium text-gray-700">Concern Category: *</label>
+                     <label class="block text-sm font-medium text-gray-700">Concern Category</label>
                      <!-- removed static required; JS will set required when Other is selected -->
                      <select name="other_concern_category" id="otherConcernCategory" class="mt-1 block w-full border rounded px-3 py-2">
                          <option value="">Select category</option>
@@ -368,7 +381,7 @@ $pcStmt->close();
                  </div>
 
                 <div id="otherConcernOthersField" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700">Specify Category: *</label>
+                    <label class="block text-sm font-medium text-gray-700">Specify Category</label>
                     <input name="other_concern_other" id="otherConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe the category">
                 </div>
             </div>
@@ -376,19 +389,19 @@ $pcStmt->close();
             <div>
                 <!-- Issue Title (restored). Hidden by default and made required via JS for non-laboratory categories -->
                 <div id="issueTitleField" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700">Issue Title: *</label>
+                    <label class="block text-sm font-medium text-gray-700">Issue Title</label>
                     <input name="title" id="issueTitle" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Brief description of the issue">
                 </div>
              </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Description:</label>
-                <textarea name="description" rows="4" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Provide more details about the issue..."></textarea>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea name="description" rows="4" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="Provide more details about the issue..."></textarea>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Priority: *</label>
-                <select name="priority" class="mt-1 block w-full border rounded px-3 py-2" required>
+                <label class="block text-sm font-semibold text-gray-700 mb-2 required">Priority</label>
+                <select name="priority" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" required>
                     <option value="Low">Low</option>
                     <option value="Medium" selected>Medium</option>
                     <option value="High">High</option>
@@ -396,25 +409,37 @@ $pcStmt->close();
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Selection Preview:</label>
-                <input id="selectionPreview" type="text" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled value="">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Selection Preview</label>
+                <input id="selectionPreview" type="text" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-600" disabled value="">
             </div>
 
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeIssueModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">Cancel</button>
-                <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Submit</button>
-            </div>
         </form>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <button type="button" onclick="closeIssueModal()" class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </button>
+            <button type="submit" form="issueForm" id="submitBtn" class="px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg">
+                <i class="fas fa-paper-plane mr-2"></i>Submit
+            </button>
+        </div>
     </div>
 </div>
 
 <!-- Loading Modal -->
 <div id="loadingModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
-    <div class="absolute inset-0 bg-black opacity-50"></div>
-    <div class="bg-white rounded-lg shadow-lg p-8 z-10 flex flex-col items-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
-        <p class="text-lg font-semibold text-gray-800">Submitting Issue...</p>
-        <p class="text-sm text-gray-500 mt-2">Please wait</p>
+    <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+    <div class="bg-white rounded-2xl shadow-2xl p-10 z-10 flex flex-col items-center max-w-sm mx-4">
+        <div class="relative">
+            <div class="animate-spin rounded-full h-20 w-20 border-b-4 border-t-4 border-[#1E3A8A]"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-paper-plane text-[#1E3A8A] text-2xl animate-pulse"></i>
+            </div>
+        </div>
+        <p class="text-xl font-bold text-gray-800 mt-6">Submitting Issue...</p>
+        <p class="text-sm text-gray-500 mt-2">Please wait while we process your request</p>
     </div>
 </div>
 
@@ -422,7 +447,6 @@ $pcStmt->close();
 // Update the handleIssueClick function
 function handleIssueClick(issueType) {
     const modal = document.getElementById('issueModal');
-    const modalTitle = document.getElementById('modalTitle');
     const issueForm = document.getElementById('issueForm');
     const submitBtn = document.getElementById('submitBtn');
     const hardwareComponentField = document.getElementById('hardwareComponentField');
@@ -463,10 +487,8 @@ function handleIssueClick(issueType) {
     
     switch(issueType) {
         case 'hardware':
-            modalTitle.textContent = 'Submit Hardware Issue';
-            modalTitle.className = 'text-lg font-semibold text-blue-700';
             issueForm.action = '../../controller/submit_issue.php';
-            submitBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded';
+            submitBtn.className = 'px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg';
             submitBtn.textContent = 'Submit';
             hardwareComponentField.classList.remove('hidden');
             hardwareComponentInput.setAttribute('required', 'required');
@@ -482,10 +504,8 @@ function handleIssueClick(issueType) {
             break;
             
         case 'software':
-            modalTitle.textContent = 'Submit Software Issue';
-            modalTitle.className = 'text-lg font-semibold text-green-700';
             issueForm.action = '../../controller/submit_issue.php';
-            submitBtn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded';
+            submitBtn.className = 'px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg';
             submitBtn.textContent = 'Submit';
             softwareNameField.classList.remove('hidden');
             softwareNameInput.setAttribute('required', 'required');
@@ -496,10 +516,8 @@ function handleIssueClick(issueType) {
             break;
             
         case 'network':
-            modalTitle.textContent = 'Submit Network Issue';
-            modalTitle.className = 'text-lg font-semibold text-purple-700';
             issueForm.action = '../../controller/submit_issue.php';
-            submitBtn.className = 'bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded';
+            submitBtn.className = 'px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg';
             submitBtn.textContent = 'Submit';
             networkTypeField.classList.remove('hidden');
             // show and require title
@@ -512,10 +530,8 @@ function handleIssueClick(issueType) {
             openBorrowingModal();
             return;
         case 'laboratory':
-            modalTitle.textContent = 'Submit Laboratory Concern';
-            modalTitle.className = 'text-lg font-semibold text-indigo-700';
             issueForm.action = '../../controller/submit_issue.php';
-            submitBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded';
+            submitBtn.className = 'px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg';
             submitBtn.textContent = 'Submit';
             document.getElementById('issueCategory').value = 'laboratory';
             document.getElementById('laboratoryFieldsContainer').classList.remove('hidden');
@@ -527,10 +543,8 @@ function handleIssueClick(issueType) {
             break;
             
         case 'other':
-            modalTitle.textContent = 'Submit Other Concern';
-            modalTitle.className = 'text-lg font-semibold text-gray-700';
             issueForm.action = '../../controller/submit_issue.php';
-            submitBtn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded';
+            submitBtn.className = 'px-6 py-2.5 bg-[#1E3A8A] hover:bg-[#1a2f6f] text-white font-medium rounded-lg transition-colors shadow-lg';
             submitBtn.textContent = 'Submit';
             document.getElementById('issueCategory').value = 'other';
             document.getElementById('otherFieldsContainer').classList.remove('hidden');
@@ -809,17 +823,11 @@ function resetHardwareComponents() {
 <!-- Borrowing Equipment Modal -->
 <div id="borrowingModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-6">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-            <!-- Modal Header -->
-            <div class="bg-[#1E3A8A] text-white px-6 py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
-                <h3 class="text-xl font-bold">
-                    <i class="fa-solid fa-box mr-2"></i>
-                    <span id="borrowingModalTitle">Borrow Equipment</span>
-                </h3>
-                <button onclick="closeBorrowingModal()" class="text-white hover:text-gray-200">
-                    <i class="fa-solid fa-xmark text-2xl mb-2 block"></i>
-                </button>
-            </div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <!-- Close Button -->
+            <button onclick="closeBorrowingModal()" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
 
             <!-- Progress Steps -->
             <div class="px-6 py-4 border-b flex-shrink-0 bg-blue-50">
@@ -848,7 +856,7 @@ function resetHardwareComponents() {
             </div>
 
             <!-- Modal Body -->
-            <div class="flex-1 overflow-y-auto px-6 py-4 bg-blue-50/30" style="max-height: calc(90vh - 200px);">
+            <div class="flex-1 overflow-hidden px-6 py-4 bg-blue-50/30">
                 <!-- Step 1: Asset Selection -->
                 <div id="step1" class="step-content">
                     <h4 class="text-lg font-semibold mb-4">Select Equipment to Borrow</h4>
@@ -899,16 +907,16 @@ function resetHardwareComponents() {
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Borrow Date: *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Borrow Date</label>
                                 <input type="date" id="borrowDate" class="w-full border rounded px-3 py-2" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Expected Return Date: *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Expected Return Date</label>
                                 <input type="date" id="returnDate" class="w-full border rounded px-3 py-2" required>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Purpose: *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
                             <textarea id="borrowPurpose" rows="4" class="w-full border rounded px-3 py-2" placeholder="Describe the purpose of borrowing this equipment..." required></textarea>
                         </div>
                         
@@ -1033,7 +1041,7 @@ function resetHardwareComponents() {
                 </div>
 
                 <!-- Step 3: Preview & Submit -->
-                <div id="step3" class="step-content hidden">
+                <div id="step3" class="step-content hidden overflow-y-auto max-h-[calc(90vh-280px)]">
                     <h4 class="text-lg font-semibold mb-4">Equipment Borrowing Agreement Preview</h4>
                     
                     <!-- Printable Document Preview -->
@@ -1198,9 +1206,6 @@ function resetHardwareComponents() {
                 <div class="flex gap-3">
                     <button type="button" id="submitBorrowBtn" onclick="submitBorrowing()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
                         <i class="fa-solid fa-check mr-2"></i>Submit Request
-                    </button>
-                    <button type="button" id="printBtn" onclick="printDocument()" class="bg-[#1E3A8A] hover:bg-[#152e6e] text-white px-5 py-2.5 rounded-lg font-medium shadow-lg hidden transition-all">
-                        <i class="fa-solid fa-print mr-2"></i>Print
                     </button>
                 </div>
             </div>
@@ -1551,7 +1556,6 @@ function updateStepDisplay() {
     
     // Update buttons
     document.getElementById('submitBorrowBtn').classList.toggle('hidden', currentStep !== 3);
-    document.getElementById('printBtn').classList.toggle('hidden', currentStep !== 3);
 }
 
 // Populate Preview
@@ -1592,7 +1596,6 @@ function submitBorrowing() {
 }
 
 function submitBorrowingRequest() {
-    
     // Create form and submit
     const form = document.createElement('form');
     form.method = 'POST';

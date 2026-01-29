@@ -183,24 +183,34 @@ include '../components/layout_header.php';
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Controls -->
+            <div class="mt-3 flex justify-between items-center bg-white rounded border border-gray-200 p-3">
+                <div class="text-[10px] text-gray-600">
+                    Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalIssues">0</span> issues
+                </div>
+                <div id="paginationButtons" class="flex gap-1">
+                    <!-- Pagination buttons will be inserted here -->
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 </main>
 
 <!-- Issue Details Modal -->
-<div id="issueDetailsModal" class="hidden fixed inset-0 z-50">
+<div id="issueDetailsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black opacity-50" onclick="closeIssueDetailsModal()"></div>
-    <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow-lg w-full max-w-2xl z-10 p-4 mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-3 border-b pb-2">
+    <div class="relative bg-white rounded shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3 border-b pb-2 p-4">
             <h3 class="text-sm font-semibold text-gray-800">Issue Details</h3>
             <button type="button" onclick="closeIssueDetailsModal()" class="text-gray-600 hover:text-gray-800 text-xl">&times;</button>
         </div>
 
-        <div id="issueDetailsContent" class="space-y-3 text-xs">
+        <div id="issueDetailsContent" class="space-y-3 text-xs p-4">
             <!-- Details will be loaded here dynamically -->
         </div>
 
-        <div class="mt-4 flex justify-end gap-2 border-t pt-3">
+        <div class="mt-4 flex justify-end gap-2 border-t pt-3 p-4">
             <button type="button" onclick="closeIssueDetailsModal()" 
                 class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded text-xs transition-colors">
                 Close
@@ -210,6 +220,10 @@ include '../components/layout_header.php';
 </div>
 
 <script>
+// Pagination variables
+let currentPage = 1;
+const itemsPerPage = 10;
+
 // Filter issues
 function filterIssues() {
     const searchTerm = document.getElementById('issueSearch').value.toLowerCase();
@@ -226,13 +240,138 @@ function filterIssues() {
         const matchesStatus = !statusFilter || status === statusFilter;
         const matchesCategory = !categoryFilter || category === categoryFilter;
         
+        // Use data attribute to mark filtered rows instead of display
         if (matchesSearch && matchesStatus && matchesCategory) {
-            row.style.display = '';
+            row.setAttribute('data-filtered', 'true');
         } else {
-            row.style.display = 'none';
+            row.setAttribute('data-filtered', 'false');
         }
     });
+    
+    // Reset to page 1 when filtering
+    currentPage = 1;
+    updatePagination();
 }
+
+// Pagination functions
+function updatePagination() {
+    const rows = Array.from(document.querySelectorAll('.issue-row'));
+    
+    // Get rows that match current filters
+    const filteredRows = rows.filter(row => row.getAttribute('data-filtered') !== 'false');
+    const totalItems = filteredRows.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    // Hide all rows first
+    rows.forEach(row => row.style.display = 'none');
+    
+    // Show only the rows for the current page from filtered results
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    filteredRows.slice(start, end).forEach(row => {
+        row.style.display = '';
+    });
+    
+    // Update showing text
+    const showStart = totalItems > 0 ? start + 1 : 0;
+    const showEnd = Math.min(end, totalItems);
+    document.getElementById('showingStart').textContent = showStart;
+    document.getElementById('showingEnd').textContent = showEnd;
+    document.getElementById('totalIssues').textContent = totalItems;
+    
+    // Render pagination buttons
+    renderPaginationButtons(totalPages);
+}
+
+function renderPaginationButtons(totalPages) {
+    const container = document.getElementById('paginationButtons');
+    container.innerHTML = '';
+    
+    if (totalPages <= 1) return;
+    
+    // Previous button
+    const prevBtn = createPageButton('‹', currentPage > 1, () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    });
+    container.appendChild(prevBtn);
+    
+    // Page number buttons
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    if (startPage > 1) {
+        container.appendChild(createPageButton(1, true, () => { currentPage = 1; updatePagination(); }));
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.className = 'px-2 text-[10px] text-gray-500';
+            dots.textContent = '...';
+            container.appendChild(dots);
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = createPageButton(i, true, () => {
+            currentPage = i;
+            updatePagination();
+        }, i === currentPage);
+        container.appendChild(btn);
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.className = 'px-2 text-[10px] text-gray-500';
+            dots.textContent = '...';
+            container.appendChild(dots);
+        }
+        container.appendChild(createPageButton(totalPages, true, () => { currentPage = totalPages; updatePagination(); }));
+    }
+    
+    // Next button
+    const nextBtn = createPageButton('›', currentPage < totalPages, () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        }
+    });
+    container.appendChild(nextBtn);
+}
+
+function createPageButton(text, enabled, onClick, isActive = false) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.className = `px-2 py-1 text-[10px] rounded transition-colors ${
+        isActive 
+            ? 'bg-[#1E3A8A] text-white' 
+            : enabled 
+                ? 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300' 
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+    }`;
+    
+    if (enabled && !isActive) {
+        button.onclick = onClick;
+    } else if (!enabled) {
+        button.disabled = true;
+    }
+    
+    return button;
+}
+
+// Initialize pagination on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Mark all rows as visible initially
+    const rows = document.querySelectorAll('.issue-row');
+    rows.forEach(row => row.setAttribute('data-filtered', 'true'));
+    updatePagination();
+});
 
 // View issue details
 async function viewIssueDetails(issueId) {

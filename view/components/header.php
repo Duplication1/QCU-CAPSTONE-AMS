@@ -93,7 +93,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 <div class="relative group flex items-center gap-3">
 
   <!-- Avatar with notification badge -->
-<button id="avatar-button" class="p-2 relative w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center hover:opacity-90 focus:outline-none" title="View profile and settings">
+<button id="avatar-button" class="p-2 relative w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center hover:opacity-90 focus:outline-none" title="View profile and logout">
     <span class="text-white text-sm font-semibold">
       <?php echo $user_initial; ?>
     </span>
@@ -104,24 +104,18 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 <!-- Profile Settings Dropdown -->
 <div id="profile-dropdown" class="absolute right-0 top-12 w-50 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 hidden z-50">
   <ul class="text-sm">
-      <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
+    <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
       <a href="profile.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
         <i class="fa-solid fa-user text-[#1E3A8A]"></i>
         View Profile
       </a>
     </li>
     <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <a href="../../view/settings.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
-        <i class="fa-solid fa-gear text-[#1E3A8A]"></i>
-        Settings
-      </a>
-    </li>
-    <!--<li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <a href="../../logout.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-[#1E3A8A] w-full">
-        <i class="fa-solid fa-right-from-bracket text-[#1E3A8A]"></i>
+      <a href="../../controller/logout_controller.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-red-600 w-full">
+        <i class="fa-solid fa-right-from-bracket text-red-600"></i>
         Logout
       </a>
-    </li> -->
+    </li>
   </ul>
 </div>
 

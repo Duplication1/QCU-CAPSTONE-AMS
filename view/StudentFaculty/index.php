@@ -52,7 +52,7 @@ $stmt->execute();
 $borrowingStats = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// Get recent activity (last 10 actions)
+// Get recent activity (last 5 actions)
 $recentActivity = [];
 $activityQuery = "
     (SELECT 'ticket' as type, id, CAST(title AS CHAR) COLLATE utf8mb4_unicode_ci as title, 
@@ -62,7 +62,7 @@ $activityQuery = "
     (SELECT 'borrowing' as type, id, CAST(purpose AS CHAR) COLLATE utf8mb4_unicode_ci as title, 
             CAST(status AS CHAR) COLLATE utf8mb4_unicode_ci as status, created_at as date 
      FROM asset_borrowing WHERE borrower_id = ? ORDER BY created_at DESC LIMIT 5)
-    ORDER BY date DESC LIMIT 10
+    ORDER BY date DESC LIMIT 5
 ";
 $stmt = $conn->prepare($activityQuery);
 $stmt->bind_param('ii', $user_id, $user_id);
@@ -100,16 +100,19 @@ include '../components/layout_header.php';
     }
     @media (min-width: 641px) {
         body, html { overflow: hidden !important; height: 100vh; }
+        .content-grid {
+            max-height: calc(100vh - 400px);
+        }
     }
 </style>
 
 <!-- Main Content -->
-<main class="p-2 mobile-p-2 bg-gray-50 min-h-screen overflow-auto flex flex-col">
+<main class="p-2 mobile-p-2 bg-gray-50 h-screen overflow-auto flex flex-col gap-2">
     <!-- Session Messages -->
     <?php include '../components/session_messages.php'; ?>
 
     <!-- Welcome Section -->
-    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mobile-p-6 mb-2 mobile-mb-2 flex-shrink-0">
+    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mobile-p-6 flex-shrink-0">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-lg mobile-text-lg font-bold text-gray-800">
@@ -131,7 +134,7 @@ include '../components/layout_header.php';
     </div>
 
     <!-- Top Metrics Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mobile-gap-2 mb-2 mobile-mb-2 flex-shrink-0">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mobile-gap-2 flex-shrink-0">
         <!-- Total Tickets -->
         <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between mb-2">
@@ -198,9 +201,9 @@ include '../components/layout_header.php';
     </div>
 
     <!-- Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 mobile-gap-2 flex-1 min-h-0">
+    <div class="content-grid grid grid-cols-1 lg:grid-cols-3 gap-2 mobile-gap-2 flex-shrink-0">
         <!-- Recent Activity -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 flex flex-col min-h-0 lg:col-span-2">
+        <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 flex flex-col h-[500px] lg:col-span-2">
             <div class="flex items-center justify-between mb-3 flex-shrink-0">
                 <div>
                     <h3 class="text-sm mobile-text-lg font-semibold text-gray-900">Recent Activity</h3>
@@ -260,7 +263,7 @@ include '../components/layout_header.php';
         </div>
 
         <!-- Quick Actions -->
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 flex flex-col min-h-0">
+        <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mobile-p-3 flex flex-col h-[500px]">
             <div class="mb-3 flex-shrink-0">
                 <h3 class="text-sm mobile-text-lg font-semibold text-gray-900">Quick Actions</h3>
                 <p class="text-xs mobile-text-sm text-gray-500 mt-1">Common tasks</p>
