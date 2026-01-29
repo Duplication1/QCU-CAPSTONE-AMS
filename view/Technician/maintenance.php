@@ -14,6 +14,10 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 
 require_once '../../config/config.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Create database connection
 if (!isset($conn)) {
     $conn = new mysqli('localhost', 'root', '', 'ams_database');
@@ -28,18 +32,23 @@ $query = "SELECT
     b.id,
     b.name,
     b.created_at,
-    COUNT(DISTINCT r.id) as total_rooms,
-    COUNT(DISTINCT CASE WHEN r.next_maintenance_date IS NOT NULL AND r.next_maintenance_date < CURDATE() THEN r.id END) as overdue_maintenance,
-    COUNT(DISTINCT CASE WHEN r.next_maintenance_date >= CURDATE() AND r.next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN r.id END) as upcoming_maintenance,
-    MIN(r.next_maintenance_date) as earliest_maintenance
+    COUNT(DISTINCT r.id) as total_rooms
 FROM buildings b
 LEFT JOIN rooms r ON b.id = r.building_id
 GROUP BY b.id, b.name, b.created_at
 ORDER BY b.name ASC";
 
 $result = $conn->query($query);
+
+// Store error for debugging
+$query_error = $result ? null : $conn->error;
+
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
+        // Set default values for maintenance counts
+        $row['overdue_maintenance'] = 0;
+        $row['upcoming_maintenance'] = 0;
+        $row['earliest_maintenance'] = null;
         $buildings[] = $row;
     }
 }

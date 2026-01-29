@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 14, 2026 at 09:26 AM
+-- Generation Time: Jan 29, 2026 at 08:40 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -258,7 +258,17 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (212, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:03'),
 (213, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:08'),
 (214, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 05:26:12'),
-(215, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 08:23:16');
+(215, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2026-01-14 08:23:16'),
+(216, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:20:55'),
+(217, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:29:00'),
+(218, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:29:54');
+INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `description`, `ip_address`, `user_agent`, `created_at`) VALUES
+(219, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:30:10'),
+(220, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:30:15'),
+(221, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:32:33'),
+(222, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:32:37'),
+(223, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:32:49'),
+(224, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 07:32:53');
 
 -- --------------------------------------------------------
 
@@ -1973,7 +1983,14 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (117, 3, '2026-01-14 04:13:33', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (118, 2, '2026-01-14 05:26:08', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
 (119, 1, '2026-01-14 05:26:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
-(120, 2, '2026-01-14 08:23:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop');
+(120, 2, '2026-01-14 08:23:16', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', 'desktop'),
+(121, 5, '2026-01-29 07:20:06', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(122, 2, '2026-01-29 07:20:55', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(123, 5, '2026-01-29 07:29:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(124, 3, '2026-01-29 07:29:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(125, 2, '2026-01-29 07:30:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(126, 3, '2026-01-29 07:32:37', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(127, 2, '2026-01-29 07:32:53', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -2225,6 +2242,10 @@ CREATE TABLE `rooms` (
   `id` int(11) NOT NULL,
   `building_id` int(11) DEFAULT NULL COMMENT 'Foreign key to buildings table',
   `name` varchar(100) NOT NULL,
+  `next_maintenance_date` date DEFAULT NULL,
+  `last_maintenance_date` date DEFAULT NULL,
+  `maintenance_frequency_days` int(11) DEFAULT 90 COMMENT 'Days between maintenance (default 90 days)',
+  `maintenance_notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -2232,14 +2253,14 @@ CREATE TABLE `rooms` (
 -- Dumping data for table `rooms`
 --
 
-INSERT INTO `rooms` (`id`, `building_id`, `name`, `created_at`) VALUES
-(6, 2, 'IL501', '2025-11-22 14:36:23'),
-(7, 1, 'IK501', '2025-11-28 06:54:16'),
-(8, 1, 'IK502', '2025-11-28 06:55:02'),
-(10, 4, '201', '2025-12-04 02:46:55'),
-(11, 1, 'IK604', '2025-12-04 05:52:42'),
-(12, 1, 'IK603', '2025-12-04 05:52:47'),
-(13, 1, 'IK503', '2025-12-04 11:49:59');
+INSERT INTO `rooms` (`id`, `building_id`, `name`, `next_maintenance_date`, `last_maintenance_date`, `maintenance_frequency_days`, `maintenance_notes`, `created_at`) VALUES
+(6, 2, 'IL501', NULL, NULL, 90, NULL, '2025-11-22 14:36:23'),
+(7, 1, 'IK501', '2026-01-30', '2026-01-29', 90, NULL, '2025-11-28 06:54:16'),
+(8, 1, 'IK502', NULL, NULL, 90, NULL, '2025-11-28 06:55:02'),
+(10, 4, '201', NULL, NULL, 90, NULL, '2025-12-04 02:46:55'),
+(11, 1, 'IK604', NULL, NULL, 90, NULL, '2025-12-04 05:52:42'),
+(12, 1, 'IK603', NULL, NULL, 90, NULL, '2025-12-04 05:52:47'),
+(13, 1, 'IK503', NULL, NULL, 90, NULL, '2025-12-04 11:49:59');
 
 -- --------------------------------------------------------
 
@@ -2271,10 +2292,10 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`) VALUES
 (1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-01-14 13:26:16', '2026-01-14 13:26:16', NULL, NULL, NULL, NULL, NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-01-14 16:23:16', '2026-01-14 16:23:16', NULL, NULL, NULL, NULL, NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-01-14 12:13:33', '2026-01-14 12:13:33', NULL, NULL, NULL, NULL, NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-01-29 15:32:53', '2026-01-29 15:32:53', NULL, NULL, NULL, NULL, NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-01-29 15:32:37', '2026-01-29 15:32:37', NULL, NULL, NULL, NULL, NULL),
 (4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL, NULL, NULL, NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-01-14 11:48:41', '2026-01-14 11:48:41', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-01-29 15:29:03', '2026-01-29 15:29:03', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
 (6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL, NULL, NULL, NULL, NULL),
 (29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL, NULL, NULL, NULL, NULL),
 (30, '22-0350', '$2y$10$cNGBGPw7BYAQ.9d6GdKvXuYXzYdVo2XwfJGo7nMfGgfjNs.5bBv3O', 'Kim F. Gamot', 'kimgamot@gmail.com', 'Student', 'Active', '2025-12-17 20:09:16', '2025-12-17 20:09:54', '2025-12-17 20:09:54', NULL, 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6');
@@ -2431,7 +2452,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=216;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=225;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -2491,7 +2512,7 @@ ALTER TABLE `issues`
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
 
 --
 -- AUTO_INCREMENT for table `notifications`
