@@ -47,107 +47,124 @@ try {
 include '../components/layout_header.php';
 ?>
 
-<style>
-    body, html { overflow: hidden !important; height: 100vh; }
-</style>
-
 <!-- Main Content -->
-<main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 overflow-hidden">
-        
-        <!-- Left Column: Profile Info -->
-        <div class="lg:col-span-2 flex flex-col gap-2 h-full overflow-hidden">
+<main class="p-6 bg-gray-50 min-h-screen text-[11px] text-gray-700">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <!-- LEFT COLUMN (2/3 width) -->
+        <div class="lg:col-span-2 space-y-4">
+
             <!-- Profile Information Card -->
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-id-card text-[#1E3A8A]"></i>
-                    Profile Information
-                </h3>
-                
-                <div class="space-y-3 text-xs">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Full Name</label>
-                            <p class="text-xs text-gray-900 font-medium"><?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?></p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Email Address</label>
-                            <p class="text-xs text-gray-900"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
-                        </div>
-                    </div>
+            <div class="bg-white rounded-lg border p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-user text-[#1E3A8A]"></i> Profile Information
+                    </h3>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Role</label>
-                            <p>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700">
-                                    <i class="fa-solid fa-flask mr-1"></i>
-                                    <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
-                                </span>
-                            </p>
+                <!-- Avatar and Basic Info -->
+                <div class="flex items-start gap-4 pb-3 border-b border-gray-200">
+                    <div class="relative shrink-0">
+                        <div class="w-20 h-20 rounded-full border border-gray-300 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-flask text-3xl text-purple-600"></i>
                         </div>
-                        
-                        <?php if (isset($user_data['id_number']) && $user_data['id_number']): ?>
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Employee ID</label>
-                            <p class="text-xs text-gray-900 font-mono"><?php echo htmlspecialchars($user_data['id_number']); ?></p>
-                        </div>
-                        <?php endif; ?>
+                        <span class="absolute bottom-0 right-0 inline-block w-3 h-3 bg-green-500 rounded-full border-2 border-white"
+                              title="Active"></span>
                     </div>
+                    <div class="flex-1">
+                        <h2 class="text-base font-bold text-gray-800">
+                            <?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?>
+                        </h2>
+                        <div class="flex items-center gap-2 text-[10px] text-gray-600 mt-1">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-flask text-purple-600"></i>
+                                <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
+                            </span>
+                            <span class="text-gray-400">•</span>
+                            <span><?php echo htmlspecialchars($user_data['id_number'] ?? 'N/A'); ?></span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-1 italic">Managing laboratory assets and operations</p>
+                    </div>
+                </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Member Since</label>
-                            <p class="text-xs text-gray-900">
-                                <i class="fa-solid fa-calendar-check text-green-600 mr-1"></i>
-                                <?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?>
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-medium text-gray-700 mb-1">Last Login</label>
-                            <p class="text-xs text-gray-900">
-                                <i class="fa-solid fa-clock text-blue-600 mr-1"></i>
-                                <?php 
-                                if ($user_data['last_login']) {
-                                    echo date('M j, Y g:i A', strtotime($user_data['last_login']));
-                                } else {
-                                    echo 'Never';
-                                }
-                                ?>
-                            </p>
-                        </div>
+                <!-- Contact Information Grid -->
+                <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-700">
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-envelope text-[#1E3A8A] mr-1"></i> Email Address
+                        </p>
+                        <p class="text-gray-900"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-id-badge text-[#1E3A8A] mr-1"></i> Employee ID
+                        </p>
+                        <p class="text-gray-900"><?php echo htmlspecialchars($user_data['id_number'] ?? 'N/A'); ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-user-tag text-[#1E3A8A] mr-1"></i> Role
+                        </p>
+                        <p class="text-gray-900">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700">
+                                <i class="fa-solid fa-flask mr-1"></i>
+                                <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
+                            </span>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-building text-[#1E3A8A] mr-1"></i> Department
+                        </p>
+                        <p class="text-gray-900">Laboratory Services</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-calendar-plus text-[#1E3A8A] mr-1"></i> Member Since
+                        </p>
+                        <p class="text-gray-900"><?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-600 mb-1">
+                            <i class="fa-solid fa-clock text-[#1E3A8A] mr-1"></i> Last Login
+                        </p>
+                        <p class="text-gray-900">
+                            <?php 
+                            if ($user_data['last_login']) {
+                                echo date('M j, Y g:i A', strtotime($user_data['last_login']));
+                            } else {
+                                echo 'Never';
+                            }
+                            ?>
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- E-Signature Section -->
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-signature text-[#1E3A8A]"></i>
-                    E-Signature Management
+            <!-- E-Signature Management -->
+            <div class="bg-white rounded-lg border p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-signature text-[#1E3A8A]"></i> E-Signature Management
                 </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Current Signature Display -->
                     <div>
                         <label class="block text-[10px] font-medium text-gray-700 mb-2">Current Signature</label>
-                        <div class="border-2 border-dashed border-gray-300 rounded p-3 bg-gray-50 flex items-center justify-center" style="min-height: 120px;">
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 140px;">
                             <?php if ($current_signature && file_exists('../../uploads/signatures/' . $current_signature)): ?>
                                 <img src="../../uploads/signatures/<?php echo htmlspecialchars($current_signature); ?>" 
                                      alt="Current E-Signature" 
-                                     class="max-h-24 max-w-full object-contain">
+                                     class="max-h-28 max-w-full object-contain">
                             <?php else: ?>
                                 <div class="text-center text-gray-400">
-                                    <i class="fa-solid fa-signature text-2xl mb-1"></i>
+                                    <i class="fa-solid fa-signature text-3xl mb-2"></i>
                                     <p class="text-[10px]">No signature uploaded</p>
                                 </div>
                             <?php endif; ?>
                         </div>
                         <?php if ($current_signature): ?>
-                        <button type="button" onclick="removeSignature()" class="mt-2 w-full px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] rounded transition-colors">
+                        <button type="button" onclick="removeSignature()" class="mt-2 w-full px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-[10px] font-medium rounded transition-colors">
                             <i class="fa-solid fa-trash mr-1"></i>Remove Signature
                         </button>
                         <?php endif; ?>
@@ -156,107 +173,104 @@ include '../components/layout_header.php';
                     <!-- Upload Form -->
                     <div>
                         <label class="block text-[10px] font-medium text-gray-700 mb-2">Upload New Signature</label>
-                        <form id="signatureForm" enctype="multipart/form-data" class="space-y-2">
-                            <input type="file" 
-                                   id="signatureFile" 
-                                   name="signature" 
-                                   accept="image/jpeg,image/jpg,image/png,image/gif"
-                                   class="block w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                            <p class="text-[9px] text-gray-500">JPG, PNG, GIF (Max 2MB)</p>
-                            
-                            <!-- Preview Area -->
-                            <div id="signaturePreview" class="hidden border-2 border-dashed border-gray-300 rounded p-2 bg-gray-50">
-                                <img id="signaturePreviewImage" src="" alt="Preview" class="max-h-20 max-w-full object-contain mx-auto">
+                        <form id="signatureForm" enctype="multipart/form-data" class="space-y-3">
+                            <div>
+                                <input type="file" 
+                                       id="signatureFile" 
+                                       name="signature" 
+                                       accept="image/jpeg,image/jpg,image/png,image/gif"
+                                       class="block w-full text-[10px] text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer border border-gray-300 rounded">
+                                <p class="text-[9px] text-gray-500 mt-1">JPG, PNG, GIF (Max 2MB)</p>
                             </div>
                             
-                            <button type="submit" class="w-full px-2 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-medium rounded transition-colors">
+                            <!-- Preview Area -->
+                            <div id="signaturePreview" class="hidden border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50">
+                                <img id="signaturePreviewImage" src="" alt="Preview" class="max-h-24 max-w-full object-contain mx-auto">
+                            </div>
+                            
+                            <button type="submit" class="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-medium rounded transition-colors">
                                 <i class="fa-solid fa-upload mr-1"></i>Upload Signature
                             </button>
                         </form>
                         
-                        <div class="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                            <p class="text-[9px] text-blue-700">
-                                <i class="fa-solid fa-info-circle mr-1"></i>
-                                Your signature will be used for approving borrowing requests and official documents.
+                        <div class="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <p class="text-[10px] text-purple-800 flex items-start gap-2">
+                                <i class="fa-solid fa-info-circle mt-0.5"></i>
+                                <span>Your signature will be used for approving borrowing requests and official documents.</span>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Security & Password Section -->
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-[#1E3A8A]"></i>
-                    Security Settings
+            <!-- Security Settings -->
+            <div class="bg-white rounded-lg border p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-[#1E3A8A]"></i> Security Settings
                 </h3>
 
-                <div class="space-y-2">
-                    <div class="border border-gray-200 rounded p-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <h4 class="text-xs font-semibold text-gray-800">Change Password</h4>
-                                <p class="text-[10px] text-gray-500 mt-0.5">Update your password to keep your account secure</p>
-                            </div>
-                            <button onclick="openChangePasswordModal()" class="px-3 py-1.5 bg-[#1E3A8A] hover:bg-blue-700 text-white text-[10px] font-medium rounded transition-colors">
-                                <i class="fa-solid fa-key mr-1"></i>Change Password
-                            </button>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-800">Change Password</h4>
+                            <p class="text-[10px] text-gray-500">Update your password to keep your account secure</p>
                         </div>
+                        <button onclick="openChangePasswordModal()" 
+                            class="px-3 py-1.5 bg-[#1E3A8A] hover:bg-blue-700 text-white text-[10px] font-medium rounded transition-colors">
+                            <i class="fa-solid fa-key mr-1"></i>Change Password
+                        </button>
                     </div>
-                    
-                    <div class="border border-gray-200 rounded p-3 bg-blue-50">
-                        <div class="flex items-start gap-2">
-                            <i class="fa-solid fa-circle-info text-blue-600 text-sm mt-0.5"></i>
-                            <div>
-                                <h4 class="text-xs font-semibold text-blue-900">Password Security Tips</h4>
-                                <ul class="text-[10px] text-blue-800 mt-1 space-y-0.5 list-disc list-inside">
-                                    <li>Use at least 8 characters</li>
-                                    <li>Include uppercase and lowercase letters</li>
-                                    <li>Add numbers and special characters</li>
-                                    <li>Avoid common words or personal information</li>
-                                </ul>
-                            </div>
-                        </div>
+
+                    <div class="bg-blue-50 border border-blue-100 rounded p-3">
+                        <h4 class="text-xs font-semibold text-blue-900 mb-2 flex items-center gap-1">
+                            <i class="fa-solid fa-shield-halved"></i> Password Security Tips
+                        </h4>
+                        <ul class="list-disc list-inside text-[10px] text-blue-800 space-y-0.5">
+                            <li>Use at least 8 characters</li>
+                            <li>Include uppercase and lowercase letters</li>
+                            <li>Add numbers and special characters</li>
+                            <li>Avoid common words or personal information</li>
+                        </ul>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- Right Sidebar -->
-        <div class="flex flex-col gap-2 h-full">
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i>
-                    Account Status
+        <!-- RIGHT SIDEBAR (1/3 width) -->
+        <div class="space-y-4">
+
+            <!-- Account Status -->
+            <div class="bg-white rounded-lg border p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i> Account Status
                 </h3>
+
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-gray-600">Profile Status</span>
-                        <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-[10px] rounded-full font-medium">
-                            <i class="fa-solid fa-circle-check mr-0.5"></i>Active
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">
+                            <i class="fa-solid fa-circle-check mr-1"></i>Active
                         </span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-gray-600">Account Type</span>
-                        <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded-full font-medium">
-                            Laboratory Staff
-                        </span>
+                        <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">Laboratory Staff</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-gray-600">Access Level</span>
-                        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
-                            Staff Access
-                        </span>
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">Staff Access</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded shadow-sm border border-gray-200 p-3">
-                <h3 class="text-xs font-semibold text-gray-800 mb-2 flex items-center gap-1">
-                    <i class="fa-solid fa-user-check text-[#1E3A8A]"></i>
-                    Staff Privileges
+            <!-- Staff Privileges -->
+            <div class="bg-white rounded-lg border p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-user-check text-[#1E3A8A]"></i> Privileges
                 </h3>
-                <div class="space-y-1.5">
+
+                <div class="space-y-2">
                     <div class="flex items-center gap-2 text-[10px] text-gray-700">
                         <i class="fa-solid fa-check text-green-600"></i>
                         <span>Asset Management</span>
@@ -280,16 +294,18 @@ include '../components/layout_header.php';
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded shadow-sm p-3 text-white">
+            <!-- Role Badge -->
+            <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg shadow-sm p-4 text-white">
                 <div class="text-center">
-                    <i class="fa-solid fa-flask text-3xl mb-2 opacity-80"></i>
+                    <i class="fa-solid fa-flask text-4xl mb-2 opacity-90"></i>
                     <h4 class="text-xs font-semibold mb-1">Laboratory Staff</h4>
                     <p class="text-[10px] opacity-90">Manage lab assets and operations</p>
                 </div>
             </div>
-        </div>
-    </div>
 
+        </div>
+
+    </div>
 </main>
 
 <!-- Change Password Modal -->

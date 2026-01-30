@@ -17,62 +17,27 @@ include '../components/layout_header.php';
 ?>
         <style>
             body, html { overflow: hidden !important; height: 100vh; }
+            main { height: calc(100vh - 85px); }
             .stat-card {
-                transition: all 0.3s ease;
-            }
-            .stat-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transition: all 0.2s ease;
             }
             .loading {
                 display: inline-block;
                 width: 20px;
                 height: 20px;
-                border: 3px solid rgba(99, 102, 241, 0.3);
+                border: 3px solid rgba(30, 58, 138, 0.3);
                 border-radius: 50%;
-                border-top-color: #6366f1;
+                border-top-color: #1E3A8A;
                 animation: spin 1s ease-in-out infinite;
             }
             @keyframes spin {
                 to { transform: rotate(360deg); }
             }
-            .tooltip-icon {
-                cursor: help;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                background: #e5e7eb;
-                color: #6b7280;
-                font-size: 11px;
-                font-weight: bold;
-                margin-left: 4px;
-            }
-            .tooltip-icon:hover {
-                background: #6366f1;
-                color: white;
-            }
-            .info-badge {
-                display: inline-block;
-                padding: 2px 8px;
-                border-radius: 12px;
-                font-size: 10px;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-            .help-text {
-                font-size: 11px;
-                color: #6b7280;
-                font-style: italic;
-                margin-top: 8px;
-            }
         </style>
 
         <!-- Main Content -->
-        <main class="p-2 bg-gray-50 h-screen overflow-y-auto">
-            <div class="w-full">
+        <main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
+            <div class="flex-1 min-h-0 overflow-hidden">
                 <!-- Loading State -->
                 <div id="loadingState" class="flex items-center justify-center py-12">
                     <div class="text-center">
@@ -81,7 +46,7 @@ include '../components/layout_header.php';
                         <p class="text-sm text-gray-500 mt-2" id="loadingSubtext">Analyzing your asset data...</p>
                         <div class="mt-4">
                             <div class="w-64 mx-auto bg-gray-200 rounded-full h-2">
-                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                <div id="progressBar" class="h-2 rounded-full transition-all duration-500" style="width: 0%; background-color: #1E3A8A;"></div>
                             </div>
                             <p class="text-xs text-gray-500 mt-2" id="progressText">0%</p>
                         </div>
@@ -92,178 +57,177 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Analytics Content -->
-                <div id="analyticsContent" class="hidden">
+                <div id="analyticsContent" class="hidden flex flex-col" style="gap: 0.375rem; height: 100%; overflow: hidden;">
                     <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-red-500 p-6">
-                            <div class="flex items-center justify-between">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-shrink-0">
+                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                            <div class="flex items-center justify-between mb-1">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600 flex items-center">
-                                        Needs Attention Now
-                                    </p>
-                                    <p id="highRiskCount" class="text-3xl font-bold text-red-600 mt-2">-</p>
+                                    <p class="text-xs opacity-70 mb-0.5">Needs Attention</p>
+                                    <p id="highRiskCount" class="text-2xl font-bold">-</p>
+                                </div>
+                                <div class="bg-red-100 p-2 rounded">
+                                    <i class="fas fa-exclamation-triangle text-xl text-red-600"></i>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-600 mt-4">Assets likely to fail soon - check these first!</p>
+                            <p class="text-xs opacity-70">Assets likely to fail soon</p>
                         </div>
 
-                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-6">
-                            <div class="flex items-center justify-between">
+                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                            <div class="flex items-center justify-between mb-1">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600 flex items-center">
-                                        Overall Health Score
-                                    </p>
-                                    <div class="flex items-baseline mt-2">
-                                        <p id="avgConditionScore" class="text-3xl font-bold text-blue-600">-</p>
-                                        <p class="text-lg text-gray-500 ml-1">/100</p>
+                                    <p class="text-xs opacity-70 mb-0.5">Health Score</p>
+                                    <div class="flex items-baseline">
+                                        <p id="avgConditionScore" class="text-2xl font-bold">-</p>
+                                        <p class="text-sm opacity-70 ml-1">/100</p>
                                     </div>
                                 </div>
-                            </div>
-                            <p id="conditionTrend" class="text-xs text-gray-600 mt-4">-</p>
-                            <p id="healthExplanation" class="text-xs font-medium mt-1">-</p>
-                        </div>
-
-                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-orange-500 p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-600 flex items-center">
-                                        Expected Problems
-                                    </p>
-                                    <p id="predictedIssues" class="text-3xl font-bold text-orange-600 mt-2">-</p>
+                                <div class="bg-blue-100 p-2 rounded">
+                                    <i class="fas fa-heart-pulse text-xl text-blue-600"></i>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-600 mt-4">Likely issues next month - plan ahead</p>
+                            <p id="healthExplanation" class="text-xs font-medium">-</p>
                         </div>
 
-                        <div class="stat-card bg-white rounded-lg shadow-md border-l-4 border-green-500 p-6">
-                            <div class="flex items-center justify-between">
+                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                            <div class="flex items-center justify-between mb-1">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600 flex items-center">
-                                        Prediction Reliability
-                                        <span class="tooltip-icon" title="How accurate our predictions are">?</span>
-                                    </p>
-                                    <p id="modelAccuracy" class="text-3xl font-bold text-green-600 mt-2">-</p>
+                                    <p class="text-xs opacity-70 mb-0.5">Next Month</p>
+                                    <p id="predictedIssues" class="text-2xl font-bold">-</p>
+                                </div>
+                                <div class="bg-orange-100 p-2 rounded">
+                                    <i class="fas fa-calendar-day text-xl text-orange-600"></i>
                                 </div>
                             </div>
-                            <p id="accuracyExplanation" class="text-xs font-medium mt-4">-</p>
+                            <p class="text-xs opacity-70">Predicted issues</p>
                         </div>
                     </div>
 
                     <!-- Main Charts Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-shrink-0">
                         <!-- Condition Degradation Trend -->
-                        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                            <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="flex items-center justify-between p-2 border-b border-gray-200" style="background-color: rgba(30, 58, 138, 0.05);">
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">How Asset Health Changes Over Time</h3>
-                                    <p class="text-sm text-gray-600">Past 12 months + next 6 months forecast</p>
+                                    <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Asset Health Over Time</h3>
+                                    <p class="text-xs text-gray-500">Past 12 months + 6 months forecast</p>
                                 </div>
-                                <span id="degradationBadge" class="px-3 py-1 text-xs font-medium rounded-full">-</span>
+                                <span id="degradationBadge" class="px-2 py-1 text-xs font-medium rounded">-</span>
                             </div>
-                            <div class="h-72">
-                                <canvas id="conditionTrendChart"></canvas>
+                            <div class="p-3">
+                                <div class="h-40">
+                                    <canvas id="conditionTrendChart"></canvas>
+                                </div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">Current</p>
+                                    <p id="currentHealth" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">In 6 Months</p>
+                                    <p id="condition6M" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-600">Current Health</p>
-                                    <p id="currentHealth" class="text-lg font-bold text-gray-900">-</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-600">In 6 Months</p>
-                                    <p id="condition6M" class="text-lg font-bold text-gray-900">-</p>
-                                </div>
                             </div>
                         </div>
 
                         <!-- Maintenance Forecast -->
-                        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                            <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="flex items-center justify-between p-2 border-b border-gray-200" style="background-color: rgba(30, 58, 138, 0.05);">
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">Expected Problems Each Month</h3>
-                                    <p class="text-sm text-gray-600">Based on past problem patterns</p>
+                                    <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Expected Problems</h3>
+                                    <p class="text-xs text-gray-500">Based on past patterns</p>
                                 </div>
-                                <span id="maintenanceBadge" class="px-3 py-1 text-xs font-medium rounded-full">-</span>
+                                <span id="maintenanceBadge" class="px-2 py-1 text-xs font-medium rounded">-</span>
                             </div>
-                            <div class="h-72">
-                                <canvas id="maintenanceForecastChart"></canvas>
+                            <div class="p-3">
+                                <div class="h-36">
+                                    <canvas id="maintenanceForecastChart"></canvas>
+                                </div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">Last Month</p>
+                                    <p id="lastMonthIssues" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">Next Month</p>
+                                    <p id="maintenanceNext" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-600">Last Month</p>
-                                    <p id="lastMonthIssues" class="text-lg font-bold text-gray-900">-</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-600">Next Month</p>
-                                    <p id="maintenanceNext" class="text-lg font-bold text-gray-900">-</p>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Predicted Failures Section (NEW) -->
-                    <div class="mb-6">
-                        <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg shadow-md border-l-4 border-orange-500 p-6">
-                            <div class="flex items-center mb-4">
-                                <div class="bg-orange-500 p-3 rounded-full mr-4">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold text-gray-900">Assets That Might Break Next</h3>
-                                    <p class="text-sm text-gray-700 mt-1">Based on patterns: if one power supply broke at 2 years old, similar ones will break around the same age</p>
-                                </div>
-                            </div>
-                            <div id="predictedFailuresList" class="space-y-3">
-                                <!-- Will be populated by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Asset Risk Distribution -->
-                        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Risk Levels</h3>
-                            <p class="text-xs text-gray-600 mb-4">How many assets are in each risk category</p>
-                            <div class="h-64">
-                                <canvas id="riskDistributionChart"></canvas>
-                            </div>
-                            <div class="mt-4 space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Critical Risk</span>
-                                    <span id="criticalCount" class="text-sm font-bold text-red-600">-</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">High Risk</span>
-                                    <span id="highRiskCountDetail" class="text-sm font-bold text-orange-600">-</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Medium Risk</span>
-                                    <span id="mediumCount" class="text-sm font-bold text-yellow-600">-</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Low Risk</span>
-                                    <span id="lowCount" class="text-sm font-bold text-green-600">-</span>
+                    <!-- Predicted Failures Section -->
+                    <div class="flex-shrink-0">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <!-- Header and Controls -->
+                            <div class="border-b border-gray-200 p-2" style="background-color: rgba(30, 58, 138, 0.05);">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="p-2 rounded" style="background-color: #1E3A8A;">
+                                            <i class="fas fa-exclamation-triangle text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold" style="color: #1E3A8A;">Assets That Might Break Next</h3>
+                                            <p class="text-xs text-gray-600">Based on failure patterns</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Search and Filter -->
+                                    <div class="flex items-center gap-2">
+                                        <div class="relative">
+                                            <input id="failureSearch" oninput="filterFailures()" type="search" placeholder="Search assets..."
+                                                class="w-40 pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1" style="focus:ring-color: #1E3A8A;" />
+                                            <i class="fas fa-search absolute left-2 text-gray-400 text-xs pointer-events-none" style="top: 50%; transform: translateY(-50%);"></i>
+                                        </div>
+                                        <select id="riskLevelFilter" onchange="filterFailures()" 
+                                            class="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1" style="focus:ring-color: #1E3A8A;">
+                                            <option value="">All Risk Levels</option>
+                                            <option value="high">High Risk (≥80%)</option>
+                                            <option value="medium">Medium Risk (50-79%)</option>
+                                            <option value="low">Low Risk (<50%)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Lifecycle Analysis -->
-                        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Assets by Age</h3>
-                            <p class="text-xs text-gray-600 mb-4">How condition changes as assets get older</p>
-                            <div class="h-64">
-                                <canvas id="lifecycleChart"></canvas>
+                            
+                            <!-- Table -->
+                            <div class="overflow-x-auto">
+                                <table id="failuresTable" class="min-w-full divide-y divide-gray-200">
+                                    <thead class="sticky top-0" style="background-color: rgba(30, 58, 138, 0.1);">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Asset</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Tag</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Reason</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Condition</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Age</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Issues</th>
+                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Risk</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <!-- Will be populated by JS -->
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-
-                        <!-- Critical Assets List -->
-                        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Currently Broken Assets</h3>
-                            <p class="text-xs text-gray-600 mb-4">Assets already having problems</p>
-                            <div class="h-64 overflow-y-auto" id="criticalAssetsList">
-                                <!-- Will be populated by JS -->
+                            
+                            <!-- Pagination -->
+                            <div class="bg-gray-50 px-3 py-2 border-t border-gray-200 flex items-center justify-between">
+                                <div class="text-xs text-gray-600">
+                                    Showing <span id="failureStart">0</span> to <span id="failureEnd">0</span> of <span id="failureTotal">0</span> assets
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="changeFailurePage(-1)" id="failurePrevBtn" 
+                                        class="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Previous
+                                    </button>
+                                    <span class="text-xs text-gray-600">Page <span id="failureCurrentPage">1</span> of <span id="failureTotalPages">1</span></span>
+                                    <button onclick="changeFailurePage(1)" id="failureNextBtn" 
+                                        class="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Next
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -379,7 +343,6 @@ include '../components/layout_header.php';
             document.getElementById('highRiskCount').textContent = highRiskAssets.length;
             document.getElementById('avgConditionScore').textContent = avgCondition.toFixed(0);
             document.getElementById('predictedIssues').textContent = nextMonthIssues;
-            document.getElementById('modelAccuracy').textContent = (modelR2 * 100).toFixed(0) + '%';
             
             // Health explanations
             let healthText = avgCondition >= 80 ? 'Excellent - Assets in great shape!' :
@@ -388,66 +351,131 @@ include '../components/layout_header.php';
                            'Poor - Many assets need help!';
             let healthColor = avgCondition >= 80 ? 'text-green-600' : avgCondition >= 60 ? 'text-blue-600' : avgCondition >= 40 ? 'text-yellow-600' : 'text-red-600';
             document.getElementById('healthExplanation').textContent = healthText;
-            document.getElementById('healthExplanation').className = `text-xs font-medium mt-1 ${healthColor}`;
-            
-            const trend = data.condition_degradation.trend === 'degrading' ? 'Things are getting worse over time' : 'Things are improving over time';
-            document.getElementById('conditionTrend').textContent = trend;
-            
-            let accuracyText = modelR2 >= 0.8 ? 'Very reliable!' : modelR2 >= 0.6 ? 'Pretty reliable' : modelR2 >= 0.4 ? 'Use with caution' : 'Need more data';
-            document.getElementById('accuracyExplanation').textContent = accuracyText;
+            document.getElementById('healthExplanation').className = `text-xs font-medium ${healthColor}`;
 
             // Render charts
             renderConditionTrendChart(data.condition_degradation);
             renderMaintenanceForecastChart(data.maintenance_forecast);
-            renderRiskDistributionChart(data.asset_failure_risk);
-            renderLifecycleChart(data.lifecycle_predictions);
-            renderCriticalAssetsList(data.critical_assets);
             renderPredictedFailures(data.predicted_failures);
         }
 
+        // Pagination variables for failures table
+        let allFailures = [];
+        let filteredFailures = [];
+        let currentFailurePage = 1;
+        const failuresPerPage = 7;
+
         function renderPredictedFailures(predictions) {
-            const container = document.getElementById('predictedFailuresList');
+            allFailures = predictions || [];
+            filteredFailures = [...allFailures];
+            currentFailurePage = 1;
             
-            if (!predictions || predictions.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg p-6 text-center">
-                        <p class="text-green-600 font-semibold">Good news!</p>
-                        <p class="text-sm text-gray-600 mt-2">No clear failure patterns detected yet. Keep monitoring!</p>
-                    </div>
+            if (allFailures.length === 0) {
+                document.querySelector('#failuresTable tbody').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-3 py-6 text-center">
+                            <p class="text-green-600 font-semibold">Good news!</p>
+                            <p class="text-xs text-gray-600 mt-1">No clear failure patterns detected yet. Keep monitoring!</p>
+                        </td>
+                    </tr>
                 `;
+                updateFailurePagination();
                 return;
             }
             
-            container.innerHTML = predictions.map((pred, index) => {
-                const riskColor = pred.risk_percentage >= 80 ? 'red' : pred.risk_percentage >= 50 ? 'orange' : 'yellow';
-                const riskBg = pred.risk_percentage >= 80 ? 'bg-red-50' : pred.risk_percentage >= 50 ? 'bg-orange-50' : 'bg-yellow-50';
-                const riskBorder = pred.risk_percentage >= 80 ? 'border-red-200' : pred.risk_percentage >= 50 ? 'border-orange-200' : 'border-yellow-200';
-                
-                return `
-                    <div class="${riskBg} border ${riskBorder} rounded-lg p-4">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <p class="font-bold text-gray-900">${pred.asset_name}</p>
-                                    <span class="text-xs px-2 py-1 bg-gray-200 rounded">${pred.asset_tag}</span>
-                                </div>
-                                <p class="text-sm text-gray-700 mb-2">
-                                    <strong>Why this might fail:</strong> ${pred.reason}
-                                </p>
-                                <div class="flex items-center space-x-4 text-xs text-gray-600">
-                                    <span>Condition: <strong>${pred.condition}</strong></span>
-                                    <span>Age: <strong>${Math.floor(pred.current_age_days / 30)} months</strong></span>
-                                    ${pred.issue_count > 0 ? `<span>Issues: <strong>${pred.issue_count}</strong></span>` : ''}
-                                </div>
-                            </div>
-                            <div class="ml-4 text-right">
-                                <div class="text-2xl font-bold text-${riskColor}-600">${pred.risk_percentage}%</div>
-                                <div class="text-xs text-gray-600">Risk Level</div>
-                            </div>
-                        </div>
-                    </div>
+            renderFailuresTable();
+        }
+
+        function renderFailuresTable() {
+            const tbody = document.querySelector('#failuresTable tbody');
+            const start = (currentFailurePage - 1) * failuresPerPage;
+            const end = start + failuresPerPage;
+            const pageData = filteredFailures.slice(start, end);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-3 py-4 text-center text-sm text-gray-500">No assets match your filters</td>
+                    </tr>
                 `;
-            }).join('');
+            } else {
+                tbody.innerHTML = pageData.map(pred => {
+                    const riskBadge = pred.risk_percentage >= 80 ? 'bg-red-100 text-red-700' : 
+                                     pred.risk_percentage >= 50 ? 'bg-orange-100 text-orange-700' : 
+                                     'bg-yellow-100 text-yellow-700';
+                    const ageMonths = Math.floor(pred.current_age_days / 30);
+                    
+                    return `
+                        <tr class="hover:bg-gray-50" 
+                            data-search="${(pred.asset_name + ' ' + pred.asset_tag + ' ' + pred.reason).toLowerCase()}"
+                            data-risk="${pred.risk_percentage}">
+                            <td class="px-3 py-2 text-xs font-medium text-gray-900">${pred.asset_name}</td>
+                            <td class="px-3 py-2 text-xs text-gray-600">${pred.asset_tag}</td>
+                            <td class="px-3 py-2 text-xs text-gray-600" style="max-width: 200px;" title="${pred.reason}">${pred.reason.length > 50 ? pred.reason.substring(0, 50) + '...' : pred.reason}</td>
+                            <td class="px-3 py-2 text-xs">
+                                <span class="px-2 py-1 rounded text-xs ${
+                                    pred.condition === 'Poor' ? 'bg-orange-100 text-orange-700' : 
+                                    pred.condition === 'Fair' ? 'bg-yellow-100 text-yellow-700' : 
+                                    'bg-gray-100 text-gray-700'
+                                }">${pred.condition}</span>
+                            </td>
+                            <td class="px-3 py-2 text-xs text-gray-600">${ageMonths} months</td>
+                            <td class="px-3 py-2 text-xs text-gray-600">${pred.issue_count}</td>
+                            <td class="px-3 py-2 text-xs">
+                                <span class="px-2 py-1 rounded font-bold ${riskBadge}">${pred.risk_percentage}%</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            updateFailurePagination();
+        }
+
+        function filterFailures() {
+            const searchQuery = (document.getElementById('failureSearch')?.value || '').toLowerCase().trim();
+            const riskLevel = document.getElementById('riskLevelFilter')?.value || '';
+            
+            filteredFailures = allFailures.filter(pred => {
+                const searchText = (pred.asset_name + ' ' + pred.asset_tag + ' ' + pred.reason).toLowerCase();
+                const matchesSearch = !searchQuery || searchText.includes(searchQuery);
+                
+                let matchesRisk = true;
+                if (riskLevel === 'high') matchesRisk = pred.risk_percentage >= 80;
+                else if (riskLevel === 'medium') matchesRisk = pred.risk_percentage >= 50 && pred.risk_percentage < 80;
+                else if (riskLevel === 'low') matchesRisk = pred.risk_percentage < 50;
+                
+                return matchesSearch && matchesRisk;
+            });
+            
+            currentFailurePage = 1;
+            renderFailuresTable();
+        }
+
+        function updateFailurePagination() {
+            const total = filteredFailures.length;
+            const totalPages = Math.ceil(total / failuresPerPage);
+            const start = total === 0 ? 0 : (currentFailurePage - 1) * failuresPerPage + 1;
+            const end = Math.min(currentFailurePage * failuresPerPage, total);
+            
+            document.getElementById('failureStart').textContent = start;
+            document.getElementById('failureEnd').textContent = end;
+            document.getElementById('failureTotal').textContent = total;
+            document.getElementById('failureCurrentPage').textContent = currentFailurePage;
+            document.getElementById('failureTotalPages').textContent = totalPages || 1;
+            
+            document.getElementById('failurePrevBtn').disabled = currentFailurePage === 1;
+            document.getElementById('failureNextBtn').disabled = currentFailurePage >= totalPages || total === 0;
+        }
+
+        function changeFailurePage(direction) {
+            const totalPages = Math.ceil(filteredFailures.length / failuresPerPage);
+            const newPage = currentFailurePage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentFailurePage = newPage;
+                renderFailuresTable();
+            }
         }
 
         function renderConditionTrendChart(data) {
@@ -476,25 +504,25 @@ include '../components/layout_header.php';
                         {
                             label: 'Historical',
                             data: historicalScores,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#1E3A8A',
+                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
                             borderWidth: 3,
                             tension: 0.4,
                             fill: true,
                             pointRadius: 5,
-                            pointBackgroundColor: '#3b82f6'
+                            pointBackgroundColor: '#1E3A8A'
                         },
                         {
                             label: 'Predicted',
                             data: Array(historicalScores.length - 1).fill(null).concat([historicalScores[historicalScores.length - 1], ...data.predictions]),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderColor: '#1E3A8A',
+                            backgroundColor: 'rgba(30, 58, 138, 0.05)',
                             borderWidth: 3,
                             borderDash: [5, 5],
                             tension: 0.4,
                             fill: true,
                             pointRadius: 5,
-                            pointBackgroundColor: '#f59e0b'
+                            pointBackgroundColor: '#1E3A8A'
                         }
                     ]
                 },
@@ -533,10 +561,10 @@ include '../components/layout_header.php';
             const badge = document.getElementById('degradationBadge');
             if (data.trend === 'degrading') {
                 badge.textContent = '↓ Degrading';
-                badge.className = 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700';
+                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700';
             } else {
                 badge.textContent = '↑ Improving';
-                badge.className = 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700';
+                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
             }
         }
 
@@ -563,13 +591,13 @@ include '../components/layout_header.php';
                         {
                             label: 'Historical Issues',
                             data: historicalCounts,
-                            backgroundColor: '#8b5cf6',
+                            backgroundColor: '#1E3A8A',
                             borderRadius: 6
                         },
                         {
                             label: 'Predicted Issues',
                             data: Array(historicalCounts.length).fill(null).concat(data.predictions),
-                            backgroundColor: '#fbbf24',
+                            backgroundColor: 'rgba(30, 58, 138, 0.6)',
                             borderRadius: 6
                         }
                     ]
@@ -603,144 +631,11 @@ include '../components/layout_header.php';
             const badge = document.getElementById('maintenanceBadge');
             if (data.trend === 'increasing') {
                 badge.textContent = '↑ Increasing';
-                badge.className = 'px-3 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700';
+                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700';
             } else {
                 badge.textContent = '↓ Decreasing';
-                badge.className = 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700';
+                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
             }
-        }
-
-        function renderRiskDistributionChart(assets) {
-            const riskCounts = {
-                'Critical': 0,
-                'High': 0,
-                'Medium': 0,
-                'Low': 0
-            };
-            
-            assets.forEach(asset => {
-                riskCounts[asset.risk_level]++;
-            });
-            
-            const ctx = document.getElementById('riskDistributionChart').getContext('2d');
-            charts.riskDistribution = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{
-                        data: [riskCounts.Critical, riskCounts.High, riskCounts.Medium, riskCounts.Low],
-                        backgroundColor: ['#dc2626', '#f97316', '#fbbf24', '#22c55e'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // Update counts
-            document.getElementById('criticalCount').textContent = riskCounts.Critical;
-            document.getElementById('highRiskCountDetail').textContent = riskCounts.High;
-            document.getElementById('mediumCount').textContent = riskCounts.Medium;
-            document.getElementById('lowCount').textContent = riskCounts.Low;
-        }
-
-        function renderLifecycleChart(data) {
-            const ctx = document.getElementById('lifecycleChart').getContext('2d');
-            
-            charts.lifecycle = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.stage),
-                    datasets: [
-                        {
-                            label: 'Asset Count',
-                            data: data.map(d => d.count),
-                            backgroundColor: '#a78bfa',
-                            borderRadius: 6,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Avg Condition',
-                            data: data.map(d => d.avg_condition),
-                            type: 'line',
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'transparent',
-                            borderWidth: 3,
-                            yAxisID: 'y1',
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Asset Count'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Avg Condition'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderCriticalAssetsList(assets) {
-            const container = document.getElementById('criticalAssetsList');
-            
-            if (assets.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">No critical assets</p>';
-                return;
-            }
-            
-            container.innerHTML = assets.map(asset => `
-                <div class="border-b border-gray-200 py-3 hover:bg-gray-50 px-2 rounded transition">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">${asset.asset_name}</p>
-                            <p class="text-xs text-gray-500">${asset.asset_tag}</p>
-                        </div>
-                        <span class="px-2 py-1 text-xs rounded-full ${
-                            asset.condition === 'Non-Functional' ? 'bg-red-100 text-red-700' :
-                            asset.condition === 'Poor' ? 'bg-orange-100 text-orange-700' :
-                            'bg-yellow-100 text-yellow-700'
-                        }">
-                            ${asset.condition}
-                        </span>
-                    </div>
-                    <div class="mt-2 flex items-center space-x-4 text-xs text-gray-600">
-                        <span>${asset.issue_count} issue${asset.issue_count !== 1 ? 's' : ''}</span>
-                        <span>${Math.floor(asset.age_days / 365)}y ${Math.floor((asset.age_days % 365) / 30)}m old</span>
-                    </div>
-                </div>
-            `).join('');
         }
 
         // Load data on page load

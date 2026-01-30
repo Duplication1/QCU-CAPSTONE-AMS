@@ -78,24 +78,27 @@ main {
     transition: all 0.3s ease;
 }
 .building-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
+    border-color: #1E3A8A;
 }
 .stat-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 0.5rem;
     padding: 0.75rem;
-    color: white;
     text-align: center;
+    border: 1px solid #e5e7eb;
 }
 .stat-box.assets {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
 }
 .stat-box.issues {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
 }
 .stat-box.condition {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #059669;
 }
 </style>
 
@@ -103,17 +106,17 @@ main {
     <div class="flex-1 flex flex-col overflow-hidden">
         
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
+        <div class="flex items-center justify-between px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-200 mb-2">
             <div>
-                <h1 class="text-xl font-bold text-gray-800">Building Analytics</h1>
-                <p class="text-sm text-gray-500">Overview of assets, rooms, and issues by building</p>
+                <h1 class="text-lg font-bold" style="color: #1E3A8A;">Building Analytics</h1>
+                <p class="text-xs text-gray-500">Overview of assets, rooms, and issues by building</p>
             </div>
         </div>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200 p-4">
+        <div class="flex-1 overflow-auto bg-white rounded-lg shadow-sm border border-gray-200 p-3">
             <!-- Buildings Grid -->
-            <div id="buildingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div id="buildingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 <?php if (empty($buildings)): ?>
                     <div class="col-span-full text-center py-12">
                         <i class="fa-solid fa-building text-6xl text-gray-300 mb-4"></i>
@@ -122,40 +125,40 @@ main {
                     </div>
                 <?php else: ?>
                     <?php foreach ($buildings as $building): ?>
-                        <div class="building-card bg-white border-2 border-gray-200 rounded-xl p-5 cursor-pointer hover:border-blue-500"
+                        <div class="building-card bg-white border border-gray-200 rounded-lg p-4 cursor-pointer"
                              onclick="window.location.href='room_analytics.php?building_id=<?= $building['id'] ?>'">
                             
                             <!-- Building Header -->
-                            <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-start justify-between mb-3">
                                 <div class="flex-1">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-1"><?= htmlspecialchars($building['name']) ?></h3>
+                                    <h3 class="text-base font-bold mb-1" style="color: #1E3A8A;"><?= htmlspecialchars($building['name']) ?></h3>
                                     <p class="text-xs text-gray-500">
                                         <i class="fa-solid fa-door-open mr-1"></i><?= $building['total_rooms'] ?> Room<?= $building['total_rooms'] != 1 ? 's' : '' ?>
                                     </p>
                                 </div>
-                                <div class="bg-blue-100 p-2 rounded-lg">
-                                    <i class="fa-solid fa-building text-blue-600 text-xl"></i>
+                                <div class="p-2 rounded" style="background-color: rgba(30, 58, 138, 0.1);">
+                                    <i class="fa-solid fa-building text-lg" style="color: #1E3A8A;"></i>
                                 </div>
                             </div>
 
                             <!-- Analytics Grid -->
-                            <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div class="grid grid-cols-2 gap-2 mb-2">
                                 <!-- Total Assets -->
                                 <div class="stat-box assets">
-                                    <div class="text-2xl font-bold"><?= $building['active_assets'] ?></div>
-                                    <div class="text-xs opacity-90">Active Assets</div>
+                                    <div class="text-xl font-bold"><?= $building['active_assets'] ?></div>
+                                    <div class="text-xs font-medium">Active Assets</div>
                                 </div>
                                 
                                 <!-- Total Issues -->
                                 <div class="stat-box issues">
-                                    <div class="text-2xl font-bold"><?= $building['total_issues'] ?></div>
-                                    <div class="text-xs opacity-90">Total Issues</div>
+                                    <div class="text-xl font-bold"><?= $building['total_issues'] ?></div>
+                                    <div class="text-xs font-medium">Total Issues</div>
                                 </div>
                             </div>
 
                             <!-- Condition Breakdown -->
-                            <div class="bg-gray-50 rounded-lg p-3 mb-3">
-                                <p class="text-xs font-semibold text-gray-600 mb-2">Asset Condition</p>
+                            <div class="bg-gray-50 rounded-lg p-2 mb-2 border border-gray-200">
+                                <p class="text-xs font-semibold text-gray-600 mb-1.5">Asset Condition</p>
                                 <div class="grid grid-cols-3 gap-1 text-center">
                                     <div>
                                         <div class="text-green-600 font-bold text-sm"><?= $building['good_condition'] ?></div>
@@ -173,8 +176,8 @@ main {
                             </div>
 
                             <!-- Issue Status -->
-                            <div class="bg-gray-50 rounded-lg p-3">
-                                <p class="text-xs font-semibold text-gray-600 mb-2">Issue Status</p>
+                            <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                                <p class="text-xs font-semibold text-gray-600 mb-1.5">Issue Status</p>
                                 <div class="grid grid-cols-3 gap-1 text-center">
                                     <div>
                                         <div class="text-orange-600 font-bold text-sm"><?= $building['pending_issues'] ?></div>
@@ -192,8 +195,8 @@ main {
                             </div>
 
                             <!-- View Details Button -->
-                            <div class="mt-4 pt-3 border-t border-gray-200">
-                                <button class="w-full text-center text-blue-600 hover:text-blue-700 font-medium text-sm">
+                            <div class="mt-3 pt-2 border-t border-gray-200">
+                                <button class="w-full text-center font-medium text-xs" style="color: #1E3A8A;">
                                     <i class="fa-solid fa-chart-line mr-1"></i>View Room Analytics
                                 </button>
                             </div>

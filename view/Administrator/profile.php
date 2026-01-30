@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Prevent page caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -46,336 +46,206 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden; 
-  box-sizing: border-box;
-}
-*, *::before, *::after {
-  box-sizing: inherit;
-}
-main {
-  height: 100vh;       
-  overflow: hidden;  
-}
-#security-settings-content {
-  transition: all 0.3s ease;
-}
-.rotate-180 {
-  transform: rotate(180deg);
-}
-@keyframes fillBar {
-  from { width: 0%; }
-  to { width: var(--fill); }
-}
-.animate-fill {
-  animation: fillBar 1s ease-out forwards;
-}
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-.tooltip .tooltip-text {
-  visibility: hidden;
-  width: 180px;
-  background-color: #1E3A8A;
-  color: #fff;
-  text-align: left;
-  padding: 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  position: absolute;
-  z-index: 10;
-  bottom: 125%; /* above the bar */
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.tooltip:hover .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-@keyframes fadeInAvatar {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-.avatar-animate {
-  animation: fadeInAvatar 0.6s ease-out forwards;
-}
-#security-settings-content {
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
-  max-height: none; /* no forced height */
-  opacity: 1;
-}
+    body, html { overflow: hidden !important; height: 100vh; }
 </style>
 
-<main class="p-6 bg-gray-50 min-h-screen text-[11px] text-gray-700">
-  <div class="grid grid-cols-1 lg:grid-cols-1 gap-4">
+<!-- Main Content -->
+<main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
+    
+    <!-- Session Messages -->
+    <?php include '../components/session_messages.php'; ?>
 
- <!-- Profile Header Grid -->
-<div class="space-y-4">
-
-  <!-- Left Column: Avatar + Info -->
-  <div class="md:col-span-1 flex flex-col gap-4">
-
-<!-- Profile Card with 40/60 Split and Divider -->
-<div id="user-profile" class="bg-white rounded-lg border p-4 grid grid-cols-[40%_60%] gap-6 items-start">
-
-<!-- Left Layout Block with spacing between avatar and name -->
-<div class="flex items-center gap-6">
-  <!-- Avatar -->
-  <div class="relative shrink-0">
-    <img src="../../assets/images/admin_profile.png" alt="Avatar"
-         class="w-24 h-24 rounded-full border border-gray-300 object-cover shadow-sm ring-2 ring-[#1E3A8A]">
-    <span class="absolute bottom-1 right-1 inline-block w-4 h-4 bg-green-500 rounded-full border border-white"
-          title="Online - Active Administrator"></span>
-  </div>
-
-  <!-- Name + Role + Last Login -->
-  <div class="flex flex-col gap-1">
-    <!-- Full Name -->
-    <h2 class="text-lg font-bold text-gray-800 mt-1">
-      <?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?>
-    </h2>
-
-    <!-- Role + Divider + Last Login -->
-    <div class="flex items-center gap-3 text-[10px] text-gray-700">
-      <span class="flex items-center gap-1 text-red-700 font-medium">
-        <i class="fa-solid fa-shield-halved"></i>
-        <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
-      </span>
-
-      <!-- Divider -->
-      <div class="h-4 w-px bg-gray-400"></div>
-
-      <!-- Last Login -->
-      <span class="text-gray-600">
-        <i class="fa-solid fa-clock mr-1 text-[#1E3A8A]"></i>
-        <?php echo date('M j, Y g:i A', strtotime($user_data['last_login'])); ?>
-      </span>
-    </div>
-    <p class="text-[10px] text-gray-500 italic">“Ensuring smooth asset operations across QCU.”</p>
-  </div>
-</div>
-
-<!-- Right Column: Two-Column Info Block -->
-<div class="relative w-full pl-6">
-  <!-- Vertical Divider -->
-  <div class="absolute top-0 left-0 h-full w-px bg-gray-300"></div>
-
-  <!-- Two-column grid: 2 rows, 2 columns -->
-  <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] leading-5">
-    <!-- Row 1 -->
-    <div>
-      <span class="font-medium text-gray-600">
-        <i class="fa-solid fa-id-badge text-[#1E3A8A]"></i>
-        Employee ID:
-      </span>
-      <span class="block text-gray-800 font-bold">
-        <?php echo htmlspecialchars($user_data['id_number'] ?? 'N/A'); ?>
-      </span>
-    </div>
-    <div>
-      <span class="font-medium text-gray-600">
-        <i class="fa-solid fa-phone text-[#1E3A8A]"></i>
-         Phone:</span>
-        <span class="block text-gray-800 font-bold">+63 (9) 972-22-22</span>
-    </div>
-
-    <!-- Row 2 -->
-    <div>
-      <span class="font-medium text-gray-600">
-        <i class="fa-solid fa-gear text-[#1E3A8A]"></i>
-        Role:
-      </span>
-      <span class="block text-gray-800 font-bold">
-        <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
-      </span>
-    </div>
-    <div>
-      <span class="font-medium text-gray-600">
-        <i class="fa-solid fa-envelope text-[#1E3A8A]"></i>
-        Email:
-        </span>
-      <span class="block text-gray-800 font-bold">
-        <?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?>
-      </span>
-    </div>
-  </div>
-</div>
-
-  </div>
-
-</div>
-
- <!-- Profile Layout Grid -->
-<div class="grid grid-cols-1 lg:grid-cols-[42%_57%] gap-4">
-
-  <!-- LEFT COLUMN -->
-  <div class="space-y-4">
-
-    <!-- System Settings -->    
-    <div id="system-settings" class="bg-white rounded-lg border p-4 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <i class="fa-solid fa-gear text-[#1E3A8A]"></i> System Settings
-        </h3>
-        <button onclick="toggleSection('system-settings-content', this)" 
-          class="text-[10px] text-[#1E3A8A] hover:text-blue-800 flex items-center gap-1">
-          <i class="fa-solid fa-chevron-up transition-transform duration-300"></i>
-        </button>
-      </div>
-
-      <div id="system-settings-content" class="space-y-4">
-        <div class="space-y-2">
-          <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
-            <i class="fa-solid fa-circle-info text-[#1E3A8A]"></i> Account Status
-          </h4>
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] text-gray-600">Profile Status</span>
-            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium" 
-              title="Last login: <?php echo date('M j, Y g:i A', strtotime($user_data['last_login'] ?? 'now')); ?>">
-              <i class="fa-solid fa-circle-check mr-1"></i>Active
-            </span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] text-gray-600">Account Type</span>
-            <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium">Administrator</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] text-gray-600">Access Level</span>
-            <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">Full Access</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] text-gray-600">Last Login</span>
-            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
-              <i class="fa-solid fa-clock mr-0.5"></i>
-              <?php 
-                if ($user_data['last_login']) {
-                  echo date('M j, Y g:i A', strtotime($user_data['last_login']));
-                } else {
-                  echo 'Never';
-                }
-              ?>
-            </span>
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <h4 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
-            <i class="fa-solid fa-user-shield text-[#1E3A8A]"></i> Admin Privileges
-          </h4>
-          <?php
-            $privileges = ['User Management', 'System Reports', 'Activity Monitoring', 'Analytics Dashboard', 'PC Health Monitoring'];
-            foreach ($privileges as $priv) {
-              echo '<div class="flex items-center gap-2 text-[10px] text-gray-700">
-                <i class="fa-solid fa-check text-green-600"></i>
-                <span>' . $priv . '</span>
-              </div>';
-            }
-          ?>
-        </div>
-      </div>
-    </div>
-
-    <!-- Login History -->
-    <div class="bg-white rounded-lg border p-4 space-y-2">
-      <h3 class="text-xs font-semibold text-gray-800 flex items-center gap-1">
-        <i class="fa-solid fa-clock-rotate-left text-[#1E3A8A]"></i> Login History
-      </h3>
-      <ul class="text-[10px] text-gray-600 space-y-1">
-        <li>Nov 26, 2025 – 11:04 PM</li>
-        <li>Nov 25, 2025 – 9:18 AM</li>
-        <li>Nov 24, 2025 – 3:42 PM</li>
-      </ul>
-    </div>
-
-  </div>
-
-      <!-- RIGHT COLUMN -->
-      <div class="space-y-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
         
-      <!-- Basic Information -->
-      <div id="basic-info" class="bg-white rounded-lg border p-4 space-y-3">
-        <div class="flex justify-between items-center">
-          <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <i class="fa-solid fa-user text-[#1E3A8A]"></i> Basic Information
-          </h3>
-          <button class="text-[10px] text-[#1E3A8A] hover:underline">
-            <i class="fa-solid fa-pen mr-1 text-[#1E3A8A]"></i>Edit
-          </button>
+        <!-- Left Column: Profile Info -->
+        <div class="lg:col-span-2 flex flex-col gap-4 h-full overflow-hidden">
+            <!-- Profile Information Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-shrink-0">
+                <h3 class="text-base font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+                    Profile Information
+                </h3>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Full Name</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200"><?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Email Address</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Role</label>
+                            <div class="bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#1E3A8A] text-white">
+                                    <?php echo htmlspecialchars($user_data['role'] ?? 'N/A'); ?>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <?php if (isset($user_data['id_number']) && $user_data['id_number']): ?>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Employee ID</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200"><?php echo htmlspecialchars($user_data['id_number']); ?></p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Member Since</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                                <?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Department</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200">Asset Management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1 overflow-y-auto">
+                <h3 class="text-base font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+                    Security Settings
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Change Password -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-800 mb-1">Change Password</h4>
+                            <p class="text-xs text-gray-600">Update your password to keep your account secure</p>
+                        </div>
+                        <button onclick="openChangePasswordModal()" 
+                            class="bg-[#1E3A8A] hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors whitespace-nowrap">
+                            <i class="fa-solid fa-key mr-1"></i>Change Password
+                        </button>
+                    </div>
+
+                    <!-- Password Security Tips -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Password Security Tips
+                        </h4>
+                        <ul class="space-y-2 text-xs text-blue-800">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>Use at least 8 characters</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>Include uppercase and lowercase letters</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>Add numbers and special characters</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>Avoid common words or personal information</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Admin Privileges Info -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h4 class="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-user-shield"></i>
+                            Administrator Privileges
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <?php
+                            $privileges = [
+                                'User Management', 
+                                'System Reports', 
+                                'Activity Monitoring', 
+                                'Analytics Dashboard', 
+                                'PC Health Monitoring',
+                                'Asset Management'
+                            ];
+                            foreach ($privileges as $priv) {
+                                echo '<div class="flex items-center gap-2 text-xs text-purple-800">
+                                    <i class="fa-solid fa-check-circle text-purple-600"></i>
+                                    <span>' . $priv . '</span>
+                                </div>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-700">
-          <div>
-            <p class="font-medium text-gray-600 mb-1">Full Name</p>
-            <p class="text-gray-900 font-semibold"><?php echo htmlspecialchars($user_data['full_name'] ?? 'N/A'); ?></p>
-          </div>
-          <div>
-            <p class="font-medium text-gray-600 mb-1">Email Address</p>
-            <p class="text-gray-900"><?php echo htmlspecialchars($user_data['email'] ?? 'N/A'); ?></p>
-          </div>
-          <div>
-            <p class="font-medium text-gray-600 mb-1">Phone</p>
-            <p class="text-gray-900">+63 (9) 972-22-22</p>
-          </div>
-          <div>
-            <p class="font-medium text-gray-600 mb-1">Member Since</p>
-            <p class="text-gray-900"><?php echo date('F j, Y', strtotime($user_data['created_at'] ?? 'now')); ?></p>
-          </div>
-        </div>
+        <!-- Right Sidebar -->
+        <div class="flex flex-col gap-4 h-full overflow-y-auto">
+            <!-- Account Status Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+                    Account Status
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between py-2">
+                        <span class="text-sm text-gray-700 font-medium">Profile Status</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Active</span>
+                    </div>
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-700 font-medium">Account Type</span>
+                        <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">Administrator</span>
+                    </div>
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-700 font-medium">Access Level</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">Full Access</span>
+                    </div>
+                    <div class="flex items-center justify-between py-2 border-t border-gray-100">
+                        <span class="text-sm text-gray-700 font-medium">Last Login</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                            <?php 
+                            if (isset($user_data['last_login']) && $user_data['last_login']) {
+                                echo date('M j, g:i A', strtotime($user_data['last_login']));
+                            } else {
+                                echo 'Never';
+                            }
+                            ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-        <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-700">
-  <div>
-    <p class="font-medium text-gray-600 mb-1">Employee ID</p>
-    <p class="text-gray-900"><?php echo htmlspecialchars($user_data['id_number'] ?? 'N/A'); ?></p>
-  </div>
-  <div>
-    <p class="font-medium text-gray-600 mb-1">Department</p>
-    <p class="text-gray-900">Asset Management</p>
-  </div>
-</div>
-</div>
-    <!-- Security Settings -->
-    <div id="security-settings" class="bg-white rounded-lg border p-4 space-y-3">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
-          <i class="fa-solid fa-lock text-[#1E3A8A]"></i> Security Settings
-        </h3>
-        <button onclick="toggleSection('security-settings-content', this)" 
-          class="text-[10px] text-[#1E3A8A] hover:text-blue-800 flex items-center gap-1">
-          <i class="fa-solid fa-chevron-up transition-transform duration-300"></i>
-        </button>
-      </div>
-
-      <div id="security-settings-content" class="space-y-4">
-        <div class="flex justify-between items-center">
-          <div>
-            <h4 class="text-xs font-semibold text-gray-800">Change Password</h4>
-            <p class="text-[10px] text-gray-500">Update your password to keep your account secure</p>
-          </div>
-          <button onclick="openChangePasswordModal()" 
-            class="px-3 py-1.5 bg-[#1E3A8A] hover:bg-blue-700 text-white text-[10px] font-medium rounded transition-colors">
-            <i class="fa-solid fa-key mr-1"></i>Change Password
-          </button>
+            <!-- System Information Card -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-info-circle text-[#1E3A8A]"></i>
+                    System Information
+                </h3>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Login Sessions</span>
+                        <span class="font-semibold text-gray-900">Active</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <span class="text-gray-600">Two-Factor Auth</span>
+                        <span class="text-yellow-600 font-semibold">Disabled</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <span class="text-gray-600">Account Created</span>
+                        <span class="font-semibold text-gray-900">
+                            <?php echo date('M j, Y', strtotime($user_data['created_at'] ?? 'now')); ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="bg-blue-50 border border-blue-100 rounded p-3">
-          <h4 class="text-xs font-semibold text-blue-900 mb-1">Password Security Tips</h4>
-          <ul class="list-disc list-inside text-[10px] text-blue-800 space-y-0.5">
-            <li>Use at least 8 characters</li>
-            <li>Include uppercase and lowercase letters</li>
-            <li>Add numbers and special characters</li>
-            <li>Avoid common words or personal information</li>
-          </ul>
-        </div>
-        <br>
     </div>
-      </div>
+
 </main>
 
 <!-- Change Password Modal -->
@@ -439,38 +309,6 @@ main {
 </div>
 
 <script>
-function toggleSection(id, btn) {
-  const section = document.getElementById(id);
-  const icon = btn.querySelector('i');
-
-  if (section.classList.contains('hidden')) {
-    section.classList.remove('hidden');
-    section.style.maxHeight = section.scrollHeight + 'px';
-    section.style.opacity = 1;
-  } else {
-    section.style.maxHeight = '0px';
-    section.style.opacity = 0;
-    setTimeout(() => section.classList.add('hidden'), 300);
-  }
-
-  icon.classList.toggle('rotate-180');
-}
-
-  const filledFields = 6; // example
-  const totalFields = 8;
-  const percent = Math.round((filledFields / totalFields) * 100);
-  document.querySelector('.animate-fill').style.setProperty('--fill', percent + '%');
-  document.querySelector('.text-gray-500').textContent = `Profile completeness: ${percent}%`;
-
-function toggleSection(id, btn) {
-  const section = document.getElementById(id);
-  const icon = btn.querySelector('i');
-  if (section) {
-    section.classList.toggle('hidden');
-    icon.classList.toggle('rotate-180'); // rotate arrow
-  }
-}
-
 function openChangePasswordModal() {
     document.getElementById('changePasswordModal').classList.remove('hidden');
 }
@@ -478,6 +316,20 @@ function openChangePasswordModal() {
 function closeChangePasswordModal() {
     document.getElementById('changePasswordModal').classList.add('hidden');
     document.getElementById('changePasswordForm').reset();
+    
+    // Reset password requirement indicators
+    const requirements = ['req_length', 'req_capital', 'req_special'];
+    const labels = {
+        'req_length': 'At least 8 characters',
+        'req_capital': 'Contains capital letter (A-Z)',
+        'req_special': 'Contains special character (!@#$%^&*)'
+    };
+    
+    requirements.forEach(reqId => {
+        const element = document.getElementById(reqId);
+        element.className = 'text-[10px] text-gray-500 flex items-center gap-1.5';
+        element.innerHTML = `<i class="fa-solid fa-circle text-[5px]"></i><span>`</span>`;
+    });
 }
 
 function validateNewPassword() {
@@ -588,7 +440,7 @@ function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     const bgColor = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
     
-    toast.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded shadow-lg z-50 text-xs`;
+    toast.className = `fixed top-4 right-4 ` text-white px-4 py-2 rounded shadow-lg z-50 text-xs`;
     toast.textContent = message;
     
     document.body.appendChild(toast);
