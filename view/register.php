@@ -68,13 +68,33 @@ session_start();
                      class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
             </div>
 
-            <!-- Full Name -->
+            <!-- First Name -->
             <div>
-              <label for="full_name" class="block text-sm font-medium text-black mb-2">
-                Full Name <span class="text-red-500">*</span>
+              <label for="first_name" class="block text-sm font-medium text-black mb-2">
+                First Name <span class="text-red-500">*</span>
               </label>
-              <input type="text" id="full_name" name="full_name" required autocomplete="off"
-                     placeholder="Enter your full name"
+              <input type="text" id="first_name" name="first_name" required autocomplete="off"
+                     placeholder="Enter your first name"
+                     class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
+            </div>
+
+            <!-- Middle Initial -->
+            <div>
+              <label for="middle_initial" class="block text-sm font-medium text-black mb-2">
+                Middle Initial <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="middle_initial" name="middle_initial" required maxlength="1" autocomplete="off"
+                     placeholder="M.I."
+                     class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
+            </div>
+
+            <!-- Last Name -->
+            <div>
+              <label for="last_name" class="block text-sm font-medium text-black mb-2">
+                Last Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="last_name" name="last_name" required autocomplete="off"
+                     placeholder="Enter your last name"
                      class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
             </div>
 

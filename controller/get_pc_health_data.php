@@ -97,6 +97,29 @@ try {
             ]);
             break;
             
+        case 'getPCAssets':
+            // Get all assets associated with PC units
+            $query = "SELECT 
+                        a.id,
+                        a.pc_unit_id,
+                        a.asset_name as name,
+                        a.category,
+                        a.brand,
+                        a.model,
+                        a.condition,
+                        a.asset_tag
+                      FROM assets a
+                      WHERE a.pc_unit_id IS NOT NULL
+                      ORDER BY a.pc_unit_id, a.category";
+            $stmt = $conn->prepare($query);
+            $stmt->execute();
+            $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode([
+                'success' => true,
+                'data' => $assets
+            ]);
+            break;
+            
         default:
             throw new Exception('Invalid action');
     }

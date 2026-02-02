@@ -56,14 +56,14 @@ include '../components/layout_header.php';
 ?>
 
         <!-- Main Content -->
-        <main class="p-3">
+        <main class="p-2">
             
             <!-- Session Messages -->
             <?php include '../components/session_messages.php'; ?>
 
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-[#1E3A8A]">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-600 text-[10px]">Pending</p>
@@ -75,48 +75,48 @@ include '../components/layout_header.php';
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500">
+                <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-600 text-[10px]">Borrowed</p>
-                            <p class="text-xl font-bold text-blue-600"><?php echo $stats['approved'] ?? 0; ?></p>
+                            <p class="text-xl font-bold text-[#1E3A8A]"><?php echo $stats['approved'] ?? 0; ?></p>
                         </div>
                         <div class="bg-blue-100 p-2 rounded">
-                            <i class="fa-solid fa-hand-holding text-blue-600 text-lg"></i>
+                            <i class="fa-solid fa-hand-holding text-[#1E3A8A] text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-green-500">
+                <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-600 text-[10px]">Returned</p>
-                            <p class="text-xl font-bold text-green-600"><?php echo $stats['returned'] ?? 0; ?></p>
+                            <p class="text-xl font-bold text-[#1E3A8A]"><?php echo $stats['returned'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-green-100 p-2 rounded">
-                            <i class="fa-solid fa-check-circle text-green-600 text-lg"></i>
+                        <div class="bg-blue-100 p-2 rounded">
+                            <i class="fa-solid fa-check-circle text-[#1E3A8A] text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-3 border-l-4 border-gray-500">
+                <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-600 text-[10px]">Total</p>
-                            <p class="text-xl font-bold text-gray-800"><?php echo $stats['total_borrowings'] ?? 0; ?></p>
+                            <p class="text-xl font-bold text-[#1E3A8A]"><?php echo $stats['total_borrowings'] ?? 0; ?></p>
                         </div>
-                        <div class="bg-gray-100 p-2 rounded">
-                            <i class="fa-solid fa-list text-gray-600 text-lg"></i>
+                        <div class="bg-blue-100 p-2 rounded">
+                            <i class="fa-solid fa-list text-[#1E3A8A] text-lg"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Borrowing Requests Table -->
-            <div class="bg-white rounded-lg shadow p-3">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                    <h2 class="text-sm font-semibold text-gray-800">
-                        <i class="fa-solid fa-clipboard-list mr-1 text-[#1E3A8A]"></i>
+            <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2">
+                    <h2 class="text-sm font-semibold text-[#1E3A8A]">
+                        <i class="fa-solid fa-clipboard-list mr-1"></i>
                         Borrowing Requests
                     </h2>
                     
@@ -223,7 +223,7 @@ include '../components/layout_header.php';
                                     <td class="px-4 py-3 text-center">
                                         <div class="flex justify-center gap-2">
                                             <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" 
-                                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-3 py-1 rounded text-xs transition-colors"
                                                     title="View Details">
                                                 <i class="fa-solid fa-eye"></i>
                                             </button>
@@ -241,7 +241,7 @@ include '../components/layout_header.php';
                                             <?php endif; ?>
                                             <?php if ($request['status'] === 'Approved'): ?>
                                             <button onclick="returnAsset(<?php echo $request['id']; ?>)" 
-                                                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-3 py-1 rounded text-xs transition-colors"
                                                     title="Mark as Returned">
                                                 <i class="fa-solid fa-rotate-left"></i>
                                             </button>
@@ -261,7 +261,7 @@ include '../components/layout_header.php';
 <div id="viewDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-6">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl">
-            <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <div class="bg-[#1E3A8A] text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
                 <h3 class="text-xl font-bold">
                     <i class="fa-solid fa-file-lines mr-2"></i>
                     Request Details
@@ -277,7 +277,7 @@ include '../components/layout_header.php';
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-between border-t">
-                <button onclick="printBorrowingDocument()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
+                <button onclick="printBorrowingDocument()" class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-6 py-2 rounded-lg font-medium">
                     <i class="fa-solid fa-print mr-2"></i>Print Document
                 </button>
                 <button onclick="closeViewModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium">
@@ -292,7 +292,7 @@ include '../components/layout_header.php';
 <div id="returnModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-6">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div class="bg-purple-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <div class="bg-[#1E3A8A] text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
                 <h3 class="text-xl font-bold">
                     <i class="fa-solid fa-rotate-left mr-2"></i>
                     Return Asset
@@ -334,7 +334,7 @@ include '../components/layout_header.php';
                         Cancel
                     </button>
                     <button type="submit" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
+                            class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-6 py-2 rounded-lg font-medium">
                         <i class="fa-solid fa-check mr-2"></i>Confirm Return
                     </button>
                 </div>

@@ -162,6 +162,7 @@ let healthDataCache = {};
 let roomsData = [];
 let buildingsData = [];
 let allRoomsData = [];
+let pcAssetsData = {}; // Store assets for each PC
 
 // Pagination variables
 let currentPage = 1;
@@ -198,15 +199,17 @@ async function initFirebase() {
 // Load PC units and rooms
 async function loadPCUnits() {
     try {
-        const [pcResponse, roomResponse, buildingResponse] = await Promise.all([
+        const [pcResponse, roomResponse, buildingResponse, assetsResponse] = await Promise.all([
             fetch('../../controller/get_pc_health_data.php?action=getAll'),
             fetch('../../controller/get_pc_health_data.php?action=getRooms'),
-            fetch('../../controller/get_pc_health_data.php?action=getBuildings')
+            fetch('../../controller/get_pc_health_data.php?action=getBuildings'),
+            fetch('../../controller/get_pc_health_data.php?action=getPCAssets')
         ]);
         
         const pcResult = await pcResponse.json();
         const roomResult = await roomResponse.json();
         const buildingResult = await buildingResponse.json();
+        const assetsResult = await assetsResponse.json();
         
         if (pcResult.success) {
             pcUnitsData = pcResult.data;
@@ -221,6 +224,17 @@ async function loadPCUnits() {
         if (buildingResult.success) {
             buildingsData = buildingResult.data;
             populateBuildingFilter();
+        }
+        
+        if (assetsResult.success) {
+            // Organize assets by PC ID
+            pcAssetsData = {};
+            assetsResult.data.forEach(asset => {
+                if (!pcAssetsData[asset.pc_unit_id]) {
+                    pcAssetsData[asset.pc_unit_id] = [];
+                }
+                pcAssetsData[asset.pc_unit_id].push(asset);
+            });
         }
         
         updateDashboard();
@@ -301,8 +315,20 @@ function clearFilters() {
 // Update dashboard
 function updateDashboard() {
     const selectedRoom = document.getElementById('roomFilter').value;
+    const selectedBuilding = document.getElementById('buildingFilter').value;
     const selectedStatus = document.getElementById('statusFilter').value;
     const searchText = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Check if any filter is applied
+    const hasFilters = selectedRoom || selectedBuilding || selectedStatus || searchText;
+    
+    // If no filters applied, show empty state
+    if (!hasFilters) {
+        filteredPCs = [];
+        renderPCGrid();
+        updateStatistics();
+        return;
+    }
     
     filteredPCs = pcUnitsData;
     
@@ -350,9 +376,10 @@ function renderPCGrid() {
         grid.innerHTML = `
             <div class="text-center py-8 col-span-full">
                 <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 21a9 9 0 100-18 9 9 0 000 18z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                 </svg>
-                <p class="text-sm text-gray-600">No PCs match the selected filters</p>
+                <p class="text-sm text-gray-600 font-medium">Select filters to view PCs</p>
+                <p class="text-xs text-gray-500 mt-1">Use the filters above to display laboratory computers</p>
             </div>
         `;
         document.getElementById('paginationControls').classList.add('hidden');
@@ -503,8 +530,46 @@ function getHealthStatus(healthData) {
     return healthData.healthStatus || 'healthy';
 }
 
+// Calculate health score percentage based on asset conditions
+function calculateHealthScore(healthData, pcId) {
+    // Get assets for this PC
+    const assets = pcAssetsData[pcId] || [];
+    
+    if (assets.length === 0) {
+        return 0;
+    }
+    
+    // Define condition scores
+    const conditionScores = {
+        'Excellent': 100,
+        'Good': 80,
+        'Fair': 60,
+        'Poor': 40,
+        'Non-Functional': 0
+    };
+    
+    // Calculate average score
+    let totalScore = 0;
+    let validAssets = 0;
+    
+    assets.forEach(asset => {
+        const condition = asset.condition || 'Fair';
+        const score = conditionScores[condition] !== undefined ? conditionScores[condition] : 60;
+        totalScore += score;
+        validAssets++;
+    });
+    
+    if (validAssets === 0) {
+        return 0;
+    }
+    
+    const healthScore = totalScore / validAssets;
+    return Math.round(healthScore);
+}
+
 // Create PC card
 function createPCCard(pc, healthData, status) {
+    const healthScore = calculateHealthScore(healthData, pc.id);
     const card = document.createElement('div');
     card.className = `bg-white border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-lg ${
         status === 'critical' ? 'border-red-500' : 
@@ -521,6 +586,11 @@ function createPCCard(pc, healthData, status) {
         status === 'online' || status === 'healthy' ? 'bg-green-500' : 
         'bg-gray-400';
     
+    const healthScoreColor = 
+        healthScore >= 70 ? 'text-green-600' :
+        healthScore >= 40 ? 'text-yellow-600' :
+        healthScore > 0 ? 'text-red-600' : 'text-gray-400';
+    
     card.innerHTML = `
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -528,6 +598,12 @@ function createPCCard(pc, healthData, status) {
                 <span class="font-bold text-gray-800">${pc.terminal_number || 'TH-' + pc.id}</span>
             </div>
             <span class="text-xs text-gray-500">${pc.room_name || 'Unknown'}</span>
+        </div>
+        
+        <!-- Health Score Display -->
+        <div class="mb-3 text-center bg-gray-50 rounded-lg py-3">
+            <p class="text-xs text-gray-600 mb-1">Health Score</p>
+            <p class="text-3xl font-bold ${healthScoreColor}">${healthScore}%</p>
         </div>
         
         ${healthData && status !== 'offline' ? `
@@ -557,8 +633,8 @@ function createPCCard(pc, healthData, status) {
                 </div>
             </div>
         ` : `
-            <div class="text-center py-4">
-                <p class="text-gray-400 text-sm">Offline</p>
+            <div class="text-center py-2">
+                <p class="text-gray-400 text-xs">No data available</p>
             </div>
         `}
     `;
@@ -571,91 +647,111 @@ function showPCDetail(pc, healthData) {
     const modal = document.getElementById('pcDetailModal');
     const title = document.getElementById('modalTitle');
     const content = document.getElementById('modalContent');
+    const healthScore = calculateHealthScore(healthData, pc.id);
+    const assets = pcAssetsData[pc.id] || [];
     
     title.textContent = `${pc.terminal_number || 'TH-' + pc.id} - ${pc.room_name}`;
     
-    if (!healthData || healthData.status === 'offline') {
+    if (assets.length === 0) {
         content.innerHTML = `
             <div class="text-center py-6">
                 <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
-                <h4 class="text-base font-semibold text-gray-600 mb-1">PC Offline</h4>
-                <p class="text-xs text-gray-500">No data available</p>
-                ${healthData?.lastUpdate ? `<p class="text-[10px] text-gray-400 mt-1">Last: ${new Date(healthData.lastUpdate).toLocaleTimeString()}</p>` : ''}
+                <h4 class="text-base font-semibold text-gray-600 mb-1">No Assets Found</h4>
+                <p class="text-xs text-gray-500">No components registered for this PC</p>
+                <div class="mt-4 bg-gray-100 rounded-lg py-3">
+                    <p class="text-xs text-gray-600 mb-1">Health Score</p>
+                    <p class="text-3xl font-bold text-gray-400">0%</p>
+                </div>
             </div>
         `;
     } else {
+        const healthScoreColor = 
+            healthScore >= 70 ? 'text-green-600' :
+            healthScore >= 40 ? 'text-yellow-600' :
+            'text-red-600';
+        
+        // Generate asset list with condition colors
+        const assetListHTML = assets.map(asset => {
+            const conditionColors = {
+                'Excellent': 'bg-green-100 text-green-800',
+                'Good': 'bg-blue-100 text-blue-800',
+                'Fair': 'bg-yellow-100 text-yellow-800',
+                'Poor': 'bg-orange-100 text-orange-800',
+                'Non-Functional': 'bg-red-100 text-red-800'
+            };
+            const colorClass = conditionColors[asset.condition] || 'bg-gray-100 text-gray-800';
+            
+            return `
+                <div class="bg-gray-50 rounded p-2 mb-1">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <p class="text-xs font-semibold text-gray-800">${asset.name || 'Unknown Component'}</p>
+                            <p class="text-[10px] text-gray-500">${asset.category || 'N/A'} ${asset.brand ? '- ' + asset.brand : ''}</p>
+                        </div>
+                        <span class="text-[9px] px-2 py-1 rounded font-medium ${colorClass}">
+                            ${asset.condition || 'Fair'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
         content.innerHTML = `
             <div class="space-y-3 text-xs">
-                <div class="bg-gray-50 rounded p-2 space-y-1">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Status:</span>
-                        <span class="font-semibold text-green-600">${healthData.status}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Updated:</span>
-                        <span class="font-semibold">${new Date(healthData.lastUpdate).toLocaleTimeString()}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Health:</span>
-                        <span class="font-semibold ${
-                            healthData.healthStatus === 'critical' ? 'text-red-600' :
-                            healthData.healthStatus === 'warning' ? 'text-yellow-600' :
-                            'text-green-600'
-                        }">${healthData.healthStatus?.toUpperCase()}</span>
+                <!-- Health Score -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-600 mb-2">Overall Health Score</p>
+                    <p class="text-5xl font-bold ${healthScoreColor}">${healthScore}%</p>
+                    <p class="text-xs text-gray-500 mt-2">
+                        ${healthScore >= 70 ? 'Excellent' : healthScore >= 40 ? 'Fair' : 'Poor'} Condition
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-1">Based on ${assets.length} component${assets.length !== 1 ? 's' : ''}</p>
+                </div>
+                
+                <!-- Assets/Components List -->
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">PC Components</p>
+                    <div class="max-h-64 overflow-y-auto">
+                        ${assetListHTML}
                     </div>
                 </div>
                 
-                <div>
-                    <p class="font-semibold text-gray-700 mb-1">CPU</p>
-                    <div class="bg-gray-50 rounded p-2 space-y-1">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Usage:</span>
-                            <span class="font-semibold">${healthData.cpu?.usage}%</span>
-                        </div>
-                        <div class="w-full bg-gray-300 rounded-full h-2">
-                            <div class="h-2 rounded-full bg-blue-500" style="width: ${healthData.cpu?.usage}%"></div>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-600">${healthData.cpu?.name}</span>
+                ${healthData && healthData.status !== 'offline' ? `
+                    <div class="border-t pt-3">
+                        <p class="font-semibold text-gray-700 mb-2">System Performance</p>
+                        <div class="bg-gray-50 rounded p-2 space-y-2">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-gray-600">CPU Usage:</span>
+                                    <span class="font-semibold">${healthData.cpu?.usage || 0}%</span>
+                                </div>
+                                <div class="w-full bg-gray-300 rounded-full h-2">
+                                    <div class="h-2 rounded-full bg-blue-500" style="width: ${healthData.cpu?.usage || 0}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-gray-600">RAM Usage:</span>
+                                    <span class="font-semibold">${healthData.memory?.usage || 0}%</span>
+                                </div>
+                                <div class="w-full bg-gray-300 rounded-full h-2">
+                                    <div class="h-2 rounded-full bg-green-500" style="width: ${healthData.memory?.usage || 0}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-gray-600">Disk Usage:</span>
+                                    <span class="font-semibold">${healthData.disks?.[0]?.usage || 0}%</span>
+                                </div>
+                                <div class="w-full bg-gray-300 rounded-full h-2">
+                                    <div class="h-2 rounded-full bg-purple-500" style="width: ${healthData.disks?.[0]?.usage || 0}%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div>
-                    <p class="font-semibold text-gray-700 mb-1">Memory</p>
-                    <div class="bg-gray-50 rounded p-2 space-y-1">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Usage:</span>
-                            <span class="font-semibold">${healthData.memory?.usage}%</span>
-                        </div>
-                        <div class="w-full bg-gray-300 rounded-full h-2">
-                            <div class="h-2 rounded-full bg-green-500" style="width: ${healthData.memory?.usage}%"></div>
-                        </div>
-                        <div class="flex justify-between text-[10px]">
-                            <span class="text-gray-600">${healthData.memory?.used}/${healthData.memory?.total} GB</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <p class="font-semibold text-gray-700 mb-1">Storage</p>
-                    ${healthData.disks?.map(disk => `
-                        <div class="bg-gray-50 rounded p-2 space-y-1 mb-1">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Drive ${disk.drive}:</span>
-                                <span class="font-semibold">${disk.usage}%</span>
-                            </div>
-                            <div class="w-full bg-gray-300 rounded-full h-2">
-                                <div class="h-2 rounded-full bg-purple-500" style="width: ${disk.usage}%"></div>
-                            </div>
-                            <div class="flex justify-between text-[10px]">
-                                <span class="text-gray-600">${disk.used}/${disk.total} GB</span>
-                            </div>
-                        </div>
-                    `).join('') || '<p class="text-gray-500">No data</p>'}
-                </div>
+                ` : ''}
             </div>
         `;
     }
@@ -681,6 +777,17 @@ function showError(message) {
 document.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     loadPCUnits();
+    
+    // Set initial empty state
+    document.getElementById('pcGrid').innerHTML = `
+        <div class="text-center py-8 col-span-full">
+            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+            </svg>
+            <p class="text-sm text-gray-600 font-medium">Select filters to view PCs</p>
+            <p class="text-xs text-gray-500 mt-1">Use the filters above to display laboratory computers</p>
+        </div>
+    `;
     
     // Refresh data every minute as backup
     setInterval(() => {

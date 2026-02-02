@@ -292,7 +292,22 @@ $pageTitle = "Activity Logs";
         }
 
         function exportLogs() {
-            const params = new URLSearchParams(window.location.search);
+            // Export only the filtered results by passing all current filter parameters
+            const params = new URLSearchParams();
+            
+            // Add all active filters
+            const action = '<?php echo addslashes($action_filter); ?>';
+            const entity = '<?php echo addslashes($entity_filter); ?>';
+            const dateFrom = '<?php echo addslashes($date_from); ?>';
+            const dateTo = '<?php echo addslashes($date_to); ?>';
+            const search = '<?php echo addslashes($search); ?>';
+            
+            if (action) params.append('action', action);
+            if (entity) params.append('entity', entity);
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+            if (search) params.append('search', search);
+            
             window.location.href = '../../controller/export_logs.php?' + params.toString();
         }
     </script>

@@ -249,17 +249,7 @@ include '../components/layout_header.php';
         <!-- Main Content -->
         <main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
             <!-- Key Financial & Inventory Metrics -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2 flex-shrink-0">
-                <!-- Total Asset Value -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-dollar-sign text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Financial</span>
-                    </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">Total Asset Value</p>
-                    <p class="text-lg font-bold">₱<?php echo number_format($totalAssetValue, 0); ?></p>
-                </div>
-
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-2 flex-shrink-0">
                 <!-- Total Assets -->
                 <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
                     <div class="flex items-center justify-between mb-1">

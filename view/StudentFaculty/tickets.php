@@ -1144,33 +1144,10 @@ function resetHardwareComponents() {
                             <div class="mt-8 grid grid-cols-2 gap-8">
                                 <div>
                                     <p class="text-gray-600 mb-2">Borrower's E-Signature:</p>
-                                    <div class="border-2 border-dashed border-gray-400 rounded p-4 bg-gray-50 min-h-24 flex items-center justify-center">
-                                        <?php
-                                        // Get user's e-signature
-                                        require_once '../../model/Database.php';
-                                        $user_id = $_SESSION['user_id'];
-                                        $signature_path = null;
-                                        try {
-                                            $db = new Database();
-                                            $conn = $db->getConnection();
-                                            $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
-                                            $stmt->execute([$user_id]);
-                                            $signature_file = $stmt->fetchColumn();
-                                            if ($signature_file && file_exists('../../uploads/signatures/' . $signature_file)) {
-                                                $signature_path = '../../uploads/signatures/' . $signature_file;
-                                            }
-                                        } catch (PDOException $e) {
-                                            // Handle error silently
-                                        }
-                                        
-                                        if ($signature_path): ?>
-                                            <img src="<?php echo htmlspecialchars($signature_path); ?>" alt="E-Signature" class="max-h-20 max-w-full object-contain" id="borrowerSignature">
-                                        <?php else: ?>
-                                            <p class="text-red-600 text-sm text-center">
-                                                <i class="fa-solid fa-exclamation-triangle mr-2"></i>
-                                                No e-signature found. Please upload your signature in the <a href="e-signature.php" class="text-blue-600 underline">E-Signature page</a>.
-                                            </p>
-                                        <?php endif; ?>
+                                    <div id="borrowerSignaturePreview" class="border-2 border-dashed border-gray-400 rounded p-4 bg-gray-50 min-h-24 flex items-center justify-center">
+                                        <p class="text-gray-400 text-sm">
+                                            <i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading signature...
+                                        </p>
                                     </div>
                                     <p class="mt-2 text-center font-semibold border-t border-gray-400 pt-1"><?php echo htmlspecialchars($_SESSION['full_name']); ?></p>
                                     <p class="text-center text-xs text-gray-600">Borrower's Name</p>
@@ -1222,6 +1199,7 @@ let borrowingData = {};
 let hasScrolledTerms = false;
 let availableAssets = [];
 let assetsDataTable = null;
+let userSignature = null;
 
 // Open Borrowing Modal
 async function openBorrowingModal() {
@@ -1229,6 +1207,25 @@ async function openBorrowingModal() {
     currentStep = 1;
     updateStepDisplay();
     loadBorrowableAssets();
+    fetchUserSignature();
+}
+
+// Fetch User Signature
+async function fetchUserSignature() {
+    try {
+        const response = await fetch('../../controller/get_signatures_for_print.php', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        if (data.success && data.borrower_signature) {
+            userSignature = data.borrower_signature;
+        } else {
+            userSignature = null;
+        }
+    } catch (error) {
+        console.error('Error fetching signature:', error);
+        userSignature = null;
+    }
 }
 
 // Close Borrowing Modal
@@ -1570,14 +1567,31 @@ function populatePreview() {
     document.getElementById('previewBorrowDate').textContent = new Date(borrowingData.borrow_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     document.getElementById('previewReturnDate').textContent = new Date(borrowingData.return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     document.getElementById('previewPurpose').textContent = borrowingData.purpose;
+    
+    // Display signature or warning
+    const signatureContainer = document.getElementById('borrowerSignaturePreview');
+    if (signatureContainer) {
+        if (userSignature) {
+            signatureContainer.innerHTML = `<img src="../../${userSignature}" alt="Your Signature" class="h-16 border-b-2 border-gray-800">`;
+        } else {
+            signatureContainer.innerHTML = `<div class="text-red-600 font-semibold"><i class="fas fa-exclamation-triangle"></i> No signature found</div>`;
+        }
+    }
 }
 
 // Submit Borrowing
 function submitBorrowing() {
     // Check if user has e-signature
-    const signatureImg = document.getElementById('borrowerSignature');
-    if (!signatureImg) {
-        showNotification('You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page.', 'error', 6000);
+    if (!userSignature) {
+        // Close the borrowing modal first
+        closeBorrowingModal();
+        
+        // Show error notification
+        if (typeof showNotification === 'function') {
+            showNotification('E-Signature Required: You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page first.', 'error', 8000);
+        } else {
+            alert('E-Signature Required: You need to upload your e-signature before submitting a borrowing request. Please go to the E-Signature page first.');
+        }
         return;
     }
     

@@ -116,6 +116,7 @@ if ($techniciansResult && $techniciansResult->num_rows > 0) {
 $filterType = isset($_GET['type']) ? $_GET['type'] : 'all';
 $filterBuilding = isset($_GET['building']) ? $_GET['building'] : '';
 $filterRoom = isset($_GET['room']) ? $_GET['room'] : '';
+$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
 
 // Fetch buildings for filter
 $buildingsQuery = "SELECT id, name FROM buildings ORDER BY name";
@@ -213,6 +214,12 @@ if (!empty($filterRoom)) {
     $types .= 'i';
 }
 
+if (!empty($filterStatus)) {
+    $whereConditions[] = "i.status = ?";
+    $params[] = $filterStatus;
+    $types .= 's';
+}
+
 $whereClause = implode(' AND ', $whereConditions);
 
 $countQuery = "SELECT COUNT(*) as total FROM issues i WHERE {$whereClause}";
@@ -253,6 +260,12 @@ if (!empty($filterRoom)) {
     $types .= 'i';
 }
 
+if (!empty($filterStatus)) {
+    $whereConditions[] = "i.status = ?";
+    $params[] = $filterStatus;
+    $types .= 's';
+}
+
 $whereClause = implode(' AND ', $whereConditions);
 
 $query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number AS terminal, i.title, i.description, 
@@ -265,9 +278,7 @@ $query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number 
           LEFT JOIN pc_units p ON p.id = i.pc_id
           LEFT JOIN assets a ON a.id = i.component_asset_id
           WHERE {$whereClause}
-          ORDER BY 
-            CASE i.priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
-            i.created_at DESC
+          ORDER BY i.created_at DESC
           LIMIT ? OFFSET ?";
 
 // Add pagination params
@@ -345,6 +356,14 @@ include '../components/layout_header.php';
                         <?php endforeach; ?>
                     </select>
                     
+                    <select id="statusFilter" onchange="applyFilters()" class="text-xs px-3 py-1.5 border border-gray-300 rounded focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="Open" <?php echo $filterStatus === 'Open' ? 'selected' : ''; ?>>Open</option>
+                        <option value="In Progress" <?php echo $filterStatus === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                        <option value="Resolved" <?php echo $filterStatus === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>
+                        <option value="Closed" <?php echo $filterStatus === 'Closed' ? 'selected' : ''; ?>>Closed</option>
+                    </select>
+                    
                     <button onclick="clearAllFilters()" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded">Clear</button>
                     
                     <div class="flex-1"></div>
@@ -359,6 +378,7 @@ include '../components/layout_header.php';
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Ticket #</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Technician</th>
                                  <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Room</th>
@@ -375,6 +395,9 @@ include '../components/layout_header.php';
                                  $ticketId = (int)$ticket['id'];
                              ?>
                              <tr class="hover:bg-gray-50" data-ticket-id="<?php echo $ticketId; ?>">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs font-semibold text-gray-900">
+                                    #<?php echo $ticketId; ?>
+                                </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                      <?php
                                      $typeColors = [
@@ -455,7 +478,7 @@ include '../components/layout_header.php';
                 <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div class="flex-1 flex justify-between sm:hidden">
                         <?php if ($page > 1): ?>
-                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             Previous
                         </a>
                         <?php else: ?>
@@ -465,7 +488,7 @@ include '../components/layout_header.php';
                         <?php endif; ?>
                         
                         <?php if ($page < $totalPages): ?>
-                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                             Next
                         </a>
                         <?php else: ?>
@@ -483,7 +506,7 @@ include '../components/layout_header.php';
                         <div>
                             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                                 <?php if ($page > 1): ?>
-                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $page - 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </a>
                                 <?php else: ?>
@@ -497,7 +520,7 @@ include '../components/layout_header.php';
                                 $endPage = min($totalPages, $page + 2);
                                 
                                 if ($startPage > 1): ?>
-                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=1" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">1</a>
+                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=1" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">1</a>
                                     <?php if ($startPage > 2): ?>
                                         <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300">...</span>
                                     <?php endif; ?>
@@ -507,7 +530,7 @@ include '../components/layout_header.php';
                                     <?php if ($i == $page): ?>
                                         <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#1E3A8A] border border-[#1E3A8A]"><?php echo $i; ?></span>
                                     <?php else: ?>
-                                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $i; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $i; ?></a>
+                                        <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $i; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
                                 
@@ -515,11 +538,11 @@ include '../components/layout_header.php';
                                     <?php if ($endPage < $totalPages - 1): ?>
                                         <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300">...</span>
                                     <?php endif; ?>
-                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $totalPages; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $totalPages; ?></a>
+                                    <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $totalPages; ?>" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"><?php echo $totalPages; ?></a>
                                 <?php endif; ?>
                                 
                                 <?php if ($page < $totalPages): ?>
-                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                                <a href="?type=<?php echo $filterKey; ?>&building=<?php echo $filterBuilding; ?>&room=<?php echo $filterRoom; ?>&status=<?php echo $filterStatus; ?>&page=<?php echo $page + 1; ?>" class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </a>
                                 <?php else: ?>
@@ -858,10 +881,12 @@ function applyFilters() {
     const category = document.getElementById('categoryFilter').value;
     const building = document.getElementById('buildingFilter').value;
     const room = document.getElementById('roomFilter').value;
+    const status = document.getElementById('statusFilter').value;
     
     let url = 'tickets.php?type=' + category;
     if (building) url += '&building=' + building;
     if (room) url += '&room=' + room;
+    if (status) url += '&status=' + status;
     
     window.location.href = url;
 }

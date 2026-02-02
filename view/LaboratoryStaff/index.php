@@ -73,11 +73,34 @@ if ($buildings_result && $buildings_result->num_rows > 0) {
         
         $rooms = [];
         while ($room_row = $rooms_result->fetch_assoc()) {
-            // For now, all labs are offline
+            // Calculate health score based on room assets
+            $health_query = "SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN `condition` IN ('Excellent', 'Good') THEN 1 ELSE 0 END) as healthy
+                FROM assets 
+                WHERE room_id = ?";
+            $health_stmt = $conn->prepare($health_query);
+            $health_stmt->bind_param('i', $room_row['id']);
+            $health_stmt->execute();
+            $health_result = $health_stmt->get_result()->fetch_assoc();
+            $health_stmt->close();
+            
+            $total = $health_result['total'] ?? 0;
+            $healthy = $health_result['healthy'] ?? 0;
+            $health_score = $total > 0 ? round(($healthy / $total) * 100) : 0;
+            
+            // Determine status based on health score
+            $status = 'offline';
+            if ($health_score >= 80) {
+                $status = 'online';
+            } elseif ($health_score >= 50) {
+                $status = 'warning';
+            }
+            
             $rooms[] = [
                 'name' => $room_row['name'],
-                'status' => 'offline',
-                'ping' => 'N/A'
+                'status' => $status,
+                'health_score' => $health_score
             ];
         }
         $rooms_stmt->close();
@@ -341,18 +364,13 @@ include '../components/layout_header.php';
                         <p class="text-[10px] text-gray-500"><?php echo $building['room_count']; ?> Labs</p>
                     </div>
                     
-                    <!-- Network Graph -->
-                    <div class="mb-2 bg-gray-50 rounded p-2">
-                        <p class="text-[9px] text-gray-600 mb-1">Network Activity</p>
-                        <div class="h-16">
-                            <canvas id="building<?php echo $building['id']; ?>NetworkChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Average Ping -->
+                    <!-- Average Health -->
                     <div class="mb-2 bg-gray-50 rounded p-2 text-center">
-                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Ping</p>
-                        <p class="text-lg font-bold text-gray-600">N/A</p>
+                        <p class="text-[9px] text-gray-600 mb-0.5">Avg Health</p>
+                        <p class="text-lg font-bold <?php 
+                            $avg_health = count($building['rooms']) > 0 ? array_sum(array_column($building['rooms'], 'health_score')) / count($building['rooms']) : 0;
+                            echo $avg_health >= 80 ? 'text-green-600' : ($avg_health >= 50 ? 'text-orange-600' : 'text-red-600');
+                        ?>"><?php echo count($building['rooms']) > 0 ? round($avg_health) : 0; ?>%</p>
                     </div>
                     
                     <div class="space-y-1.5">
@@ -365,8 +383,10 @@ include '../components/layout_header.php';
                                 </span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-[9px] text-gray-500">Ping:</span>
-                                <span class="text-[9px] font-medium text-gray-700"><?php echo $room['ping']; ?></span>
+                                <span class="text-[9px] text-gray-500">Health Score:</span>
+                                <span class="text-[9px] font-medium <?php echo $room['health_score'] >= 80 ? 'text-green-600' : ($room['health_score'] >= 50 ? 'text-orange-600' : 'text-red-600'); ?>">
+                                    <?php echo $room['health_score']; ?>%
+                                </span>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -1011,122 +1031,7 @@ include '../components/layout_header.php';
             });
         }
 
-        // Building Network Charts
-        // BELMONTE Network Chart
-        const belmonteNetworkCtx = document.getElementById('belmonteNetworkChart');
-        if (belmonteNetworkCtx) {
-            new Chart(belmonteNetworkCtx, {
-                type: 'line',
-                data: {
-                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
-                    datasets: [{
-                        data: [45, 52, 48, 50, 47, 49],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
-                    }
-                }
-            });
-        }
-
-        // ACADEMIC Network Chart
-        const academicNetworkCtx = document.getElementById('academicNetworkChart');
-        if (academicNetworkCtx) {
-            new Chart(academicNetworkCtx, {
-                type: 'line',
-                data: {
-                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
-                    datasets: [{
-                        data: [38, 42, 45, 48, 44, 46],
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
-                    }
-                }
-            });
-        }
-
-        // KORPHIL Network Chart
-        const korphilNetworkCtx = document.getElementById('korphilNetworkChart');
-        if (korphilNetworkCtx) {
-            new Chart(korphilNetworkCtx, {
-                type: 'line',
-                data: {
-                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
-                    datasets: [{
-                        data: [50, 48, 52, 49, 51, 53],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
-                    }
-                }
-            });
-        }
-
-        // LAB BUILDING Network Chart
-        const labBuildingNetworkCtx = document.getElementById('labBuildingNetworkChart');
-        if (labBuildingNetworkCtx) {
-            new Chart(labBuildingNetworkCtx, {
-                type: 'line',
-                data: {
-                    labels: ['10s', '8s', '6s', '4s', '2s', '0s'],
-                    datasets: [{
-                        data: [47, 49, 46, 48, 50, 52],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
-                    }
-                }
-            });
-        }
+        // Building Network Charts have been removed
         </script>
 
 <?php include '../components/layout_footer.php'; ?>

@@ -5,7 +5,9 @@ require_once '../model/Database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_number = trim($_POST['id_number']);
-    $full_name = trim($_POST['full_name']);
+    $first_name = trim($_POST['first_name']);
+    $middle_initial = trim($_POST['middle_initial']);
+    $last_name = trim($_POST['last_name']);
     $email = trim($_POST['email']);
     $role = trim($_POST['role']);
     $password = trim($_POST['password']);
@@ -16,13 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $security_answer_2 = trim($_POST['security_answer_2']);
     
     // Validate inputs
-    if (empty($id_number) || empty($full_name) || empty($email) || empty($role) || 
-        empty($password) || empty($security_question_1) || empty($security_answer_1) ||
-        empty($security_question_2) || empty($security_answer_2)) {
+    if (empty($id_number) || empty($first_name) || empty($middle_initial) || empty($last_name) || 
+        empty($email) || empty($role) || empty($password) || empty($security_question_1) || 
+        empty($security_answer_1) || empty($security_question_2) || empty($security_answer_2)) {
         $_SESSION['error_message'] = "All fields are required.";
         header("Location: ../view/register.php");
         exit();
     }
+    
+    // Combine name fields into full_name
+    $full_name = $first_name . ' ' . $middle_initial . '. ' . $last_name;
     
     // Validate password match
     if ($password !== $confirm_password) {
