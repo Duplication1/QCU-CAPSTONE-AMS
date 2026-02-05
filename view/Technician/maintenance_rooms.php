@@ -48,25 +48,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
     $action = $_POST['action'];
     
-    if ($action === 'update_maintenance_date') {
-        $room_id = intval($_POST['room_id'] ?? 0);
-        $maintenance_date = trim($_POST['maintenance_date'] ?? '');
+    if ($action === 'update_status') {
+        $schedule_id = intval($_POST['schedule_id'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
         
-        if ($room_id <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Invalid room ID']);
+        if ($schedule_id <= 0 || empty($status)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid schedule ID or status']);
             exit;
         }
         
+        // Verify this schedule is assigned to the current user
+        $verify_stmt = $conn->prepare("SELECT id FROM maintenance_schedules WHERE id = ? AND assigned_technician_id = ?");
+        $technician_id = $_SESSION['user_id'];
+        $verify_stmt->bind_param('ii', $schedule_id, $technician_id);
+        $verify_stmt->execute();
+        $verify_result = $verify_stmt->get_result();
+        
+        if ($verify_result->num_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        $verify_stmt->close();
+        
         try {
-            $stmt = $conn->prepare("UPDATE rooms SET next_maintenance_date = ?, last_maintenance_date = CURDATE() WHERE id = ? AND building_id = ?");
-            $stmt->bind_param('sii', $maintenance_date, $room_id, $building_id);
+            $stmt = $conn->prepare("UPDATE maintenance_schedules SET status = ? WHERE id = ?");
+            $stmt->bind_param('si', $status, $schedule_id);
             $success = $stmt->execute();
             $stmt->close();
             
             if ($success) {
-                echo json_encode(['success' => true, 'message' => 'Maintenance date updated successfully']);
+                echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update maintenance date']);
+                echo json_encode(['success' => false, 'message' => 'Failed to update status']);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -75,36 +88,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch rooms with maintenance info
-$rooms = [];
+// Fetch my assigned maintenance tasks for this building
+$technician_id = $_SESSION['user_id'];
+$schedules = [];
 $query = "SELECT 
-    r.id,
-    r.name,
-    r.next_maintenance_date,
-    r.last_maintenance_date,
-    r.created_at,
+    ms.*,
+    r.name as room_name,
     COUNT(DISTINCT a.id) as total_assets,
     COUNT(DISTINCT CASE WHEN a.status IN ('Available', 'In Use') THEN a.id END) as active_assets
-FROM rooms r
+FROM maintenance_schedules ms
+INNER JOIN rooms r ON ms.room_id = r.id
 LEFT JOIN assets a ON r.id = a.room_id
-WHERE r.building_id = ?
-GROUP BY r.id, r.name, r.next_maintenance_date, r.last_maintenance_date, r.created_at
+WHERE ms.building_id = ? AND ms.assigned_technician_id = ?
+GROUP BY ms.id, r.name, r.id
 ORDER BY 
     CASE 
-        WHEN r.next_maintenance_date IS NULL THEN 2
-        WHEN r.next_maintenance_date < CURDATE() THEN 0
-        ELSE 1
+        WHEN ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() THEN 0
+        WHEN ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() THEN 1
+        WHEN ms.status = 'In Progress' THEN 2
+        ELSE 3
     END,
-    r.next_maintenance_date ASC,
-    r.name ASC";
+    ms.maintenance_date ASC";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param('i', $building_id);
+$stmt->bind_param('ii', $building_id, $technician_id);
 $stmt->execute();
 $result = $stmt->get_result();
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $rooms[] = $row;
+        $schedules[] = $row;
     }
 }
 $stmt->close();
@@ -141,8 +153,8 @@ main {
                     <i class="fa-solid fa-arrow-left text-lg"></i>
                 </a>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($building['name']) ?> - Room Maintenance</h1>
-                    <p class="text-sm text-gray-500">Manage maintenance schedules for rooms</p>
+                    <h1 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($building['name']) ?> - My Assignments</h1>
+                    <p class="text-sm text-gray-500">View and manage your assigned maintenance tasks</p>
                 </div>
             </div>
         </div>
@@ -150,20 +162,21 @@ main {
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
             <?php
-            $total_rooms = count($rooms);
-            $overdue = count(array_filter($rooms, fn($r) => $r['next_maintenance_date'] && strtotime($r['next_maintenance_date']) < time()));
-            $upcoming = count(array_filter($rooms, fn($r) => $r['next_maintenance_date'] && strtotime($r['next_maintenance_date']) >= time() && strtotime($r['next_maintenance_date']) <= strtotime('+7 days')));
-            $not_scheduled = count(array_filter($rooms, fn($r) => !$r['next_maintenance_date']));
+            $total_tasks = count($schedules);
+            $overdue = count(array_filter($schedules, fn($s) => $s['status'] === 'Scheduled' && strtotime($s['maintenance_date']) < time()));
+            $upcoming = count(array_filter($schedules, fn($s) => $s['status'] === 'Scheduled' && strtotime($s['maintenance_date']) >= time() && strtotime($s['maintenance_date']) <= strtotime('+7 days')));
+            $in_progress = count(array_filter($schedules, fn($s) => $s['status'] === 'In Progress'));
+            $completed = count(array_filter($schedules, fn($s) => $s['status'] === 'Completed'));
             ?>
             
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Total Rooms</p>
-                        <p class="text-2xl font-bold text-gray-800"><?= $total_rooms ?></p>
+                        <p class="text-sm text-gray-600">Total Tasks</p>
+                        <p class="text-2xl font-bold text-gray-800"><?= $total_tasks ?></p>
                     </div>
                     <div class="bg-blue-100 p-3 rounded-lg">
-                        <i class="fa-solid fa-door-open text-blue-600 text-xl"></i>
+                        <i class="fa-solid fa-clipboard-list text-blue-600 text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -183,11 +196,11 @@ main {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Upcoming (7 days)</p>
-                        <p class="text-2xl font-bold text-orange-600"><?= $upcoming ?></p>
+                        <p class="text-sm text-gray-600">In Progress</p>
+                        <p class="text-2xl font-bold text-yellow-600"><?= $in_progress ?></p>
                     </div>
-                    <div class="bg-orange-100 p-3 rounded-lg">
-                        <i class="fa-solid fa-calendar-days text-orange-600 text-xl"></i>
+                    <div class="bg-yellow-100 p-3 rounded-lg">
+                        <i class="fa-solid fa-spinner text-yellow-600 text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -195,17 +208,17 @@ main {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Not Scheduled</p>
-                        <p class="text-2xl font-bold text-gray-600"><?= $not_scheduled ?></p>
+                        <p class="text-sm text-gray-600">Completed</p>
+                        <p class="text-2xl font-bold text-green-600"><?= $completed ?></p>
                     </div>
-                    <div class="bg-gray-100 p-3 rounded-lg">
-                        <i class="fa-solid fa-calendar-xmark text-gray-600 text-xl"></i>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i class="fa-solid fa-check-circle text-green-600 text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Rooms Table -->
+        <!-- Maintenance Tasks Table -->
         <div class="bg-white rounded shadow-sm border border-gray-200">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -213,106 +226,87 @@ main {
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Last Maintenance</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Next Maintenance</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Maintenance Date</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <?php if (empty($rooms)): ?>
+                        <?php if (empty($schedules)): ?>
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center">
-                                    <i class="fa-solid fa-door-open text-6xl text-gray-300 mb-4"></i>
-                                    <p class="text-gray-500 text-lg">No rooms found in this building</p>
+                                    <i class="fa-solid fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
+                                    <p class="text-gray-500 text-lg">No maintenance tasks assigned for this building</p>
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($rooms as $room): ?>
+                            <?php foreach ($schedules as $schedule): ?>
                                 <?php
-                                $status_class = 'bg-gray-100 text-gray-700';
-                                $status_text = 'Not Scheduled';
-                                $status_icon = 'fa-calendar-xmark';
+                                $status_class = [
+                                    'Scheduled' => 'bg-blue-100 text-blue-700',
+                                    'In Progress' => 'bg-yellow-100 text-yellow-700',
+                                    'Completed' => 'bg-green-100 text-green-700',
+                                    'Cancelled' => 'bg-red-100 text-red-700'
+                                ][$schedule['status']] ?? 'bg-gray-100 text-gray-700';
                                 
-                                if ($room['next_maintenance_date']) {
-                                    $days_until = floor((strtotime($room['next_maintenance_date']) - time()) / 86400);
-                                    if ($days_until < 0) {
-                                        $status_class = 'bg-red-100 text-red-700';
-                                        $status_text = abs($days_until) . ' days overdue';
-                                        $status_icon = 'fa-exclamation-triangle';
-                                    } elseif ($days_until <= 7) {
-                                        $status_class = 'bg-orange-100 text-orange-700';
-                                        $status_text = 'Due in ' . $days_until . ' day' . ($days_until != 1 ? 's' : '');
-                                        $status_icon = 'fa-calendar-days';
-                                    } else {
-                                        $status_class = 'bg-green-100 text-green-700';
-                                        $status_text = 'Scheduled';
-                                        $status_icon = 'fa-calendar-check';
-                                    }
+                                $days_until = floor((strtotime($schedule['maintenance_date']) - time()) / 86400);
+                                $date_class = 'text-gray-900';
+                                if ($schedule['status'] === 'Scheduled' && $days_until < 0) {
+                                    $date_class = 'text-red-600 font-bold';
+                                } elseif ($schedule['status'] === 'Scheduled' && $days_until <= 7) {
+                                    $date_class = 'text-orange-600 font-semibold';
                                 }
                                 ?>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                <tr class="hover:bg-gray-50 transition-colors" data-schedule-id="<?= $schedule['id'] ?>">
+                                    <td class="px-6 py-4">
                                         <div class="flex items-center">
                                             <i class="fa-solid fa-door-open text-blue-600 mr-3"></i>
                                             <div>
-                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($room['name']) ?></div>
-                                                <div class="text-xs text-gray-500">Created: <?= date('M d, Y', strtotime($room['created_at'])) ?></div>
+                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($schedule['room_name']) ?></div>
+                                                <div class="text-xs text-gray-500">Created: <?= date('M d, Y', strtotime($schedule['created_at'])) ?></div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="text-sm">
-                                            <div class="font-bold text-gray-800"><?= $room['total_assets'] ?></div>
-                                            <div class="text-xs text-gray-500"><?= $room['active_assets'] ?> active</div>
+                                            <div class="font-bold text-gray-800"><?= $schedule['total_assets'] ?></div>
+                                            <div class="text-xs text-gray-500"><?= $schedule['active_assets'] ?> active</div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <?php if ($room['last_maintenance_date']): ?>
-                                            <div class="text-sm text-gray-700">
-                                                <?= date('M d, Y', strtotime($room['last_maintenance_date'])) ?>
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                <?php
-                                                $days_ago = floor((time() - strtotime($room['last_maintenance_date'])) / 86400);
-                                                echo $days_ago . ' day' . ($days_ago != 1 ? 's' : '') . ' ago';
-                                                ?>
-                                            </div>
-                                        <?php else: ?>
-                                            <span class="text-sm text-gray-400">Never</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <div id="next-maintenance-<?= $room['id'] ?>">
-                                            <?php if ($room['next_maintenance_date']): ?>
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    <?= date('M d, Y', strtotime($room['next_maintenance_date'])) ?>
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    <?php
-                                                    $days_until = floor((strtotime($room['next_maintenance_date']) - time()) / 86400);
-                                                    if ($days_until < 0) {
-                                                        echo abs($days_until) . ' days overdue';
-                                                    } else {
-                                                        echo 'In ' . $days_until . ' day' . ($days_until != 1 ? 's' : '');
-                                                    }
-                                                    ?>
-                                                </div>
-                                            <?php else: ?>
-                                                <span class="text-sm text-gray-400">Not scheduled</span>
-                                            <?php endif; ?>
+                                        <div class="text-sm <?= $date_class ?>">
+                                            <?= date('M d, Y', strtotime($schedule['maintenance_date'])) ?>
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            <?php
+                                            if ($days_until < 0) {
+                                                echo abs($days_until) . ' days overdue';
+                                            } else {
+                                                echo 'In ' . $days_until . ' day' . ($days_until != 1 ? 's' : '');
+                                            }
+                                            ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?= $status_class ?>">
-                                            <i class="fa-solid <?= $status_icon ?> mr-1"></i><?= $status_text ?>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?= $status_class ?> status-badge">
+                                            <?= $schedule['status'] ?>
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-xs text-gray-700 max-w-xs">
+                                            <?= $schedule['notes'] ? htmlspecialchars($schedule['notes']) : '<span class="text-gray-400">No notes</span>' ?>
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 text-center">
-                                        <button onclick="openMaintenanceModal(<?= $room['id'] ?>, '<?= htmlspecialchars($room['name'], ENT_QUOTES) ?>', '<?= $room['next_maintenance_date'] ?? '' ?>')" 
-                                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                            <i class="fa-solid fa-calendar-plus mr-1"></i>Schedule
-                                        </button>
+                                        <?php if ($schedule['status'] !== 'Completed' && $schedule['status'] !== 'Cancelled'): ?>
+                                            <button onclick="updateStatus(<?= $schedule['id'] ?>, '<?= $schedule['status'] ?>')" 
+                                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                                <i class="fa-solid fa-edit mr-1"></i>Update Status
+                                            </button>
+                                        <?php else: ?>
+                                            <span class="text-xs text-gray-400">Task <?= strtolower($schedule['status']) ?></span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -324,60 +318,58 @@ main {
     </div>
 </main>
 
-<!-- Maintenance Schedule Modal -->
-<div id="maintenanceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+<!-- Update Status Modal -->
+<div id="statusModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-            <h3 class="text-xl font-semibold text-white">Schedule Maintenance</h3>
+            <h3 class="text-xl font-semibold text-white">Update Maintenance Status</h3>
         </div>
-        <form id="maintenanceForm" class="p-6">
-            <input type="hidden" id="maintenanceRoomId" name="room_id">
+        <div class="p-6">
+            <input type="hidden" id="statusScheduleId">
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Room</label>
-                <input type="text" id="maintenanceRoomName" readonly
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Next Maintenance Date</label>
-                <input type="date" id="maintenanceDate" name="maintenance_date" required
-                       min="<?= date('Y-m-d') ?>"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <p class="text-xs text-gray-500 mt-1">Select the date for the next scheduled maintenance</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Current Status: <span id="currentStatus" class="font-semibold"></span></label>
+                <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">New Status</label>
+                <select id="statusSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Update the maintenance task status</p>
             </div>
             <div class="flex gap-3 justify-end">
-                <button type="button" onclick="closeMaintenanceModal()" 
+                <button type="button" onclick="closeStatusModal()" 
                         class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button type="submit" 
+                <button type="button" onclick="submitStatusUpdate()" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fa-solid fa-save mr-2"></i>Save Schedule
+                    <i class="fa-solid fa-save mr-2"></i>Update Status
                 </button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 <script>
-function openMaintenanceModal(roomId, roomName, currentDate) {
-    document.getElementById('maintenanceRoomId').value = roomId;
-    document.getElementById('maintenanceRoomName').value = roomName;
-    document.getElementById('maintenanceDate').value = currentDate || '';
-    document.getElementById('maintenanceModal').classList.remove('hidden');
+function updateStatus(scheduleId, currentStatus) {
+    document.getElementById('statusScheduleId').value = scheduleId;
+    document.getElementById('currentStatus').textContent = currentStatus;
+    document.getElementById('statusSelect').value = currentStatus;
+    document.getElementById('statusModal').classList.remove('hidden');
 }
 
-function closeMaintenanceModal() {
-    document.getElementById('maintenanceModal').classList.add('hidden');
-    document.getElementById('maintenanceForm').reset();
+function closeStatusModal() {
+    document.getElementById('statusModal').classList.add('hidden');
 }
 
-document.getElementById('maintenanceForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+async function submitStatusUpdate() {
+    const scheduleId = document.getElementById('statusScheduleId').value;
+    const newStatus = document.getElementById('statusSelect').value;
     
     const formData = new FormData();
-    formData.append('action', 'update_maintenance_date');
-    formData.append('room_id', document.getElementById('maintenanceRoomId').value);
-    formData.append('maintenance_date', document.getElementById('maintenanceDate').value);
+    formData.append('action', 'update_status');
+    formData.append('schedule_id', scheduleId);
+    formData.append('status', newStatus);
     
     try {
         const response = await fetch('', {
@@ -388,22 +380,22 @@ document.getElementById('maintenanceForm').addEventListener('submit', async func
         const result = await response.json();
         
         if (result.success) {
-            alert(result.message);
-            closeMaintenanceModal();
-            location.reload();
+            showNotification(result.message, 'success');
+            closeStatusModal();
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + result.message);
+            showNotification('Error: ' + result.message, 'error');
         }
     } catch (error) {
-        alert('Error updating maintenance date');
+        showNotification('Error updating status', 'error');
         console.error(error);
     }
-});
+}
 
 // Close modal on escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        closeMaintenanceModal();
+        closeStatusModal();
     }
 });
 </script>

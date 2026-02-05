@@ -6,8 +6,8 @@ header("Pragma: no-cache");
 
 session_start();
 
-// Check if user is logged in and has Technician role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Technician') {
+// Check if user is logged in and has Laboratory Staff role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
     header("Location: ../login.php");
     exit();
 }
@@ -48,43 +48,30 @@ $conn->query("CREATE TABLE IF NOT EXISTS maintenance_schedules (
     FOREIGN KEY (building_id) REFERENCES buildings(id) ON DELETE CASCADE
 )");
 
-// Get current technician user ID
-$technician_id = $_SESSION['user_id'];
-
-// Fetch My Assigned Maintenance Schedules grouped by building
+// Fetch all buildings with maintenance stats
 $buildings = [];
 $query = "SELECT 
     b.id,
     b.name,
     b.created_at,
-    COUNT(DISTINCT ms.room_id) as total_rooms,
+    COUNT(DISTINCT r.id) as total_rooms,
+    COUNT(DISTINCT ms.id) as total_schedules,
     COUNT(DISTINCT CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() THEN ms.id END) as overdue_maintenance,
     COUNT(DISTINCT CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN ms.id END) as upcoming_maintenance,
     MIN(CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() THEN ms.maintenance_date END) as earliest_maintenance
 FROM buildings b
-INNER JOIN maintenance_schedules ms ON b.id = ms.building_id
-WHERE ms.assigned_technician_id = ?
+LEFT JOIN rooms r ON b.id = r.building_id
+LEFT JOIN maintenance_schedules ms ON r.id = ms.room_id AND b.id = ms.building_id
 GROUP BY b.id, b.name, b.created_at
-ORDER BY 
-    CASE 
-        WHEN MIN(CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() THEN ms.maintenance_date END) IS NOT NULL THEN 0
-        WHEN MIN(CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() THEN ms.maintenance_date END) IS NOT NULL THEN 1
-        ELSE 2
-    END,
-    MIN(CASE WHEN ms.status = 'Scheduled' THEN ms.maintenance_date END) ASC,
-    b.name ASC";
+ORDER BY b.name ASC";
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param('i', $technician_id);
-$stmt->execute();
-$result = $stmt->get_result();
+$result = $conn->query($query);
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $buildings[] = $row;
     }
 }
-$stmt->close();
 
 include '../components/layout_header.php';
 ?>
@@ -114,8 +101,8 @@ main {
         <!-- Header -->
         <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
             <div>
-                <h1 class="text-xl font-bold text-gray-800">My Maintenance Assignments</h1>
-                <p class="text-sm text-gray-500">View and manage your assigned maintenance tasks</p>
+                <h1 class="text-xl font-bold text-gray-800">Room Maintenance Management</h1>
+                <p class="text-sm text-gray-500">Schedule and assign maintenance tasks for all rooms</p>
             </div>
         </div>
 
@@ -131,7 +118,7 @@ main {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Buildings Assigned</p>
+                        <p class="text-sm text-gray-600">Total Buildings</p>
                         <p class="text-2xl font-bold text-gray-800"><?= $total_buildings ?></p>
                     </div>
                     <div class="bg-blue-100 p-3 rounded-lg">
@@ -143,7 +130,7 @@ main {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Rooms Assigned</p>
+                        <p class="text-sm text-gray-600">Total Rooms</p>
                         <p class="text-2xl font-bold text-gray-800"><?= $total_rooms ?></p>
                     </div>
                     <div class="bg-green-100 p-3 rounded-lg">
@@ -179,13 +166,12 @@ main {
 
         <!-- Buildings Grid -->
         <div class="bg-white rounded shadow-sm border border-gray-200 p-4">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Buildings with Assigned Tasks</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Buildings</h2>
             
             <?php if (empty($buildings)): ?>
                 <div class="text-center py-12">
-                    <i class="fa-solid fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
-                    <p class="text-gray-500 text-lg font-medium">No Maintenance Tasks Assigned</p>
-                    <p class="text-gray-400 text-sm mt-2">You will be notified when new maintenance tasks are assigned to you</p>
+                    <i class="fa-solid fa-building text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500 text-lg">No buildings found</p>
                 </div>
             <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -234,7 +220,7 @@ main {
                             
                             <div class="mt-3 pt-3 border-t border-gray-200">
                                 <div class="flex items-center justify-between text-sm text-blue-600 font-medium">
-                                    <span>Manage Rooms</span>
+                                    <span>Manage Rooms & Assignments</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </div>
                             </div>

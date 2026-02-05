@@ -308,6 +308,29 @@ if ($countResult) {
     }
 }
 
+// Fetch statistics for cards
+$unassignedQuery = "SELECT COUNT(*) as count FROM issues WHERE COALESCE(category,'') <> 'borrow' AND (assigned_technician IS NULL OR assigned_technician = '')";
+$unassignedResult = $conn->query($unassignedQuery);
+$unassignedCount = $unassignedResult->fetch_assoc()['count'];
+
+$inProgressQuery = "SELECT COUNT(*) as count FROM issues WHERE COALESCE(category,'') <> 'borrow' AND status = 'In Progress'";
+$inProgressResult = $conn->query($inProgressQuery);
+$inProgressCount = $inProgressResult->fetch_assoc()['count'];
+
+$resolvedQuery = "SELECT COUNT(*) as count FROM issues WHERE COALESCE(category,'') <> 'borrow' AND status = 'Resolved'";
+$resolvedResult = $conn->query($resolvedQuery);
+$resolvedCount = $resolvedResult->fetch_assoc()['count'];
+
+// Fetch technician workload data for chart
+$techWorkloadQuery = "SELECT assigned_technician, COUNT(*) as count FROM issues WHERE COALESCE(category,'') <> 'borrow' AND assigned_technician IS NOT NULL AND assigned_technician <> '' GROUP BY assigned_technician ORDER BY count DESC";
+$techWorkloadResult = $conn->query($techWorkloadQuery);
+$techWorkloadData = [];
+if ($techWorkloadResult && $techWorkloadResult->num_rows > 0) {
+    while ($row = $techWorkloadResult->fetch_assoc()) {
+        $techWorkloadData[] = $row;
+    }
+}
+
 // Get success message
 $successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : '';
 unset($_SESSION['success_message']);
@@ -325,6 +348,59 @@ include '../components/layout_header.php';
                 <?php echo htmlspecialchars($successMessage); ?>
             </div>
             <?php endif; ?>
+
+            <!-- Two Column Layout: Cards and Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <!-- Left Column: Statistics Cards -->
+                <div class="space-y-4">
+                    <!-- Unassigned Tickets Card -->
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-semibold">Unassigned Tickets</p>
+                                <p class="text-3xl font-bold text-orange-600 mt-1"><?php echo $unassignedCount; ?></p>
+                            </div>
+                            <div class="bg-orange-100 rounded-full p-3">
+                                <i class="fa-solid fa-inbox text-2xl text-orange-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- In Progress Card -->
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-semibold">In Progress</p>
+                                <p class="text-3xl font-bold text-purple-600 mt-1"><?php echo $inProgressCount; ?></p>
+                            </div>
+                            <div class="bg-purple-100 rounded-full p-3">
+                                <i class="fa-solid fa-spinner text-2xl text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resolved Card -->
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase font-semibold">Resolved</p>
+                                <p class="text-3xl font-bold text-green-600 mt-1"><?php echo $resolvedCount; ?></p>
+                            </div>
+                            <div class="bg-green-100 rounded-full p-3">
+                                <i class="fa-solid fa-check-circle text-2xl text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Technician Workload Chart -->
+                <div class="bg-white rounded-lg shadow p-4 h-full">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Technician Workload</h3>
+                    <div class="w-full flex-1" style="height: calc(100% - 32px);">
+                        <canvas id="technicianChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
             <div class="bg-white rounded-lg shadow p-3">
                 <!-- Compact Filter Bar -->
@@ -647,7 +723,68 @@ include '../components/layout_header.php';
     </div>
 </div>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <script>
+// Technician Workload Chart
+const techWorkloadData = <?php echo json_encode($techWorkloadData); ?>;
+const techLabels = techWorkloadData.map(item => item.assigned_technician);
+const techCounts = techWorkloadData.map(item => parseInt(item.count));
+
+const ctx = document.getElementById('technicianChart').getContext('2d');
+const technicianChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: techLabels,
+        datasets: [{
+            label: 'Tickets Assigned',
+            data: techCounts,
+            backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(34, 197, 94, 0.8)',
+                'rgba(249, 115, 22, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(251, 191, 36, 0.8)'
+            ],
+            borderColor: [
+                'rgba(59, 130, 246, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(34, 197, 94, 1)',
+                'rgba(249, 115, 22, 1)',
+                'rgba(236, 72, 153, 1)',
+                'rgba(251, 191, 36, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Tickets: ' + context.parsed.y;
+                    }
+                }
+            }
+        }
+    }
+});
+
 // showAlert function is now in notifications.js as showNotification
 // Keeping this as wrapper for backward compatibility
 function showAlert(type, msg) {

@@ -95,6 +95,13 @@ $navigation_items = [
             'href' => 'tickets.php'
         ],
         [
+            'id' => 'maintenance',
+            'label' => 'Maintenance Scheduling',
+            'icon' => 'fa-solid fa-screwdriver-wrench',
+            'color' => 'blue',
+            'href' => 'maintenance.php'
+        ],
+        [
             'id' => 'activity-logs',
             'label' => 'Activity Logs',
             'icon' => 'fa-solid fa-clock-rotate-left',
