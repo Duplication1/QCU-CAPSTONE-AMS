@@ -28,8 +28,12 @@ try {
     $stmt = $conn->prepare("
         SELECT 
             i.*,
-            i.assigned_technician as assigned_to_name
+            i.assigned_technician as assigned_to_name,
+            pc.terminal_number,
+            r.name as room
         FROM issues i
+        LEFT JOIN pc_units pc ON i.pc_id = pc.id
+        LEFT JOIN rooms r ON i.room_id = r.id
         WHERE i.id = ? 
         AND (i.user_id = ? OR ? IN (SELECT id FROM users WHERE id = ? AND role IN ('LaboratoryStaff', 'Technician', 'Administrator')))
     ");

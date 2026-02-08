@@ -27,6 +27,7 @@ try {
         SELECT 
             i.*,
             r.name as room,
+            pc.terminal_number,
             i.assigned_technician as technician_name,
             CASE 
                 WHEN i.status = 'Open' AND i.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 'Overdue'
@@ -34,6 +35,7 @@ try {
             END as display_status
         FROM issues i
         LEFT JOIN rooms r ON i.room_id = r.id
+        LEFT JOIN pc_units pc ON i.pc_id = pc.id
         WHERE i.user_id = ?
         ORDER BY 
             CASE i.status
@@ -116,6 +118,7 @@ include '../components/layout_header.php';
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Issue ID</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Category</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Room</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Terminal No</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Description</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Submitted</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Assigned To</th>
@@ -141,6 +144,15 @@ include '../components/layout_header.php';
                             </td>
                             <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                 <?php echo htmlspecialchars($issue['room']); ?>
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                <?php 
+                                if ($issue['terminal_number']) {
+                                    echo htmlspecialchars($issue['terminal_number']);
+                                } else {
+                                    echo '<span class="text-gray-400 text-[10px]">(no terminal)</span>';
+                                }
+                                ?>
                             </td>
                             <td class="px-3 py-2 text-xs text-gray-900 max-w-xs truncate">
                                 <?php echo htmlspecialchars($issue['description']); ?>
@@ -406,6 +418,10 @@ async function viewIssueDetails(issueId) {
                     <div>
                         <label class="block text-[10px] font-medium text-gray-700 mb-1">Room</label>
                         <p class="text-xs">${issue.room}</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-medium text-gray-700 mb-1">Terminal No</label>
+                        <p class="text-xs">${issue.terminal_number || '<span class="text-gray-400">(no terminal)</span>'}</p>
                     </div>
                     <div>
                         <label class="block text-[10px] font-medium text-gray-700 mb-1">Status</label>

@@ -420,7 +420,7 @@
                     </div>
                     <div class="bg-green-600 text-white p-8 rounded-xl">
                         <i class="fa-solid fa-building text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">15+</h3>
+                        <h3 class="text-3xl font-bold mb-2">5+</h3>
                         <p class="text-green-100">Buildings</p>
                     </div>
                     <div class="bg-purple-600 text-white p-8 rounded-xl">
@@ -430,7 +430,7 @@
                     </div>
                     <div class="bg-yellow-600 text-white p-8 rounded-xl">
                         <i class="fa-solid fa-handshake text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">100%</h3>
+                        <h3 class="text-3xl font-bold mb-2">95%</h3>
                         <p class="text-yellow-100">Satisfaction</p>
                     </div>
                 </div>
