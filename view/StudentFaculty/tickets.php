@@ -353,14 +353,8 @@ $pcStmt->close();
                           <option value="Air Conditioning">Air Conditioning/Ventilation</option>
                           <option value="Lighting">Lighting Issue</option>
                           <option value="Furniture">Furniture/Seating Issue</option>
-                          <option value="Others">Others</option>
                       </select>
                   </div>
-
-                 <div id="laboratoryConcernOthersField" class="hidden">
-                     <label class="block text-sm font-medium text-gray-700">Specify Concern</label>
-                     <input name="laboratory_concern_other" id="laboratoryConcernOther" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Please describe your concern">
-                 </div>
              </div>
 
             <!-- Other Concern Fields (only for Other issues) -->
@@ -399,6 +393,7 @@ $pcStmt->close();
                 <textarea name="description" rows="4" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="Provide more details about the issue..."></textarea>
             </div>
 
+            <?php if ($_SESSION['role'] === 'Faculty'): ?>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2 required">Priority</label>
                 <select name="priority" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" required>
@@ -407,6 +402,10 @@ $pcStmt->close();
                     <option value="High">High</option>
                 </select>
             </div>
+            <?php else: ?>
+            <!-- Students get default Low priority -->
+            <input type="hidden" name="priority" value="Low">
+            <?php endif; ?>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Selection Preview</label>
@@ -616,9 +615,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const networkIssueType = document.getElementById('networkIssueType');
     const networkOthersField = document.getElementById('networkOthersField');
     const networkIssueTypeOther = document.getElementById('networkIssueTypeOther');
-    const laboratoryConcernType = document.getElementById('laboratoryConcernType');
-    const laboratoryConcernOthersField = document.getElementById('laboratoryConcernOthersField');
-    const laboratoryConcernOther = document.getElementById('laboratoryConcernOther');
     const otherConcernCategory = document.getElementById('otherConcernCategory');
     const otherConcernOthersField = document.getElementById('otherConcernOthersField');
     const otherConcernOther = document.getElementById('otherConcernOther');
@@ -715,20 +711,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 networkOthersField.classList.add('hidden');
                 networkIssueTypeOther.removeAttribute('required');
                 networkIssueTypeOther.value = '';
-            }
-        });
-    }
-    
-    // Toggle "Others" text field for Laboratory Concern
-    if (laboratoryConcernType) {
-        laboratoryConcernType.addEventListener('change', function() {
-            if (this.value === 'Others') {
-                laboratoryConcernOthersField.classList.remove('hidden');
-                laboratoryConcernOther.setAttribute('required', 'required');
-            } else {
-                laboratoryConcernOthersField.classList.add('hidden');
-                laboratoryConcernOther.removeAttribute('required');
-                laboratoryConcernOther.value = '';
             }
         });
     }
@@ -1572,9 +1554,10 @@ function populatePreview() {
     const signatureContainer = document.getElementById('borrowerSignaturePreview');
     if (signatureContainer) {
         if (userSignature) {
-            signatureContainer.innerHTML = `<img src="../../${userSignature}" alt="Your Signature" class="h-16 border-b-2 border-gray-800">`;
+            // Use signature directly (it's a Base64 data URI)
+            signatureContainer.innerHTML = `<img src="${userSignature}" alt="Your Signature" class="h-16 border-b-2 border-gray-800" onerror="this.parentElement.innerHTML='<div class=\'text-red-600 text-sm\'>Error loading signature. Please re-upload in your profile.</div>'">`;
         } else {
-            signatureContainer.innerHTML = `<div class="text-red-600 font-semibold"><i class="fas fa-exclamation-triangle"></i> No signature found</div>`;
+            signatureContainer.innerHTML = `<div class="text-red-600 font-semibold"><i class="fas fa-exclamation-triangle"></i> No signature found. <a href="profile.php" class="text-blue-600 underline hover:text-blue-800">Upload in Profile</a></div>`;
         }
     }
 }

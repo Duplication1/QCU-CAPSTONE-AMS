@@ -527,6 +527,10 @@ async function viewRequestDetails(requestId) {
         const data = await response.json();
         
         if (data.success) {
+            // Debug signature data
+            console.log('Request data:', data.request);
+            console.log('Borrower signature:', data.request.borrower_signature);
+            console.log('Lab staff signature:', data.request.lab_staff_signature);
             displayRequestDetails(data.request);
         } else {
             document.getElementById('requestDetailsContent').innerHTML = `
@@ -672,6 +676,46 @@ async function viewRequestDetails(requestId) {
                 ` : ''}
             </div>
             ` : ''}
+            
+            <!-- Signatures -->
+            <div class="border-t pt-4">
+                <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-signature text-[#1E3A8A]"></i>
+                    Signatures
+                </h5>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Borrower</p>
+                        ${request.borrower_signature ? `
+                            <div class="signature-container">
+                                <img src="${request.borrower_signature}" 
+                                     alt="Borrower Signature" 
+                                     class="max-w-full h-auto border-b-2 border-gray-800 mx-auto" 
+                                     style="max-height: 100px; display: block;">
+                            </div>
+                        ` : `
+                            <p class="text-red-600 text-sm italic">No signature found. <a href="profile.php" class="text-blue-600 underline hover:text-blue-800">Upload in profile</a></p>
+                        `}
+                        <p class="text-sm text-gray-600 mt-2">${request.borrower_name}</p>
+                    </div>
+                    ${request.approved_by_name ? `
+                    <div class="text-center">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Laboratory Staff</p>
+                        ${request.lab_staff_signature ? `
+                            <div class="signature-container">
+                                <img src="${request.lab_staff_signature}" 
+                                     alt="Lab Staff Signature" 
+                                     class="max-w-full h-auto border-b-2 border-gray-800 mx-auto" 
+                                     style="max-height: 100px; display: block;">
+                            </div>
+                        ` : `
+                            <p class="text-red-600 text-sm italic">No signature on file</p>
+                        `}
+                        <p class="text-sm text-gray-600 mt-2">${request.approved_by_name}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
         </div>
     `;
     
@@ -794,6 +838,15 @@ async function printRequest(requestId) {
         if (data.success) {
             const request = data.request;
             
+            // Prepare signature sections with Base64 data
+            const borrowerSigSection = request.borrower_signature 
+                ? `<img src="${request.borrower_signature}" alt="Borrower Signature" style="max-width: 200px; height: auto; border-bottom: 1px solid #000; display: block;">` 
+                : `<p style="color: #991b1b; font-style: italic;">No signature found. <a href="profile.php" style="color: #1e40af; text-decoration: underline;">Upload signature in profile</a></p>`;
+            
+            const labStaffSigSection = request.lab_staff_signature 
+                ? `<img src="${request.lab_staff_signature}" alt="Lab Staff Signature" style="max-width: 200px; height: auto; border-bottom: 1px solid #000; display: block;">` 
+                : `<p style="color: #991b1b; font-style: italic;">No signature on file</p>`;
+            
             // Create printable content
             const printContent = `
                 <!DOCTYPE html>
@@ -817,6 +870,13 @@ async function printRequest(requestId) {
                         .status.returned { background: #f3f4f6; color: #374151; }
                         .status.overdue { background: #fee2e2; color: #991b1b; }
                         .status.cancelled { background: #fee2e2; color: #991b1b; }
+                        .signature-section { margin-top: 40px; }
+                        .signature-row { display: flex; justify-content: space-around; margin-top: 20px; }
+                        .signature-box { text-align: center; width: 45%; }
+                        .signature-box p { margin: 5px 0; }
+                        @media print {
+                            a { color: #1e40af; text-decoration: underline; }
+                        }
                     </style>
                 </head>
                 <body>
@@ -921,6 +981,24 @@ async function printRequest(requestId) {
                         </div>
                     </div>
                     ` : ''}
+                    
+                    <div class="signature-section">
+                        <h3>Signatures</h3>
+                        <div class="signature-row">
+                            <div class="signature-box">
+                                <p style="font-weight: bold; margin-bottom: 10px;">Borrower</p>
+                                ${borrowerSigSection}
+                                <p style="margin-top: 10px; border-top: 1px solid #000; padding-top: 5px;">${request.borrower_name}</p>
+                            </div>
+                            ${request.approved_by_name ? `
+                            <div class="signature-box">
+                                <p style="font-weight: bold; margin-bottom: 10px;">Laboratory Staff</p>
+                                ${labStaffSigSection}
+                                <p style="margin-top: 10px; border-top: 1px solid #000; padding-top: 5px;">${request.approved_by_name}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
                 </body>
                 </html>
             `;

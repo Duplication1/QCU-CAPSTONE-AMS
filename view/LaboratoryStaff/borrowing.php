@@ -23,10 +23,7 @@ try {
     $conn = $db->getConnection();
     $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
-    $signature_file = $stmt->fetchColumn();
-    if ($signature_file && file_exists('../../uploads/signatures/' . $signature_file)) {
-        $lab_staff_signature = $signature_file;
-    }
+    $lab_staff_signature = $stmt->fetchColumn();
 } catch (PDOException $e) {
     // Handle error silently
 }
@@ -891,7 +888,7 @@ function generatePrintableDocument(request, borrowerSig, labStaffSig) {
         <div class="signature-box">
             <div class="label">Borrower's E-Signature:</div>
             <div class="sig-area">
-                ${borrowerSig ? `<img src="../../uploads/signatures/${borrowerSig}" alt="Borrower Signature">` : '<div class="no-sig">No signature available</div>'}
+                ${borrowerSig ? `<img src="${borrowerSig}" alt="Borrower Signature">` : '<div class="no-sig">No signature available</div>'}
             </div>
             <div class="name-line">${request.borrower_full_name}</div>
             <div class="role-text">Borrower's Name</div>
@@ -900,7 +897,7 @@ function generatePrintableDocument(request, borrowerSig, labStaffSig) {
         <div class="signature-box">
             <div class="label">Released By (Laboratory Staff):</div>
             <div class="sig-area">
-                ${labStaffSig ? `<img src="../../uploads/signatures/${labStaffSig}" alt="Lab Staff Signature">` : '<div class="no-sig">No signature available</div>'}
+                ${labStaffSig ? `<img src="${labStaffSig}" alt="Lab Staff Signature">` : '<div class="no-sig">No signature available</div>'}
             </div>
             <div class="name-line"><?php echo htmlspecialchars($_SESSION['full_name']); ?></div>
             <div class="role-text">Laboratory Staff Signature</div>

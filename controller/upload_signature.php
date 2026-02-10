@@ -35,78 +35,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
         
-        // Validate file size (max 2MB)
-        $max_size = 2 * 1024 * 1024; // 2MB in bytes
-        if ($file['size'] > $max_size) {
-            $_SESSION['error_message'] = "File size exceeds 2MB limit.";
+        // Check if GD extension is available
+        $has_gd = extension_loaded('gd');
+        
+        if ($has_gd) {
+            // GD is available - resize and optimize image
+            $max_size = 2 * 1024 * 1024; // 2MB for original file
+            if ($file['size'] > $max_size) {
+                $_SESSION['error_message'] = "File size exceeds 2MB limit.";
+                header("Location: $redirect_url");
+                exit();
+            }
+            
+            // Load image based on type
+            $image = null;
+            $max_width = 400;
+            $max_height = 150;
+            
+            switch ($file_type) {
+                case 'image/jpeg':
+                case 'image/jpg':
+                    $image = @imagecreatefromjpeg($file['tmp_name']);
+                    break;
+                case 'image/png':
+                    $image = @imagecreatefrompng($file['tmp_name']);
+                    break;
+                case 'image/gif':
+                    $image = @imagecreatefromgif($file['tmp_name']);
+                    break;
+            }
+            
+            if (!$image) {
+                $_SESSION['error_message'] = "Failed to process image.";
+                header("Location: $redirect_url");
+                exit();
+            }
+            
+            // Resize image
+            $orig_width = imagesx($image);
+            $orig_height = imagesy($image);
+            $ratio = min($max_width / $orig_width, $max_height / $orig_height, 1);
+            $new_width = (int)($orig_width * $ratio);
+            $new_height = (int)($orig_height * $ratio);
+            
+            $resized = imagecreatetruecolor($new_width, $new_height);
+            
+            // Preserve transparency
+            if ($file_type === 'image/png' || $file_type === 'image/gif') {
+                imagealphablending($resized, false);
+                imagesavealpha($resized, true);
+                $transparent = imagecolorallocatealpha($resized, 255, 255, 255, 127);
+                imagefilledrectangle($resized, 0, 0, $new_width, $new_height, $transparent);
+            }
+            
+            imagecopyresampled($resized, $image, 0, 0, 0, 0, $new_width, $new_height, $orig_width, $orig_height);
+            
+            // Convert to PNG
+            ob_start();
+            imagepng($resized, null, 6);
+            $image_data = ob_get_clean();
+            
+            imagedestroy($image);
+            imagedestroy($resized);
+            
+            $base64_image = 'data:image/png;base64,' . base64_encode($image_data);
+            
+        } else {
+            // GD not available - use original file with stricter size limit
+            $max_size = 200 * 1024; // 200KB limit when no compression available
+            if ($file['size'] > $max_size) {
+                $_SESSION['error_message'] = "File size exceeds 200KB limit. Please use a smaller image or enable GD extension for auto-compression.";
+                header("Location: $redirect_url");
+                exit();
+            }
+            
+            $image_data = file_get_contents($file['tmp_name']);
+            if ($image_data === false) {
+                $_SESSION['error_message'] = "Failed to read uploaded file.";
+                header("Location: $redirect_url");
+                exit();
+            }
+            
+            $base64_image = 'data:' . $file_type . ';base64,' . base64_encode($image_data);
+        }
+        
+        // Verify final Base64 size
+        if (strlen($base64_image) > 524288) { // 500KB
+            $_SESSION['error_message'] = "Signature file is too large. Please use a smaller or simpler image.";
             header("Location: $redirect_url");
             exit();
         }
         
-        // Create signatures directory if it doesn't exist
-        $upload_dir = __DIR__ . '/../uploads/signatures/';
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
-        
-        // Generate unique filename
-        $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_filename = 'signature_' . $user_id . '_' . time() . '.' . $file_extension;
-        $upload_path = $upload_dir . $new_filename;
-        
-        // Delete old signature if exists
         try {
             $db = new Database();
             $conn = $db->getConnection();
             
-            // Get old signature filename
-            $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
-            $stmt->execute([$user_id]);
-            $old_signature = $stmt->fetchColumn();
+            // Update user's e-signature in database with Base64 data
+            $stmt = $conn->prepare("UPDATE users SET e_signature = ? WHERE id = ?");
+            $stmt->execute([$base64_image, $user_id]);
             
-            if ($old_signature && file_exists($upload_dir . $old_signature)) {
-                unlink($upload_dir . $old_signature);
+            // Log activity for Laboratory Staff
+            if ($_SESSION['role'] === 'Laboratory Staff') {
+                require_once __DIR__ . '/../model/ActivityLog.php';
+                ActivityLog::record(
+                    $user_id,
+                    'upload',
+                    'signature',
+                    $user_id,
+                    'Uploaded e-signature'
+                );
             }
+            
+            $_SESSION['success_message'] = "E-signature uploaded successfully!";
+            header("Location: $redirect_url");
+            exit();
         } catch (PDOException $e) {
-            // Continue even if old file deletion fails
-        }
-        
-        // Move uploaded file
-        if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-            try {
-                $db = new Database();
-                $conn = $db->getConnection();
-                
-                // Update user's e-signature in database
-                $stmt = $conn->prepare("UPDATE users SET e_signature = ? WHERE id = ?");
-                $stmt->execute([$new_filename, $user_id]);
-                
-                // Log activity for Laboratory Staff
-                if ($_SESSION['role'] === 'Laboratory Staff') {
-                    require_once __DIR__ . '/../model/ActivityLog.php';
-                    ActivityLog::record(
-                        $user_id,
-                        'upload',
-                        'signature',
-                        $user_id,
-                        'Uploaded e-signature'
-                    );
-                }
-                
-                $_SESSION['success_message'] = "E-signature uploaded successfully!";
-                header("Location: $redirect_url");
-                exit();
-            } catch (PDOException $e) {
-                // Delete uploaded file if database update fails
-                if (file_exists($upload_path)) {
-                    unlink($upload_path);
-                }
-                $_SESSION['error_message'] = "Failed to save e-signature to database: " . $e->getMessage();
-                header("Location: $redirect_url");
-                exit();
-            }
-        } else {
-            $_SESSION['error_message'] = "Failed to upload file.";
+            $_SESSION['error_message'] = "Failed to save e-signature to database: " . $e->getMessage();
             header("Location: $redirect_url");
             exit();
         }

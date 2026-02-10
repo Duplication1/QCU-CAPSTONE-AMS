@@ -22,19 +22,13 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     
-    // Get current signature filename
+    // Check if user has a signature
     $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
-    $signature_file = $stmt->fetchColumn();
+    $signature_data = $stmt->fetchColumn();
     
-    if ($signature_file) {
-        // Delete file from server
-        $file_path = '../uploads/signatures/' . $signature_file;
-        if (file_exists($file_path)) {
-            unlink($file_path);
-        }
-        
-        // Update database
+    if ($signature_data) {
+        // Update database to remove signature
         $stmt = $conn->prepare("UPDATE users SET e_signature = NULL WHERE id = ?");
         $stmt->execute([$user_id]);
         

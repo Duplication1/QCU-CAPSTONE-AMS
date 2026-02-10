@@ -15,10 +15,8 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 require_once '../../config/config.php';
 require_once '../../model/Database.php';
 
-// Get current user's signature
-$user_id = $_SESSION['user_id'];
+// Get Laboratory Staff's e-signature
 $current_signature = null;
-
 try {
     $db = new Database();
     $conn = $db->getConnection();
@@ -50,8 +48,8 @@ include '../components/layout_header.php';
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 mb-3">Current Signature</h3>
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 flex items-center justify-center" style="min-height: 200px;">
-                        <?php if ($current_signature && file_exists('../../uploads/signatures/' . $current_signature)): ?>
-                            <img src="../../uploads/signatures/<?php echo htmlspecialchars($current_signature); ?>" 
+                        <?php if ($current_signature): ?>
+                            <img src="<?php echo htmlspecialchars($current_signature); ?>" 
                                  alt="Current E-Signature" 
                                  class="max-h-48 max-w-full object-contain">
                         <?php else: ?>

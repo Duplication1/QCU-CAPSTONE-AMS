@@ -152,8 +152,8 @@ include '../components/layout_header.php';
                     <div>
                         <label class="block text-[10px] font-medium text-gray-700 mb-2">Current Signature</label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 140px;">
-                            <?php if ($current_signature && file_exists('../../uploads/signatures/' . $current_signature)): ?>
-                                <img src="../../uploads/signatures/<?php echo htmlspecialchars($current_signature); ?>" 
+                            <?php if ($current_signature): ?>
+                                <img src="<?php echo htmlspecialchars($current_signature); ?>" 
                                      alt="Current E-Signature" 
                                      class="max-h-28 max-w-full object-contain">
                             <?php else: ?>

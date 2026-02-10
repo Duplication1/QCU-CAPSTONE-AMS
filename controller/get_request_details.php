@@ -32,6 +32,28 @@ try {
             exit();
         }
         
+        // Fetch signatures (Base64 data from database)
+        require_once '../model/Database.php';
+        $db = new Database();
+        $conn = $db->getConnection();
+        
+        // Get borrower's signature
+        $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
+        $stmt->execute([$request['borrower_id']]);
+        $borrower_signature = $stmt->fetchColumn();
+        
+        // Get lab staff's signature (if approved)
+        $lab_staff_signature = null;
+        if ($request['approved_by']) {
+            $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
+            $stmt->execute([$request['approved_by']]);
+            $lab_staff_signature = $stmt->fetchColumn();
+        }
+        
+        // Signatures are stored as Base64 data URIs, use directly
+        $request['borrower_signature'] = $borrower_signature;
+        $request['lab_staff_signature'] = $lab_staff_signature;
+        
         echo json_encode([
             'success' => true,
             'request' => $request

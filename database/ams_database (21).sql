@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 10, 2026 at 06:59 AM
+-- Generation Time: Feb 10, 2026 at 04:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -375,7 +375,46 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (328, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 05:52:21'),
 (329, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 05:58:36'),
 (330, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 05:58:42'),
-(331, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 05:59:38');
+(331, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 05:59:38'),
+(332, 5, 'create', 'ticket', 262, 'Submitted hardware ticket: headset', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:15:10'),
+(333, 5, 'create', 'ticket', 263, 'Submitted software ticket: google', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:17:02'),
+(334, 5, 'create', 'ticket', 264, 'Submitted network ticket: internet', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:17:17'),
+(335, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:27:20'),
+(336, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:30:36'),
+(337, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:31:02'),
+(338, 3, 'assign', 'ticket', 264, 'Assigned ticket #264 to Carlos Mendoza', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:33:09'),
+(339, 3, 'assign', 'ticket', 263, 'Assigned ticket #263 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:33:19'),
+(340, 3, 'assign', 'ticket', 262, 'Assigned ticket #262 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:33:25'),
+(341, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:38:20'),
+(342, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:38:57'),
+(343, 2, 'update', 'ticket', 145, 'Changed ticket #145 status to Resolved', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:40:24'),
+(344, 2, 'update', 'ticket', 140, 'Changed ticket #140 status to Resolved', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:40:26'),
+(345, 5, 'login', 'scanner', 970, 'Logged in via QR scanner for asset viewing', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-02-10 13:45:45'),
+(346, 1, 'view', 'report', NULL, 'Previewed tickets report (2026-01-11 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:20'),
+(347, 1, 'view', 'report', NULL, 'Previewed assets report (2026-01-11 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:29'),
+(348, 1, 'view', 'report', NULL, 'Previewed assets report (2026-01-11 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:30'),
+(349, 1, 'view', 'report', NULL, 'Previewed assets report (2026-01-06 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:40'),
+(350, 1, 'view', 'report', NULL, 'Previewed assets report (2026-01-06 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:41'),
+(351, 1, 'view', 'report', NULL, 'Previewed assets report (2026-01-01 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:44'),
+(352, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:47'),
+(353, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:53'),
+(354, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:53'),
+(355, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:53'),
+(356, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:53'),
+(357, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:54'),
+(358, 1, 'export', 'report', NULL, 'Generated assets report', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:54:56'),
+(359, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:55:05'),
+(360, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:55:05'),
+(361, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:55:06'),
+(362, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-17 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:55:06'),
+(363, 1, 'view', 'report', NULL, 'Previewed assets report (2025-12-01 to 2026-02-10)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 13:55:15'),
+(364, 5, 'create', 'ticket', 265, 'Submitted hardware ticket: dsa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:17:00'),
+(365, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:17:12'),
+(366, 3, 'assign', 'ticket', 265, 'Assigned ticket #265 to John Technician', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:17:32'),
+(367, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:17:38'),
+(368, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:17:48'),
+(369, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 14:18:14'),
+(370, 5, 'create', 'ticket', 266, 'Submitted hardware ticket: dsadsa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-10 15:06:31');
 
 -- --------------------------------------------------------
 
@@ -494,7 +533,7 @@ INSERT INTO `assets` (`id`, `asset_tag`, `asset_name`, `asset_type`, `category`,
 (967, '12-04-2025-LAPTOP-IK501-046', 'LAPTOP #46', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D967', NULL, 3, NULL, '2025-12-04 10:11:34', '2025-12-04 11:27:34'),
 (968, '12-04-2025-LAPTOP-IK501-047', 'LAPTOP #47', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D968', NULL, 3, NULL, '2025-12-04 10:11:34', '2025-12-04 11:27:34'),
 (969, '12-04-2025-LAPTOP-IK501-048', 'LAPTOP #48', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D969', NULL, 3, NULL, '2025-12-04 10:11:34', '2025-12-04 11:27:34'),
-(970, '12-04-2025-LAPTOP-IK501-049', 'LAPTOP #49', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D970', NULL, 3, NULL, '2025-12-04 10:11:34', '2025-12-04 11:27:34'),
+(970, '12-04-2025-LAPTOP-IK501-049', 'LAPTOP #49', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D970', NULL, 3, NULL, '2025-12-04 10:11:34', '2026-02-10 13:43:28'),
 (971, '12-04-2025-LAPTOP-IK501-050', 'LAPTOP #50', 'Hardware', '1', 'das', 'sda', NULL, 7, NULL, NULL, 'Available', 'Good', 1, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D971', NULL, 3, NULL, '2025-12-04 10:11:34', '2025-12-04 11:27:34'),
 (972, '12-04-2025-COMPUTERT-IK501-001', 'COMPUTER TABLE', 'Hardware', '73', '', '', '', 7, NULL, NULL, 'Available', 'Good', 0, NULL, 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D972', NULL, 3, 3, '2025-12-04 11:05:22', '2025-12-04 11:27:34'),
 (973, '12-04-2025-RAM-NOROOM-001', 'RAM #1', 'Hardware', NULL, '', '', NULL, NULL, NULL, NULL, 'Disposed', 'Poor', 0, '\n\n[DISPOSAL - 2025-12-04 19:11:23]\nAsset marked for disposal by  ', 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F192.168.100.15%2FQCU-CAPSTONE-AMS%2Fview%2Fpublic%2Fscan_asset.php%3Fid%3D973', NULL, 3, 3, '2025-12-04 11:09:50', '2025-12-04 11:27:34'),
@@ -4155,12 +4194,12 @@ INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware
 (137, 7, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU aging', 'PSU capacitor aging', 'High', 'Resolved', '2025-12-23 01:00:00', '2025-12-27 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (138, 9, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'No display signal', 'Display port no signal', 'Medium', 'Resolved', '2025-12-28 02:00:00', '2025-12-29 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (139, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Privacy shutter', 'Webcam privacy shutter stuck', 'Low', 'Resolved', '2025-12-29 05:00:00', '2025-12-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(140, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU thermal paste', 'GPU thermal paste degraded', 'High', 'In Progress', '2025-12-30 03:00:00', '2026-02-10 03:52:25', 'John Technician', '2026-02-08 06:52:25', 3, NULL, 0, NULL, NULL),
+(140, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU thermal paste', 'GPU thermal paste degraded', 'High', 'Resolved', '2025-12-30 03:00:00', '2026-02-10 13:40:26', 'John Technician', '2026-02-08 06:52:25', 3, NULL, 0, NULL, NULL),
 (141, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker distortion', 'Speaker distortion at high volume', 'Low', 'Resolved', '2025-12-30 08:30:00', '2025-12-31 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (142, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery health low', 'Battery health below 50%', 'Medium', 'Resolved', '2025-12-31 03:00:00', '2025-12-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (143, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Trackpad clicking', 'Trackpad clicking mechanism broken', 'Medium', 'Resolved', '2025-12-31 07:00:00', '2025-12-31 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (144, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD vibration', 'Hard drive vibration excessive', 'Medium', 'Resolved', '2025-12-31 10:00:00', '2025-12-31 12:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(145, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor no backlight', 'Monitor no backlight', 'High', 'In Progress', '2026-01-02 01:00:00', '2026-02-10 03:52:25', 'John Technician', '2026-02-09 06:52:25', 3, NULL, 0, NULL, NULL),
+(145, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor no backlight', 'Monitor no backlight', 'High', 'Resolved', '2026-01-02 01:00:00', '2026-02-10 13:40:24', 'John Technician', '2026-02-09 06:52:25', 3, NULL, 0, NULL, NULL),
 (146, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM not detected', 'RAM not detected in slot 2', 'High', 'Resolved', '2026-01-03 02:30:00', '2026-02-10 05:36:51', 'John Technician', '2026-02-04 21:42:20', 3, NULL, 1, '2026-02-10 13:36:51', NULL),
 (147, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooler loose', 'CPU cooler loose mounting', 'Medium', 'Resolved', '2026-01-04 03:00:00', '2026-01-06 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
 (148, 5, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver crash', 'Network card driver crash', 'Medium', 'In Progress', '2026-01-07 05:30:00', '2026-02-10 03:52:25', 'John Technician', '2026-02-10 03:41:41', 3, NULL, 0, NULL, NULL),
@@ -4277,7 +4316,12 @@ INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware
 (258, 5, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Network switch config', 'Network switch needs configuration', 'Medium', 'Resolved', '2026-01-10 04:12:21', '2026-01-12 04:12:21', 'David Tan', '2026-01-11 12:12:21', 3, NULL, 0, NULL, 1),
 (259, 5, 'software', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Database recovery', 'Database corrupted need recovery', 'High', 'Resolved', '2026-01-15 04:12:21', '2026-01-17 04:12:21', 'David Tan', '2026-01-16 08:12:21', 51, NULL, 0, NULL, 1),
 (260, 5, 'hardware', 8, 836, '02-02-2026-IK502-CPU-352', 2925, '', '', '', '', '', '', '', '', 'dsadsa', 'dsadsaa', 'Medium', 'Open', '2026-02-10 05:32:28', '2026-02-10 05:32:28', NULL, NULL, NULL, NULL, 0, NULL, 1),
-(261, 5, 'hardware', 19, 1037, '02-02-2026-IL502-CABLE-553', 3378, '', '', '', '', '', '', '', '', 'asd', 'dsadsa', 'Medium', 'In Progress', '2026-02-10 05:33:06', '2026-02-10 05:33:52', 'John Technician', '2026-02-10 05:33:52', 3, NULL, 0, NULL, 2);
+(261, 5, 'hardware', 19, 1037, '02-02-2026-IL502-CABLE-553', 3378, '', '', '', '', '', '', '', '', 'asd', 'dsadsa', 'Medium', 'In Progress', '2026-02-10 05:33:06', '2026-02-10 05:33:52', 'John Technician', '2026-02-10 05:33:52', 3, NULL, 0, NULL, 2),
+(262, 5, 'hardware', 12, 887, '02-02-2026-IK603-HEADSET-403', 3027, '', '', '', '', '', '', '', '', 'headset', 'headset', 'Medium', 'In Progress', '2026-02-10 13:15:10', '2026-02-10 13:33:25', 'John Technician', '2026-02-10 13:33:25', 3, NULL, 0, NULL, 1),
+(263, 5, 'software', 8, 836, '', 3027, '', 'google ', '', '', '', '', '', '', 'google', 'google', 'Low', 'In Progress', '2026-02-10 13:17:02', '2026-02-10 13:33:19', 'John Technician', '2026-02-10 13:33:19', 3, NULL, 0, NULL, 1),
+(264, 5, 'network', 8, 837, '', 3027, '', '', 'Slow Internet', '', '', '', '', '', 'internet', 'internet', 'Medium', 'In Progress', '2026-02-10 13:17:17', '2026-02-10 13:33:09', 'Carlos Mendoza', '2026-02-10 13:33:09', 3, NULL, 0, NULL, 1),
+(265, 5, 'hardware', 7, 587, '02-02-2026-IK501-KEYBOARD-103', 2183, '', '', '', '', '', '', '', '', 'dsa', 'dsadsa', 'Low', 'In Progress', '2026-02-10 14:17:00', '2026-02-10 14:17:32', 'John Technician', '2026-02-10 14:17:32', 3, NULL, 0, NULL, 1),
+(266, 5, 'hardware', 13, 487, '12-04-2025-IK503-CASE-004', 1154, '', '', '', '', '', NULL, '', '', 'dsadsa', 'dsada', 'Low', 'Open', '2026-02-10 15:06:31', '2026-02-10 15:06:31', NULL, NULL, NULL, NULL, 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -4486,7 +4530,23 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (185, 2, '2026-02-10 05:34:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
 (186, 3, '2026-02-10 05:51:33', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
 (187, 2, '2026-02-10 05:52:21', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
-(188, 3, '2026-02-10 05:58:42', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop');
+(188, 3, '2026-02-10 05:58:42', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(189, 5, '2026-02-10 13:12:42', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(190, 5, '2026-02-10 13:14:04', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(191, 5, '2026-02-10 13:24:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(192, 3, '2026-02-10 13:27:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(193, 1, '2026-02-10 13:30:43', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(194, 3, '2026-02-10 13:31:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(195, 5, '2026-02-10 13:38:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(196, 2, '2026-02-10 13:38:57', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(197, 1, '2026-02-10 13:46:05', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', 'mobile'),
+(198, 1, '2026-02-10 14:00:32', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(199, 57, '2026-02-10 14:00:53', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(200, 5, '2026-02-10 14:16:42', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(201, 3, '2026-02-10 14:17:12', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(202, 2, '2026-02-10 14:17:48', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(203, 5, '2026-02-10 14:18:17', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop'),
+(204, 57, '2026-02-10 15:14:49', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -4562,7 +4622,8 @@ INSERT INTO `maintenance_schedules` (`id`, `room_id`, `building_id`, `assigned_t
 (45, 13, 1, 56, 'David Tan', '2026-01-01 04:12:21', '2026-01-02', 'Software Update', 'Completed', 'OS and software updates', '2025-12-31 04:12:21', '2026-01-02 04:12:21', 53),
 (46, 7, 1, 56, 'David Tan', '2026-01-15 04:12:21', '2026-01-16', 'Regular', 'Completed', 'Bi-weekly maintenance', '2026-01-14 04:12:21', '2026-01-16 04:12:21', 3),
 (47, 14, 16, 2, 'John Technician', '2026-02-10 04:39:20', '2026-02-18', 'Regular', 'Scheduled', '', '2026-02-10 04:39:20', '2026-02-10 04:39:20', 3),
-(48, 10, 4, 2, 'John Technician', '2026-02-10 04:40:56', '2026-02-11', 'Regular', 'Scheduled', '', '2026-02-10 04:40:56', '2026-02-10 04:40:56', 3);
+(48, 10, 4, 2, 'John Technician', '2026-02-10 04:40:56', '2026-02-11', 'Regular', 'Scheduled', '', '2026-02-10 04:40:56', '2026-02-10 04:40:56', 3),
+(49, 14, 16, 2, 'John Technician', '2026-02-10 13:37:48', '2026-02-10', 'Regular', 'Scheduled', 'this room has not been checked for months', '2026-02-10 13:37:48', '2026-02-10 13:37:48', 3);
 
 -- --------------------------------------------------------
 
@@ -4587,118 +4648,118 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `related_type`, `related_id`, `is_read`, `created_at`) VALUES
-(42, 5, 'Borrowing Request #2 Approved', 'Your borrowing request has been approved. You can now pick up the asset.', 'success', 'borrowing', 2, 0, '2025-11-29 03:28:51'),
-(43, 5, 'Asset Returned - Request #2', 'Your borrowed asset has been returned and marked as \'Excellent\'. Thank you!', 'success', 'borrowing', 2, 0, '2025-11-29 03:28:57'),
-(44, 5, 'Ticket #26 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 26, 0, '2025-11-30 09:10:34'),
+(42, 5, 'Borrowing Request #2 Approved', 'Your borrowing request has been approved. You can now pick up the asset.', 'success', 'borrowing', 2, 1, '2025-11-29 03:28:51'),
+(43, 5, 'Asset Returned - Request #2', 'Your borrowed asset has been returned and marked as \'Excellent\'. Thank you!', 'success', 'borrowing', 2, 1, '2025-11-29 03:28:57'),
+(44, 5, 'Ticket #26 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 26, 1, '2025-11-30 09:10:34'),
 (45, 2, 'New Ticket Assigned #26', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 26, 1, '2025-11-30 09:10:34'),
-(46, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:38:40'),
+(46, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:38:40'),
 (47, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:38:40'),
-(48, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:38:45'),
+(48, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:38:45'),
 (49, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:38:45'),
-(50, 5, 'Ticket #25 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 25, 0, '2025-11-30 11:38:48'),
+(50, 5, 'Ticket #25 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 25, 1, '2025-11-30 11:38:48'),
 (51, 2, 'New Ticket Assigned #25', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 25, 1, '2025-11-30 11:38:48'),
-(52, 5, 'Ticket #24 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 24, 0, '2025-11-30 11:38:53'),
+(52, 5, 'Ticket #24 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 24, 1, '2025-11-30 11:38:53'),
 (53, 2, 'New Ticket Assigned #24', 'You have been assigned to a hardware ticket: \"dsa\". Please review and take action.', 'info', 'issue', 24, 1, '2025-11-30 11:38:53'),
-(54, 5, 'Ticket #23 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 23, 0, '2025-11-30 11:39:54'),
+(54, 5, 'Ticket #23 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 23, 1, '2025-11-30 11:39:54'),
 (55, 2, 'New Ticket Assigned #23', 'You have been assigned to a hardware ticket: \"dsa\". Please review and take action.', 'info', 'issue', 23, 1, '2025-11-30 11:39:54'),
-(56, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:45:04'),
+(56, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:45:04'),
 (57, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:45:04'),
-(58, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:45:28'),
+(58, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:45:28'),
 (59, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:45:28'),
-(60, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:50:18'),
+(60, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:50:18'),
 (61, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:50:18'),
-(62, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-11-30 11:51:28'),
+(62, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-11-30 11:51:28'),
 (63, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-11-30 11:51:28'),
-(64, 5, 'Ticket #26 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 26, 0, '2025-12-02 03:34:23'),
+(64, 5, 'Ticket #26 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 26, 1, '2025-12-02 03:34:23'),
 (65, 2, 'New Ticket Assigned #26', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 26, 1, '2025-12-02 03:34:23'),
-(66, 5, 'Ticket #26 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 26, 0, '2025-12-02 04:09:49'),
-(67, 5, 'Ticket #25 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 25, 0, '2025-12-02 04:09:55'),
-(68, 5, 'Ticket #24 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 24, 0, '2025-12-02 04:09:57'),
-(69, 5, 'Ticket #23 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 23, 0, '2025-12-02 04:09:59'),
-(70, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-12-02 04:35:55'),
+(66, 5, 'Ticket #26 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 26, 1, '2025-12-02 04:09:49'),
+(67, 5, 'Ticket #25 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 25, 1, '2025-12-02 04:09:55'),
+(68, 5, 'Ticket #24 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 24, 1, '2025-12-02 04:09:57'),
+(69, 5, 'Ticket #23 - Status Updated', 'Your ticket is now being worked on by John Technician.', 'info', 'issue', 23, 1, '2025-12-02 04:09:59'),
+(70, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-12-02 04:35:55'),
 (71, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-12-02 04:35:55'),
-(72, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 0, '2025-12-02 08:18:28'),
+(72, 5, 'Ticket #27 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 27, 1, '2025-12-02 08:18:28'),
 (73, 2, 'New Ticket Assigned #27', 'You have been assigned to a hardware ticket: \"dsadsa\". Please review and take action.', 'info', 'issue', 27, 1, '2025-12-02 08:18:28'),
-(74, 5, 'Borrowing Request #3 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 3, 0, '2025-12-03 06:35:50'),
-(75, 5, 'Ticket #28 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 28, 0, '2025-12-03 06:47:30'),
-(76, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 28, 0, '2025-12-03 06:47:30'),
-(77, 5, 'Ticket #29 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 29, 0, '2025-12-03 06:49:23'),
-(78, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 29, 0, '2025-12-03 06:49:23'),
-(79, 5, 'Ticket #30 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 30, 0, '2025-12-03 06:49:43'),
-(80, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 30, 0, '2025-12-03 06:49:43'),
-(81, 5, 'Ticket #30 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 30, 0, '2025-12-03 06:51:57'),
+(74, 5, 'Borrowing Request #3 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 3, 1, '2025-12-03 06:35:50'),
+(75, 5, 'Ticket #28 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 28, 1, '2025-12-03 06:47:30'),
+(76, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 28, 1, '2025-12-03 06:47:30'),
+(77, 5, 'Ticket #29 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 29, 1, '2025-12-03 06:49:23'),
+(78, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 29, 1, '2025-12-03 06:49:23'),
+(79, 5, 'Ticket #30 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 30, 1, '2025-12-03 06:49:43'),
+(80, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 30, 1, '2025-12-03 06:49:43'),
+(81, 5, 'Ticket #30 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 30, 1, '2025-12-03 06:51:57'),
 (82, 2, 'New Ticket Assigned #30', 'You have been assigned to a hardware ticket: \"dsada\". Please review and take action.', 'info', 'issue', 30, 1, '2025-12-03 06:51:57'),
-(83, 5, 'Ticket #31 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 31, 0, '2025-12-03 06:52:35'),
-(84, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 31, 0, '2025-12-03 06:52:35'),
-(85, 5, 'Ticket #32 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 32, 0, '2025-12-03 06:54:41'),
-(86, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: sda', 'info', 'issue', 32, 0, '2025-12-03 06:54:41'),
-(87, 5, 'Ticket #33 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 33, 0, '2025-12-03 06:56:37'),
-(88, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: sda', 'info', 'issue', 33, 0, '2025-12-03 06:56:37'),
-(89, 5, 'Ticket #34 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 34, 0, '2025-12-03 06:56:59'),
-(90, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dasdsadas', 'info', 'issue', 34, 0, '2025-12-03 06:56:59'),
-(91, 5, 'Ticket #35 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 35, 0, '2025-12-03 06:58:23'),
-(92, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: 3232', 'info', 'issue', 35, 0, '2025-12-03 06:58:23'),
-(93, 5, 'Ticket #36 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 36, 0, '2025-12-03 06:59:04'),
-(94, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: aaa', 'info', 'issue', 36, 0, '2025-12-03 06:59:04'),
-(95, 5, 'Ticket #37 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 37, 0, '2025-12-03 07:05:44'),
-(96, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 37, 0, '2025-12-03 07:05:44'),
-(97, 5, 'Ticket #38 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 38, 0, '2025-12-03 07:06:00'),
-(98, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: das', 'info', 'issue', 38, 0, '2025-12-03 07:06:00'),
-(99, 5, 'Ticket #39 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 39, 0, '2025-12-03 07:12:35'),
-(100, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: ko', 'info', 'issue', 39, 0, '2025-12-03 07:12:35'),
-(101, 5, 'Ticket #40 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 40, 0, '2025-12-03 07:13:06'),
-(102, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsads', 'info', 'issue', 40, 0, '2025-12-03 07:13:06'),
-(103, 5, 'Ticket #41 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 41, 0, '2025-12-03 07:14:19'),
-(104, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dasdsa', 'info', 'issue', 41, 0, '2025-12-03 07:14:19'),
-(105, 5, 'Ticket #42 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 42, 0, '2025-12-03 07:15:13'),
-(106, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: uhj', 'info', 'issue', 42, 0, '2025-12-03 07:15:13'),
-(107, 5, 'Ticket #43 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 43, 0, '2025-12-03 07:15:46'),
-(108, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 43, 0, '2025-12-03 07:15:46'),
-(109, 5, 'Ticket #44 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 44, 0, '2025-12-03 07:17:37'),
-(110, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: kjgkjh', 'info', 'issue', 44, 0, '2025-12-03 07:17:37'),
-(111, 5, 'Ticket #45 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 45, 0, '2025-12-03 07:18:27'),
-(112, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 45, 0, '2025-12-03 07:18:27'),
-(113, 5, 'Ticket #46 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 46, 0, '2025-12-03 07:18:52'),
-(114, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: gjhg', 'info', 'issue', 46, 0, '2025-12-03 07:18:52'),
-(115, 5, 'Ticket #46 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 46, 0, '2025-12-03 07:23:33'),
+(83, 5, 'Ticket #31 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 31, 1, '2025-12-03 06:52:35'),
+(84, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 31, 1, '2025-12-03 06:52:35'),
+(85, 5, 'Ticket #32 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 32, 1, '2025-12-03 06:54:41'),
+(86, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: sda', 'info', 'issue', 32, 1, '2025-12-03 06:54:41'),
+(87, 5, 'Ticket #33 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 33, 1, '2025-12-03 06:56:37'),
+(88, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: sda', 'info', 'issue', 33, 1, '2025-12-03 06:56:37'),
+(89, 5, 'Ticket #34 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 34, 1, '2025-12-03 06:56:59'),
+(90, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dasdsadas', 'info', 'issue', 34, 1, '2025-12-03 06:56:59'),
+(91, 5, 'Ticket #35 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 35, 1, '2025-12-03 06:58:23'),
+(92, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: 3232', 'info', 'issue', 35, 1, '2025-12-03 06:58:23'),
+(93, 5, 'Ticket #36 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 36, 1, '2025-12-03 06:59:04'),
+(94, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: aaa', 'info', 'issue', 36, 1, '2025-12-03 06:59:04'),
+(95, 5, 'Ticket #37 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 37, 1, '2025-12-03 07:05:44'),
+(96, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 37, 1, '2025-12-03 07:05:44'),
+(97, 5, 'Ticket #38 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 38, 1, '2025-12-03 07:06:00'),
+(98, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: das', 'info', 'issue', 38, 1, '2025-12-03 07:06:00'),
+(99, 5, 'Ticket #39 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 39, 1, '2025-12-03 07:12:35'),
+(100, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: ko', 'info', 'issue', 39, 1, '2025-12-03 07:12:35'),
+(101, 5, 'Ticket #40 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 40, 1, '2025-12-03 07:13:06'),
+(102, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsads', 'info', 'issue', 40, 1, '2025-12-03 07:13:06'),
+(103, 5, 'Ticket #41 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 41, 1, '2025-12-03 07:14:19'),
+(104, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dasdsa', 'info', 'issue', 41, 1, '2025-12-03 07:14:19'),
+(105, 5, 'Ticket #42 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 42, 1, '2025-12-03 07:15:13'),
+(106, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: uhj', 'info', 'issue', 42, 1, '2025-12-03 07:15:13'),
+(107, 5, 'Ticket #43 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 43, 1, '2025-12-03 07:15:46'),
+(108, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 43, 1, '2025-12-03 07:15:46'),
+(109, 5, 'Ticket #44 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 44, 1, '2025-12-03 07:17:37'),
+(110, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: kjgkjh', 'info', 'issue', 44, 1, '2025-12-03 07:17:37'),
+(111, 5, 'Ticket #45 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 45, 1, '2025-12-03 07:18:27'),
+(112, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsad', 'info', 'issue', 45, 1, '2025-12-03 07:18:27'),
+(113, 5, 'Ticket #46 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 46, 1, '2025-12-03 07:18:52'),
+(114, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: gjhg', 'info', 'issue', 46, 1, '2025-12-03 07:18:52'),
+(115, 5, 'Ticket #46 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 46, 1, '2025-12-03 07:23:33'),
 (116, 2, 'New Ticket Assigned #46', 'You have been assigned to a hardware ticket: \"gjhg\". Please review and take action.', 'info', 'issue', 46, 1, '2025-12-03 07:23:33'),
-(117, 5, 'Ticket #45 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 45, 0, '2025-12-04 12:04:21'),
+(117, 5, 'Ticket #45 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 45, 1, '2025-12-04 12:04:21'),
 (118, 2, 'New Ticket Assigned #45', 'You have been assigned to a hardware ticket: \"dsad\". Please review and take action.', 'info', 'issue', 45, 1, '2025-12-04 12:04:21'),
-(119, 5, 'Ticket #47 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 47, 0, '2025-12-04 12:14:57'),
-(120, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 47, 0, '2025-12-04 12:14:57'),
-(121, 5, 'Ticket #48 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 48, 0, '2025-12-04 12:31:22'),
-(122, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsads', 'info', 'issue', 48, 0, '2025-12-04 12:31:22'),
-(123, 5, 'Ticket #48 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 48, 0, '2025-12-04 12:36:58'),
+(119, 5, 'Ticket #47 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 47, 1, '2025-12-04 12:14:57'),
+(120, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 47, 1, '2025-12-04 12:14:57'),
+(121, 5, 'Ticket #48 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 48, 1, '2025-12-04 12:31:22'),
+(122, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsads', 'info', 'issue', 48, 1, '2025-12-04 12:31:22'),
+(123, 5, 'Ticket #48 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 48, 1, '2025-12-04 12:36:58'),
 (124, 2, 'New Ticket Assigned #48', 'You have been assigned to a hardware ticket: \"dsads\". Please review and take action.', 'info', 'issue', 48, 1, '2025-12-04 12:36:58'),
-(125, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:33'),
+(125, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 1, '2025-12-04 12:43:33'),
 (126, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 1, '2025-12-04 12:43:37'),
-(127, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 0, '2025-12-04 12:43:39'),
+(127, 5, 'Ticket #48 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 48, 1, '2025-12-04 12:43:39'),
 (128, 5, 'Ticket #49 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 49, 1, '2025-12-05 15:23:11'),
-(129, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DSADSA', 'info', 'issue', 49, 0, '2025-12-05 15:23:11'),
+(129, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DSADSA', 'info', 'issue', 49, 1, '2025-12-05 15:23:11'),
 (130, 5, 'Ticket #50 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 50, 1, '2025-12-24 13:32:34'),
-(131, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DAS', 'info', 'issue', 50, 0, '2025-12-24 13:32:34'),
+(131, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: DAS', 'info', 'issue', 50, 1, '2025-12-24 13:32:34'),
 (132, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 1, '2025-12-24 13:33:00'),
 (133, 2, 'New Ticket Assigned #50', 'You have been assigned to a hardware ticket: \"DAS\". Please review and take action.', 'info', 'issue', 50, 1, '2025-12-24 13:33:00'),
-(134, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 0, '2026-01-14 03:52:30'),
+(134, 5, 'Ticket #50 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 50, 1, '2026-01-14 03:52:30'),
 (135, 2, 'New Ticket Assigned #50', 'You have been assigned to a hardware ticket: \"DAS\". Please review and take action.', 'info', 'issue', 50, 1, '2026-01-14 03:52:30'),
-(136, 5, 'Ticket #50 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 50, 0, '2026-01-30 06:59:34'),
+(136, 5, 'Ticket #50 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 50, 1, '2026-01-30 06:59:34'),
 (137, 9, 'Ticket #146 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 146, 0, '2026-01-30 07:00:44'),
 (138, 2, 'New Ticket Assigned #146', 'You have been assigned to a hardware ticket: \"RAM not detected\". Please review and take action.', 'info', 'issue', 146, 1, '2026-01-30 07:00:44'),
 (139, 7, 'Ticket #145 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 145, 0, '2026-01-30 07:00:48'),
 (140, 2, 'New Ticket Assigned #145', 'You have been assigned to a hardware ticket: \"Monitor no backlight\". Please review and take action.', 'info', 'issue', 145, 1, '2026-01-30 07:00:48'),
-(141, 5, 'Ticket #140 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 140, 0, '2026-01-30 07:00:51'),
+(141, 5, 'Ticket #140 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 140, 1, '2026-01-30 07:00:51'),
 (142, 2, 'New Ticket Assigned #140', 'You have been assigned to a hardware ticket: \"GPU thermal paste\". Please review and take action.', 'info', 'issue', 140, 1, '2026-01-30 07:00:51'),
-(143, 5, 'Ticket #50 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 50, 0, '2026-01-30 07:12:13'),
-(144, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 0, '2026-01-30 07:12:14'),
+(143, 5, 'Ticket #50 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 50, 1, '2026-01-30 07:12:13'),
+(144, 5, 'Ticket #48 - Status Updated', 'Your ticket has been closed.', 'info', 'issue', 48, 1, '2026-01-30 07:12:14'),
 (145, 31, 'Borrowing Request #4 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 4, 0, '2026-01-30 12:12:15'),
 (146, 31, 'Borrowing Request #4 Approved', 'Your borrowing request has been approved. You can now pick up the asset.', 'success', 'borrowing', 4, 0, '2026-01-30 12:13:03'),
-(147, 5, 'Ticket #153 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 153, 0, '2026-01-30 12:22:49'),
-(148, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: mali', 'info', 'issue', 153, 0, '2026-01-30 12:22:49'),
-(149, 5, 'Ticket #154 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 154, 0, '2026-01-30 12:28:08'),
-(150, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: adsdsa', 'info', 'issue', 154, 0, '2026-01-30 12:28:08'),
-(151, 5, 'Ticket #153 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 153, 0, '2026-01-30 12:29:00'),
+(147, 5, 'Ticket #153 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 153, 1, '2026-01-30 12:22:49'),
+(148, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: mali', 'info', 'issue', 153, 1, '2026-01-30 12:22:49'),
+(149, 5, 'Ticket #154 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 154, 1, '2026-01-30 12:28:08'),
+(150, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: adsdsa', 'info', 'issue', 154, 1, '2026-01-30 12:28:08'),
+(151, 5, 'Ticket #153 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 153, 1, '2026-01-30 12:29:00'),
 (152, 2, 'New Ticket Assigned #153', 'You have been assigned to a hardware ticket: \"mali\". Please review and take action.', 'info', 'issue', 153, 1, '2026-01-30 12:29:00'),
-(153, 5, 'Ticket #154 Assigned', 'Your ticket has been assigned to Kim GAMOTA. They will be working on your issue soon.', 'info', 'issue', 154, 0, '2026-02-05 04:29:42'),
+(153, 5, 'Ticket #154 Assigned', 'Your ticket has been assigned to Kim GAMOTA. They will be working on your issue soon.', 'info', 'issue', 154, 1, '2026-02-05 04:29:42'),
 (154, 32, 'New Ticket Assigned #154', 'You have been assigned to a hardware ticket: \"adsdsa\". Please review and take action.', 'info', 'issue', 154, 0, '2026-02-05 04:29:42'),
 (155, 9, 'Ticket #146 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 146, 0, '2026-02-05 04:42:20'),
 (156, 2, 'New Maintenance Assignment', 'You have been assigned to maintain IK501 in IK on Feb 06, 2026', 'info', '', 1, 1, '2026-02-05 04:46:33'),
@@ -4706,24 +4767,60 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `relat
 (158, 2, 'New Ticket Assigned #152', 'You have been assigned to a hardware ticket: \"Audio jack issue\". Please review and take action.', 'info', 'issue', 152, 1, '2026-02-10 03:37:49'),
 (159, 6, 'Ticket #151 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 151, 0, '2026-02-10 03:38:22'),
 (160, 2, 'New Ticket Assigned #151', 'You have been assigned to a software ticket: \"Resolution resets\". Please review and take action.', 'info', 'issue', 151, 1, '2026-02-10 03:38:22'),
-(161, 5, 'Ticket #148 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 148, 0, '2026-02-10 03:41:41'),
+(161, 5, 'Ticket #148 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 148, 1, '2026-02-10 03:41:41'),
 (162, 2, 'New Ticket Assigned #148', 'You have been assigned to a software ticket: \"Driver crash\". Please review and take action.', 'info', 'issue', 148, 1, '2026-02-10 03:41:41'),
 (163, 2, 'New Maintenance Assignment', 'You have been assigned to maintain IC201 in IC on Feb 18, 2026', 'info', '', 47, 1, '2026-02-10 04:39:20'),
 (164, 2, 'New Maintenance Assignment', 'You have been assigned to maintain IE201 in KORPHIL on Feb 11, 2026', 'info', '', 48, 1, '2026-02-10 04:40:56'),
-(165, 5, 'Ticket #52 Assigned', 'Your ticket has been assigned to Carlos Mendoza. They will be working on your issue soon.', 'info', 'issue', 52, 0, '2026-02-10 05:25:32'),
+(165, 5, 'Ticket #52 Assigned', 'Your ticket has been assigned to Carlos Mendoza. They will be working on your issue soon.', 'info', 'issue', 52, 1, '2026-02-10 05:25:32'),
 (166, 7, 'New Ticket Assigned #52', 'You have been assigned to a hardware ticket: \"Keyboard malfunction\". Please review and take action.', 'info', 'issue', 52, 0, '2026-02-10 05:25:32'),
-(167, 5, 'Ticket #260 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 260, 0, '2026-02-10 05:32:28'),
-(168, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 260, 0, '2026-02-10 05:32:28'),
+(167, 5, 'Ticket #260 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 260, 1, '2026-02-10 05:32:28'),
+(168, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 260, 1, '2026-02-10 05:32:28'),
 (169, 51, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 260, 0, '2026-02-10 05:32:28'),
 (170, 52, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 260, 0, '2026-02-10 05:32:28'),
 (171, 53, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 260, 0, '2026-02-10 05:32:28'),
-(172, 5, 'Ticket #261 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 261, 0, '2026-02-10 05:33:06'),
-(173, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: asd', 'info', 'issue', 261, 0, '2026-02-10 05:33:06'),
+(172, 5, 'Ticket #261 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 261, 1, '2026-02-10 05:33:06'),
+(173, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: asd', 'info', 'issue', 261, 1, '2026-02-10 05:33:06'),
 (174, 51, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: asd', 'info', 'issue', 261, 0, '2026-02-10 05:33:06'),
 (175, 52, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: asd', 'info', 'issue', 261, 0, '2026-02-10 05:33:06'),
 (176, 53, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: asd', 'info', 'issue', 261, 0, '2026-02-10 05:33:06'),
-(177, 5, 'Ticket #261 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 261, 0, '2026-02-10 05:33:52'),
-(178, 2, 'New Ticket Assigned #261', 'You have been assigned to a hardware ticket: \"asd\". Please review and take action.', 'info', 'issue', 261, 1, '2026-02-10 05:33:52');
+(177, 5, 'Ticket #261 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 261, 1, '2026-02-10 05:33:52'),
+(178, 2, 'New Ticket Assigned #261', 'You have been assigned to a hardware ticket: \"asd\". Please review and take action.', 'info', 'issue', 261, 1, '2026-02-10 05:33:52'),
+(179, 5, 'Ticket #262 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 262, 1, '2026-02-10 13:15:10'),
+(180, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: headset', 'info', 'issue', 262, 1, '2026-02-10 13:15:10'),
+(181, 51, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: headset', 'info', 'issue', 262, 0, '2026-02-10 13:15:10'),
+(182, 52, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: headset', 'info', 'issue', 262, 0, '2026-02-10 13:15:10'),
+(183, 53, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: headset', 'info', 'issue', 262, 0, '2026-02-10 13:15:10'),
+(184, 5, 'Ticket #263 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 263, 1, '2026-02-10 13:17:02'),
+(185, 3, 'New Ticket Submitted', 'Student One submitted a new software ticket: google', 'info', 'issue', 263, 1, '2026-02-10 13:17:02'),
+(186, 51, 'New Ticket Submitted', 'Student One submitted a new software ticket: google', 'info', 'issue', 263, 0, '2026-02-10 13:17:02'),
+(187, 52, 'New Ticket Submitted', 'Student One submitted a new software ticket: google', 'info', 'issue', 263, 0, '2026-02-10 13:17:02'),
+(188, 53, 'New Ticket Submitted', 'Student One submitted a new software ticket: google', 'info', 'issue', 263, 0, '2026-02-10 13:17:02'),
+(189, 5, 'Ticket #264 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 264, 1, '2026-02-10 13:17:17'),
+(190, 3, 'New Ticket Submitted', 'Student One submitted a new network ticket: internet', 'info', 'issue', 264, 1, '2026-02-10 13:17:17'),
+(191, 51, 'New Ticket Submitted', 'Student One submitted a new network ticket: internet', 'info', 'issue', 264, 0, '2026-02-10 13:17:17'),
+(192, 52, 'New Ticket Submitted', 'Student One submitted a new network ticket: internet', 'info', 'issue', 264, 0, '2026-02-10 13:17:17'),
+(193, 53, 'New Ticket Submitted', 'Student One submitted a new network ticket: internet', 'info', 'issue', 264, 0, '2026-02-10 13:17:17'),
+(194, 5, 'Ticket #264 Assigned', 'Your ticket has been assigned to Carlos Mendoza. They will be working on your issue soon.', 'info', 'issue', 264, 1, '2026-02-10 13:33:09'),
+(195, 7, 'New Ticket Assigned #264', 'You have been assigned to a network ticket: \"internet\". Please review and take action.', 'info', 'issue', 264, 0, '2026-02-10 13:33:09'),
+(196, 5, 'Ticket #263 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 263, 1, '2026-02-10 13:33:19'),
+(197, 2, 'New Ticket Assigned #263', 'You have been assigned to a software ticket: \"google\". Please review and take action.', 'info', 'issue', 263, 1, '2026-02-10 13:33:19'),
+(198, 5, 'Ticket #262 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 262, 1, '2026-02-10 13:33:25'),
+(199, 2, 'New Ticket Assigned #262', 'You have been assigned to a hardware ticket: \"headset\". Please review and take action.', 'info', 'issue', 262, 1, '2026-02-10 13:33:25'),
+(200, 2, 'New Maintenance Assignment', 'You have been assigned to maintain IC201 in IC on Feb 10, 2026', 'info', '', 49, 1, '2026-02-10 13:37:48'),
+(201, 7, 'Ticket #145 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 145, 0, '2026-02-10 13:40:24'),
+(202, 5, 'Ticket #140 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 140, 1, '2026-02-10 13:40:26'),
+(203, 5, 'Ticket #265 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 265, 1, '2026-02-10 14:17:00'),
+(204, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 265, 1, '2026-02-10 14:17:00'),
+(205, 51, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 265, 0, '2026-02-10 14:17:00'),
+(206, 52, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 265, 0, '2026-02-10 14:17:00'),
+(207, 53, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsa', 'info', 'issue', 265, 0, '2026-02-10 14:17:00'),
+(208, 5, 'Ticket #265 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 265, 1, '2026-02-10 14:17:32'),
+(209, 2, 'New Ticket Assigned #265', 'You have been assigned to a hardware ticket: \"dsa\". Please review and take action.', 'info', 'issue', 265, 0, '2026-02-10 14:17:32'),
+(210, 5, 'Ticket #266 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 266, 1, '2026-02-10 15:06:31'),
+(211, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 266, 0, '2026-02-10 15:06:31'),
+(212, 51, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 266, 0, '2026-02-10 15:06:31'),
+(213, 52, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 266, 0, '2026-02-10 15:06:31'),
+(214, 53, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 266, 0, '2026-02-10 15:06:31');
 
 -- --------------------------------------------------------
 
@@ -5799,7 +5896,8 @@ CREATE TABLE `registration_requests` (
 INSERT INTO `registration_requests` (`id`, `id_number`, `full_name`, `email`, `password`, `role`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`, `status`, `requested_at`, `reviewed_at`, `reviewed_by`, `rejection_reason`) VALUES
 (1, '22-0350', 'Kim F. Gamot', 'kimgamot@gmail.com', '$2y$10$Dzt2k5eAaoU/gdpTrjFwfOREkczmXd1e0JINpJgvLKspHjrfCqKKm', 'Student', 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6', 'Approved', '2025-12-17 19:58:34', '2025-12-17 20:09:16', 1, NULL),
 (2, '22-0315', 'Kim F. Gamot', 'gamot.kim.fernandez@gmail.com', '$2y$10$zsF0noDLbUAsiP/GvXRme.BR796wOuqcf5TSZ8uoYhklJ1paEHc7W', 'Student', 'What was the name of your first pet?', '$2y$10$b2C2cLLF0g..WscpiY2vJOthvRtWZYhlZ7Y9Wi5lv6uzFCbw4bgku', 'What is your favorite book?', '$2y$10$LTchoj98aJ4YrarukHAkCuplEuQ6PIr5385TKHlL12pdVClSr4wEK', 'Approved', '2026-01-30 20:09:21', '2026-01-30 20:10:10', 1, NULL),
-(3, '22-0320', 'Kimq f. gamot', 'fasdsa@gmail.com', '$2y$10$rIzILwCgHBeKcb5FxcBiaeSQ1bf3v9gkdw.KUeHxRz6TK.KIL8Pyi', 'Student', 'What is your mother\'s maiden name?', '$2y$10$NJc/xWlLjGFOrS/hClXez.S9.T73.vN4/lXxBOZGJM2nMGb3NPxxO', 'What is your favorite book?', '$2y$10$/5FQEUOr./zsJYcZlH5mNOjnxFTXOSa3sou.WOrLCQYHOheW9maky', 'Pending', '2026-02-02 15:03:40', NULL, NULL, NULL);
+(3, '22-0320', 'Kimq f. gamot', 'fasdsa@gmail.com', '$2y$10$rIzILwCgHBeKcb5FxcBiaeSQ1bf3v9gkdw.KUeHxRz6TK.KIL8Pyi', 'Student', 'What is your mother\'s maiden name?', '$2y$10$NJc/xWlLjGFOrS/hClXez.S9.T73.vN4/lXxBOZGJM2nMGb3NPxxO', 'What is your favorite book?', '$2y$10$/5FQEUOr./zsJYcZlH5mNOjnxFTXOSa3sou.WOrLCQYHOheW9maky', 'Pending', '2026-02-02 15:03:40', NULL, NULL, NULL),
+(4, '22-0300', 'Faculty F. aculty', 'faculty@gmail.com', '$2y$10$S/GTMCJo8JE.PN2WsWj7luIw9QicrM59Xe9w4Q06M34e42rA8y22K', 'Faculty', 'What is your mother\'s maiden name?', '$2y$10$xwfrv.5k0nY6Pj4pmPAoWuDotaYlk9p8eLbs95UPbV3eFh0OJD6Ue', 'What is your favorite book?', '$2y$10$f52Jp6lvOfKlUDeZv9F3t.anBWRpAUmKyiLIlyfqYI7BSF2Blvkr2', 'Approved', '2026-02-10 22:00:18', '2026-02-10 22:00:42', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -5861,7 +5959,7 @@ CREATE TABLE `users` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
   `last_login` datetime DEFAULT NULL,
-  `e_signature` varchar(255) DEFAULT NULL,
+  `e_signature` longtext DEFAULT NULL,
   `security_question_1` varchar(255) DEFAULT NULL,
   `security_answer_1` varchar(255) DEFAULT NULL,
   `security_question_2` varchar(255) DEFAULT NULL,
@@ -5873,23 +5971,24 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `e_signature`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-02-10 12:36:34', '2026-02-10 12:36:34', NULL, NULL, NULL, NULL, NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-02-10 13:52:21', '2026-02-10 13:52:21', NULL, NULL, NULL, NULL, NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-02-10 13:58:42', '2026-02-10 13:58:42', 'signature_3_1769775222.png', NULL, NULL, NULL, NULL),
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-02-10 22:00:32', '2026-02-10 22:00:32', NULL, NULL, NULL, NULL, NULL),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-02-10 22:17:48', '2026-02-10 22:17:48', NULL, NULL, NULL, NULL, NULL),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-02-10 22:17:12', '2026-02-10 22:17:12', 'signature_3_1769775222.png', NULL, NULL, NULL, NULL),
 (4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, NULL, NULL, NULL, NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-02-10 13:32:02', '2026-02-10 13:32:02', 'signature_5_1764382897.png', NULL, NULL, NULL, NULL),
+(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-02-10 22:48:43', '2026-02-10 22:18:17', 'data:image/jpeg;base64,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', NULL, NULL, NULL, NULL),
 (6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, NULL, NULL, NULL, NULL, NULL),
 (7, '', '$2y$10$YourHashedPassword', 'Carlos Mendoza', 'tech2@qcu.edu.ph', 'Technician', 'Active', '2026-02-10 11:56:39', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, NULL, NULL, NULL, NULL, NULL),
 (30, '22-0350', '$2y$10$cNGBGPw7BYAQ.9d6GdKvXuYXzYdVo2XwfJGo7nMfGgfjNs.5bBv3O', 'Kim F. Gamot', 'kimgamot@gmail.com', 'Student', 'Active', '2025-12-17 20:09:16', '2025-12-17 20:09:54', '2025-12-17 20:09:54', NULL, 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6'),
-(31, '22-0315', '$2y$10$zsF0noDLbUAsiP/GvXRme.BR796wOuqcf5TSZ8uoYhklJ1paEHc7W', 'Kim F. Gamot', 'gamot.kim.fernandez@gmail.com', 'Student', 'Active', '2026-01-30 20:10:10', '2026-01-30 20:11:49', '2026-01-30 20:10:24', 'signature_31_1769775109.png', 'What was the name of your first pet?', '$2y$10$b2C2cLLF0g..WscpiY2vJOthvRtWZYhlZ7Y9Wi5lv6uzFCbw4bgku', 'What is your favorite book?', '$2y$10$LTchoj98aJ4YrarukHAkCuplEuQ6PIr5385TKHlL12pdVClSr4wEK'),
+(31, '22-0315', '$2y$10$zsF0noDLbUAsiP/GvXRme.BR796wOuqcf5TSZ8uoYhklJ1paEHc7W', 'Kim F. Gamot', 'gamot.kim.fernandez@gmail.com', 'Administrator', 'Active', '2026-01-30 20:10:10', '2026-02-10 21:57:44', '2026-01-30 20:10:24', 'signature_31_1769775109.png', 'What was the name of your first pet?', '$2y$10$b2C2cLLF0g..WscpiY2vJOthvRtWZYhlZ7Y9Wi5lv6uzFCbw4bgku', 'What is your favorite book?', '$2y$10$LTchoj98aJ4YrarukHAkCuplEuQ6PIr5385TKHlL12pdVClSr4wEK'),
 (32, '22-0317', '$2y$10$qJELYchDbjL1IBwX3ol1IOPDYX0AntJzsbB1hPlsYeCcVJJYWuZSe', 'Kim GAMOTA', 'gamotkim96@gmail.com1', 'Technician', 'Active', '2026-02-05 12:28:50', '2026-02-05 12:29:21', '2026-02-05 12:29:21', NULL, NULL, NULL, NULL, NULL),
 (51, '2024-LS-002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Maria Santos', 'maria.santos@qcu.edu.ph', 'Laboratory Staff', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (52, '2024-LS-003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Robert Cruz', 'robert.cruz@qcu.edu.ph', 'Laboratory Staff', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (53, '2024-LS-004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Anna Reyes', 'anna.reyes@qcu.edu.ph', 'Laboratory Staff', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (54, '2024-TECH-002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Carlos Mendoza', 'carlos.mendoza@qcu.edu.ph', 'Technician', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (55, '2024-TECH-003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Lisa Garcia', 'lisa.garcia@qcu.edu.ph', 'Technician', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(56, '2024-TECH-004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'David Tan', 'david.tan@qcu.edu.ph', 'Technician', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+(56, '2024-TECH-004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'David Tan', 'david.tan@qcu.edu.ph', 'Technician', 'Active', '2026-02-10 12:12:21', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(57, '22-0300', '$2y$10$S/GTMCJo8JE.PN2WsWj7luIw9QicrM59Xe9w4Q06M34e42rA8y22K', 'Faculty F. aculty', 'faculty@gmail.com', 'Faculty', 'Active', '2026-02-10 22:00:42', '2026-02-10 23:14:49', '2026-02-10 23:14:49', NULL, 'What is your mother\'s maiden name?', '$2y$10$xwfrv.5k0nY6Pj4pmPAoWuDotaYlk9p8eLbs95UPbV3eFh0OJD6Ue', 'What is your favorite book?', '$2y$10$f52Jp6lvOfKlUDeZv9F3t.anBWRpAUmKyiLIlyfqYI7BSF2Blvkr2');
 
 --
 -- Indexes for dumped tables
@@ -6059,7 +6158,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=332;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=371;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -6113,25 +6212,25 @@ ALTER TABLE `buildings`
 -- AUTO_INCREMENT for table `issues`
 --
 ALTER TABLE `issues`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=262;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=267;
 
 --
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=189;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=205;
 
 --
 -- AUTO_INCREMENT for table `maintenance_schedules`
 --
 ALTER TABLE `maintenance_schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=179;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=215;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`
@@ -6149,7 +6248,7 @@ ALTER TABLE `pc_units`
 -- AUTO_INCREMENT for table `registration_requests`
 --
 ALTER TABLE `registration_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -6161,7 +6260,7 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- Constraints for dumped tables

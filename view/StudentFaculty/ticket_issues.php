@@ -115,7 +115,7 @@ include '../components/layout_header.php';
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Issue ID</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Ticket ID</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Category</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Room</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Terminal No</th>
@@ -408,7 +408,7 @@ async function viewIssueDetails(issueId) {
             document.getElementById('issueDetailsContent').innerHTML = `
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-medium text-gray-700 mb-1">Issue ID</label>
+                        <label class="block text-[10px] font-medium text-gray-700 mb-1">Ticket ID</label>
                         <p class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">#${String(issue.id).padStart(4, '0')}</p>
                     </div>
                     <div>

@@ -120,10 +120,11 @@ include '../components/layout_header.php';
                     <div class="flex flex-col">
                         <h4 class="text-xs font-semibold text-gray-700 mb-3">Current Signature</h4>
                         <div class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 150px;">
-                            <?php if ($current_signature && file_exists('../../uploads/signatures/' . $current_signature)): ?>
+                            <?php if ($current_signature): ?>
                             <div class="text-center w-full">
-                                <img src="../../uploads/signatures/<?php echo htmlspecialchars($current_signature); ?>" 
+                                <img src="<?php echo $current_signature; ?>" 
                                      alt="Signature" 
+                                     onerror="this.parentElement.innerHTML='<p class=\'text-red-600 text-xs\'>Error loading signature. Please re-upload.</p>';"
                                      class="max-h-20 max-w-full object-contain mx-auto mb-3">
                                 <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
                                     Active Signature
@@ -216,6 +217,15 @@ document.getElementById('signature').addEventListener('change', function(e) {
         `;
     }
 });
+
+// Debug signature data
+<?php if ($current_signature): ?>
+console.log('Signature data type:', '<?php echo substr($current_signature, 0, 20); ?>...');
+console.log('Signature length:', <?php echo strlen($current_signature); ?>);
+console.log('Is Base64 data URI:', <?php echo strpos($current_signature, 'data:image/') === 0 ? 'true' : 'false'; ?>);
+<?php else: ?>
+console.log('No signature found in database');
+<?php endif; ?>
 
 // Remove signature with confirmation
 async function removeSignature() {

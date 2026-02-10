@@ -50,30 +50,15 @@ include '../components/layout_header.php';
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 mb-3">Current Signature</h3>
                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 flex items-center justify-center" style="min-height: 200px;">
-<?php if ($current_signature && file_exists('../../uploads/signatures/' . $current_signature)): ?>
+<?php if ($current_signature): ?>
 <div class="shadow-sm border rounded-lg p-4 bg-white text-center">
-  <img src="../../uploads/signatures/<?php echo htmlspecialchars($current_signature); ?>" 
+  <img src="<?php echo htmlspecialchars($current_signature); ?>" 
        alt="Preview of your uploaded signature" 
        class="max-h-48 max-w-full object-contain mx-auto">
   <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full mt-2">
     Signature Active
   </span>
 </div>
-
-
-
-    <?php
-    $timestamp = null;
-    $path = '../../uploads/signatures/' . $current_signature;
-    if (file_exists($path)) {
-        $timestamp = date("F j, Y, g:i a", filemtime($path));
-    }
-    ?>
-    <?php if ($timestamp): ?>
-        <p class="text-xs text-gray-500 mt-2 text-center">
-            Uploaded on <?php echo $timestamp; ?>
-        </p>
-    <?php endif; ?>
 
 <?php else: ?>
     <div class="text-center text-gray-400">

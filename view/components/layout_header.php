@@ -28,7 +28,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 }
 
 $current_role = $_SESSION['role'] ?? 'Student';
-$page_title = "AMS - " . $current_role . " Dashboard";
+$page_title = "AMS - " . $current_role . " " . (in_array($current_role, ['Student', 'Faculty']) ? 'Home' : 'Dashboard');
 ?>
 
 <!DOCTYPE html>

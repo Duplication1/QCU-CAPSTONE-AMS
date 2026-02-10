@@ -165,8 +165,8 @@ $navigation_items = [
     'Student' => [
         [
             'id' => 'dashboard',
-            'label' => 'Dashboard',
-            'icon' => 'fa-solid fa-gauge',
+            'label' => 'Home',
+            'icon' => 'fa-solid fa-house',
             'color' => 'blue',
             'href' => 'index.php'
         ],
@@ -179,7 +179,7 @@ $navigation_items = [
         ],
         [
             'id' => 'ticket-issues',
-            'label' => 'Ticket Issues',
+            'label' => 'My Tickets',
             'icon' => 'fa-solid fa-list-check',
             'color' => 'blue',
             'href' => 'ticket_issues.php'
@@ -195,8 +195,8 @@ $navigation_items = [
     'Faculty' => [
         [
             'id' => 'dashboard',
-            'label' => 'Dashboard',
-            'icon' => 'fa-solid fa-gauge',
+            'label' => 'Home',
+            'icon' => 'fa-solid fa-house',
             'color' => 'blue',
             'href' => 'index.php'
         ],
@@ -209,7 +209,7 @@ $navigation_items = [
         ],
         [
             'id' => 'ticket-issues',
-            'label' => 'Ticket Issues',
+            'label' => 'My Tickets',
             'icon' => 'fa-solid fa-list-check',
             'color' => 'blue',
             'href' => 'ticket_issues.php'
