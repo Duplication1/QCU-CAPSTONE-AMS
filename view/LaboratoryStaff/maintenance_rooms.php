@@ -83,8 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $tech_stmt->close();
             }
             
-            // Insert maintenance schedule
-            $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, assigned_technician_id, assigned_technician_name, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
+            // Insert maintenance schedule with assigned_at timestamp if technician is assigned
+            if ($technician_id && $tech_name) {
+                $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, assigned_technician_id, assigned_technician_name, assigned_at, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 'Scheduled')");
+            } else {
+                $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, assigned_technician_id, assigned_technician_name, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
+            }
             $user_id = $_SESSION['user_id'];
             $stmt->bind_param('iiisssi', $room_id, $building_id, $technician_id, $tech_name, $maintenance_date, $notes, $user_id);
             $success = $stmt->execute();

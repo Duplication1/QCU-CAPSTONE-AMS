@@ -108,9 +108,6 @@ $pageTitle = "Activity Logs";
     <title><?php echo htmlspecialchars($pageTitle); ?> - Laboratory Staff</title>
     <link rel="stylesheet" href="../../assets/css/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
 <body class="bg-gray-50">
     
@@ -193,86 +190,88 @@ $pageTitle = "Activity Logs";
 
                 <!-- Activity Logs Table -->
                 <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
-                    <table id="logsTable" class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
-                            <tr>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Timestamp</th>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">User</th>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Action</th>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Entity</th>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">Description</th>
-                                <th class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wider">IP Address</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                                <?php if (empty($logs)): ?>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                        <i class="fa-solid fa-clipboard-list text-5xl mb-3 opacity-30"></i>
-                                        <p class="text-lg">No activity logs found</p>
-                                        <?php if (!empty($search) || !empty($action_filter) || !empty($entity_filter) || !empty($date_from) || !empty($date_to)): ?>
-                                            <p class="text-sm">Try adjusting your filters</p>
-                                        <?php endif; ?>
-                                    </td>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
                                 </tr>
-                                <?php else: ?>
-                                    <?php foreach ($logs as $log): ?>
-                                    <tr class="hover:bg-blue-50 transition-colors">
-                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-700">
-                                            <div class="flex flex-col">
-                                                <span class="font-medium"><?php echo date('M d, Y', strtotime($log['created_at'])); ?></span>
-                                                <span class="text-gray-500"><?php echo date('H:i:s', strtotime($log['created_at'])); ?></span>
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs">
-                                            <div class="flex flex-col">
-                                                <span class="font-medium text-gray-900"><?php echo htmlspecialchars($log['full_name'] ?? 'Unknown'); ?></span>
-                                                <span class="text-gray-500"><?php echo htmlspecialchars($log['id_number'] ?? 'N/A'); ?></span>
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-1.5 whitespace-nowrap">
-                                            <?php
-                                            $action_colors = [
-                                                'login' => 'bg-blue-100 text-blue-800',
-                                                'create' => 'bg-green-100 text-green-800',
-                                                'update' => 'bg-yellow-100 text-yellow-800',
-                                                'archive' => 'bg-orange-100 text-orange-800',
-                                                'restore' => 'bg-purple-100 text-purple-800',
-                                                'dispose' => 'bg-red-100 text-red-800',
-                                                'import' => 'bg-indigo-100 text-indigo-800',
-                                                'assign' => 'bg-cyan-100 text-cyan-800',
-                                                'upload' => 'bg-pink-100 text-pink-800',
-                                                'export' => 'bg-teal-100 text-teal-800',
-                                            ];
-                                            $color = $action_colors[$log['action']] ?? 'bg-gray-100 text-gray-800';
-                                            ?>
-                                            <span class="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full <?php echo $color; ?>">
-                                                <?php echo ucfirst(htmlspecialchars($log['action'])); ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-700">
-                                            <?php if ($log['entity_type']): ?>
-                                                <span class="font-medium"><?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($log['entity_type']))); ?></span>
-                                                <?php if ($log['entity_id']): ?>
-                                                    <span class="text-gray-500">#<?php echo htmlspecialchars($log['entity_id']); ?></span>
-                                                <?php endif; ?>
-                                            <?php else: ?>
-                                                <span class="text-gray-400">—</span>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                    <?php if (empty($logs)): ?>
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                            <i class="fa-solid fa-clipboard-list text-5xl mb-3 opacity-30"></i>
+                                            <p class="text-lg">No activity logs found</p>
+                                            <?php if (!empty($search) || !empty($action_filter) || !empty($entity_filter) || !empty($date_from) || !empty($date_to)): ?>
+                                                <p class="text-sm">Try adjusting your filters</p>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="px-3 py-1.5 text-xs text-gray-700 max-w-md">
-                                            <div class="truncate" title="<?php echo htmlspecialchars($log['description']); ?>">
-                                                <?php echo htmlspecialchars($log['description']); ?>
-                                            </div>
-                                        </td>
-                                        <td class="px-3 py-1.5 whitespace-nowrap text-xs text-gray-500">
-                                            <?php echo htmlspecialchars($log['ip_address'] ?? 'N/A'); ?>
-                                        </td>
                                     </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                        </tbody>
-                    </table>
+                                    <?php else: ?>
+                                        <?php foreach ($logs as $log): ?>
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                <div class="flex flex-col">
+                                                    <span class="font-medium"><?php echo date('M d, Y', strtotime($log['created_at'])); ?></span>
+                                                    <span class="text-gray-500"><?php echo date('h:i A', strtotime($log['created_at'])); ?></span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div class="flex flex-col">
+                                                    <span class="font-medium text-gray-900"><?php echo htmlspecialchars($log['full_name'] ?? 'Unknown'); ?></span>
+                                                    <span class="text-gray-500"><?php echo htmlspecialchars($log['id_number'] ?? 'N/A'); ?></span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <?php
+                                                $action_colors = [
+                                                    'login' => 'bg-blue-100 text-blue-700',
+                                                    'create' => 'bg-green-100 text-green-700',
+                                                    'update' => 'bg-yellow-100 text-yellow-700',
+                                                    'archive' => 'bg-orange-100 text-orange-700',
+                                                    'restore' => 'bg-purple-100 text-purple-700',
+                                                    'dispose' => 'bg-red-100 text-red-700',
+                                                    'import' => 'bg-indigo-100 text-indigo-700',
+                                                    'assign' => 'bg-cyan-100 text-cyan-700',
+                                                    'upload' => 'bg-pink-100 text-pink-700',
+                                                    'export' => 'bg-teal-100 text-teal-700',
+                                                ];
+                                                $color = $action_colors[$log['action']] ?? 'bg-gray-100 text-gray-700';
+                                                ?>
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $color; ?>">
+                                                    <?php echo ucfirst(htmlspecialchars($log['action'])); ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                <?php if ($log['entity_type']): ?>
+                                                    <span class="font-medium"><?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($log['entity_type']))); ?></span>
+                                                    <?php if ($log['entity_id']): ?>
+                                                        <span class="text-gray-500">#<?php echo htmlspecialchars($log['entity_id']); ?></span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">—</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-700 max-w-md">
+                                                <div class="truncate" title="<?php echo htmlspecialchars($log['description']); ?>">
+                                                    <?php echo htmlspecialchars($log['description']); ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <?php echo htmlspecialchars($log['ip_address'] ?? 'N/A'); ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

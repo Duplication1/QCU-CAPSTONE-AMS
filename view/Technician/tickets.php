@@ -236,6 +236,7 @@ if (!$result || $result->num_rows === 0): ?>
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-[#1E3A8A] text-white sticky top-0 z-10">
           <tr>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Ticket #</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Type</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Title / Details</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Location</th>
@@ -271,6 +272,9 @@ if (!$result || $result->num_rows === 0): ?>
               data-priority="<?php echo htmlspecialchars($priority); ?>"
               data-status="<?php echo htmlspecialchars($status); ?>"
               data-ticket='<?php echo json_encode($ticket, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT); ?>'>
+            <td class="px-3 py-2 text-xs text-gray-700">
+              <span class="font-semibold text-blue-600">#<?php echo (int)$ticket['id']; ?></span>
+            </td>
             <td class="px-3 py-2 text-xs text-gray-700">
               <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium <?php 
                 echo $category === 'hardware' ? 'bg-orange-100 text-orange-700' : 

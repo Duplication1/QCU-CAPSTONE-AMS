@@ -65,13 +65,38 @@ try {
     $technicianName = $techData['full_name'];
     error_log("Technician lookup - ID: $technicianId, Name: $technicianName");
 
-    // update assigned_technician with the technician's full name and set status to In Progress
-    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, status = 'In Progress', updated_at = NOW() WHERE id = ?");
+    // Check current state before update
+    $checkStmt = $conn->prepare("SELECT status, assigned_technician, assigned_at FROM issues WHERE id = ?");
+    $checkStmt->bind_param('i', $ticketId);
+    $checkStmt->execute();
+    $beforeResult = $checkStmt->get_result();
+    $beforeData = $beforeResult->fetch_assoc();
+    $checkStmt->close();
+    error_log("BEFORE UPDATE - Ticket #$ticketId: status={$beforeData['status']}, assigned_tech={$beforeData['assigned_technician']}, assigned_at={$beforeData['assigned_at']}");
+
+    // update assigned_technician with the technician's full name, set status to In Progress, record assignment time and who assigned it
+    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, assigned_at = NOW(), assigned_by = ?, status = 'In Progress', updated_at = NOW() WHERE id = ?");
     if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
-    $stmt->bind_param('si', $technicianName, $ticketId);
-    $stmt->execute();
+    $assignedBy = $_SESSION['user_id'];
+    $stmt->bind_param('sii', $technicianName, $assignedBy, $ticketId);
+    
+    if (!$stmt->execute()) {
+        $error = $stmt->error;
+        $stmt->close();
+        throw new Exception('Failed to update ticket: ' . $error);
+    }
+    
     $affected = $stmt->affected_rows;
     $stmt->close();
+    
+    // Check state after update
+    $verifyStmt = $conn->prepare("SELECT status, assigned_technician, assigned_at FROM issues WHERE id = ?");
+    $verifyStmt->bind_param('i', $ticketId);
+    $verifyStmt->execute();
+    $afterResult = $verifyStmt->get_result();
+    $afterData = $afterResult->fetch_assoc();
+    $verifyStmt->close();
+    error_log("AFTER UPDATE - Ticket #$ticketId: status={$afterData['status']}, assigned_tech={$afterData['assigned_technician']}, assigned_at={$afterData['assigned_at']}, affected_rows=$affected");
     
     // Log activity for Laboratory Staff
     if ($affected > 0 && isset($_SESSION['role']) && $_SESSION['role'] === 'Laboratory Staff') {

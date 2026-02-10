@@ -77,9 +77,8 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 
   <!-- Notification Dropdown -->
   <div id="notification-dropdown" class="absolute right-0 top-10 w-80 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 hidden z-50 max-h-96 overflow-y-auto">
-    <div class="p-3 border-b font-semibold text-sm text-gray-700 flex justify-between items-center flex-shrink-0">
+    <div class="p-3 border-b font-semibold text-sm text-gray-700">
       <span>Notifications</span>
-      <button onclick="markAllAsRead()" class="text-xs text-[#1E3A8A] hover:underline">Mark all read</button>
     </div>
     <ul id="notifications-list" class="text-sm">
       <li class="px-4 py-3 text-center text-gray-500">
@@ -169,9 +168,9 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     if (badge) {
       if (unreadCount > 0) {
         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        badge.style.display = 'flex';
+        badge.classList.remove('hidden');
       } else {
-        badge.style.display = 'none';
+        badge.classList.add('hidden');
       }
     }
     
@@ -188,10 +187,12 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
         };
         const icon = iconMap[notif.type] || iconMap['info'];
         const unreadClass = notif.is_read == 0 ? 'bg-blue-50 border-l-4 border-[#1E3A8A]' : '';
+        const isUnread = notif.is_read == 0 ? '1' : '0';
         
         return `
-          <li class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b ${unreadClass}" 
-              onclick="handleNotificationClick(${notif.id}, '${notif.related_type}', ${notif.related_id})">
+          <li class="px-4 py-3 border-b ${unreadClass}" 
+              data-notification-id="${notif.id}"
+              data-is-unread="${isUnread}">
             <div class="flex gap-2">
               <i class="fa-solid ${icon} mt-1"></i>
               <div class="flex-1">
@@ -206,7 +207,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     }
   }
   
-  function handleNotificationClick(notifId, relatedType, relatedId) {
+  function handleNotificationClick(notifId, relatedType, relatedId, element) {
     const currentPath = window.location.pathname;
     let controllerPath = '../../controller/mark_notification_read.php';
     
@@ -216,59 +217,103 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       controllerPath = '../controller/mark_notification_read.php';
     }
     
-    // Mark as read
-    fetch(controllerPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `notification_id=${notifId}`
-    }).then(() => {
-      console.log('Notification marked as read:', notifId);
-    }).catch(err => {
-      console.error('Failed to mark notification as read:', err);
-    });
+    // Get current badge count and element's unread status
+    const badge = document.getElementById('notification-badge');
+    const isUnread = element.getAttribute('data-is-unread') === '1';
     
-    // Navigate based on type
+    // Update UI immediately if this was an unread notification
+    if (isUnread && badge) {
+      const currentCount = parseInt(badge.textContent) || 0;
+      const newCount = Math.max(0, currentCount - 1);
+      
+      if (newCount > 0) {
+        badge.textContent = newCount > 99 ? '99+' : newCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+      
+      // Update notification item styling
+      element.classList.remove('bg-blue-50', 'border-l-4', 'border-[#1E3A8A]');
+      element.setAttribute('data-is-unread', '0');
+    }
+    
+    // Close dropdown
     const dropdown = document.getElementById('notification-dropdown');
     if (dropdown) {
       dropdown.classList.add('hidden');
     }
     
-    if (relatedType === 'issue' && relatedId) {
-      window.location.href = 'ticket_issues.php';
-    } else if (relatedType === 'borrowing' && relatedId) {
-      window.location.href = 'requests.php';
-    }
-    
-    // Reload notifications
-    setTimeout(loadNotifications, 500);
+    // Mark as read on server, then navigate
+    fetch(controllerPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `notification_id=${notifId}`
+    }).then(response => response.json())
+    .then(data => {
+      console.log('Notification marked as read:', notifId, data);
+      
+      // After server confirms, navigate or reload
+      if (relatedType === 'issue' && relatedId) {
+        window.location.href = 'ticket_issues.php';
+      } else if (relatedType === 'borrowing' && relatedId) {
+        window.location.href = 'requests.php';
+      } else {
+        // Only reload if not navigating away
+        loadNotifications();
+      }
+    }).catch(err => {
+      console.error('Failed to mark notification as read:', err);
+      // Still navigate even if marking failed
+      if (relatedType === 'issue' && relatedId) {
+        window.location.href = 'ticket_issues.php';
+      } else if (relatedType === 'borrowing' && relatedId) {
+        window.location.href = 'requests.php';
+      }
+    });
   }
   
   function markAllAsRead() {
     const currentPath = window.location.pathname;
-    let controllerPath = '../../controller/mark_notification_read.php';
+    let controllerPath = '../../controller/mark_all_notifications_read.php';
     
-    if (currentPath.includes('/view/StudentFaculty/')) {
-      controllerPath = '../../controller/mark_notification_read.php';
+    if (currentPath.includes('/view/StudentFaculty/') || currentPath.includes('/view/Technician/') || currentPath.includes('/view/LaboratoryStaff/') || currentPath.includes('/view/Administrator/')) {
+      controllerPath = '../../controller/mark_all_notifications_read.php';
     } else if (currentPath.includes('/view/')) {
-      controllerPath = '../controller/mark_notification_read.php';
+      controllerPath = '../controller/mark_all_notifications_read.php';
+    }
+    
+    // Update badge immediately
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+      badge.classList.add('hidden');
     }
     
     const list = document.getElementById('notifications-list');
-    const items = list.querySelectorAll('li[onclick]');
+    const items = list.querySelectorAll('li[data-notification-id]');
     
+    // Update all notification items styling
     items.forEach(item => {
-      const onclick = item.getAttribute('onclick');
-      const match = onclick.match(/handleNotificationClick\((\d+)/);
-      if (match) {
-        fetch(controllerPath, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `notification_id=${match[1]}`
-        }).catch(err => console.error('Failed to mark notification as read:', err));
-      }
+      item.classList.remove('bg-blue-50', 'border-l-4', 'border-[#1E3A8A]');
+      item.setAttribute('data-is-unread', '0');
     });
     
-    setTimeout(loadNotifications, 500);
+    // Mark all as read on server with single request
+    fetch(controllerPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('All notifications marked as read in database:', data.affected_rows, 'rows updated');
+      } else {
+        console.error('Failed to mark all notifications as read:', data.message);
+      }
+    })
+    .catch(err => {
+      console.error('Failed to mark all notifications as read:', err);
+    });
   }
   
   function escapeHtml(text) {
@@ -297,9 +342,13 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       e.stopPropagation();
       bellDropdown.classList.toggle('hidden');
       profileDropdown.classList.add('hidden');
-      // Load fresh notifications when opening
+      // Load fresh notifications and mark all as read when opening
       if (!bellDropdown.classList.contains('hidden')) {
         loadNotifications();
+        // Mark all notifications as read after a short delay to ensure they're loaded
+        setTimeout(() => {
+          markAllAsRead();
+        }, 500);
       }
     } 
     // Avatar toggle

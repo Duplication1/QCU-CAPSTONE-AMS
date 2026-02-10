@@ -196,34 +196,6 @@ if (empty($borrowingMonths)) {
 }
 
 // ============================================
-// TOP CATEGORIES
-// ============================================
-$topCategoriesResult = $conn->query("
-    SELECT 
-        COALESCE(ac.category_name, 'Uncategorized') as category_name, 
-        COUNT(a.id) as count 
-    FROM assets a
-    LEFT JOIN asset_categories ac ON CAST(a.category AS UNSIGNED) = ac.id
-    WHERE a.status NOT IN ('Disposed', 'Archive')
-    GROUP BY ac.category_name
-    ORDER BY count DESC
-    LIMIT 5
-");
-$topCategories = [];
-$topCategoryCounts = [];
-if ($topCategoriesResult) {
-    while ($row = $topCategoriesResult->fetch_assoc()) {
-        $topCategories[] = $row['category_name'];
-        $topCategoryCounts[] = $row['count'];
-    }
-}
-// Ensure we have data for the chart
-if (empty($topCategories)) {
-    $topCategories = ['No Data'];
-    $topCategoryCounts = [0];
-}
-
-// ============================================
 // RECENT ACTIVITY COUNT
 // ============================================
 $recentActivityCount = $conn->query("
@@ -238,6 +210,84 @@ $recentUsersCount = $conn->query("
     FROM activity_logs 
     WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
 ")->fetch_assoc()['count'];
+
+
+
+// ============================================
+// LAB STAFF ASSIGNMENT SPEED (How fast they assign tickets)
+// ============================================
+$labStaffAssignmentResult = $conn->query("
+    SELECT 
+        u.full_name,
+        COUNT(i.id) as total_assigned,
+        AVG(TIMESTAMPDIFF(HOUR, i.created_at, i.assigned_at)) as avg_assignment_hours
+    FROM users u
+    INNER JOIN issues i ON u.id = i.assigned_by
+    WHERE u.role = 'Laboratory Staff'
+        AND i.assigned_at IS NOT NULL
+        AND i.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
+    GROUP BY u.id, u.full_name
+    HAVING total_assigned > 0
+    ORDER BY avg_assignment_hours ASC
+    LIMIT 10
+");
+
+$labStaffNames = [];
+$labStaffAssignedCount = [];
+$labStaffAvgAssignmentHours = [];
+
+if ($labStaffAssignmentResult && $labStaffAssignmentResult->num_rows > 0) {
+    while ($row = $labStaffAssignmentResult->fetch_assoc()) {
+        $labStaffNames[] = $row['full_name'];
+        $labStaffAssignedCount[] = $row['total_assigned'];
+        $labStaffAvgAssignmentHours[] = round($row['avg_assignment_hours'] ?? 0, 1);
+    }
+}
+
+if (empty($labStaffNames)) {
+    $labStaffNames = ['No Data'];
+    $labStaffAssignedCount = [0];
+    $labStaffAvgAssignmentHours = [0];
+}
+
+// ============================================
+// TECHNICIAN RESOLUTION SPEED (How fast they resolve tickets)
+// ============================================
+$technicianResolutionResult = $conn->query("
+    SELECT 
+        assigned_technician as tech_name,
+        COUNT(id) as total_resolved,
+        AVG(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as avg_resolution_hours,
+        MIN(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as fastest_resolution_hours,
+        MAX(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as slowest_resolution_hours
+    FROM issues
+    WHERE status = 'Resolved'
+        AND assigned_technician IS NOT NULL
+        AND assigned_at IS NOT NULL
+        AND assigned_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
+    GROUP BY assigned_technician
+    HAVING total_resolved > 0
+    ORDER BY avg_resolution_hours ASC
+    LIMIT 10
+");
+
+$technicianNames = [];
+$technicianResolvedCount = [];
+$technicianAvgResolutionHours = [];
+
+if ($technicianResolutionResult && $technicianResolutionResult->num_rows > 0) {
+    while ($row = $technicianResolutionResult->fetch_assoc()) {
+        $technicianNames[] = $row['tech_name'];
+        $technicianResolvedCount[] = $row['total_resolved'];
+        $technicianAvgResolutionHours[] = round($row['avg_resolution_hours'] ?? 0, 1);
+    }
+}
+
+if (empty($technicianNames)) {
+    $technicianNames = ['No Data'];
+    $technicianResolvedCount = [0];
+    $technicianAvgResolutionHours = [0];
+}
 
 // Include the layout header (includes sidebar and header components)
 include '../components/layout_header.php';
@@ -354,27 +404,9 @@ include '../components/layout_header.php';
 
             <!-- Charts Section -->
             <div class="flex-1 min-h-0 overflow-hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 h-full">
-                    <!-- Asset Status Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Status Distribution</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Current inventory status breakdown</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="statusChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Asset Condition Analysis -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Condition Analysis</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Health assessment of all assets</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="conditionChart"></canvas>
-                        </div>
-                    </div>
-
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 h-full">
                     <!-- Asset Type Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 lg:col-span-1">
                         <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Type Distribution</h3>
                         <p class="text-[9px] text-gray-500 mb-1">Breakdown by asset category</p>
                         <div style="height: calc(100% - 2.5rem);">
@@ -382,70 +414,30 @@ include '../components/layout_header.php';
                         </div>
                     </div>
 
+                    <!-- Lab Staff Assignment Speed -->
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 col-span-1 md:col-span-1 lg:col-span-2 lg:row-span-2">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Lab Staff Assignment Speed</h3>
+                        <p class="text-[9px] text-gray-500 mb-1">Avg hours to assign tickets (faster is better)</p>
+                        <div style="height: calc(100% - 2.5rem);">
+                            <canvas id="labStaffAssignmentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Technician Resolution Speed -->
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 col-span-1 md:col-span-1 lg:col-span-3 lg:row-span-2">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Technician Resolution Speed</h3>
+                        <p class="text-[9px] text-gray-500 mb-1">Avg hours to resolve tickets (faster is better)</p>
+                        <div style="height: calc(100% - 2.5rem);">
+                            <canvas id="technicianResolutionChart"></canvas>
+                        </div>
+                    </div>
+
                     <!-- Monthly Asset Additions -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 lg:col-span-1">
                         <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Acquisition Trend</h3>
                         <p class="text-[9px] text-gray-500 mb-1">Last 6 months additions</p>
                         <div style="height: calc(100% - 2.5rem);">
                             <canvas id="additionsChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Issues Trend -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Issues Trend</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Support tickets over 6 months</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="issuesChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Borrowing Activity -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Borrowing Activity</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Asset checkouts last 6 months</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="borrowingChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Top Categories -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Top Asset Categories</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Most common asset types</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="topCategoriesChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Quick Stats Summary -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-1.5">Quick Statistics</h3>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div class="border-l-2 pl-2" style="border-color: #1E3A8A;">
-                                <p class="text-[9px] text-gray-500">Borrowable Assets</p>
-                                <p class="text-base font-bold text-gray-900"><?php echo $borrowableAssets; ?></p>
-                            </div>
-                            <div class="border-l-2 pl-2" style="border-color: #10B981;">
-                                <p class="text-[9px] text-gray-500">Total Returned</p>
-                                <p class="text-base font-bold text-gray-900"><?php echo $totalReturned; ?></p>
-                            </div>
-                            <div class="border-l-2 pl-2" style="border-color: #EF4444;">
-                                <p class="text-[9px] text-gray-500">Disposed Assets</p>
-                                <p class="text-base font-bold text-gray-900"><?php echo $disposedAssets; ?></p>
-                            </div>
-                            <div class="border-l-2 pl-2" style="border-color: #F59E0B;">
-                                <p class="text-[9px] text-gray-500">Poor Condition</p>
-                                <p class="text-base font-bold text-gray-900"><?php echo $poorAssets + $nonFunctionalAssets; ?></p>
-                            </div>
-                            <div class="border-l-2 pl-2" style="border-color: #2563eb;">
-                                <p class="text-[9px] text-gray-500">Avg Asset Cost</p>
-                                <p class="text-base font-bold text-gray-900">₱<?php echo number_format($avgAssetCost, 0); ?></p>
-                            </div>
-                            <div class="border-l-2 pl-2" style="border-color: #14B8A6;">
-                                <p class="text-[9px] text-gray-500">Active Users (7d)</p>
-                                <p class="text-base font-bold text-gray-900"><?php echo $recentUsersCount; ?></p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -475,96 +467,7 @@ include '../components/layout_header.php';
             cyan: '#1e40af'
         };
 
-        // 1. Asset Status Distribution (Doughnut Chart)
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Available', 'In Use', 'Maintenance', 'Disposed'],
-                datasets: [{
-                    data: [
-                        <?php echo $availableAssets; ?>,
-                        <?php echo $inUseAssets; ?>,
-                        <?php echo $maintenanceAssets; ?>,
-                        <?php echo $disposedAssets; ?>
-                    ],
-                    backgroundColor: [
-                        chartColors.green,
-                        chartColors.orange,
-                        chartColors.amber,
-                        chartColors.red
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { font: { size: 10 }, padding: 10 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // 2. Asset Condition Analysis (Bar Chart)
-        const conditionCtx = document.getElementById('conditionChart').getContext('2d');
-        new Chart(conditionCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Excellent', 'Good', 'Fair', 'Poor', 'Non-Functional'],
-                datasets: [{
-                    label: 'Assets',
-                    data: [
-                        <?php echo $excellentAssets; ?>,
-                        <?php echo $goodAssets; ?>,
-                        <?php echo $fairAssets; ?>,
-                        <?php echo $poorAssets; ?>,
-                        <?php echo $nonFunctionalAssets; ?>
-                    ],
-                    backgroundColor: [
-                        chartColors.green,
-                        chartColors.teal,
-                        chartColors.amber,
-                        chartColors.orange,
-                        chartColors.red
-                    ],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6' },
-                        ticks: { font: { size: 10 } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
-                    }
-                }
-            }
-        });
-
-        // 3. Asset Type Distribution (Doughnut Chart)
+        // 1. Asset Type Distribution (Doughnut Chart)
         const typeCtx = document.getElementById('typeChart').getContext('2d');
         new Chart(typeCtx, {
             type: 'doughnut',
@@ -597,7 +500,7 @@ include '../components/layout_header.php';
             }
         });
 
-        // 4. Monthly Asset Additions (Line Chart)
+        // 2. Monthly Asset Additions (Line Chart)
         const additionsCtx = document.getElementById('additionsChart').getContext('2d');
         new Chart(additionsCtx, {
             type: 'line',
@@ -635,54 +538,16 @@ include '../components/layout_header.php';
             }
         });
 
-        // 5. Issues Trend (Line Chart)
-        const issuesCtx = document.getElementById('issuesChart').getContext('2d');
-        new Chart(issuesCtx, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($issueMonths); ?>,
-                datasets: [{
-                    label: 'Issues',
-                    data: <?php echo json_encode($issueCounts); ?>,
-                    borderColor: chartColors.red,
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: chartColors.red
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6' },
-                        ticks: { font: { size: 10 } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
-                    }
-                }
-            }
-        });
-
-        // 6. Borrowing Activity (Bar Chart)
-        const borrowingCtx = document.getElementById('borrowingChart').getContext('2d');
-        new Chart(borrowingCtx, {
+        // 3. Lab Staff Assignment Speed Chart (Bar Chart)
+        const labStaffAssignmentCtx = document.getElementById('labStaffAssignmentChart').getContext('2d');
+        new Chart(labStaffAssignmentCtx, {
             type: 'bar',
             data: {
-                labels: <?php echo json_encode($borrowingMonths); ?>,
+                labels: <?php echo json_encode($labStaffNames); ?>,
                 datasets: [{
-                    label: 'Borrowings',
-                    data: <?php echo json_encode($borrowingCounts); ?>,
-                    backgroundColor: chartColors.purple,
+                    label: 'Avg Hours to Assign',
+                    data: <?php echo json_encode($labStaffAvgAssignmentHours); ?>,
+                    backgroundColor: chartColors.blue,
                     borderRadius: 6
                 }]
             },
@@ -690,57 +555,118 @@ include '../components/layout_header.php';
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Lab Staff Names & Assignment Time',
+                        font: { size: 11, weight: 'bold' },
+                        padding: { bottom: 5 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Lab Staff: ' + context[0].label;
+                            },
+                            afterLabel: function(context) {
+                                const dataIndex = context.dataIndex;
+                                const assigned = <?php echo json_encode($labStaffAssignedCount); ?>[dataIndex];
+                                return 'Total Assigned: ' + assigned + ' tickets';
+                            }
+                        }
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: { color: '#f3f4f6' },
-                        ticks: { font: { size: 10 } }
+                        ticks: { 
+                            font: { size: 10 },
+                            callback: function(value) {
+                                return value + 'h';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Average Hours to Assign',
+                            font: { size: 10, weight: 'bold' }
+                        }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 10 } }
+                        ticks: { 
+                            font: { size: 10, weight: 'bold' },
+                            color: '#1E3A8A',
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: false
+                        }
                     }
                 }
             }
         });
 
-        // 7. Top Categories (Horizontal Bar Chart)
-        const topCategoriesCtx = document.getElementById('topCategoriesChart').getContext('2d');
-        new Chart(topCategoriesCtx, {
+        // 4. Technician Resolution Speed Chart (Bar Chart)
+        const technicianResolutionCtx = document.getElementById('technicianResolutionChart').getContext('2d');
+        new Chart(technicianResolutionCtx, {
             type: 'bar',
             data: {
-                labels: <?php echo json_encode($topCategories); ?>,
+                labels: <?php echo json_encode($technicianNames); ?>,
                 datasets: [{
-                    label: 'Count',
-                    data: <?php echo json_encode($topCategoryCounts); ?>,
-                    backgroundColor: [
-                        chartColors.blue,
-                        chartColors.green,
-                        chartColors.orange,
-                        chartColors.purple,
-                        chartColors.teal
-                    ],
+                    label: 'Avg Hours to Resolve',
+                    data: <?php echo json_encode($technicianAvgResolutionHours); ?>,
+                    backgroundColor: chartColors.blue,
                     borderRadius: 6
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Technician Names & Resolution Time',
+                        font: { size: 11, weight: 'bold' },
+                        padding: { bottom: 5 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Technician: ' + context[0].label;
+                            },
+                            afterLabel: function(context) {
+                                const dataIndex = context.dataIndex;
+                                const resolved = <?php echo json_encode($technicianResolvedCount); ?>[dataIndex];
+                                return 'Total Resolved: ' + resolved + ' tickets';
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         grid: { color: '#f3f4f6' },
-                        ticks: { font: { size: 10 } }
+                        ticks: { 
+                            font: { size: 10 },
+                            callback: function(value) {
+                                return value + 'h';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Average Hours to Resolve',
+                            font: { size: 10, weight: 'bold' }
+                        }
                     },
-                    y: {
+                    x: {
                         grid: { display: false },
-                        ticks: { font: { size: 10 } }
+                        ticks: { 
+                            font: { size: 10, weight: 'bold' },
+                            color: '#1E3A8A',
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: false
+                        }
                     }
                 }
             }
