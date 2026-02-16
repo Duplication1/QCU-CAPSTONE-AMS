@@ -549,7 +549,9 @@ function handleIssueClick(issueType) {
             document.getElementById('otherFieldsContainer').classList.remove('hidden');
             // make other concern category required when Other selected
             otherConcernCategory?.setAttribute('required','required');
-            // Do not show or require the Issue Title for Other concerns
+            // Hide and do NOT require the Issue Title for Other concerns
+            issueTitleField?.classList.add('hidden');
+            issueTitleInput?.removeAttribute('required');
             break;
             
         default:

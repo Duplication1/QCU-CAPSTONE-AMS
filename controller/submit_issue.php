@@ -37,8 +37,27 @@ $laboratory_concern_other = $_POST['laboratory_concern_other'] ?? null;
 $other_concern_category = $_POST['other_concern_category'] ?? null;
 $other_concern_other = $_POST['other_concern_other'] ?? null;
 
-if ($category==='' || $title==='') {
-  echo json_encode(['success'=>false,'message'=>'Missing required fields']); exit;
+// Validate category is provided
+if ($category === '') {
+  echo json_encode(['success'=>false,'message'=>'Missing required fields: Category is required']); exit;
+}
+
+// Title is required for hardware, software, and network categories
+// For laboratory and other categories, title can be auto-generated or optional
+$requiresTitle = in_array($category, ['hardware', 'software', 'network']);
+if ($requiresTitle && $title === '') {
+  echo json_encode(['success'=>false,'message'=>'Missing required fields: Issue title is required']); exit;
+}
+
+// Auto-generate title for laboratory and other categories if not provided
+if ($title === '') {
+    if ($category === 'laboratory') {
+        $title = 'Laboratory Concern: ' . ($laboratory_concern_type ?? 'Unspecified');
+    } elseif ($category === 'other') {
+        $title = 'Other Concern: ' . ($other_concern_category ?? 'Unspecified');
+    } else {
+        $title = ucfirst($category) . ' Issue';
+    }
 }
 
 // insert into issues

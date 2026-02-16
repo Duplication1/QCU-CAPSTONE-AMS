@@ -85,17 +85,17 @@ $todayActivity = $todayActivityResult ? ($todayActivityResult->fetch_assoc()['co
 // ISSUES BY TYPE & STATUS
 // ============================================
 $issuesByTypeResult = $conn->query("
-    SELECT issue_type, COUNT(*) as count 
+    SELECT category, COUNT(*) as count 
     FROM issues 
     WHERE status != 'Resolved'
-    GROUP BY issue_type
+    GROUP BY category
     ORDER BY count DESC
 ");
 $issueTypes = [];
 $issueTypeCounts = [];
 if ($issuesByTypeResult && $issuesByTypeResult->num_rows > 0) {
     while ($row = $issuesByTypeResult->fetch_assoc()) {
-        $issueTypes[] = $row['issue_type'];
+        $issueTypes[] = $row['category'];
         $issueTypeCounts[] = $row['count'];
     }
 }

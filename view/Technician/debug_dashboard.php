@@ -67,7 +67,7 @@ if ($technicianIds && $technicianIds->num_rows > 0) {
 
 // Sample issues
 echo "<h3>Sample Issues in Database (First 5):</h3>";
-$sampleIssues = $conn->query("SELECT id, issue_type, status, priority, assigned_to, created_at FROM issues ORDER BY created_at DESC LIMIT 5");
+$sampleIssues = $conn->query("SELECT id, category, status, priority, assigned_to, created_at FROM issues ORDER BY created_at DESC LIMIT 5");
 if ($sampleIssues && $sampleIssues->num_rows > 0) {
     echo "<table>";
     echo "<tr><th>ID</th><th>Type</th><th>Status</th><th>Priority</th><th>Assigned To</th><th>Created</th></tr>";
@@ -75,7 +75,7 @@ if ($sampleIssues && $sampleIssues->num_rows > 0) {
         $highlight = ($row['assigned_to'] == $technician_id) ? " style='background: yellow;'" : "";
         echo "<tr$highlight>";
         echo "<td>" . $row['id'] . "</td>";
-        echo "<td>" . $row['issue_type'] . "</td>";
+        echo "<td>" . $row['category'] . "</td>";
         echo "<td>" . $row['status'] . "</td>";
         echo "<td>" . $row['priority'] . "</td>";
         echo "<td>" . $row['assigned_to'] . "</td>";

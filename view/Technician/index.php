@@ -161,17 +161,17 @@ $weekResolved = $weekResolvedResult ? ($weekResolvedResult->fetch_assoc()['count
 // ISSUES BY TYPE
 // ============================================
 $issuesByTypeResult = $conn->query("
-    SELECT issue_type, COUNT(*) as count 
+    SELECT category, COUNT(*) as count 
     FROM issues 
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status != 'Resolved'
-    GROUP BY issue_type
+    GROUP BY category
     ORDER BY count DESC
 ");
 $issueTypes = [];
 $issueTypeCounts = [];
 if ($issuesByTypeResult && $issuesByTypeResult->num_rows > 0) {
     while ($row = $issuesByTypeResult->fetch_assoc()) {
-        $issueTypes[] = $row['issue_type'];
+        $issueTypes[] = $row['category'];
         $issueTypeCounts[] = $row['count'];
     }
 }
@@ -235,23 +235,25 @@ if (empty($resolvedMonths)) {
 $recentIssuesResult = $conn->query("
     SELECT 
         i.id,
-        i.issue_type,
+        i.category,
         i.priority,
         i.status,
         i.description,
         i.created_at,
+        i.title,
         a.asset_tag,
         a.asset_name,
         u.full_name as reporter_name
     FROM issues i
-    LEFT JOIN assets a ON i.asset_id = a.id
-    LEFT JOIN users u ON i.reported_by = u.id
+    LEFT JOIN assets a ON i.component_asset_id = a.id
+    LEFT JOIN users u ON i.user_id = u.id
     WHERE i.assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
     ORDER BY 
         CASE 
-            WHEN i.status = 'Pending' THEN 1
+            WHEN i.status = 'Open' THEN 1
             WHEN i.status = 'In Progress' THEN 2
-            ELSE 3
+            WHEN i.status = 'Resolved' THEN 3
+            ELSE 4
         END,
         CASE 
             WHEN i.priority = 'High' THEN 1
@@ -520,7 +522,7 @@ include '../components/layout_header.php';
                                     <div class="flex items-center justify-between text-[9px]">
                                         <span class="text-gray-500">
                                             <i class="fas fa-tag mr-0.5"></i>
-                                            <?php echo htmlspecialchars($issue['issue_type']); ?>
+                                            <?php echo htmlspecialchars($issue['category']); ?>
                                         </span>
                                         <?php 
                                         $priorityColors = [
