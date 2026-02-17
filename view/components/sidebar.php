@@ -74,6 +74,13 @@ $navigation_items = [
             'href' => 'index.php'
         ],
         [
+            'id' => 'submit-tickets',
+            'label' => 'Submit Tickets',
+            'icon' => 'fa-solid fa-plus-circle',
+            'color' => 'green',
+            'href' => 'submit_tickets.php'
+        ],
+        [
             'id' => 'pc-health',
             'label' => 'PC Health Monitor',
             'icon' => 'fa-solid fa-heart-pulse',

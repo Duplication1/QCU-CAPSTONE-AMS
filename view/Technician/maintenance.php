@@ -26,45 +26,27 @@ if (!isset($conn)) {
     }
 }
 
-// Create maintenance_schedules table if it doesn't exist
-$conn->query("CREATE TABLE IF NOT EXISTS maintenance_schedules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    room_id INT NOT NULL,
-    building_id INT NOT NULL,
-    assigned_technician_id INT NULL,
-    assigned_technician_name VARCHAR(255) NULL,
-    maintenance_date DATE NOT NULL,
-    maintenance_type VARCHAR(100) DEFAULT 'Regular',
-    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
-    notes TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by INT NOT NULL,
-    INDEX idx_room (room_id),
-    INDEX idx_technician (assigned_technician_id),
-    INDEX idx_date (maintenance_date),
-    INDEX idx_status (status),
-    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-    FOREIGN KEY (building_id) REFERENCES buildings(id) ON DELETE CASCADE
-)");
-
 // Get current technician user ID
 $technician_id = $_SESSION['user_id'];
 
-// Fetch My Assigned Maintenance Schedules grouped by building
+// Fetch Buildings Assigned to this Technician
 $buildings = [];
 $query = "SELECT 
     b.id,
     b.name,
     b.created_at,
-    COUNT(DISTINCT ms.room_id) as total_rooms,
+    bt.assigned_at,
+    COUNT(DISTINCT r.id) as total_rooms,
+    COUNT(DISTINCT ms.id) as total_schedules,
     COUNT(DISTINCT CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() THEN ms.id END) as overdue_maintenance,
     COUNT(DISTINCT CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN ms.id END) as upcoming_maintenance,
     MIN(CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() THEN ms.maintenance_date END) as earliest_maintenance
-FROM buildings b
-INNER JOIN maintenance_schedules ms ON b.id = ms.building_id
-WHERE ms.assigned_technician_id = ?
-GROUP BY b.id, b.name, b.created_at
+FROM building_technicians bt
+INNER JOIN buildings b ON bt.building_id = b.id
+LEFT JOIN rooms r ON b.id = r.building_id
+LEFT JOIN maintenance_schedules ms ON r.id = ms.room_id AND b.id = ms.building_id
+WHERE bt.technician_id = ?
+GROUP BY b.id, b.name, b.created_at, bt.assigned_at
 ORDER BY 
     CASE 
         WHEN MIN(CASE WHEN ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() THEN ms.maintenance_date END) IS NOT NULL THEN 0
@@ -75,6 +57,9 @@ ORDER BY
     b.name ASC";
 
 $stmt = $conn->prepare($query);
+if (!$stmt) {
+    die("Query preparation failed: " . $conn->error);
+}
 $stmt->bind_param('i', $technician_id);
 $stmt->execute();
 $result = $stmt->get_result();

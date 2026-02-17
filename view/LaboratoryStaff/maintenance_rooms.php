@@ -43,16 +43,6 @@ if (!$building) {
     exit();
 }
 
-// Fetch all technicians
-$technicians = [];
-$tech_query = "SELECT id, full_name FROM users WHERE role = 'Technician' ORDER BY full_name";
-$tech_result = $conn->query($tech_query);
-if ($tech_result && $tech_result->num_rows > 0) {
-    while ($tech = $tech_result->fetch_assoc()) {
-        $technicians[] = $tech;
-    }
-}
-
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
@@ -61,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($action === 'schedule_maintenance') {
         $room_id = intval($_POST['room_id'] ?? 0);
         $maintenance_date = trim($_POST['maintenance_date'] ?? '');
-        $technician_id = !empty($_POST['technician_id']) ? intval($_POST['technician_id']) : null;
         $notes = trim($_POST['notes'] ?? '');
         
         if ($room_id <= 0 || empty($maintenance_date)) {
@@ -70,53 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         
         try {
-            // Get technician name if assigned
-            $tech_name = null;
-            if ($technician_id) {
-                $tech_stmt = $conn->prepare("SELECT full_name FROM users WHERE id = ? AND role = 'Technician'");
-                $tech_stmt->bind_param('i', $technician_id);
-                $tech_stmt->execute();
-                $tech_result = $tech_stmt->get_result();
-                if ($tech_row = $tech_result->fetch_assoc()) {
-                    $tech_name = $tech_row['full_name'];
-                }
-                $tech_stmt->close();
-            }
-            
-            // Insert maintenance schedule with assigned_at timestamp if technician is assigned
-            if ($technician_id && $tech_name) {
-                $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, assigned_technician_id, assigned_technician_name, assigned_at, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 'Scheduled')");
-            } else {
-                $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, assigned_technician_id, assigned_technician_name, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Scheduled')");
-            }
+            // Insert maintenance schedule
+            $stmt = $conn->prepare("INSERT INTO maintenance_schedules (room_id, building_id, maintenance_date, notes, created_by, status) VALUES (?, ?, ?, ?, ?, 'Scheduled')");
             $user_id = $_SESSION['user_id'];
-            $stmt->bind_param('iiisssi', $room_id, $building_id, $technician_id, $tech_name, $maintenance_date, $notes, $user_id);
+            $stmt->bind_param('iissi', $room_id, $building_id, $maintenance_date, $notes, $user_id);
             $success = $stmt->execute();
-            $schedule_id = $conn->insert_id;
             $stmt->close();
             
             if ($success) {
-                // Create notification for technician if assigned
-                if ($technician_id && $tech_name) {
-                    // Get room name
-                    $room_stmt = $conn->prepare("SELECT name FROM rooms WHERE id = ?");
-                    $room_stmt->bind_param('i', $room_id);
-                    $room_stmt->execute();
-                    $room_result = $room_stmt->get_result();
-                    $room_data = $room_result->fetch_assoc();
-                    $room_name = $room_data['name'];
-                    $room_stmt->close();
-                    
-                    // Create notification
-                    $notif_title = "New Maintenance Assignment";
-                    $notif_message = "You have been assigned to maintain {$room_name} in {$building['name']} on " . date('M d, Y', strtotime($maintenance_date));
-                    
-                    $notif_stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'maintenance', ?)");
-                    $notif_stmt->bind_param('issi', $technician_id, $notif_title, $notif_message, $schedule_id);
-                    $notif_stmt->execute();
-                    $notif_stmt->close();
-                }
-                
                 echo json_encode(['success' => true, 'message' => 'Maintenance schedule created successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to create maintenance schedule']);
@@ -424,17 +374,7 @@ main {
                 <input type="date" id="maintenanceDate" name="maintenance_date" required
                        min="<?= date('Y-m-d') ?>"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Assign Technician</label>
-                <select id="technicianSelect" name="technician_id"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="">-- No Technician (Unassigned) --</option>
-                    <?php foreach ($technicians as $tech): ?>
-                        <option value="<?= $tech['id'] ?>"><?= htmlspecialchars($tech['full_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Technician will be notified of the assignment</p>
+                <p class="text-xs text-gray-500 mt-1">Technicians are assigned at the building level</p>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
@@ -514,7 +454,6 @@ function viewSchedules(roomId, roomName) {
                         </div>
                         <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${schedule.status}</span>
                     </div>
-                    ${schedule.assigned_technician_name ? `<div class="text-sm text-gray-700 mb-1"><i class="fa-solid fa-user mr-1"></i>${schedule.assigned_technician_name}</div>` : '<div class="text-sm text-gray-400 mb-1"><i class="fa-solid fa-user mr-1"></i>Unassigned</div>'}
                     ${schedule.notes ? `<div class="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded">${schedule.notes}</div>` : ''}
                     ${schedule.status === 'Scheduled' ? `<button onclick="deleteSchedule(${schedule.id})" class="mt-2 text-xs text-red-600 hover:text-red-800"><i class="fa-solid fa-trash mr-1"></i>Delete</button>` : ''}
                 </div>
@@ -567,7 +506,6 @@ document.getElementById('maintenanceForm').addEventListener('submit', async func
     formData.append('action', 'schedule_maintenance');
     formData.append('room_id', document.getElementById('maintenanceRoomId').value);
     formData.append('maintenance_date', document.getElementById('maintenanceDate').value);
-    formData.append('technician_id', document.getElementById('technicianSelect').value);
     formData.append('notes', document.getElementById('maintenanceNotes').value);
     
     try {

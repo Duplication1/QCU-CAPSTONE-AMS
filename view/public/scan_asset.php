@@ -346,6 +346,92 @@ if ($asset_id <= 0) {
             font-size: 0.875rem;
             font-weight: 600;
         }
+        /* Make statistics and timeline sections with dark text on light backgrounds */
+        .glass-card .stats-section .bg-blue-50 {
+            background-color: rgba(239, 246, 255, 0.98) !important;
+        }
+        .glass-card .stats-section .bg-purple-50 {
+            background-color: rgba(250, 245, 255, 0.98) !important;
+        }
+        .glass-card .stats-section .bg-green-50 {
+            background-color: rgba(240, 253, 244, 0.98) !important;
+        }
+        .glass-card .stats-section .bg-orange-50 {
+            background-color: rgba(255, 247, 237, 0.98) !important;
+        }
+        .glass-card .stats-section .text-blue-600 {
+            color: #2563eb !important;
+        }
+        .glass-card .stats-section .text-purple-600 {
+            color: #9333ea !important;
+        }
+        .glass-card .stats-section .text-green-600 {
+            color: #16a34a !important;
+        }
+        .glass-card .stats-section .text-orange-600 {
+            color: #ea580c !important;
+        }
+        .glass-card .stats-section .text-gray-600 {
+            color: #4b5563 !important;
+        }
+        
+        /* Timeline section - force dark text on white background */
+        .timeline-section .bg-gray-50,
+        .glass-card .timeline-section .bg-gray-50 {
+            background-color: #ffffff !important;
+        }
+        .timeline-section h3,
+        .glass-card .timeline-section h3 {
+            color: white !important;
+        }
+        .timeline-section .timeline-item,
+        .glass-card .timeline-section .timeline-item {
+            color: #111827 !important;
+        }
+        .timeline-section .bg-gray-50 *,
+        .glass-card .timeline-section .bg-gray-50 * {
+            color: #111827 !important;
+        }
+        .timeline-section p,
+        .glass-card .timeline-section p {
+            color: #111827 !important;
+        }
+        .timeline-section span,
+        .glass-card .timeline-section span {
+            color: #111827 !important;
+        }
+        .timeline-section div,
+        .glass-card .timeline-section div {
+            color: #111827 !important;
+        }
+        .timeline-section .text-xs,
+        .glass-card .timeline-section .text-xs {
+            color: #374151 !important;
+        }
+        .timeline-section .bg-blue-100,
+        .glass-card .timeline-section .bg-blue-100 {
+            background-color: #dbeafe !important;
+        }
+        .timeline-section .text-blue-800,
+        .glass-card .timeline-section .text-blue-800 {
+            color: #1e3a8a !important;
+            font-weight: 700 !important;
+        }
+        .timeline-section .text-red-600,
+        .glass-card .timeline-section .text-red-600 {
+            color: #dc2626 !important;
+            font-weight: 700 !important;
+        }
+        .timeline-section .text-green-600,
+        .glass-card .timeline-section .text-green-600 {
+            color: #16a34a !important;
+            font-weight: 700 !important;
+        }
+        .timeline-section .font-mono,
+        .glass-card .timeline-section .font-mono {
+            color: #000000 !important;
+            font-weight: 700 !important;
+        }
         .timeline-item {
             position: relative;
             padding-left: 2rem;
@@ -568,7 +654,7 @@ if ($asset_id <= 0) {
 
                 <!-- Statistics -->
                 <?php if ($stats && in_array($user_role, ['Administrator', 'Laboratory Staff', 'Technician'])): ?>
-                <div class="mt-6 border-t pt-6">
+                <div class="mt-6 border-t pt-6 stats-section">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
                         <i class="fas fa-chart-line mr-2"></i>Asset Statistics
                     </h3>
@@ -754,7 +840,7 @@ if ($asset_id <= 0) {
 
             <!-- Asset History Timeline -->
             <?php if (!empty($history) && in_array($user_role, ['Administrator', 'Laboratory Staff', 'Technician'])): ?>
-            <div class="glass-card p-6 md:p-8">
+            <div class="glass-card p-6 md:p-8 timeline-section">
                 <h3 class="text-lg font-bold text-gray-800 mb-6">
                     <i class="fas fa-clock-rotate-left mr-2"></i>Asset Activity Timeline
                 </h3>

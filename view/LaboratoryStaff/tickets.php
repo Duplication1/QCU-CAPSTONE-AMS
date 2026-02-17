@@ -279,12 +279,7 @@ $query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number 
           LEFT JOIN assets a ON a.id = i.component_asset_id
           WHERE {$whereClause}
           ORDER BY i.created_at DESC
-          LIMIT ? OFFSET ?";
-
-// Add pagination params
-$params[] = $limit;
-$params[] = $offset;
-$types .= 'ii';
+          LIMIT $limit OFFSET $offset";
 
 if (!empty($params)) {
     $stmt = $conn->prepare($query);
@@ -452,18 +447,18 @@ include '../components/layout_header.php';
                 <?php if ($result && $result->num_rows > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-[#1E3A8A]">
                             <tr>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Ticket #</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Technician</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Room</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Terminal</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Component</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Issue Title</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                 <th class="px-3 py-2 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Ticket #</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Type</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Technician</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Room</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Terminal</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Component</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Issue Title</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Status</th>
+                                 <th class="px-3 py-2 text-left text-[10px] font-medium text-white uppercase tracking-wider">Created</th>
+                                 <th class="px-3 py-2 text-center text-[10px] font-medium text-white uppercase tracking-wider">Actions</th>
                              </tr>
                          </thead>
                          <tbody class="bg-white divide-y divide-gray-200">

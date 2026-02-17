@@ -126,7 +126,7 @@ main {
           
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                <div class="bg-white rounded-lg shadow-sm p-4">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm mb-1">Total Eligible</p>
@@ -138,7 +138,7 @@ main {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
+                <div class="bg-white rounded-lg shadow-sm p-4">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm mb-1">End of Life</p>
@@ -150,7 +150,7 @@ main {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+                <div class="bg-white rounded-lg shadow-sm p-4">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm mb-1">Poor Condition</p>
@@ -162,7 +162,7 @@ main {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-gray-500">
+                <div class="bg-white rounded-lg shadow-sm p-4">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm mb-1">Non-Functional</p>
@@ -487,6 +487,7 @@ main {
         }
     </style>
 
+    <script src="../js/notifications.js"></script>
     <script>
         let currentDisposalAssetId = null;
         let selectedAssets = new Set();
@@ -613,7 +614,7 @@ main {
 
         function openBulkDisposalModal() {
             if (selectedAssets.size === 0) {
-                alert('Please select at least one asset to dispose.');
+                showChip('Please select at least one asset to dispose.', 'warning', 'chip-container', 3000);
                 return;
             }
             
@@ -636,13 +637,16 @@ main {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
             
-            // Prepare form data
+            // Prepare form data - send array as separate indexed parameters
             const formData = new URLSearchParams();
             formData.append('ajax', '1');
             formData.append('action', 'bulk_dispose');
             formData.append('notes', notes);
-            selectedAssets.forEach(id => {
-                formData.append('ids[]', id);
+            
+            // Send array elements with array notation
+            const assetArray = Array.from(selectedAssets);
+            assetArray.forEach((id, index) => {
+                formData.append(`ids[${index}]`, id);
             });
             
             fetch('../../controller/dispose_asset.php', {
@@ -652,20 +656,36 @@ main {
                 },
                 body: formData.toString()
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`Successfully disposed ${data.count || selectedAssets.size} asset(s)`);
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to dispose assets'));
+            .then(response => {
+                // Check if response is OK before parsing
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text(); // Get text first to handle non-JSON responses
+            })
+            .then(text => {
+                // Try to parse as JSON
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        showChip(`Successfully disposed ${data.count || selectedAssets.size} asset(s)`, 'success', 'chip-container', 3000);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showChip('Error: ' + (data.message || 'Failed to dispose assets'), 'error', 'chip-container', 5000);
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-trash mr-2"></i>Dispose All Selected';
+                    }
+                } catch (e) {
+                    // If not JSON, show the actual response
+                    console.error('Invalid JSON response:', text);
+                    showChip('Error: Server returned invalid response. Check console for details.', 'error', 'chip-container', 5000);
                     button.disabled = false;
                     button.innerHTML = '<i class="fas fa-trash mr-2"></i>Dispose All Selected';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error: Failed to process bulk disposal request');
+                showChip('Error: ' + error.message, 'error', 'chip-container', 5000);
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-trash mr-2"></i>Dispose All Selected';
             });
@@ -721,14 +741,14 @@ main {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Asset marked for disposal successfully');
-                    location.reload();
+                    showChip('Asset marked for disposal successfully', 'success', 'chip-container', 3000);
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to dispose asset'));
+                    showChip('Error: ' + (data.message || 'Failed to dispose asset'), 'error', 'chip-container', 5000);
                 }
             })
             .catch(error => {
-                alert('Error: Failed to process disposal request');
+                showChip('Error: Failed to process disposal request', 'error', 'chip-container', 5000);
             });
         }
 
@@ -739,7 +759,7 @@ main {
         // Print selected QR codes
         async function printSelectedQRCodes() {
             if (selectedAssets.size === 0) {
-                alert('Please select at least one asset to print QR codes.');
+                showChip('Please select at least one asset to print QR codes.', 'warning', 'chip-container', 3000);
                 return;
             }
             

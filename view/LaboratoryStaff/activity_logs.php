@@ -117,10 +117,10 @@ $pageTitle = "Activity Logs";
         
         <?php include '../components/header.php'; ?>
         
-        <div id="main-content-container" class="p-6">
-            <div class="max-w-[1400px] mx-auto">
+        <div id="main-content-container" class="p-2">
+            <div>
                 <!-- Header -->
-                <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-3">
+                <div class="flex items-center justify-between px-4 py-3 bg-white rounded shadow-sm border border-gray-200 mb-2">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">Activity Logs</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Total: <?php echo count($logs); ?> log(s)</p>
@@ -134,7 +134,7 @@ $pageTitle = "Activity Logs";
                 </div>
 
                 <!-- Search and Filters -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 mb-3 px-4 py-3">
+                <div class="bg-white rounded shadow-sm border border-gray-200 mb-2 px-4 py-3">
                     <form method="GET" action="" class="flex flex-wrap gap-3">
                         <div class="flex-1 min-w-[200px]">
                             <input type="text" name="search" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
@@ -192,14 +192,14 @@ $pageTitle = "Activity Logs";
                 <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
+                            <thead class="bg-[#1E3A8A] sticky top-0">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Timestamp</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Entity</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">IP Address</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">

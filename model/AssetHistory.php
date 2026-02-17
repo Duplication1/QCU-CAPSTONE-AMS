@@ -24,13 +24,15 @@ class AssetHistory {
             
             if ($performed_by) {
                 $user_query = $this->conn->prepare("SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = ?");
-                $user_query->bind_param('i', $performed_by);
-                $user_query->execute();
-                $result = $user_query->get_result();
-                if ($user = $result->fetch_assoc()) {
-                    $performed_by_name = $user['full_name'];
+                if ($user_query) {
+                    $user_query->bind_param('i', $performed_by);
+                    $user_query->execute();
+                    $result = $user_query->get_result();
+                    if ($user = $result->fetch_assoc()) {
+                        $performed_by_name = $user['full_name'];
+                    }
+                    $user_query->close();
                 }
-                $user_query->close();
             }
             
             $stmt = $this->conn->prepare("
@@ -39,7 +41,11 @@ class AssetHistory {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
-            $stmt->bind_param('isssssssss', 
+            if (!$stmt) {
+                throw new Exception("Failed to prepare asset history statement: " . $this->conn->error);
+            }
+            
+            $stmt->bind_param('issssissss', 
                 $asset_id, 
                 $action_type, 
                 $field_changed, 
@@ -79,6 +85,10 @@ class AssetHistory {
                 LIMIT ?
             ");
             
+            if (!$stmt) {
+                throw new Exception("Failed to prepare getAssetHistory query: " . $this->conn->error);
+            }
+            
             $stmt->bind_param('ii', $asset_id, $limit);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -115,6 +125,10 @@ class AssetHistory {
                 LIMIT ?
             ");
             
+            if (!$stmt) {
+                throw new Exception("Failed to prepare getRecentHistory query: " . $this->conn->error);
+            }
+            
             $stmt->bind_param('i', $limit);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -149,6 +163,10 @@ class AssetHistory {
                 LIMIT ?
             ");
             
+            if (!$stmt) {
+                throw new Exception("Failed to prepare getHistoryByAction query: " . $this->conn->error);
+            }
+            
             $stmt->bind_param('si', $action_type, $limit);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -181,6 +199,10 @@ class AssetHistory {
                 FROM asset_history
                 WHERE asset_id = ?
             ");
+            
+            if (!$stmt) {
+                throw new Exception("Failed to prepare getAssetStats query: " . $this->conn->error);
+            }
             
             $stmt->bind_param('i', $asset_id);
             $stmt->execute();

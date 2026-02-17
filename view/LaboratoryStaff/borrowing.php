@@ -28,19 +28,81 @@ try {
     // Handle error silently
 }
 
-// Get borrowing requests with optional filter
+// Get pagination and filter parameters
 $filter_status = $_GET['status'] ?? 'all';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+if ($per_page <= 0) $per_page = 999999; // Show all
+$offset = ($page - 1) * $per_page;
+
 $borrowing = new AssetBorrowing();
 $requests = [];
+$total_requests = 0;
 $stats = ['total_borrowings' => 0, 'pending' => 0, 'approved' => 0, 'returned' => 0];
 $db_error = null;
 
 try {
-    if ($filter_status === 'all') {
-        $requests = $borrowing->getAll();
-    } else {
-        $requests = $borrowing->getAll(['status' => $filter_status]);
+    $db = new Database();
+    $conn = $db->getConnection();
+    
+    // Build query with search and filter
+    $where_conditions = [];
+    $params = [];
+    
+    if ($filter_status !== 'all') {
+        $where_conditions[] = 'ab.status = ?';
+        $params[] = $filter_status;
     }
+    
+    if (!empty($search)) {
+        $where_conditions[] = '(u.full_name LIKE ? OR u.email LIKE ? OR a.asset_tag LIKE ? OR a.asset_name LIKE ? OR ab.purpose LIKE ?)';
+        $search_param = '%' . $search . '%';
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param]);
+    }
+    
+    $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+    
+    // Count total requests
+    $count_query = "SELECT COUNT(*) as total 
+                    FROM asset_borrowing ab
+                    LEFT JOIN users u ON ab.borrower_id = u.id
+                    LEFT JOIN assets a ON ab.asset_id = a.id
+                    $where_clause";
+    
+    $count_stmt = $conn->prepare($count_query);
+    if (!empty($params)) {
+        $count_stmt->execute($params);
+    } else {
+        $count_stmt->execute();
+    }
+    $total_requests = $count_stmt->fetchColumn();
+    
+    // Fetch paginated requests (LIMIT and OFFSET are safe - already validated as integers)
+    $query = "SELECT ab.*, 
+              u.full_name as borrower_full_name, 
+              u.email as borrower_email,
+              a.asset_tag, 
+              a.asset_name, 
+              a.asset_type,
+              a.brand,
+              a.model,
+              approver.full_name as approved_by_name
+              FROM asset_borrowing ab
+              LEFT JOIN users u ON ab.borrower_id = u.id
+              LEFT JOIN assets a ON ab.asset_id = a.id
+              LEFT JOIN users approver ON ab.approved_by = approver.id
+              $where_clause
+              ORDER BY ab.id DESC
+              LIMIT $per_page OFFSET $offset";
+    
+    $stmt = $conn->prepare($query);
+    if (!empty($params)) {
+        $stmt->execute($params);
+    } else {
+        $stmt->execute();
+    }
+    $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get statistics
     $stats = $borrowing->getStatistics();
@@ -48,6 +110,8 @@ try {
     $db_error = $e->getMessage();
     $_SESSION['error_message'] = 'Database error: ' . $e->getMessage();
 }
+
+$total_pages = ceil($total_requests / $per_page);
 
 include '../components/layout_header.php';
 ?>
@@ -111,27 +175,55 @@ include '../components/layout_header.php';
 
             <!-- Borrowing Requests Table -->
             <div class="bg-white rounded-lg shadow p-3 border border-gray-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
                     <h2 class="text-sm font-semibold text-[#1E3A8A]">
                         <i class="fa-solid fa-clipboard-list mr-1"></i>
-                        Borrowing Requests
+                        Borrowing Requests (<?php echo $total_requests; ?>)
                     </h2>
                     
-                    <!-- Filter Buttons -->
-                    <div class="flex flex-wrap gap-1">
-                        <a href="?status=all" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'all' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
-                            All
-                        </a>
-                        <a href="?status=Pending" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Pending' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
-                            Pending
-                        </a>
-                        <a href="?status=Approved" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Approved' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
-                            Approved
-                        </a>
-                        <a href="?status=Returned" class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Returned' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
-                            Returned
-                        </a>
+                    <!-- Search and Filter -->
+                    <div class="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                        <!-- Search Box -->
+                        <form method="GET" action="" class="flex items-center gap-2">
+                            <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
+                            <input type="hidden" name="per_page" value="<?php echo $per_page; ?>">
+                            <div class="relative">
+                                <input type="text" 
+                                       name="search" 
+                                       id="searchInput"
+                                       value="<?php echo htmlspecialchars($search); ?>"
+                                       placeholder="Search requests..." 
+                                       class="pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent w-48">
+                                <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+                            </div>
+                            <?php if (!empty($search)): ?>
+                            <a href="?status=<?php echo htmlspecialchars($filter_status); ?>&per_page=<?php echo $per_page; ?>" 
+                               class="text-xs text-red-600 hover:text-red-700">
+                                <i class="fa-solid fa-times-circle"></i> Clear
+                            </a>
+                            <?php endif; ?>
+                        </form>
                     </div>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="flex flex-wrap gap-1 mb-3">
+                    <a href="?status=all&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>" 
+                       class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'all' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        All
+                    </a>
+                    <a href="?status=Pending&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>" 
+                       class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Pending' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        Pending
+                    </a>
+                    <a href="?status=Approved&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>" 
+                       class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Approved' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        Approved
+                    </a>
+                    <a href="?status=Returned&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>" 
+                       class="px-3 py-1.5 rounded text-xs font-medium transition-colors <?php echo $filter_status === 'Returned' ? 'bg-[#1E3A8A] text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'; ?>">
+                        Returned
+                    </a>
                 </div>
 
                 <?php if ($db_error): ?>
@@ -154,43 +246,67 @@ include '../components/layout_header.php';
                     <div class="text-center py-8">
                         <i class="fa-solid fa-inbox text-5xl text-gray-300 mb-3"></i>
                         <p class="text-gray-600 text-sm">No borrowing requests found.</p>
+                        <?php if (!empty($search)): ?>
+                        <p class="text-gray-500 text-xs mt-1">Try adjusting your search terms.</p>
+                        <?php else: ?>
                         <p class="text-gray-500 text-xs mt-1">Borrowing requests will appear here when students or faculty submit them.</p>
+                        <?php endif; ?>
                         <?php if ($filter_status !== 'all'): ?>
                         <p class="text-[10px] text-gray-400 mt-3">Current filter: <span class="font-semibold"><?php echo htmlspecialchars($filter_status); ?></span></p>
                         <?php endif; ?>
                     </div>
                 <?php else: ?>
-                    <!-- <?php echo count($requests); ?> requests found -->
-                <?php endif; ?>
-                
-                <?php if (!empty($requests)): ?>
+                    <!-- Entries Per Page and Pagination Info -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-gray-600">Show:</label>
+                            <select onchange="window.location.href='?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=' + this.value" 
+                                    class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]">
+                                <option value="10" <?php echo $per_page == 10 ? 'selected' : ''; ?>>10</option>
+                                <option value="25" <?php echo $per_page == 25 ? 'selected' : ''; ?>>25</option>
+                                <option value="50" <?php echo $per_page == 50 ? 'selected' : ''; ?>>50</option>
+                                <option value="100" <?php echo $per_page == 100 ? 'selected' : ''; ?>>100</option>
+                            </select>
+                            <span class="text-xs text-gray-600">entries per page</span>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Showing <?php echo min(($page - 1) * $per_page + 1, $total_requests); ?> 
+                            to <?php echo min($page * $per_page, $total_requests); ?> 
+                            of <?php echo $total_requests; ?> requests
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
-                        <table id="borrowingTable" class="display stripe hover w-full text-xs">
-                            <thead class="bg-gray-50">
+                        <table class="w-full text-xs border-collapse">
+                            <thead class="bg-[#1E3A8A]">
                                 <tr>
-                                    <th class="text-left px-3 py-2">Request Date</th>
-                                    <th class="text-left px-3 py-2">Borrower</th>
-                                    <th class="text-left px-3 py-2">Asset Tag</th>
-                                    <th class="text-left px-3 py-2">Asset Name</th>
-                                    <th class="text-left px-3 py-2">Borrow Date</th>
-                                    <th class="text-left px-3 py-2">Return Date</th>
-                                    <th class="text-left px-3 py-2">Status</th>
-                                    <th class="text-center px-3 py-2">Actions</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Request Date</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Borrower</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Asset Tag</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Asset Name</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Borrow Date</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Return Date</th>
+                                    <th class="text-left px-3 py-2 font-semibold text-white">Status</th>
+                                    <th class="text-center px-3 py-2 font-semibold text-white">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-gray-200">
                                 <?php foreach ($requests as $request): ?>
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-3 py-2"><?php echo date('M d, Y', strtotime($request['created_at'])); ?></td>
                                     <td class="px-3 py-2">
-                                        <strong><?php echo htmlspecialchars($request['borrower_full_name']); ?></strong>
+                                        <div class="font-medium text-gray-900"><?php echo htmlspecialchars($request['borrower_full_name']); ?></div>
+                                        <div class="text-[10px] text-gray-500"><?php echo htmlspecialchars($request['borrower_email']); ?></div>
                                     </td>
                                     <td class="px-3 py-2">
-                                        <span class="font-mono text-[10px] bg-gray-100 px-2 py-0.5 rounded">
+                                        <span class="font-mono text-[10px] bg-gray-100 px-2 py-1 rounded">
                                             <?php echo htmlspecialchars($request['asset_tag']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-3 py-2"><strong><?php echo htmlspecialchars($request['asset_name']); ?></strong></td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium"><?php echo htmlspecialchars($request['asset_name']); ?></div>
+                                        <div class="text-[10px] text-gray-500"><?php echo htmlspecialchars($request['asset_type']); ?></div>
+                                    </td>
                                     <td class="px-3 py-2"><?php echo date('M d, Y', strtotime($request['borrowed_date'])); ?></td>
                                     <td class="px-3 py-2">
                                         <?php 
@@ -201,7 +317,7 @@ include '../components/layout_header.php';
                                         }
                                         ?>
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-3 py-2">
                                         <?php
                                         $statusColors = [
                                             'Pending' => 'bg-yellow-100 text-yellow-800',
@@ -213,32 +329,32 @@ include '../components/layout_header.php';
                                         ];
                                         $statusClass = $statusColors[$request['status']] ?? 'bg-gray-100 text-gray-800';
                                         ?>
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold <?php echo $statusClass; ?>">
+                                        <span class="px-2 py-1 rounded-full text-[10px] font-semibold <?php echo $statusClass; ?>">
                                             <?php echo htmlspecialchars($request['status']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <div class="flex justify-center gap-2">
+                                    <td class="px-3 py-2 text-center">
+                                        <div class="flex justify-center gap-1">
                                             <button onclick="viewRequestDetails(<?php echo $request['id']; ?>)" 
-                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-2 py-1 rounded text-[10px] transition-colors"
                                                     title="View Details">
                                                 <i class="fa-solid fa-eye"></i>
                                             </button>
                                             <?php if ($request['status'] === 'Pending'): ?>
                                             <button onclick="approveRequest(<?php echo $request['id']; ?>)" 
-                                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-[10px] transition-colors"
                                                     title="Approve">
                                                 <i class="fa-solid fa-check"></i>
                                             </button>
                                             <button onclick="cancelRequest(<?php echo $request['id']; ?>)" 
-                                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] transition-colors"
                                                     title="Cancel">
                                                 <i class="fa-solid fa-times"></i>
                                             </button>
                                             <?php endif; ?>
                                             <?php if ($request['status'] === 'Approved'): ?>
                                             <button onclick="returnAsset(<?php echo $request['id']; ?>)" 
-                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-3 py-1 rounded text-xs transition-colors"
+                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-2 py-1 rounded text-[10px] transition-colors"
                                                     title="Mark as Returned">
                                                 <i class="fa-solid fa-rotate-left"></i>
                                             </button>
@@ -250,6 +366,50 @@ include '../components/layout_header.php';
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <?php if ($total_pages > 1): ?>
+                    <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
+                        <div class="text-xs text-gray-600">
+                            Page <?php echo $page; ?> of <?php echo $total_pages; ?>
+                        </div>
+                        <div class="flex gap-1">
+                            <?php if ($page > 1): ?>
+                                <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>&page=1" 
+                                   class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                                    <i class="fa-solid fa-angles-left"></i>
+                                </a>
+                                <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $page - 1; ?>" 
+                                   class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                                    <i class="fa-solid fa-angle-left"></i>
+                                </a>
+                            <?php endif; ?>
+
+                            <?php
+                            $start_page = max(1, $page - 2);
+                            $end_page = min($total_pages, $page + 2);
+                            
+                            for ($i = $start_page; $i <= $end_page; $i++):
+                            ?>
+                                <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $i; ?>" 
+                                   class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors <?php echo $i == $page ? 'bg-[#1E3A8A] text-white hover:bg-[#152d6b]' : ''; ?>">
+                                    <?php echo $i; ?>
+                                </a>
+                            <?php endfor; ?>
+
+                            <?php if ($page < $total_pages): ?>
+                                <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $page + 1; ?>" 
+                                   class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                                    <i class="fa-solid fa-angle-right"></i>
+                                </a>
+                                <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $total_pages; ?>" 
+                                   class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                                    <i class="fa-solid fa-angles-right"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </main>
@@ -344,40 +504,17 @@ include '../components/layout_header.php';
 // Store current request for printing (global scope)
 let currentRequest = null;
 
-// Initialize DataTable
-$(document).ready(function() {
-    <?php if (!empty($requests)): ?>
-    $('#borrowingTable').DataTable({
-        pageLength: 10,
-        order: [[0, 'desc']],
-        responsive: true,
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search requests...",
-            lengthMenu: "Show _MENU_ requests per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ requests",
-            infoEmpty: "No requests available",
-            infoFiltered: "(filtered from _MAX_ total requests)",
-            zeroRecords: "No matching requests found",
-            paginate: {
-                first: '<i class="fa-solid fa-angles-left"></i>',
-                last: '<i class="fa-solid fa-angles-right"></i>',
-                next: '<i class="fa-solid fa-angle-right"></i>',
-                previous: '<i class="fa-solid fa-angle-left"></i>'
-            }
-        },
-        columnDefs: [
-            { orderable: false, targets: 7 }
-        ],
-        dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rtip',
-        drawCallback: function() {
-            $('.dataTables_paginate .paginate_button').addClass('px-3 py-1 mx-1 border border-gray-300 rounded hover:bg-blue-600 hover:text-white transition-colors');
-            $('.dataTables_paginate .paginate_button.current').addClass('bg-blue-600 text-white').removeClass('hover:bg-blue-600');
-            $('.dataTables_paginate .paginate_button.disabled').addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-blue-600 hover:text-white');
-        }
+// Auto-submit search with debounce
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 800); // Wait 800ms after user stops typing
     });
-    <?php endif; ?>
-});
+}
 
 // View Request Details
 async function viewRequestDetails(requestId) {

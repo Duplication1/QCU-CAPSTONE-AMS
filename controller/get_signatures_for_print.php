@@ -54,8 +54,8 @@ if (!$borrower_id || !$lab_staff_id) {
     exit();
 }
 
-// If user is Student or Faculty, only allow them to access their own signature
-if (in_array($_SESSION['role'], ['Student', 'Faculty']) && $_SESSION['user_id'] != $borrower_id) {
+// If user is Student, Faculty, or Laboratory Staff, only allow them to access their own signature
+if (in_array($_SESSION['role'], ['Student', 'Faculty', 'Laboratory Staff']) && $_SESSION['user_id'] != $borrower_id) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'You can only access your own signature']);
     exit();

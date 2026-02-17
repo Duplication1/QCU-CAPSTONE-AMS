@@ -4030,7 +4030,7 @@ function updateSearchableDropdownDisplay(selectId, value) {
         select.value = value;
     } else {
         selectedText.textContent = 'Select Category';
-        selectedText.className = 'selected-text text-gray-500';
+        selectedText.className = 'dropdown-selected-text text-gray-500';
         select.value = '';
     }
 }
@@ -4051,8 +4051,13 @@ async function updateSearchableDropdownOptions(selectId) {
         
         if (result.success && result.categories) {
             const select = document.getElementById(selectId);
-            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            if (!select) return;
+            
+            const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+            if (!dropdown) return;
+            
             const dropdownList = dropdown.querySelector('.dropdown-list');
+            if (!dropdownList) return;
             
             // Clear existing options
             dropdownList.innerHTML = '';
@@ -4096,12 +4101,16 @@ async function updateSearchableDropdownOptions(selectId) {
                     
                     // Update display text
                     const selectedText = dropdown.querySelector('.dropdown-selected-text');
-                    selectedText.textContent = text;
-                    selectedText.className = 'dropdown-selected-text text-gray-900';
+                    if (selectedText) {
+                        selectedText.textContent = text;
+                        selectedText.className = 'dropdown-selected-text text-gray-900';
+                    }
                     
                     // Close dropdown
                     const options = dropdown.querySelector('.dropdown-options');
-                    options.classList.add('hidden');
+                    if (options) {
+                        options.classList.add('hidden');
+                    }
                     
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
@@ -4166,8 +4175,22 @@ async function addNewCategory() {
     // Add the category locally first for instant feedback
     if (window.currentCategorySource) {
         const select = document.getElementById(window.currentCategorySource);
-        const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+        if (!select) {
+            console.error('Select element not found:', window.currentCategorySource);
+            return;
+        }
+        
+        const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+        if (!dropdown) {
+            console.error('Searchable dropdown not found for:', window.currentCategorySource);
+            return;
+        }
+        
         const dropdownList = dropdown.querySelector('.dropdown-list');
+        if (!dropdownList) {
+            console.error('Dropdown list not found');
+            return;
+        }
         
         // Check if already exists
         const existing = dropdownList.querySelector(`[data-value="${categoryName}"]`);
@@ -4182,10 +4205,14 @@ async function addNewCategory() {
             option.addEventListener('click', function() {
                 select.value = categoryName;
                 const selectedText = dropdown.querySelector('.dropdown-selected-text');
-                selectedText.textContent = categoryName;
-                selectedText.className = 'dropdown-selected-text text-gray-900';
+                if (selectedText) {
+                    selectedText.textContent = categoryName;
+                    selectedText.className = 'dropdown-selected-text text-gray-900';
+                }
                 const options = dropdown.querySelector('.dropdown-options');
-                options.classList.add('hidden');
+                if (options) {
+                    options.classList.add('hidden');
+                }
                 select.dispatchEvent(new Event('change'));
                 
                 // Trigger asset tag generation if this is the asset name field
@@ -4198,14 +4225,14 @@ async function addNewCategory() {
             });
             
             // Insert before "Add New Category"
-            const addNew = dropdownList.querySelector('[data-value="__add_new__]');
+            const addNew = dropdownList.querySelector('[data-value="__add_new__"]');
             dropdownList.insertBefore(option, addNew);
             
             // Add to select options
             const selectOption = document.createElement('option');
             selectOption.value = categoryName;
             selectOption.textContent = categoryName;
-            const addNewSelect = select.querySelector('[value="__add_new__]');
+            const addNewSelect = select.querySelector('[value="__add_new__"]');
             select.insertBefore(selectOption, addNewSelect);
             
             // Set as selected

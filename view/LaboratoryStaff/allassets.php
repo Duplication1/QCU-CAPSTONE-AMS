@@ -121,6 +121,22 @@ function buildAssetFilters($filters, $show_archived = false, $show_standby = fal
 
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+    // Suppress error display for AJAX requests but log them
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+    error_reporting(E_ALL);
+    
+    // Set a custom error handler for AJAX requests
+    set_error_handler(function($errno, $errstr, $errfile, $errline) {
+        error_log("PHP Error [$errno]: $errstr in $errfile on line $errline");
+        throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+    });
+    
+    // Clean any output buffers
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
     
@@ -134,6 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
         $room_id = !empty($_POST['room_id']) ? intval($_POST['room_id']) : null;
+        $is_borrowable = isset($_POST['is_borrowable']) && $_POST['is_borrowable'] == '1' ? 1 : 0;
+        $acquisition_date = trim($_POST['acquisition_date'] ?? '');
         
         if (empty($asset_tag) || empty($asset_name)) {
             echo json_encode(['success' => false, 'message' => 'Asset tag and name are required']);
@@ -141,46 +159,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         }
         
         try {
+            // Check if InnoDB engine is being used (required for transactions)
+            // Start transaction
+            if (!$conn->autocommit(FALSE)) {
+                throw new Exception("Failed to start transaction: " . $conn->error);
+            }
+            
             // Insert asset first to get ID
-            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, is_borrowable, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $conn->error);
+            }
+            
             $created_by = $_SESSION['user_id'];
-            $stmt->bind_param('ssssssissi', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $created_by);
+            $stmt->bind_param('ssssssissii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $is_borrowable, $created_by);
             $success = $stmt->execute();
+            
+            if (!$success) {
+                throw new Exception("Execute failed: " . $stmt->error);
+            }
+            
             $new_id = $conn->insert_id;
             $stmt->close();
             
-            if ($success) {
-                // Generate QR code with scan URL
-                $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
-                $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
-                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
-                
-                // Update asset with QR code
-                $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
-                $update_qr->bind_param('si', $qr_code_url, $new_id);
-                $update_qr->execute();
-                $update_qr->close();
-                
-                // Log asset creation history
-                require_once '../../controller/AssetHistoryHelper.php';
-                $historyHelper = AssetHistoryHelper::getInstance();
-                $historyHelper->logAssetCreated($new_id, $asset_tag, $asset_name, $created_by);
-                
-                // Log to activity_logs
-                require_once '../../model/ActivityLog.php';
-                ActivityLog::record(
-                    $created_by,
-                    'create',
-                    'asset',
-                    $new_id,
-                    "Created asset: {$asset_tag} - {$asset_name}"
-                );
-                
-                echo json_encode(['success' => true, 'message' => 'Asset created successfully', 'id' => $new_id]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to create asset']);
+            // Generate QR code with scan URL
+            $base_url = 'http://192.168.1.90/QCU-CAPSTONE-AMS';
+            $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
+            $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+            
+            // Update asset with QR code
+            $update_qr = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+            if (!$update_qr) {
+                throw new Exception("QR update prepare failed: " . $conn->error);
             }
+            $update_qr->bind_param('si', $qr_code_url, $new_id);
+            if (!$update_qr->execute()) {
+                throw new Exception("QR update failed: " . $update_qr->error);
+            }
+            $update_qr->close();
+            
+            // Commit transaction before logging (logging errors shouldn't rollback asset creation)
+            if (!$conn->commit()) {
+                throw new Exception("Commit failed: " . $conn->error);
+            }
+            
+            // Re-enable autocommit
+            $conn->autocommit(TRUE);
+            
+            // Log asset creation history (non-critical, wrapped in try-catch)
+            try {
+                if (file_exists('../../controller/AssetHistoryHelper.php')) {
+                    require_once '../../controller/AssetHistoryHelper.php';
+                    $historyHelper = AssetHistoryHelper::getInstance();
+                    $historyHelper->logAssetCreated($new_id, $asset_tag, $asset_name, $created_by);
+                }
+            } catch (Exception $log_error) {
+                error_log("Asset history logging failed: " . $log_error->getMessage());
+            }
+            
+            // Log to activity_logs (non-critical, wrapped in try-catch)
+            try {
+                if (file_exists('../../model/ActivityLog.php')) {
+                    require_once '../../model/ActivityLog.php';
+                    ActivityLog::record(
+                        $created_by,
+                        'create',
+                        'asset',
+                        $new_id,
+                        "Created asset: {$asset_tag} - {$asset_name}"
+                    );
+                }
+            } catch (Exception $log_error) {
+                error_log("Activity logging failed: " . $log_error->getMessage());
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Asset created successfully', 'id' => $new_id]);
         } catch (Exception $e) {
+            // Rollback on error
+            if (isset($conn)) {
+                $conn->rollback();
+                $conn->autocommit(TRUE);
+            }
+            
+            // Log the full error for debugging
+            error_log("Asset creation error: " . $e->getMessage() . " | File: " . $e->getFile() . " | Line: " . $e->getLine());
+            
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
         exit;
@@ -329,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     $created_asset_ids[] = $new_id;
                     
                     // Generate QR code with scan URL
-                    $base_url = 'http://192.168.100.15/QCU-CAPSTONE-AMS';
+                    $base_url = 'http://192.168.1.90/QCU-CAPSTONE-AMS';
                     $scan_url = $base_url . '/view/public/scan_asset.php?id=' . $new_id;
                     $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
                     
@@ -2208,22 +2272,6 @@ main {
                             <option value="Network Device">Network Device</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                        <input type="text" id="bulkBrand" name="bulk_brand"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                        <input type="text" id="bulkModel" name="bulk_model"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Room</label>
                         <select id="bulkRoomId" name="bulk_room_id" 
@@ -2608,129 +2656,149 @@ main {
                     <i class="fa-solid fa-info-circle mr-2"></i>
                     <span id="bulkEditCount">0</span> asset(s) selected. Only fill in the fields you want to update. Empty fields will remain unchanged.
                 </p>
+                <p class="text-sm text-blue-900 font-semibold mt-2">
+                    <i class="fa-solid fa-edit mr-2"></i>
+                    Fields to update: <span id="fieldsToUpdateCount" class="text-blue-600">0</span>
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Asset Name (Category) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Asset Name (Category)
-                    </label>
-                    <div class="searchable-dropdown relative">
-                        <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors flex items-center justify-between bg-white">
-                            <span class="selected-text text-gray-400">Keep current values</span>
-                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
-                        </div>
-                        <select id="bulkEditAssetName" name="asset_name" class="hidden">
-                            <option value="">Keep current values</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            <div class="sticky top-0 bg-white border-b border-gray-200 p-2">
-                                <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Search categories...">
+            <!-- Update Fields Section -->
+            <div class="mb-4">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                    <i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i>
+                    Fields to Update
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Asset Name (Category) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Asset Name (Category)
+                        </label>
+                        <div class="searchable-dropdown relative">
+                            <div class="dropdown-display w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors flex items-center justify-between bg-white">
+                                <span class="selected-text text-gray-400">Keep current values</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
                             </div>
-                            <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
-                                <i class="fa-solid fa-plus mr-2"></i>Add New Category
-                            </div>
-                            <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="">
-                                <em class="text-gray-400">Keep current values</em>
-                            </div>
-                            <?php foreach ($categories as $cat): ?>
-                                <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="<?php echo htmlspecialchars($cat['name']); ?>">
-                                    <?php echo htmlspecialchars($cat['name']); ?>
+                            <select id="bulkEditAssetName" name="asset_name" class="hidden">
+                                <option value="">Keep current values</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="dropdown-options hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div class="sticky top-0 bg-white border-b border-gray-200 p-2">
+                                    <input type="text" class="dropdown-search w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Search categories...">
                                 </div>
-                            <?php endforeach; ?>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer text-blue-600 font-medium" data-value="__add_new__">
+                                    <i class="fa-solid fa-plus mr-2"></i>Add New Category
+                                </div>
+                                <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="">
+                                    <em class="text-gray-400">Keep current values</em>
+                                </div>
+                                <?php foreach ($categories as $cat): ?>
+                                    <div class="dropdown-option px-4 py-2 cursor-pointer hover:bg-gray-50" data-value="<?php echo htmlspecialchars($cat['name']); ?>">
+                                        <?php echo htmlspecialchars($cat['name']); ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Asset Type -->
+                    <div>
+                        <label for="bulkEditAssetType" class="block text-sm font-medium text-gray-700 mb-2">
+                            Asset Type
+                        </label>
+                        <select id="bulkEditAssetType" name="asset_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Keep current values</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Software">Software</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Equipment">Equipment</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="bulkEditStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                            Status
+                        </label>
+                        <select id="bulkEditStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Keep current values</option>
+                            <option value="Available">Available</option>
+                            <option value="In Use">In Use</option>
+                            <option value="Under Maintenance">Under Maintenance</option>
+                            <option value="Retired">Retired</option>
+                            <option value="Disposed">Disposed</option>
+                            <option value="Lost">Lost</option>
+                            <option value="Broken">Broken</option>
+                            <option value="Archive">Archive</option>
+                        </select>
+                    </div>
+
+                    <!-- Condition -->
+                    <div>
+                        <label for="bulkEditCondition" class="block text-sm font-medium text-gray-700 mb-2">
+                            Condition
+                        </label>
+                        <select id="bulkEditCondition" name="condition" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Keep current values</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                        </select>
+                    </div>
+
+                    <!-- Borrowable -->
+                    <div>
+                        <label for="bulkEditIsBorrowable" class="block text-sm font-medium text-gray-700 mb-2">
+                            Borrowable Status
+                        </label>
+                        <select id="bulkEditIsBorrowable" name="is_borrowable" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Keep current values</option>
+                            <option value="1">Borrowable</option>
+                            <option value="0">Not Borrowable</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Building Filter (Helper) - Not an update field -->
+                <div class="col-span-2 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-2 mb-3">
+                        <i class="fa-solid fa-filter text-gray-500 mt-1"></i>
+                        <div>
+                            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Room Selection Helper</p>
+                            <p class="text-xs text-gray-500 mt-1">Use building filter to narrow down room options. Only the room field will be updated.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="bulkEditBuildingId" class="block text-xs font-medium text-gray-600 mb-1">
+                                <i class="fa-solid fa-building text-gray-400 mr-1"></i>Filter by Building
+                            </label>
+                            <select id="bulkEditBuildingId" onchange="updateBulkEditRoomFilter()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white">
+                                <option value="">All Buildings</option>
+                                <?php foreach ($buildings as $building): ?>
+                                    <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="bulkEditRoomId" class="block text-xs font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-door-open text-blue-500 mr-1"></i>Update Room To <span class="text-red-500">*</span>
+                            </label>
+                            <select id="bulkEditRoomId" name="room_id" class="w-full px-3 py-2 text-sm border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                <option value="">Keep current values</option>
+                                <option value="0">No Room</option>
+                                <?php foreach ($rooms as $room): ?>
+                                    <option value="<?php echo $room['id']; ?>" data-building-id="<?php echo $room['building_id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
                 </div>
-
-                <!-- Asset Type -->
-                <div>
-                    <label for="bulkEditAssetType" class="block text-sm font-medium text-gray-700 mb-2">
-                        Asset Type
-                    </label>
-                    <select id="bulkEditAssetType" name="asset_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Keep current values</option>
-                        <option value="Hardware">Hardware</option>
-                        <option value="Software">Software</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="Equipment">Equipment</option>
-                    </select>
-                </div>
-
-                <!-- Building -->
-                <div>
-                    <label for="bulkEditBuildingId" class="block text-sm font-medium text-gray-700 mb-2">
-                        Building (Filter)
-                    </label>
-                    <select id="bulkEditBuildingId" onchange="updateBulkEditRoomFilter()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">All Buildings</option>
-                        <?php foreach ($buildings as $building): ?>
-                            <option value="<?php echo $building['id']; ?>"><?php echo htmlspecialchars($building['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- Room -->
-                <div>
-                    <label for="bulkEditRoomId" class="block text-sm font-medium text-gray-700 mb-2">
-                        Room
-                    </label>
-                    <select id="bulkEditRoomId" name="room_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Keep current values</option>
-                        <option value="0">No Room</option>
-                        <?php foreach ($rooms as $room): ?>
-                            <option value="<?php echo $room['id']; ?>" data-building-id="<?php echo $room['building_id']; ?>"><?php echo htmlspecialchars($room['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- Status -->
-                <div>
-                    <label for="bulkEditStatus" class="block text-sm font-medium text-gray-700 mb-2">
-                        Status
-                    </label>
-                    <select id="bulkEditStatus" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Keep current values</option>
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
-                        <option value="Under Maintenance">Under Maintenance</option>
-                        <option value="Retired">Retired</option>
-                        <option value="Disposed">Disposed</option>
-                        <option value="Lost">Lost</option>
-                        <option value="Broken">Broken</option>
-                        <option value="Archive">Archive</option>
-                    </select>
-                </div>
-
-                <!-- Condition -->
-                <div>
-                    <label for="bulkEditCondition" class="block text-sm font-medium text-gray-700 mb-2">
-                        Condition
-                    </label>
-                    <select id="bulkEditCondition" name="condition" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Keep current values</option>
-                        <option value="Excellent">Excellent</option>
-                        <option value="Good">Good</option>
-                        <option value="Fair">Fair</option>
-                        <option value="Poor">Poor</option>
-                    </select>
-                </div>
-
-                <!-- Borrowable -->
-                <div>
-                    <label for="bulkEditIsBorrowable" class="block text-sm font-medium text-gray-700 mb-2">
-                        Borrowable Status
-                    </label>
-                    <select id="bulkEditIsBorrowable" name="is_borrowable" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Keep current values</option>
-                        <option value="1">Borrowable</option>
-                        <option value="0">Not Borrowable</option>
-                    </select>
-                </div>
-            </div>
 
             <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" onclick="closeBulkEditModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
@@ -3314,7 +3382,26 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
             body: formData
         });
         
-        const result = await response.json();
+        // Check if response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Get response text first to check if it's valid
+        const responseText = await response.text();
+        
+        if (!responseText) {
+            throw new Error('Empty response from server');
+        }
+        
+        // Try to parse JSON
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Invalid JSON response:', responseText);
+            throw new Error('Server returned invalid JSON. Check console for details.');
+        }
         
         if (result.success) {
             showAlert('success', result.message);
@@ -3327,13 +3414,13 @@ document.getElementById('addAssetForm').addEventListener('submit', async functio
                 setTimeout(() => window.location.reload(), 1500);
             }
         } else {
-            showAlert('error', result.message);
+            showAlert('error', result.message || 'Unknown error occurred');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fa-solid fa-plus mr-2"></i><span id="createAssetBtnText">Create Asset</span>';
         }
     } catch (error) {
         console.error('Error:', error);
-        showAlert('error', 'An error occurred while creating the asset');
+        showAlert('error', error.message || 'An error occurred while creating the asset');
         const submitBtn = document.getElementById('createAssetBtn');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-plus mr-2"></i><span id="createAssetBtnText">Create Asset</span>';
@@ -4385,11 +4472,16 @@ async function updateSearchableDropdownOptions(selectId) {
         
         if (result.success && result.categories) {
             const select = document.getElementById(selectId);
-            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+            if (!select) return;
+            
+            const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+            if (!dropdown) return;
+            
             const dropdownList = dropdown.querySelector('.dropdown-list');
+            if (!dropdownList) return;
             
             // Clear existing options except "Add New Category"
-            const addNewOption = dropdownList.querySelector('[data-value="__add_new__]');
+            const addNewOption = dropdownList.querySelector('[data-value="__add_new__"]');
             dropdownList.innerHTML = '';
             dropdownList.appendChild(addNewOption);
             
@@ -4427,12 +4519,16 @@ async function updateSearchableDropdownOptions(selectId) {
                     
                     // Update display text
                     const selectedText = dropdown.querySelector('.selected-text');
-                    selectedText.textContent = text;
-                    selectedText.className = 'selected-text text-gray-900';
+                    if (selectedText) {
+                        selectedText.textContent = text;
+                        selectedText.className = 'selected-text text-gray-900';
+                    }
                     
                     // Close dropdown
                     const options = dropdown.querySelector('.dropdown-options');
-                    options.classList.add('hidden');
+                    if (options) {
+                        options.classList.add('hidden');
+                    }
                     
                     // Trigger change event for compatibility
                     select.dispatchEvent(new Event('change'));
@@ -4497,8 +4593,22 @@ async function addNewCategory() {
     // Add the category locally first for instant feedback
     if (window.currentCategorySource) {
         const select = document.getElementById(window.currentCategorySource);
-        const dropdown = select.parentElement.querySelector('.searchable-dropdown');
+        if (!select) {
+            console.error('Select element not found:', window.currentCategorySource);
+            return;
+        }
+        
+        const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+        if (!dropdown) {
+            console.error('Searchable dropdown not found for:', window.currentCategorySource);
+            return;
+        }
+        
         const dropdownList = dropdown.querySelector('.dropdown-list');
+        if (!dropdownList) {
+            console.error('Dropdown list not found');
+            return;
+        }
         
         // Check if already exists
         const existing = dropdownList.querySelector(`[data-value="${categoryName}"]`);
@@ -4513,10 +4623,14 @@ async function addNewCategory() {
             option.addEventListener('click', function() {
                 select.value = categoryName;
                 const selectedText = dropdown.querySelector('.selected-text');
-                selectedText.textContent = categoryName;
-                selectedText.className = 'selected-text text-gray-900';
+                if (selectedText) {
+                    selectedText.textContent = categoryName;
+                    selectedText.className = 'selected-text text-gray-900';
+                }
                 const options = dropdown.querySelector('.dropdown-options');
-                options.classList.add('hidden');
+                if (options) {
+                    options.classList.add('hidden');
+                }
                 select.dispatchEvent(new Event('change'));
                 
                 // Trigger asset tag generation if this is the asset name field in single mode
@@ -4525,18 +4639,18 @@ async function addNewCategory() {
                 }
                 
                 const searchInput = dropdown.querySelector('.dropdown-search');
-                searchInput.value = '';
+                if (searchInput) searchInput.value = '';
             });
             
             // Insert before "Add New Category"
-            const addNew = dropdownList.querySelector('[data-value="__add_new__]');
+            const addNew = dropdownList.querySelector('[data-value="__add_new__"]');
             dropdownList.insertBefore(option, addNew);
             
             // Add to select options
             const selectOption = document.createElement('option');
             selectOption.value = categoryName;
             selectOption.textContent = categoryName;
-            const addNewSelect = select.querySelector('[value="__add_new__]');
+            const addNewSelect = select.querySelector('[value="__add_new__"]');
             select.insertBefore(selectOption, addNewSelect);
             
             // Set as selected
@@ -4570,20 +4684,25 @@ async function addNewCategory() {
             // Revert local changes if server failed
             if (window.currentCategorySource) {
                 const select = document.getElementById(window.currentCategorySource);
-                const dropdown = select.parentElement.querySelector('.searchable-dropdown');
-                const dropdownList = dropdown.querySelector('.dropdown-list');
-                
-                // Remove from dropdown
-                const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
-                if (option) option.remove();
-                
-                // Remove from select
-                const selectOption = select.querySelector(`option[value="${categoryName}"]`);
-                if (selectOption) selectOption.remove();
-                
-                // Reset display if it was selected
-                if (select.value === categoryName) {
-                    updateSearchableDropdownDisplay(window.currentCategorySource, '');
+                if (select) {
+                    const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+                    if (dropdown) {
+                        const dropdownList = dropdown.querySelector('.dropdown-list');
+                        if (dropdownList) {
+                            // Remove from dropdown
+                            const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+                            if (option) option.remove();
+                        }
+                    }
+                    
+                    // Remove from select
+                    const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+                    if (selectOption) selectOption.remove();
+                    
+                    // Reset display if it was selected
+                    if (select.value === categoryName) {
+                        updateSearchableDropdownDisplay(window.currentCategorySource, '');
+                    }
                 }
             }
         }
@@ -4594,20 +4713,25 @@ async function addNewCategory() {
         // Revert local changes on error
         if (window.currentCategorySource) {
             const select = document.getElementById(window.currentCategorySource);
-            const dropdown = select.parentElement.querySelector('.searchable-dropdown');
-            const dropdownList = dropdown.querySelector('.dropdown-list');
-            
-            // Remove from dropdown
-            const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
-            if (option) option.remove();
-            
-            // Remove from select
-            const selectOption = select.querySelector(`option[value="${categoryName}"]`);
-            if (selectOption) selectOption.remove();
-            
-            // Reset display if it was selected
-            if (select.value === categoryName) {
-                updateSearchableDropdownDisplay(window.currentCategorySource, '');
+            if (select) {
+                const dropdown = select.parentElement?.querySelector('.searchable-dropdown');
+                if (dropdown) {
+                    const dropdownList = dropdown.querySelector('.dropdown-list');
+                    if (dropdownList) {
+                        // Remove from dropdown
+                        const option = dropdownList.querySelector(`[data-value="${categoryName}"]`);
+                        if (option) option.remove();
+                    }
+                }
+                
+                // Remove from select
+                const selectOption = select.querySelector(`option[value="${categoryName}"]`);
+                if (selectOption) selectOption.remove();
+                
+                // Reset display if it was selected
+                if (select.value === categoryName) {
+                    updateSearchableDropdownDisplay(window.currentCategorySource, '');
+                }
             }
         }
     }
@@ -4910,6 +5034,26 @@ function openBulkEditModal() {
 function closeBulkEditModal() {
     document.getElementById('bulkEditModal').classList.add('hidden');
     document.getElementById('bulkEditForm').reset();
+    
+    // Reset the asset name searchable dropdown display
+    const bulkEditAssetName = document.getElementById('bulkEditAssetName');
+    if (bulkEditAssetName) {
+        const dropdown = bulkEditAssetName.parentElement ? bulkEditAssetName.parentElement.querySelector('.searchable-dropdown') : null;
+        if (dropdown) {
+            const selectedText = dropdown.querySelector('.selected-text');
+            if (selectedText) {
+                selectedText.textContent = 'Keep current values';
+                selectedText.className = 'selected-text text-gray-400';
+            }
+        }
+    }
+    
+    // Reset field counter
+    const counterElement = document.getElementById('fieldsToUpdateCount');
+    if (counterElement) {
+        counterElement.textContent = '0';
+        counterElement.className = 'text-blue-600';
+    }
 }
 
 // Initialize bulk edit dropdowns
@@ -4934,6 +5078,60 @@ function initializeBulkEditDropdowns() {
         bulkEditBuildingId.value = '';
     }
     updateBulkEditRoomFilter();
+    
+    // Reset field counter
+    updateBulkEditFieldCounter();
+    
+    // Add change listeners to all bulk edit fields
+    const bulkEditFields = [
+        'bulkEditAssetName', 
+        'bulkEditAssetType', 
+        'bulkEditRoomId', 
+        'bulkEditStatus', 
+        'bulkEditCondition', 
+        'bulkEditIsBorrowable'
+    ];
+    
+    bulkEditFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updateBulkEditFieldCounter);
+        }
+    });
+}
+
+// Update the counter showing how many fields will be updated
+function updateBulkEditFieldCounter() {
+    let count = 0;
+    
+    const assetName = document.getElementById('bulkEditAssetName')?.value;
+    if (assetName) count++;
+    
+    const assetType = document.getElementById('bulkEditAssetType')?.value;
+    if (assetType) count++;
+    
+    const roomId = document.getElementById('bulkEditRoomId')?.value;
+    if (roomId !== '') count++;
+    
+    const status = document.getElementById('bulkEditStatus')?.value;
+    if (status) count++;
+    
+    const condition = document.getElementById('bulkEditCondition')?.value;
+    if (condition) count++;
+    
+    const isBorrowable = document.getElementById('bulkEditIsBorrowable')?.value;
+    if (isBorrowable !== '') count++;
+    
+    const counterElement = document.getElementById('fieldsToUpdateCount');
+    if (counterElement) {
+        counterElement.textContent = count;
+        // Change color based on count
+        if (count > 0) {
+            counterElement.className = 'text-green-600 font-bold';
+        } else {
+            counterElement.className = 'text-blue-600';
+        }
+    }
 }
 
 // Update room filter in bulk edit modal based on selected building
@@ -4994,31 +5192,58 @@ document.getElementById('bulkEditForm')?.addEventListener('submit', async functi
     formData.append('asset_ids', JSON.stringify(assetIds));
     
     // Only append fields that have values (not empty)
+    let fieldsToUpdate = 0;
+    
     const assetName = document.getElementById('bulkEditAssetName').value;
     console.log('Asset Name:', assetName);
-    if (assetName) formData.append('asset_name', assetName);
+    if (assetName) {
+        formData.append('asset_name', assetName);
+        fieldsToUpdate++;
+    }
     
     const assetType = document.getElementById('bulkEditAssetType').value;
     console.log('Asset Type:', assetType);
-    if (assetType) formData.append('asset_type', assetType);
+    if (assetType) {
+        formData.append('asset_type', assetType);
+        fieldsToUpdate++;
+    }
     
     const roomId = document.getElementById('bulkEditRoomId').value;
     console.log('Room ID:', roomId);
-    if (roomId !== '') formData.append('room_id', roomId);
+    if (roomId !== '') {
+        formData.append('room_id', roomId);
+        fieldsToUpdate++;
+    }
     
     const status = document.getElementById('bulkEditStatus').value;
     console.log('Status:', status);
-    if (status) formData.append('status', status);
+    if (status) {
+        formData.append('status', status);
+        fieldsToUpdate++;
+    }
     
     const condition = document.getElementById('bulkEditCondition').value;
     console.log('Condition:', condition);
-    if (condition) formData.append('condition', condition);
+    if (condition) {
+        formData.append('condition', condition);
+        fieldsToUpdate++;
+    }
     
     const isBorrowable = document.getElementById('bulkEditIsBorrowable').value;
     console.log('Is Borrowable:', isBorrowable);
-    if (isBorrowable !== '') formData.append('is_borrowable', isBorrowable);
+    if (isBorrowable !== '') {
+        formData.append('is_borrowable', isBorrowable);
+        fieldsToUpdate++;
+    }
     
     console.log('FormData to send:', Object.fromEntries(formData));
+    console.log('Fields to update:', fieldsToUpdate);
+    
+    // Validate that at least one field is selected
+    if (fieldsToUpdate === 0) {
+        showAlert('error', 'Please select at least one field to update. Change any field from "Keep current values" to apply updates.');
+        return;
+    }
     
     try {
         const submitBtn = document.getElementById('bulkEditBtn');

@@ -79,7 +79,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1' && isset($_POST['action']) &
             }
             
             // Update asset status
-            $disposal_note = "Asset marked for disposal by " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
+            $disposal_note = "Asset marked for disposal by " . ($_SESSION['full_name'] ?? 'System');
             if (!empty($notes)) {
                 $disposal_note .= "\nDisposal Notes: " . $notes;
             }
@@ -180,7 +180,7 @@ try {
                          notes = CONCAT(COALESCE(notes, ''), '\n\n[DISPOSAL - ', NOW(), ']\n', ?)
                      WHERE id = ?";
     
-    $disposal_note = "Asset marked for disposal by " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
+    $disposal_note = "Asset marked for disposal by " . ($_SESSION['full_name'] ?? 'System');
     if (!empty($notes)) {
         $disposal_note .= "\nDisposal Notes: " . $notes;
     }

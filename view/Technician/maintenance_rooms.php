@@ -30,13 +30,14 @@ if ($building_id <= 0) {
     exit();
 }
 
-// Get building details
-$building_query = $conn->prepare("SELECT * FROM buildings WHERE id = ?");
-$building_query->bind_param('i', $building_id);
-$building_query->execute();
-$building_result = $building_query->get_result();
+// Verify technician is assigned to this building
+$technician_id = $_SESSION['user_id'];
+$verify_assignment = $conn->prepare("SELECT b.* FROM buildings b INNER JOIN building_technicians bt ON b.id = bt.building_id WHERE b.id = ? AND bt.technician_id = ?");
+$verify_assignment->bind_param('ii', $building_id, $technician_id);
+$verify_assignment->execute();
+$building_result = $verify_assignment->get_result();
 $building = $building_result->fetch_assoc();
-$building_query->close();
+$verify_assignment->close();
 
 if (!$building) {
     header("Location: maintenance.php");
@@ -57,9 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
         
-        // Verify this schedule is assigned to the current user
-        $verify_stmt = $conn->prepare("SELECT id FROM maintenance_schedules WHERE id = ? AND assigned_technician_id = ?");
+        // Verify this schedule belongs to a building assigned to the current user
         $technician_id = $_SESSION['user_id'];
+        $verify_stmt = $conn->prepare("SELECT ms.id FROM maintenance_schedules ms INNER JOIN building_technicians bt ON ms.building_id = bt.building_id WHERE ms.id = ? AND bt.technician_id = ?");
         $verify_stmt->bind_param('ii', $schedule_id, $technician_id);
         $verify_stmt->execute();
         $verify_result = $verify_stmt->get_result();
@@ -88,8 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch my assigned maintenance tasks for this building
-$technician_id = $_SESSION['user_id'];
+// Fetch all maintenance tasks for this building (technician is assigned to the building)
 $schedules = [];
 $query = "SELECT 
     ms.*,
@@ -99,7 +99,7 @@ $query = "SELECT
 FROM maintenance_schedules ms
 INNER JOIN rooms r ON ms.room_id = r.id
 LEFT JOIN assets a ON r.id = a.room_id
-WHERE ms.building_id = ? AND ms.assigned_technician_id = ?
+WHERE ms.building_id = ?
 GROUP BY ms.id, r.name, r.id
 ORDER BY 
     CASE 
@@ -111,7 +111,10 @@ ORDER BY
     ms.maintenance_date ASC";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param('ii', $building_id, $technician_id);
+if (!$stmt) {
+    die("Query preparation failed: " . $conn->error);
+}
+$stmt->bind_param('i', $building_id);
 $stmt->execute();
 $result = $stmt->get_result();
 if ($result && $result->num_rows > 0) {
