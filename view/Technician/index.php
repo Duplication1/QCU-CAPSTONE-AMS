@@ -95,35 +95,40 @@ $lowPriorityIssues = $lowPriorityResult ? ($lowPriorityResult->fetch_assoc()['co
 // ============================================
 // MAINTENANCE METRICS
 // ============================================
-// Assets under maintenance
+// Assets under maintenance in technician's assigned buildings
 $maintenanceAssetsResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM assets 
-    WHERE status = 'Under Maintenance'
+    SELECT COUNT(DISTINCT a.id) as count 
+    FROM assets a
+    INNER JOIN rooms r ON a.room_id = r.id
+    INNER JOIN building_technicians bt ON r.building_id = bt.building_id
+    WHERE a.status = 'Under Maintenance' AND bt.technician_id = " . intval($technician_id) . "
 ");
 $maintenanceAssets = $maintenanceAssetsResult ? ($maintenanceAssetsResult->fetch_assoc()['count'] ?? 0) : 0;
 
-// Scheduled maintenance
+// Scheduled maintenance for technician's assigned buildings
 $scheduledMaintenanceResult = $conn->query("
     SELECT COUNT(*) as count 
-    FROM maintenance_schedules 
-    WHERE status = 'Scheduled' AND maintenance_date >= CURDATE()
+    FROM maintenance_schedules ms
+    INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
+    WHERE ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() AND bt.technician_id = " . intval($technician_id) . "
 ");
 $scheduledMaintenance = $scheduledMaintenanceResult ? ($scheduledMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
-// Overdue maintenance
+// Overdue maintenance for technician's assigned buildings
 $overdueMaintenanceResult = $conn->query("
     SELECT COUNT(*) as count 
-    FROM maintenance_schedules 
-    WHERE status = 'Scheduled' AND maintenance_date < CURDATE()
+    FROM maintenance_schedules ms
+    INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
+    WHERE ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() AND bt.technician_id = " . intval($technician_id) . "
 ");
 $overdueMaintenance = $overdueMaintenanceResult ? ($overdueMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
-// Completed maintenance this month
+// Completed maintenance this month for technician's assigned buildings
 $completedMaintenanceResult = $conn->query("
     SELECT COUNT(*) as count 
-    FROM maintenance_schedules 
-    WHERE status = 'Completed' AND MONTH(updated_at) = MONTH(CURDATE()) AND YEAR(updated_at) = YEAR(CURDATE())
+    FROM maintenance_schedules ms
+    INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
+    WHERE ms.status = 'Completed' AND MONTH(ms.updated_at) = MONTH(CURDATE()) AND YEAR(ms.updated_at) = YEAR(CURDATE()) AND bt.technician_id = " . intval($technician_id) . "
 ");
 $completedMaintenance = $completedMaintenanceResult ? ($completedMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
@@ -282,9 +287,10 @@ $upcomingMaintenanceQuery = "
         r.name as room_name,
         b.name as building_name
     FROM maintenance_schedules ms
+    INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
     LEFT JOIN rooms r ON ms.room_id = r.id
     LEFT JOIN buildings b ON ms.building_id = b.id
-    WHERE ms.assigned_technician_id = " . intval($technician_id) . "
+    WHERE bt.technician_id = " . intval($technician_id) . "
     AND ms.status = 'Scheduled' 
     AND ms.maintenance_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
     ORDER BY ms.maintenance_date ASC
@@ -295,12 +301,12 @@ $upcomingMaintenanceResult = $conn->query($upcomingMaintenanceQuery);
 echo "<!-- DEBUG Upcoming Maintenance Result: " . ($upcomingMaintenanceResult ? "Success, Rows: " . $upcomingMaintenanceResult->num_rows : "Failed: " . $conn->error) . " -->";
 
 // Debug: Check all maintenance schedules for this technician
-$debugAllMaintenance = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules WHERE assigned_technician_id = " . intval($technician_id));
+$debugAllMaintenance = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules ms INNER JOIN building_technicians bt ON ms.building_id = bt.building_id WHERE bt.technician_id = " . intval($technician_id));
 $debugTotal = $debugAllMaintenance ? $debugAllMaintenance->fetch_assoc()['total'] : 0;
 echo "<!-- DEBUG Total maintenance schedules for technician $technician_id: $debugTotal -->";
 
 // Debug: Check scheduled maintenance
-$debugScheduled = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules WHERE assigned_technician_id = " . intval($technician_id) . " AND status = 'Scheduled'");
+$debugScheduled = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules ms INNER JOIN building_technicians bt ON ms.building_id = bt.building_id WHERE bt.technician_id = " . intval($technician_id) . " AND ms.status = 'Scheduled'");
 $debugScheduledTotal = $debugScheduled ? $debugScheduled->fetch_assoc()['total'] : 0;
 echo "<!-- DEBUG Scheduled maintenance for technician $technician_id: $debugScheduledTotal -->";
 

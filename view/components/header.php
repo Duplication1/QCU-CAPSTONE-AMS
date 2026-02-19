@@ -190,9 +190,12 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
         const isUnread = notif.is_read == 0 ? '1' : '0';
         
         return `
-          <li class="px-4 py-3 border-b ${unreadClass}" 
+          <li class="px-4 py-3 border-b ${unreadClass} hover:bg-gray-100 cursor-pointer transition-colors duration-200" 
               data-notification-id="${notif.id}"
-              data-is-unread="${isUnread}">
+              data-is-unread="${isUnread}"
+              data-related-type="${notif.related_type || ''}"
+              data-related-id="${notif.related_id || ''}"
+              onclick="handleNotificationClick(${notif.id}, '${notif.related_type || ''}', ${notif.related_id || 'null'}, this)">
             <div class="flex gap-2">
               <i class="fa-solid ${icon} mt-1"></i>
               <div class="flex-1">
@@ -244,6 +247,40 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       dropdown.classList.add('hidden');
     }
     
+    // Determine navigation target based on role and notification type
+    let targetUrl = null;
+    
+    if (relatedType === 'issue' && relatedId) {
+      // For issue/ticket notifications
+      if (currentPath.includes('/view/StudentFaculty/')) {
+        targetUrl = 'ticket_issues.php';
+      } else if (currentPath.includes('/view/Technician/')) {
+        targetUrl = 'tickets.php';
+      } else if (currentPath.includes('/view/LaboratoryStaff/')) {
+        targetUrl = 'tickets.php';
+      } else if (currentPath.includes('/view/Administrator/')) {
+        targetUrl = 'index.php'; // Admin dashboard
+      }
+    } else if (relatedType === 'borrowing' && relatedId) {
+      // For borrowing request notifications
+      if (currentPath.includes('/view/StudentFaculty/')) {
+        targetUrl = 'requests.php';
+      } else if (currentPath.includes('/view/LaboratoryStaff/')) {
+        targetUrl = 'borrowing.php';
+      } else if (currentPath.includes('/view/Administrator/')) {
+        targetUrl = 'index.php'; // Admin dashboard
+      }
+    } else if (relatedType === 'asset' && relatedId) {
+      // For asset-related notifications
+      if (currentPath.includes('/view/LaboratoryStaff/')) {
+        targetUrl = 'allassets.php';
+      } else if (currentPath.includes('/view/Technician/')) {
+        targetUrl = 'allassets.php';
+      } else if (currentPath.includes('/view/Administrator/')) {
+        targetUrl = 'index.php';
+      }
+    }
+    
     // Mark as read on server, then navigate
     fetch(controllerPath, {
       method: 'POST',
@@ -253,22 +290,18 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     .then(data => {
       console.log('Notification marked as read:', notifId, data);
       
-      // After server confirms, navigate or reload
-      if (relatedType === 'issue' && relatedId) {
-        window.location.href = 'ticket_issues.php';
-      } else if (relatedType === 'borrowing' && relatedId) {
-        window.location.href = 'requests.php';
+      // Navigate to target URL if determined
+      if (targetUrl) {
+        window.location.href = targetUrl;
       } else {
-        // Only reload if not navigating away
+        // Only reload notifications if not navigating away
         loadNotifications();
       }
     }).catch(err => {
       console.error('Failed to mark notification as read:', err);
       // Still navigate even if marking failed
-      if (relatedType === 'issue' && relatedId) {
-        window.location.href = 'ticket_issues.php';
-      } else if (relatedType === 'borrowing' && relatedId) {
-        window.location.href = 'requests.php';
+      if (targetUrl) {
+        window.location.href = targetUrl;
       }
     });
   }

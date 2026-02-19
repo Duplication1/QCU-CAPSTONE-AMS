@@ -11,6 +11,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_number = trim($_POST['id_number']);
     $password = trim($_POST['password']);
     
+    // Create user model instances first to ensure DB connection
+    $userModel = new User();
+    
+    // Auto-migrate: Add security columns if they don't exist
+    try {
+        $dbConfig = Config::database();
+        $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
+        $conn->set_charset('utf8mb4');
+        
+        // Check if columns exist
+        $result = $conn->query("SHOW COLUMNS FROM users LIKE 'failed_login_attempts'");
+        if ($result->num_rows === 0) {
+            // Add the security columns
+            $conn->query("ALTER TABLE `users` ADD COLUMN `failed_login_attempts` INT DEFAULT 0 AFTER `last_login`");
+            $conn->query("ALTER TABLE `users` ADD COLUMN `account_locked_until` DATETIME DEFAULT NULL AFTER `failed_login_attempts`");
+            $conn->query("ALTER TABLE `users` ADD INDEX `idx_account_locked` (`account_locked_until`)");
+        }
+        $conn->close();
+    } catch (Exception $e) {
+        error_log('Failed to add security columns: ' . $e->getMessage());
+    }
+    
     // Validate inputs
     if (empty($id_number) || empty($password)) {
         $_SESSION['error_message'] = "Please enter both ID number and password.";
@@ -21,10 +43,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Create user model instances
     $userModel = new User();
     
+    // Check if account is locked
+    $lockedUntil = $userModel->isAccountLocked($id_number);
+    if ($lockedUntil) {
+        $remainingTime = ceil((strtotime($lockedUntil) - time()) / 60);
+        $_SESSION['error_message'] = "Account is locked due to multiple failed login attempts. Please try again in {$remainingTime} minute(s).";
+        header("Location: ../view/login.php");
+        exit();
+    }
+    
     // Authenticate user
     $user = $userModel->authenticate($id_number, $password);
     
     if ($user) {
+        // Reset failed login attempts on successful login
+        $userModel->resetFailedAttempts($id_number);
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['id_number'] = $user['id_number'];
@@ -129,7 +162,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: ../view/login.php");
         exit();
     } else {
-        $_SESSION['error_message'] = "Invalid ID number or password.";
+        // Increment failed login attempts and get the new count
+        $attemptCount = $userModel->incrementFailedAttempts($id_number);
+        
+        // Check if account is now locked
+        $lockedUntil = $userModel->isAccountLocked($id_number);
+        if ($lockedUntil) {
+            $_SESSION['error_message'] = "Too many failed login attempts. Your account has been locked for 30 minutes.";
+        } else if ($attemptCount > 0) {
+            // User exists but wrong password
+            $remainingAttempts = 3 - $attemptCount;
+            if ($remainingAttempts > 0) {
+                $_SESSION['error_message'] = "Invalid ID number or password. You have {$remainingAttempts} attempt(s) remaining before your account is locked.";
+            } else {
+                $_SESSION['error_message'] = "Invalid ID number or password.";
+            }
+        } else {
+            // Invalid ID or user doesn't exist
+            $_SESSION['error_message'] = "Invalid ID number or password.";
+        }
         header("Location: ../view/login.php");
         exit();
     }

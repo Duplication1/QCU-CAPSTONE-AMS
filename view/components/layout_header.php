@@ -108,6 +108,58 @@ $page_title = "AMS - " . $current_role . " " . (in_array($current_role, ['Studen
         /* Toggle button style when active */
         #dark-mode-toggle.active { background-color: rgba(255,255,255,0.06); color: #fff; }
 
+        /* Notification dropdown dark mode styles */
+        body.dark-mode #notification-dropdown {
+            background-color: #071127 !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        }
+        
+        body.dark-mode #notification-dropdown .p-3 {
+            border-bottom-color: rgba(255,255,255,0.08) !important;
+        }
+        
+        body.dark-mode #notifications-list li {
+            border-bottom-color: rgba(255,255,255,0.04) !important;
+        }
+        
+        body.dark-mode #notifications-list li:hover {
+            background-color: rgba(255,255,255,0.06) !important;
+        }
+        
+        body.dark-mode #notifications-list li.bg-blue-50 {
+            background-color: rgba(30,58,138,0.15) !important;
+        }
+        
+        body.dark-mode #notifications-list li .text-gray-800,
+        body.dark-mode #notifications-list li .text-gray-600,
+        body.dark-mode #notifications-list li .text-gray-500 {
+            color: #e6eef8 !important;
+        }
+        
+        body.dark-mode #notifications-list li .text-gray-400 {
+            color: #9ca3af !important;
+        }
+
+        /* Profile dropdown dark mode styles */
+        body.dark-mode #profile-dropdown {
+            background-color: #071127 !important;
+            border-color: rgba(255,255,255,0.08) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        }
+        
+        body.dark-mode #profile-dropdown li:hover {
+            background-color: rgba(255,255,255,0.06) !important;
+        }
+        
+        body.dark-mode #profile-dropdown a {
+            color: #e6eef8 !important;
+        }
+        
+        body.dark-mode #profile-dropdown a:hover {
+            color: #fff !important;
+        }
+
         /* Component-specific tweaks for better contrast */
         /* Header / Top bar */
         body.dark-mode header { background: linear-gradient(90deg,#062033,#0a1930) !important; border-color: rgba(255,255,255,0.06) !important; }

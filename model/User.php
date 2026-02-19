@@ -163,5 +163,92 @@ class User {
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
+
+    /**
+     * Check if account is locked
+     */
+    public function isAccountLocked($id_number) {
+        $query = "SELECT account_locked_until FROM " . $this->table_name . " WHERE id_number = :id_number LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_number', $id_number);
+        $stmt->execute();
+        
+        if ($stmt->rowCount() > 0) {
+            $row = $stmt->fetch();
+            if ($row['account_locked_until'] && strtotime($row['account_locked_until']) > time()) {
+                return $row['account_locked_until'];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get current failed login attempts
+     */
+    public function getFailedAttempts($id_number) {
+        $query = "SELECT failed_login_attempts FROM " . $this->table_name . " WHERE id_number = :id_number LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_number', $id_number);
+        $stmt->execute();
+        
+        if ($stmt->rowCount() > 0) {
+            $row = $stmt->fetch();
+            return (int)$row['failed_login_attempts'];
+        }
+        return 0;
+    }
+
+    /**
+     * Increment failed login attempts
+     * Returns the new attempt count
+     */
+    public function incrementFailedAttempts($id_number) {
+        // First, get current attempts
+        $query = "SELECT failed_login_attempts FROM " . $this->table_name . " WHERE id_number = :id_number LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_number', $id_number);
+        $stmt->execute();
+        
+        $attempts = 0;
+        if ($stmt->rowCount() > 0) {
+            $row = $stmt->fetch();
+            $attempts = (int)$row['failed_login_attempts'] + 1;
+        } else {
+            // User doesn't exist - don't track attempts for invalid IDs
+            return 0;
+        }
+        
+        // If 3 or more attempts, lock the account for 30 minutes
+        if ($attempts >= 3) {
+            $query = "UPDATE " . $this->table_name . " 
+                      SET failed_login_attempts = :attempts, 
+                          account_locked_until = DATE_ADD(NOW(), INTERVAL 30 MINUTE)
+                      WHERE id_number = :id_number";
+        } else {
+            $query = "UPDATE " . $this->table_name . " 
+                      SET failed_login_attempts = :attempts
+                      WHERE id_number = :id_number";
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':attempts', $attempts);
+        $stmt->bindParam(':id_number', $id_number);
+        $stmt->execute();
+        
+        return $attempts;
+    }
+
+    /**
+     * Reset failed login attempts on successful login
+     */
+    public function resetFailedAttempts($id_number) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET failed_login_attempts = 0, 
+                      account_locked_until = NULL
+                  WHERE id_number = :id_number";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_number', $id_number);
+        return $stmt->execute();
+    }
 }
 ?>
