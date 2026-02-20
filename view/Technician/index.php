@@ -46,11 +46,11 @@ $totalIssuesResult = $conn->query("
 ");
 $totalAssignedIssues = $totalIssuesResult ? ($totalIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
-// Pending issues
+// Open (unstarted) issues — DB uses 'Open', not 'Pending'
 $pendingIssuesResult = $conn->query("
     SELECT COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'Pending'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'Open'
 ");
 $pendingIssues = $pendingIssuesResult ? ($pendingIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
@@ -66,29 +66,29 @@ $inProgressIssues = $inProgressIssuesResult ? ($inProgressIssuesResult->fetch_as
 $resolvedIssuesResult = $conn->query("
     SELECT COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'Resolved'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status IN ('Resolved', 'Closed')
 ");
 $resolvedIssues = $resolvedIssuesResult ? ($resolvedIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
-// Issues by priority
+// Issues by priority (active only — exclude Resolved & Closed)
 $highPriorityResult = $conn->query("
     SELECT COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'High' AND status != 'Resolved'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'High' AND status NOT IN ('Resolved', 'Closed')
 ");
 $highPriorityIssues = $highPriorityResult ? ($highPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
 
 $mediumPriorityResult = $conn->query("
     SELECT COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Medium' AND status != 'Resolved'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Medium' AND status NOT IN ('Resolved', 'Closed')
 ");
 $mediumPriorityIssues = $mediumPriorityResult ? ($mediumPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
 
 $lowPriorityResult = $conn->query("
     SELECT COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Low' AND status != 'Resolved'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Low' AND status NOT IN ('Resolved', 'Closed')
 ");
 $lowPriorityIssues = $lowPriorityResult ? ($lowPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
 
@@ -168,7 +168,7 @@ $weekResolved = $weekResolvedResult ? ($weekResolvedResult->fetch_assoc()['count
 $issuesByTypeResult = $conn->query("
     SELECT category, COUNT(*) as count 
     FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status != 'Resolved'
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status NOT IN ('Resolved', 'Closed')
     GROUP BY category
     ORDER BY count DESC
 ");
@@ -324,6 +324,17 @@ include '../components/layout_header.php';
 <style>
     body, html { overflow: hidden !important; height: 100vh; }
     main { height: calc(100vh - 85px); }
+    .metric-card {
+        display: block;
+        text-decoration: none;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: pointer;
+    }
+    .metric-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 24px rgba(30, 58, 138, 0.25), 0 0 0 2px rgba(30, 58, 138, 0.15);
+        text-decoration: none;
+    }
 </style>
 
 <!-- Main Content -->
@@ -332,64 +343,64 @@ include '../components/layout_header.php';
     <!-- Key Metrics Row -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2 flex-shrink-0">
         <!-- Total Assigned Issues -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <a href="issue_details.php?filter=All" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-ticket text-lg opacity-80"></i>
                 <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Total</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">Assigned Issues</p>
             <p class="text-lg font-bold"><?php echo $totalAssignedIssues; ?></p>
-        </div>
+        </a>
 
-        <!-- Pending Issues -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <!-- Open Issues -->
+        <a href="issue_details.php?status=Open" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-clock text-lg opacity-80"></i>
-                <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Pending</span>
+                <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Open</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">Awaiting Action</p>
             <p class="text-lg font-bold"><?php echo $pendingIssues; ?></p>
-        </div>
+        </a>
 
         <!-- In Progress -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <a href="issue_details.php?status=In+Progress" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-wrench text-lg opacity-80"></i>
                 <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">In Progress</p>
             <p class="text-lg font-bold"><?php echo $inProgressIssues; ?></p>
-        </div>
+        </a>
 
         <!-- Resolved Issues -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <a href="issue_details.php?status=Resolved" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-check-circle text-lg opacity-80"></i>
                 <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Completed</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">Resolved</p>
             <p class="text-lg font-bold"><?php echo $resolvedIssues; ?></p>
-        </div>
+        </a>
 
         <!-- High Priority -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <a href="issue_details.php?priority=High" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-exclamation-triangle text-lg opacity-80"></i>
                 <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Urgent</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">High Priority</p>
             <p class="text-lg font-bold"><?php echo $highPriorityIssues; ?></p>
-        </div>
+        </a>
 
         <!-- Under Maintenance -->
-        <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
+        <a href="maintenance.php" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
                 <i class="fas fa-tools text-lg opacity-80"></i>
                 <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Maintenance</span>
             </div>
             <p class="text-[9px] opacity-70 mb-0.5">Assets</p>
             <p class="text-lg font-bold"><?php echo $maintenanceAssets; ?></p>
-        </div>
+        </a>
     </div>
 
     <!-- Secondary Metrics Row -->
@@ -628,7 +639,7 @@ const statusCtx = document.getElementById('statusChart').getContext('2d');
 new Chart(statusCtx, {
     type: 'doughnut',
     data: {
-        labels: ['Pending', 'In Progress', 'Resolved'],
+        labels: ['Open', 'In Progress', 'Resolved'],
         datasets: [{
             data: [
                 <?php echo $pendingIssues; ?>,
@@ -647,21 +658,38 @@ new Chart(statusCtx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        onHover: function(event, elements) {
+            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        },
+        onClick: function(event, elements) {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const statusMap = ['Open', 'In Progress', 'Resolved'];
+                const status = statusMap[index];
+                window.location.href = 'issue_details.php?status=' + encodeURIComponent(status);
+            }
+        },
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: { font: { size: 10 }, padding: 8 }
+            },
+            tooltip: {
+                callbacks: {
+                    footer: function() { return 'Click to view details'; }
+                }
             }
         }
     }
 });
 
 // 2. Issue Types
+const typeLabels = <?php echo json_encode($issueTypes); ?>;
 const typeCtx = document.getElementById('typeChart').getContext('2d');
 new Chart(typeCtx, {
     type: 'doughnut',
     data: {
-        labels: <?php echo json_encode($issueTypes); ?>,
+        labels: typeLabels,
         datasets: [{
             data: <?php echo json_encode($issueTypeCounts); ?>,
             backgroundColor: [
@@ -678,10 +706,27 @@ new Chart(typeCtx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        onHover: function(event, elements) {
+            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        },
+        onClick: function(event, elements) {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const category = typeLabels[index];
+                if (category && category !== 'No Active Issues') {
+                    window.location.href = 'issue_details.php?category=' + encodeURIComponent(category);
+                }
+            }
+        },
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: { font: { size: 10 }, padding: 8 }
+            },
+            tooltip: {
+                callbacks: {
+                    footer: function() { return 'Click to view details'; }
+                }
             }
         }
     }
@@ -711,10 +756,26 @@ new Chart(priorityCtx, {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        onHover: function(event, elements) {
+            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        },
+        onClick: function(event, elements) {
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const priorityMap = ['High', 'Medium', 'Low'];
+                const priority = priorityMap[index];
+                window.location.href = 'issue_details.php?priority=' + encodeURIComponent(priority);
+            }
+        },
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: { font: { size: 10 }, padding: 8 }
+            },
+            tooltip: {
+                callbacks: {
+                    footer: function() { return 'Click to view details'; }
+                }
             }
         }
     }

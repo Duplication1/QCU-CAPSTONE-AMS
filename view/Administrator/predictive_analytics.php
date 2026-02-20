@@ -203,7 +203,6 @@ include '../components/layout_header.php';
                                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Condition</th>
                                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Age</th>
                                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Issues</th>
-                                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Risk</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
@@ -373,7 +372,7 @@ include '../components/layout_header.php';
             if (allFailures.length === 0) {
                 document.querySelector('#failuresTable tbody').innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-3 py-6 text-center">
+                        <td colspan="6" class="px-3 py-6 text-center">
                             <p class="text-green-600 font-semibold">Good news!</p>
                             <p class="text-xs text-gray-600 mt-1">No clear failure patterns detected yet. Keep monitoring!</p>
                         </td>
@@ -395,14 +394,11 @@ include '../components/layout_header.php';
             if (pageData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-3 py-4 text-center text-sm text-gray-500">No assets match your filters</td>
+                        <td colspan="6" class="px-3 py-4 text-center text-sm text-gray-500">No assets match your filters</td>
                     </tr>
                 `;
             } else {
                 tbody.innerHTML = pageData.map(pred => {
-                    const riskBadge = pred.risk_percentage >= 80 ? 'bg-red-100 text-red-700' : 
-                                     pred.risk_percentage >= 50 ? 'bg-orange-100 text-orange-700' : 
-                                     'bg-yellow-100 text-yellow-700';
                     const ageMonths = Math.floor(pred.current_age_days / 30);
                     
                     return `
@@ -421,9 +417,6 @@ include '../components/layout_header.php';
                             </td>
                             <td class="px-3 py-2 text-xs text-gray-600">${ageMonths} months</td>
                             <td class="px-3 py-2 text-xs text-gray-600">${pred.issue_count}</td>
-                            <td class="px-3 py-2 text-xs">
-                                <span class="px-2 py-1 rounded font-bold ${riskBadge}">${pred.risk_percentage}%</span>
-                            </td>
                         </tr>
                     `;
                 }).join('');

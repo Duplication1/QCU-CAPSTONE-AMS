@@ -45,8 +45,19 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     <!-- Left: Burger Menu + Logo + oneQCU -->
     <div class="flex items-center space-x-2 md:space-x-2">
       <!-- Logo + Text -->
-      <div class="flex items-center gap-2 md:gap-3">
-        <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-12 h-12 md:w-14 md:h-14">
+      <?php
+      $dashboard_links = [
+          'Administrator'     => '../Administrator/index.php',
+          'Laboratory Staff'  => '../LaboratoryStaff/index.php',
+          'LaboratoryStaff'   => '../LaboratoryStaff/index.php',
+          'Technician'        => '../Technician/index.php',
+          'Student'           => '../StudentFaculty/index.php',
+          'Faculty'           => '../StudentFaculty/index.php',
+      ];
+      $dashboard_url = $dashboard_links[$current_role] ?? '../login.php';
+      ?>
+      <a href="<?php echo $dashboard_url; ?>" class="flex items-center gap-2 md:gap-3" style="text-decoration: none;" title="Go to Dashboard">
+        <img src="../../assets/images/QCU-LOGO.png" alt="QCU Logo" class="w-12 h-12 md:w-14 md:h-14" style="transition: transform 0.25s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
         <div class="flex flex-col leading-tight">
           <h1 class="font-bold font-[Poppins] text-white" style="font-size: 20px;">
             Quezon City University
@@ -55,7 +66,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
             Asset Management System
           </p>
         </div>
-      </div>
+      </a>
       
       <!-- Burger Menu Button - Only visible on mobile -->
       <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg hover:bg-blue-800 transition-all duration-300">
