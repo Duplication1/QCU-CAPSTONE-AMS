@@ -95,6 +95,10 @@ include '../components/layout_header.php';
 ?>
 
 <style>
+      table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: center; }
+      td .flex.flex-wrap { justify-content: center; }
+
     .status-badge {
         padding: 0.25rem 0.75rem;
         border-radius: 9999px;
@@ -124,7 +128,7 @@ include '../components/layout_header.php';
     <div class="mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Historical Issues</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Issues History</h1>
                 <p class="text-sm text-gray-600 mt-1">Showing issues reported in <strong><?php echo htmlspecialchars($monthName); ?></strong></p>
             </div>
             <a href="index.php" class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors">
@@ -184,18 +188,43 @@ include '../components/layout_header.php';
         </div>
     </div>
 
-    <!-- Category Breakdown -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Issues by Category</h2>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <?php foreach ($issuesByCategory as $category => $count): ?>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600 capitalize"><?php echo htmlspecialchars($category); ?></p>
-                    <p class="text-2xl font-bold text-blue-900"><?php echo $count; ?></p>
-                </div>
-            <?php endforeach; ?>
-        </div>
+<!-- Category Breakdown -->
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900 mb-4">
+    Issues by Category
+  </h2>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <?php foreach ($issuesByCategory as $category => $count): ?>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600 capitalize"><?php echo htmlspecialchars($category); ?></p>
+        <p class="text-3xl font-bold text-blue-900"><?php echo $count; ?></p>
+      </div>
+      <div 
+        class="<?php 
+          if (strtolower($category) === 'hardware') {
+            echo 'bg-red-100';
+          } elseif (strtolower($category) === 'network') {
+            echo 'bg-yellow-100';
+          } else {
+            echo 'bg-blue-100';
+          }
+        ?> p-3 rounded-full">
+        <?php if (strtolower($category) === 'hardware'): ?>
+          <i class="fas fa-microchip text-2xl text-red-900"></i>
+        <?php elseif (strtolower($category) === 'network'): ?>
+          <i class="fas fa-network-wired text-2xl text-yellow-900"></i>
+        <?php else: ?>
+          <i class="fas fa-tag text-2xl text-blue-900"></i>
+        <?php endif; ?>
+      </div>
     </div>
+  <?php endforeach; ?>
+</div>
+
+
+</div>
 
     <!-- Issues by PC Unit -->
     <?php if (!empty($issuesByPC)): ?>
@@ -205,13 +234,13 @@ include '../components/layout_header.php';
         </h2>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-[#1E3A8A]">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PC Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Count</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categories</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white text-center">PC Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white text-center">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white text-center">Issue Count</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white text-center">Categories</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -221,8 +250,8 @@ include '../components/layout_header.php';
                         $categories = array_unique(array_column($pcIssues, 'category'));
                         $statuses = array_count_values(array_column($pcIssues, 'status'));
                         ?>
-                        <tr class="hover:bg-gray-50 cursor-pointer" onclick="toggleDetails('pc-<?php echo md5($pcName); ?>')">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                        <tr class="hover:bg-blue-50 cursor-pointer" onclick="toggleDetails('pc-<?php echo md5($pcName); ?>')">
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center">
                                     <i class="fas fa-desktop text-blue-900 mr-2"></i>
                                     <div>
@@ -319,21 +348,21 @@ include '../components/layout_header.php';
         <?php else: ?>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-[#1E3A8A] text-center">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PC/Location</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">PC/Location</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Reporter</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Created</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php foreach ($issues as $issue): ?>
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-blue-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     #<?php echo htmlspecialchars($issue['id']); ?>
                                 </td>

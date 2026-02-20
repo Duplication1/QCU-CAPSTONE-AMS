@@ -236,15 +236,16 @@ main {
 <div class="flex-1 overflow-auto bg-white rounded shadow-sm border border-gray-200">
   <div class="overflow-x-auto">
     <table id="logsTable" class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
-        </tr>
-      </thead>
+<thead class="bg-[#1E3A8A] text-white">
+  <tr>
+    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Technician</th>
+    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Entity</th>
+    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Timestamp</th>
+    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Description</th>
+    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">IP Address</th>
+  </tr>
+</thead>
+
       <tbody class="bg-white divide-y divide-gray-200">
         <?php if (empty($logs)): ?>
         <tr>

@@ -106,11 +106,14 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-    .issue-card { transition: all 0.2s; }
-    .issue-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .priority-high { border-left: 4px solid #EF4444; }
-    .priority-medium { border-left: 4px solid #F59E0B; }
-    .priority-low { border-left: 4px solid #10B981; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 8px; text-align: center; } 
+  thead th { background-color: #1E3A8A; color: white; } 
+  tbody tr { border-bottom: 1px solid #ddd; }
+  tbody tr:hover { background-color: #eff6ff; }
+  .priority-high { background-color: #fee2e2; }
+  .priority-medium { background-color: #ffedd5; }
+  .priority-low { background-color: #d1fae5; }
 </style>
 
 <!-- Main Content -->
@@ -120,7 +123,9 @@ include '../components/layout_header.php';
         <div class="flex items-center justify-between mb-2">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900"><?php echo $pageTitle; ?></h1>
-                <p class="text-sm text-gray-600 mt-1">Detailed breakdown of computers with issues in this <?php echo $filterStatus ? 'status' : 'category'; ?></p>
+                <p class="text-sm text-gray-600 mt-1">
+                    Detailed breakdown of computers with issues in this <?php echo $filterStatus ? 'status' : 'category'; ?>
+                </p>
             </div>
             <a href="index.php" class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
@@ -130,44 +135,38 @@ include '../components/layout_header.php';
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Total Issues</p>
-                    <p class="text-3xl font-bold text-blue-900"><?php echo $totalIssues; ?></p>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <i class="fas fa-exclamation-circle text-2xl text-blue-900"></i>
-                </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Issues</p>
+                <p class="text-3xl font-bold text-blue-900"><?php echo $totalIssues; ?></p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class="fas fa-exclamation-circle text-2xl text-blue-900"></i>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Affected PCs</p>
-                    <p class="text-3xl font-bold text-blue-900"><?php echo $totalPCs; ?></p>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-full">
-                    <i class="fas fa-desktop text-2xl text-purple-900"></i>
-                </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Affected PCs</p>
+                <p class="text-3xl font-bold text-blue-900"><?php echo $totalPCs; ?></p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class="fas fa-desktop text-2xl text-purple-900"></i>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Avg Issues per PC</p>
-                    <p class="text-3xl font-bold text-blue-900"><?php echo $avgIssuesPerPC; ?></p>
-                </div>
-                <div class="bg-amber-100 p-3 rounded-full">
-                    <i class="fas fa-chart-bar text-2xl text-amber-900"></i>
-                </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Avg Issues per PC</p>
+                <p class="text-3xl font-bold text-blue-900"><?php echo $avgIssuesPerPC; ?></p>
+            </div>
+            <div class="bg-amber-100 p-3 rounded-full">
+                <i class="fas fa-chart-bar text-2xl text-amber-900"></i>
             </div>
         </div>
     </div>
 
-    <!-- PC Groups -->
+    <!-- Issues Table -->
     <?php if (empty($pcGroups)): ?>
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
@@ -175,89 +174,50 @@ include '../components/layout_header.php';
             <p class="text-gray-500">There are no issues matching this <?php echo $filterStatus ? 'status' : 'category'; ?>.</p>
         </div>
     <?php else: ?>
-        <div class="space-y-6">
-            <?php foreach ($pcGroups as $pcKey => $pcData): ?>
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <!-- PC Header -->
-                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-white bg-opacity-20 p-3 rounded-lg">
-                                    <i class="fas fa-desktop text-2xl"></i>
-                                </div>
-                                <div>
-                                    <h2 class="text-xl font-bold"><?php echo htmlspecialchars($pcData['terminal_number']) ?? 'Unknown PC'; ?></h2>
-                                    <p class="text-sm opacity-90">
-                                        <?php echo htmlspecialchars($pcData['room_name'] ?? 'Unknown Room'); ?> - 
-                                        <?php echo htmlspecialchars($pcData['building_name'] ?? 'Unknown Building'); ?>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-3xl font-bold"><?php echo count($pcData['issues']); ?></p>
-                                <p class="text-sm opacity-90">
-                                    <?php echo count($pcData['issues']) === 1 ? 'Issue' : 'Issues'; ?>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Issues List -->
-                    <div class="p-4 space-y-3">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+            <table class="min-w-full text-sm text-gray-700">
+                <thead>
+                    <tr>
+                        <th>PC Name</th>
+                        <th>Location</th>
+                        <th>Issue ID</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Reported</th>
+                        <th>Assigned</th>
+                        <th>Technician</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($pcGroups as $pcData): ?>
                         <?php foreach ($pcData['issues'] as $issue): ?>
-                            <div class="issue-card bg-gray-50 rounded-lg p-4 priority-<?php echo strtolower($issue['priority']); ?>">
-                                <div class="flex items-start justify-between mb-2">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="text-xs font-semibold text-gray-500">
-                                                #<?php echo $issue['issue_id']; ?>
-                                            </span>
-                                            <span class="px-2 py-0.5 text-xs font-medium rounded <?php
-                                                echo $issue['status'] === 'Open' ? 'bg-yellow-100 text-yellow-800' :
-                                                     ($issue['status'] === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                                                     'bg-green-100 text-green-800');
-                                            ?>">
-                                                <?php echo htmlspecialchars($issue['status']); ?>
-                                            </span>
-                                            <span class="px-2 py-0.5 text-xs font-medium rounded <?php
-                                                echo $issue['priority'] === 'High' ? 'bg-red-100 text-red-800' :
-                                                     ($issue['priority'] === 'Medium' ? 'bg-orange-100 text-orange-800' :
-                                                     'bg-green-100 text-green-800');
-                                            ?>">
-                                                <?php echo htmlspecialchars($issue['priority']); ?>
-                                            </span>
-                                            <span class="px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
-                                                <?php echo htmlspecialchars($issue['category']); ?>
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-700 font-medium mb-2">
-                                            <?php echo htmlspecialchars($issue['description']); ?>
-                                        </p>
-                                        <div class="flex items-center gap-4 text-xs text-gray-500">
-                                            <span>
-                                                <i class="far fa-calendar mr-1"></i>
-                                                Reported: <?php echo date('M d, Y g:i A', strtotime($issue['created_at'])); ?>
-                                            </span>
-                                            <?php if ($issue['assigned_at']): ?>
-                                                <span>
-                                                    <i class="fas fa-user-check mr-1"></i>
-                                                    Assigned: <?php echo date('M d, Y', strtotime($issue['assigned_at'])); ?>
-                                                </span>
-                                            <?php endif; ?>
-                                            <?php if ($issue['tech_name']): ?>
-                                                <span>
-                                                    <i class="fas fa-user-cog mr-1"></i>
-                                                    Tech: <?php echo htmlspecialchars($issue['tech_name']); ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <tr class="hover:bg-blue-50">
+                                <td><?php echo htmlspecialchars($pcData['terminal_number'] ?? 'Unknown PC'); ?></td>
+                                <td>
+                                    <?php echo htmlspecialchars($pcData['room_name'] ?? 'Unknown Room'); ?> -
+                                    <?php echo htmlspecialchars($pcData['building_name'] ?? 'Unknown Building'); ?>
+                                </td>
+                                <td>#<?php echo $issue['issue_id']; ?></td>
+                                <td><?php echo htmlspecialchars($issue['status']); ?></td>
+                                <td><?php echo htmlspecialchars($issue['priority']); ?></td>
+                                <td><?php echo htmlspecialchars($issue['category']); ?></td>
+                                <td><?php echo htmlspecialchars($issue['description']); ?></td>
+                                <td><?php echo date('M d, Y g:i A', strtotime($issue['created_at'])); ?></td>
+                                <td>
+                                    <?php if (!empty($issue['assigned_at'])): ?>
+                                        <?php echo date('M d, Y', strtotime($issue['assigned_at'])); ?>
+                                    <?php else: ?>
+                                        —
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($issue['tech_name'] ?? '—'); ?></td>
+                            </tr>
                         <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     <?php endif; ?>
 </main>
