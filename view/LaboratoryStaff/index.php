@@ -212,8 +212,8 @@ include '../components/layout_header.php';
     
     /* Fixed chart sizes - no resizing */
     #statusChart, #typeChart, #assetChart {
-        width: 220px !important;
-        height: 220px !important;
+        width: 130px !important;
+        height: 130px !important;
     }
     
     #issuesTrendChart {
@@ -354,44 +354,150 @@ include '../components/layout_header.php';
             <!-- Charts Row -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                     <!-- Issue Status Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <h3 class="text-xs font-semibold text-gray-900">Issue Status</h3>
-                            <span class="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                <i class="fas fa-hand-pointer mr-1"></i>Clickable
-                            </span>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Issue Status</h3>
+                        <!-- Donut + Bars Row -->
+                        <div class="flex items-center gap-4 flex-1">
+                            <!-- Donut Chart -->
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="statusChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="statusChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <!-- Status Bars -->
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Status</p>
+                                <?php
+                                $statusBarColors = ['#F6C762', '#3B3663', '#1E3A8A'];
+                                $statusLabelsPhp = ['Resolved', 'In Progress', 'Unassigned'];
+                                $statusValuesPhp = [$resolvedIssues, $inProgressIssues, $unassignedIssues];
+                                $totalStatusCount = array_sum($statusValuesPhp);
+                                foreach ($statusLabelsPhp as $i => $label):
+                                    $val = $statusValuesPhp[$i];
+                                    $pct = $totalStatusCount > 0 ? round(($val / $totalStatusCount) * 100) : 0;
+                                    $barColor = $statusBarColors[$i];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo $label; ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <p class="text-[9px] text-gray-500 mb-1">Current ticket breakdown - Click to view</p>
-                        <div style="width: 220px; height: 220px; margin: 0 auto;">
-                            <canvas id="statusChart" width="220" height="220"></canvas>
+                        <!-- Legend -->
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($statusLabelsPhp as $i => $label):
+                                $barColor = $statusBarColors[$i];
+                            ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo $label; ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <!-- Issue Types -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <h3 class="text-xs font-semibold text-gray-900">Issue Types</h3>
-                            <span class="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                <i class="fas fa-hand-pointer mr-1"></i>Clickable
-                            </span>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Issue Types</h3>
+                        <!-- Donut + Bars Row -->
+                        <div class="flex items-center gap-4 flex-1">
+                            <!-- Donut Chart -->
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="typeChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="typeChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <!-- Status Bars -->
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Status</p>
+                                <?php
+                                $typeBarColors = ['#F6C762', '#3B3663', '#1E3A8A', '#8B5CF6', '#10B981'];
+                                $totalIssueTypeCount = array_sum($issueTypeCounts);
+                                foreach ($issueTypes as $i => $type):
+                                    $count = $issueTypeCounts[$i];
+                                    $pct = $totalIssueTypeCount > 0 ? round(($count / $totalIssueTypeCount) * 100) : 0;
+                                    $barColor = $typeBarColors[$i % count($typeBarColors)];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo htmlspecialchars(ucfirst($type)); ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <p class="text-[9px] text-gray-500 mb-1">Active issues by category - Click to view</p>
-                        <div style="width: 220px; height: 220px; margin: 0 auto;">
-                            <canvas id="typeChart" width="220" height="220"></canvas>
+                        <!-- Legend -->
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($issueTypes as $i => $type):
+                                $barColor = $typeBarColors[$i % count($typeBarColors)];
+                            ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo htmlspecialchars(ucfirst($type)); ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <!-- Asset Status -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <h3 class="text-xs font-semibold text-gray-900">Asset Status</h3>
-                            <span class="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                <i class="fas fa-hand-pointer mr-1"></i>Clickable
-                            </span>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Asset Status</h3>
+                        <!-- Donut + Bars Row -->
+                        <div class="flex items-center gap-4 flex-1">
+                            <!-- Donut Chart -->
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="assetChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="assetChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <!-- Status Bars -->
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Status</p>
+                                <?php
+                                $assetBarColors = ['#F6C762', '#3B3663', '#1E3A8A', '#EF4444'];
+                                $assetLabelsPhp = ['Available', 'In Use', 'Needs Attention', 'Critical'];
+                                $assetValuesPhp = [$assetsAvailable, $assetsInUse, $needsAttention, $assetsCritical];
+                                $totalAssetStatusCount = array_sum($assetValuesPhp);
+                                foreach ($assetLabelsPhp as $i => $label):
+                                    $val = $assetValuesPhp[$i];
+                                    $pct = $totalAssetStatusCount > 0 ? round(($val / $totalAssetStatusCount) * 100) : 0;
+                                    $barColor = $assetBarColors[$i];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo $label; ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <p class="text-[9px] text-gray-500 mb-1">Asset distribution - Click to view</p>
-                        <div style="width: 220px; height: 220px; margin: 0 auto;">
-                            <canvas id="assetChart" width="220" height="220"></canvas>
+                        <!-- Legend -->
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($assetLabelsPhp as $i => $label):
+                                $barColor = $assetBarColors[$i];
+                            ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo $label; ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -467,42 +573,48 @@ const chartColors = {
     gray: '#6B7280'
 };
 
-// 1. Issue Status Distribution (Clickable)
+// 1. Issue Status Distribution
 const statusCtx = document.getElementById('statusChart').getContext('2d');
-const statusLabels = ['Unassigned', 'In Progress', 'Resolved'];
-const statusMap = ['Open', 'In Progress', 'Resolved'];
+const statusLabels = ['Resolved', 'In Progress', 'Unassigned'];
+const statusMap = ['Resolved', 'In Progress', 'Open'];
+const statusData = [<?php echo $resolvedIssues; ?>, <?php echo $inProgressIssues; ?>, <?php echo $unassignedIssues; ?>];
+const statusColors = ['#F6C762', '#3B3663', '#1E3A8A'];
+
+const statusCenterPlugin = {
+    id: 'statusCenterText',
+    afterDraw(chart) {
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('statusChartPct').textContent = pct + '%';
+    }
+};
 
 const statusChart = new Chart(statusCtx, {
     type: 'doughnut',
+    plugins: [statusCenterPlugin],
     data: {
         labels: statusLabels,
         datasets: [{
-            data: [
-                <?php echo $unassignedIssues; ?>,
-                <?php echo $inProgressIssues; ?>,
-                <?php echo $resolvedIssues; ?>
-            ],
-            backgroundColor: [
-                'rgba(30, 58, 138, 0.6)',
-                'rgba(30, 58, 138, 0.8)',
-                'rgba(30, 58, 138, 1)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: statusData,
+            backgroundColor: statusColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
         responsive: false,
         maintainAspectRatio: false,
+        cutout: '68%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    afterLabel: function(context) {
-                        return '\n👆 Click to view details';
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
                     }
                 }
             }
@@ -510,8 +622,7 @@ const statusChart = new Chart(statusCtx, {
         onClick: (event, activeElements) => {
             if (activeElements.length > 0) {
                 const index = activeElements[0].index;
-                const status = statusMap[index];
-                window.location.href = `issue_details.php?status=${encodeURIComponent(status)}`;
+                window.location.href = `issue_details.php?status=${encodeURIComponent(statusMap[index])}`;
             }
         },
         onHover: (event, activeElements) => {
@@ -520,39 +631,63 @@ const statusChart = new Chart(statusCtx, {
     }
 });
 
-// 2. Issue Types (Clickable)
+(function() {
+    const total = statusData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((statusData[0] / total) * 100) : 0;
+    document.getElementById('statusChartPct').textContent = pct + '%';
+})();
+
+// 2. Issue Types — Donut with center text
 const typeCtx = document.getElementById('typeChart').getContext('2d');
-const issueTypeLabels = <?php echo json_encode($issueTypes); ?>;
+const issueTypeLabels = <?php echo json_encode(array_map('ucfirst', $issueTypes)); ?>;
+const issueTypeData   = <?php echo json_encode($issueTypeCounts); ?>;
+const typeBarColors   = ['#F6C762', '#3B3663', '#1E3A8A', '#8B5CF6', '#10B981'];
+
+// Center-text plugin
+const typeCenterTextPlugin = {
+    id: 'typeCenterText',
+    afterDraw(chart) {
+        const { ctx, chartArea } = chart;
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct   = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('typeChartPct').textContent = pct + '%';
+        const cx = (chartArea.left + chartArea.right) / 2;
+        const cy = (chartArea.top  + chartArea.bottom) / 2;
+        ctx.save();
+        ctx.font = 'bold 18px Inter, sans-serif';
+        ctx.fillStyle = '#1f2937';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.restore();
+    }
+};
 
 const typeChart = new Chart(typeCtx, {
     type: 'doughnut',
+    plugins: [typeCenterTextPlugin],
     data: {
         labels: issueTypeLabels,
         datasets: [{
-            data: <?php echo json_encode($issueTypeCounts); ?>,
-            backgroundColor: [
-                'rgba(30, 58, 138, 1)',
-                'rgba(30, 58, 138, 0.8)',
-                'rgba(30, 58, 138, 0.6)',
-                'rgba(30, 58, 138, 0.4)',
-                'rgba(30, 58, 138, 0.3)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: issueTypeData,
+            backgroundColor: typeBarColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
         responsive: false,
         maintainAspectRatio: false,
+        cutout: '68%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    afterLabel: function(context) {
-                        return '\n👆 Click to view details';
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
                     }
                 }
             }
@@ -570,44 +705,55 @@ const typeChart = new Chart(typeCtx, {
     }
 });
 
-// 3. Asset Status (Clickable)
+// Set initial center percentage
+(function() {
+    const total = issueTypeData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((issueTypeData[0] / total) * 100) : 0;
+    document.getElementById('typeChartPct').textContent = pct + '%';
+})();
+
+// 3. Asset Status
 const assetCtx = document.getElementById('assetChart').getContext('2d');
 const assetLabels = ['Available', 'In Use', 'Needs Attention', 'Critical'];
 const assetStatusMap = ['Available', 'In Use', 'Fair', 'Critical'];
+const assetData = [<?php echo $assetsAvailable; ?>, <?php echo $assetsInUse; ?>, <?php echo $needsAttention; ?>, <?php echo $assetsCritical; ?>];
+const assetColors = ['#F6C762', '#3B3663', '#1E3A8A', '#EF4444'];
+
+const assetCenterPlugin = {
+    id: 'assetCenterText',
+    afterDraw(chart) {
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('assetChartPct').textContent = pct + '%';
+    }
+};
 
 const assetChart = new Chart(assetCtx, {
     type: 'doughnut',
+    plugins: [assetCenterPlugin],
     data: {
         labels: assetLabels,
         datasets: [{
-            data: [
-                <?php echo $assetsAvailable; ?>,
-                <?php echo $assetsInUse; ?>,
-                <?php echo $needsAttention; ?>,
-                <?php echo $assetsCritical; ?>
-            ],
-            backgroundColor: [
-                'rgba(30, 58, 138, 1)',
-                'rgba(30, 58, 138, 0.8)',
-                'rgba(30, 58, 138, 0.6)',
-                'rgba(30, 58, 138, 0.4)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: assetData,
+            backgroundColor: assetColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
         responsive: false,
         maintainAspectRatio: false,
+        cutout: '68%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    afterLabel: function(context) {
-                        return '\n👆 Click to view details';
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
                     }
                 }
             }
@@ -615,8 +761,7 @@ const assetChart = new Chart(assetCtx, {
         onClick: (event, activeElements) => {
             if (activeElements.length > 0) {
                 const index = activeElements[0].index;
-                const statusOrCondition = assetStatusMap[index];
-                window.location.href = `asset_details.php?filter=${encodeURIComponent(statusOrCondition)}`;
+                window.location.href = `asset_details.php?filter=${encodeURIComponent(assetStatusMap[index])}`;
             }
         },
         onHover: (event, activeElements) => {
@@ -624,6 +769,12 @@ const assetChart = new Chart(assetCtx, {
         }
     }
 });
+
+(function() {
+    const total = assetData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((assetData[0] / total) * 100) : 0;
+    document.getElementById('assetChartPct').textContent = pct + '%';
+})();
 
 // 4. Issues Trend (Clickable)
 const issuesTrendCtx = document.getElementById('issuesTrendChart').getContext('2d');
