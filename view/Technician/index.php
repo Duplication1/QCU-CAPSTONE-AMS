@@ -188,50 +188,90 @@ if (empty($issueTypes)) {
 // ============================================
 // MONTHLY TRENDS (Last 6 months)
 // ============================================
+$issueMonths = [];
+$issueCounts = [];
+$monthlyData = [];
+$monthMetadata = [];
+
+// Create array of last 6 months
+for ($i = 5; $i >= 0; $i--) {
+    $monthDate = date('Y-m', strtotime("-$i months"));
+    $monthLabel = date('M', strtotime("-$i months"));
+    $yearMonth = date('F Y', strtotime("-$i months"));
+    $monthlyData[$monthDate] = [
+        'label' => $monthLabel,
+        'count' => 0,
+        'index' => 5 - $i,
+        'year_month' => $yearMonth
+    ];
+}
+
 $monthlyIssuesResult = $conn->query("
-    SELECT DATE_FORMAT(created_at, '%b') as month, COUNT(*) as count 
-    FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' 
+    SELECT
+        DATE_FORMAT(created_at, '%Y-%m') as ym,
+        COUNT(*) as count
+    FROM issues
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
     AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
     ORDER BY created_at ASC
 ");
-$issueMonths = [];
-$issueCounts = [];
+
 if ($monthlyIssuesResult && $monthlyIssuesResult->num_rows > 0) {
     while ($row = $monthlyIssuesResult->fetch_assoc()) {
-        $issueMonths[] = $row['month'];
-        $issueCounts[] = $row['count'];
+        if (isset($monthlyData[$row['ym']])) {
+            $monthlyData[$row['ym']]['count'] = (int)$row['count'];
+        }
     }
 }
-if (empty($issueMonths)) {
-    $issueMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    $issueCounts = [0, 0, 0, 0, 0, 0];
+
+foreach ($monthlyData as $yearMonth => $data) {
+    $issueMonths[] = $data['label'];
+    $issueCounts[] = $data['count'];
+    $monthMetadata[] = [
+        'index' => $data['index'],
+        'year_month' => $data['year_month'],
+        'count' => $data['count']
+    ];
 }
 
-// Resolved issues trend
+// Resolution performance trend (avg hours per month)
+$resolvedMonths = [];
+$resolvedAvgHours = [];
+$resolvedData = [];
+
+for ($i = 5; $i >= 0; $i--) {
+    $monthDate = date('Y-m', strtotime("-$i months"));
+    $monthLabel = date('M', strtotime("-$i months"));
+    $resolvedData[$monthDate] = [
+        'label' => $monthLabel,
+        'avg_hours' => 0
+    ];
+}
+
 $monthlyResolvedResult = $conn->query("
-    SELECT 
-        DATE_FORMAT(updated_at, '%b') as month,
+    SELECT
+        DATE_FORMAT(updated_at, '%Y-%m') as ym,
         AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_resolution_hours
-    FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' 
+    FROM issues
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
     AND status = 'Resolved'
     AND updated_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
     GROUP BY DATE_FORMAT(updated_at, '%Y-%m')
     ORDER BY updated_at ASC
 ");
-$resolvedMonths = [];
-$resolvedAvgHours = [];
+
 if ($monthlyResolvedResult && $monthlyResolvedResult->num_rows > 0) {
     while ($row = $monthlyResolvedResult->fetch_assoc()) {
-        $resolvedMonths[] = $row['month'];
-        $resolvedAvgHours[] = round($row['avg_resolution_hours'] ?? 0, 1);
+        if (isset($resolvedData[$row['ym']])) {
+            $resolvedData[$row['ym']]['avg_hours'] = round($row['avg_resolution_hours'] ?? 0, 1);
+        }
     }
 }
-if (empty($resolvedMonths)) {
-    $resolvedMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    $resolvedAvgHours = [0, 0, 0, 0, 0, 0];
+
+foreach ($resolvedData as $yearMonth => $data) {
+    $resolvedMonths[] = $data['label'];
+    $resolvedAvgHours[] = $data['avg_hours'];
 }
 
 // ============================================
@@ -334,6 +374,22 @@ include '../components/layout_header.php';
         transform: scale(1.05);
         box-shadow: 0 8px 24px rgba(30, 58, 138, 0.25), 0 0 0 2px rgba(30, 58, 138, 0.15);
         text-decoration: none;
+    }
+
+    /* Fixed chart sizes - no resizing */
+    #statusChart, #typeChart, #priorityChart {
+        width: 130px !important;
+        height: 130px !important;
+    }
+
+    #issuesTrendChart {
+        width: 420px !important;
+        height: 190px !important;
+    }
+
+    #resolvedTrendChart {
+        width: 420px !important;
+        height: 190px !important;
     }
 </style>
 
@@ -455,29 +511,132 @@ include '../components/layout_header.php';
                 <!-- Charts Row -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                     <!-- Issue Status Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Issue Status</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Current workload breakdown</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="statusChart"></canvas>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Issue Status</h3>
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="statusChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="statusChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Status</p>
+                                <?php
+                                $statusBarColors = ['#F6C762', '#3B3663', '#1E3A8A'];
+                                $statusLabelsPhp = ['Open', 'In Progress', 'Resolved'];
+                                $statusValuesPhp = [$pendingIssues, $inProgressIssues, $resolvedIssues];
+                                $totalStatusCount = array_sum($statusValuesPhp);
+                                foreach ($statusLabelsPhp as $i => $label):
+                                    $val = $statusValuesPhp[$i];
+                                    $pct = $totalStatusCount > 0 ? round(($val / $totalStatusCount) * 100) : 0;
+                                    $barColor = $statusBarColors[$i];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo $label; ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($statusLabelsPhp as $i => $label): $barColor = $statusBarColors[$i]; ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo $label; ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <!-- Issue Types -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Issue Types</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Active issues by category</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="typeChart"></canvas>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Issue Types</h3>
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="typeChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="typeChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Category</p>
+                                <?php
+                                $typeBarColors = ['#F6C762', '#3B3663', '#1E3A8A', '#8B5CF6', '#10B981'];
+                                $totalIssueTypeCount = array_sum($issueTypeCounts);
+                                foreach ($issueTypes as $i => $type):
+                                    $count = $issueTypeCounts[$i];
+                                    $pct = $totalIssueTypeCount > 0 ? round(($count / $totalIssueTypeCount) * 100) : 0;
+                                    $barColor = $typeBarColors[$i % count($typeBarColors)];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo htmlspecialchars(ucfirst($type)); ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($issueTypes as $i => $type): $barColor = $typeBarColors[$i % count($typeBarColors)]; ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo htmlspecialchars(ucfirst($type)); ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
                     <!-- Priority Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Priority Levels</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Active issues by priority</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="priorityChart"></canvas>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
+                        <h3 class="text-xs font-semibold text-gray-900 mb-2">Priority Levels</h3>
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="relative flex-shrink-0" style="width:130px;height:130px;">
+                                <canvas id="priorityChart" width="130" height="130"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="font-bold text-gray-800" id="priorityChartPct" style="font-size:18px;">0%</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-semibold text-gray-700 mb-2">Priority</p>
+                                <?php
+                                $priorityBarColors = ['#EF4444', '#F59E0B', '#6B7280'];
+                                $priorityLabelsPhp = ['High', 'Medium', 'Low'];
+                                $priorityValuesPhp = [$highPriorityIssues, $mediumPriorityIssues, $lowPriorityIssues];
+                                $totalPriorityCount = array_sum($priorityValuesPhp);
+                                foreach ($priorityLabelsPhp as $i => $label):
+                                    $val = $priorityValuesPhp[$i];
+                                    $pct = $totalPriorityCount > 0 ? round(($val / $totalPriorityCount) * 100) : 0;
+                                    $barColor = $priorityBarColors[$i];
+                                ?>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between mb-0.5">
+                                        <span class="text-[10px] text-gray-600 truncate max-w-[80px]"><?php echo $label; ?></span>
+                                        <span class="text-[10px] text-gray-600 ml-1 flex-shrink-0"><?php echo $pct; ?>%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full" style="height:6px;">
+                                        <div class="h-full rounded-full" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-3 mt-3 pt-2 border-t border-gray-100">
+                            <?php foreach ($priorityLabelsPhp as $i => $label): $barColor = $priorityBarColors[$i]; ?>
+                            <div class="flex items-center gap-1">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:<?php echo $barColor; ?>;"></span>
+                                <span class="text-[10px] text-gray-600"><?php echo $label; ?></span>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -485,11 +644,32 @@ include '../components/layout_header.php';
                 <!-- Trends Row -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
                     <!-- Issues Trend -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Issues Trend</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Last 6 months assigned issues</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="issuesTrendChart"></canvas>
+                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 cursor-pointer hover:shadow-md transition-shadow flex flex-col">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <h3 class="text-xs font-semibold text-gray-900">Issues Trend</h3>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[9px] text-gray-500">Last 6 months</span>
+                                <span class="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                    <i class="fas fa-hand-pointer mr-1"></i>Clickable
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-gray-500 mb-1">
+                            Click any point to see detailed breakdown
+                            <span class="ml-1 text-blue-900 font-semibold">(Total: <?php echo array_sum($issueCounts); ?> issues)</span>
+                        </p>
+                        <div style="width: 420px; height: 190px; margin: 0 auto;">
+                            <canvas id="issuesTrendChart" width="420" height="190"></canvas>
+                        </div>
+                        <div class="mt-1 pt-1 border-t border-gray-200 grid grid-cols-6 gap-0.5 text-center">
+                            <?php foreach ($monthMetadata as $idx => $meta): ?>
+                                <div class="text-[8px]">
+                                    <div class="font-medium text-gray-700"><?php echo $issueMonths[$idx]; ?></div>
+                                    <div class="<?php echo $meta['count'] > 0 ? 'text-blue-900 font-bold' : 'text-gray-400'; ?>">
+                                        <?php echo $meta['count']; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
@@ -497,8 +677,8 @@ include '../components/layout_header.php';
                     <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
                         <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Resolution Performance</h3>
                         <p class="text-[9px] text-gray-500 mb-1">Avg hours to resolve (faster is better)</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="resolvedTrendChart"></canvas>
+                        <div style="width: 420px; height: 190px; margin: 0 auto;">
+                            <canvas id="resolvedTrendChart" width="420" height="190"></canvas>
                         </div>
                     </div>
                 </div>
@@ -636,154 +816,203 @@ const chartColors = {
 
 // 1. Issue Status Distribution
 const statusCtx = document.getElementById('statusChart').getContext('2d');
-new Chart(statusCtx, {
+const statusLabels = ['Open', 'In Progress', 'Resolved'];
+const statusMap = ['Open', 'In Progress', 'Resolved'];
+const statusData = [<?php echo $pendingIssues; ?>, <?php echo $inProgressIssues; ?>, <?php echo $resolvedIssues; ?>];
+const statusColors = ['#F6C762', '#3B3663', '#1E3A8A'];
+
+const statusCenterPlugin = {
+    id: 'statusCenterText',
+    afterDraw(chart) {
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('statusChartPct').textContent = pct + '%';
+    }
+};
+
+const statusChart = new Chart(statusCtx, {
     type: 'doughnut',
+    plugins: [statusCenterPlugin],
     data: {
-        labels: ['Open', 'In Progress', 'Resolved'],
+        labels: statusLabels,
         datasets: [{
-            data: [
-                <?php echo $pendingIssues; ?>,
-                <?php echo $inProgressIssues; ?>,
-                <?php echo $resolvedIssues; ?>
-            ],
-            backgroundColor: [
-                'rgba(30, 58, 138, 0.6)',
-                'rgba(30, 58, 138, 0.8)',
-                'rgba(30, 58, 138, 1)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: statusData,
+            backgroundColor: statusColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
-        onHover: function(event, elements) {
-            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-        },
-        onClick: function(event, elements) {
-            if (elements.length > 0) {
-                const index = elements[0].index;
-                const statusMap = ['Open', 'In Progress', 'Resolved'];
-                const status = statusMap[index];
-                window.location.href = 'issue_details.php?status=' + encodeURIComponent(status);
-            }
-        },
+        cutout: '68%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    footer: function() { return 'Click to view details'; }
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
+                    }
                 }
             }
+        },
+        onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+                const index = activeElements[0].index;
+                window.location.href = `issue_details.php?status=${encodeURIComponent(statusMap[index])}`;
+            }
+        },
+        onHover: (event, activeElements) => {
+            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
         }
     }
 });
 
-// 2. Issue Types
-const typeLabels = <?php echo json_encode($issueTypes); ?>;
+(function() {
+    const total = statusData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((statusData[0] / total) * 100) : 0;
+    document.getElementById('statusChartPct').textContent = pct + '%';
+})();
+
+// 2. Issue Types — Donut with center text
 const typeCtx = document.getElementById('typeChart').getContext('2d');
-new Chart(typeCtx, {
+const issueTypeLabels = <?php echo json_encode(array_map('ucfirst', $issueTypes)); ?>;
+const issueTypeData   = <?php echo json_encode($issueTypeCounts); ?>;
+const typeBarColors   = ['#F6C762', '#3B3663', '#1E3A8A', '#8B5CF6', '#10B981'];
+
+const typeCenterTextPlugin = {
+    id: 'typeCenterText',
+    afterDraw(chart) {
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct   = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('typeChartPct').textContent = pct + '%';
+    }
+};
+
+const typeChart = new Chart(typeCtx, {
     type: 'doughnut',
+    plugins: [typeCenterTextPlugin],
     data: {
-        labels: typeLabels,
+        labels: issueTypeLabels,
         datasets: [{
-            data: <?php echo json_encode($issueTypeCounts); ?>,
-            backgroundColor: [
-                'rgba(30, 58, 138, 1)',
-                'rgba(30, 58, 138, 0.8)',
-                'rgba(30, 58, 138, 0.6)',
-                'rgba(30, 58, 138, 0.4)',
-                'rgba(30, 58, 138, 0.3)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: issueTypeData,
+            backgroundColor: typeBarColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
-        onHover: function(event, elements) {
-            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+        cutout: '68%',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
+                    }
+                }
+            }
         },
-        onClick: function(event, elements) {
-            if (elements.length > 0) {
-                const index = elements[0].index;
-                const category = typeLabels[index];
+        onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+                const index = activeElements[0].index;
+                const category = issueTypeLabels[index];
                 if (category && category !== 'No Active Issues') {
-                    window.location.href = 'issue_details.php?category=' + encodeURIComponent(category);
+                    window.location.href = `issue_details.php?category=${encodeURIComponent(category)}`;
                 }
             }
         },
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
-            tooltip: {
-                callbacks: {
-                    footer: function() { return 'Click to view details'; }
-                }
-            }
+        onHover: (event, activeElements) => {
+            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
         }
     }
 });
 
-// 3. Priority Distribution
+(function() {
+    const total = issueTypeData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((issueTypeData[0] / total) * 100) : 0;
+    document.getElementById('typeChartPct').textContent = pct + '%';
+})();
+
+// 3. Priority Distribution — Donut with center text
 const priorityCtx = document.getElementById('priorityChart').getContext('2d');
-new Chart(priorityCtx, {
+const priorityLabels = ['High', 'Medium', 'Low'];
+const priorityMap = ['High', 'Medium', 'Low'];
+const priorityData = [<?php echo $highPriorityIssues; ?>, <?php echo $mediumPriorityIssues; ?>, <?php echo $lowPriorityIssues; ?>];
+const priorityColors = ['#EF4444', '#F59E0B', '#6B7280'];
+
+const priorityCenterPlugin = {
+    id: 'priorityCenterText',
+    afterDraw(chart) {
+        const total = chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+        const first = Number(chart.data.datasets[0].data[0]) || 0;
+        const pct = total > 0 ? Math.round((first / total) * 100) : 0;
+        document.getElementById('priorityChartPct').textContent = pct + '%';
+    }
+};
+
+const priorityChart = new Chart(priorityCtx, {
     type: 'doughnut',
+    plugins: [priorityCenterPlugin],
     data: {
-        labels: ['High', 'Medium', 'Low'],
+        labels: priorityLabels,
         datasets: [{
-            data: [
-                <?php echo $highPriorityIssues; ?>,
-                <?php echo $mediumPriorityIssues; ?>,
-                <?php echo $lowPriorityIssues; ?>
-            ],
-            backgroundColor: [
-                'rgba(30, 58, 138, 1)',
-                'rgba(30, 58, 138, 0.7)',
-                'rgba(30, 58, 138, 0.4)'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            data: priorityData,
+            backgroundColor: priorityColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
         }]
     },
     options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
-        onHover: function(event, elements) {
-            event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-        },
-        onClick: function(event, elements) {
-            if (elements.length > 0) {
-                const index = elements[0].index;
-                const priorityMap = ['High', 'Medium', 'Low'];
-                const priority = priorityMap[index];
-                window.location.href = 'issue_details.php?priority=' + encodeURIComponent(priority);
-            }
-        },
+        cutout: '68%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 10 }, padding: 8 }
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    footer: function() { return 'Click to view details'; }
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                        return context.label + ': ' + context.parsed + ' (' + pct + '%)';
+                    }
                 }
             }
+        },
+        onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+                const index = activeElements[0].index;
+                window.location.href = `issue_details.php?priority=${encodeURIComponent(priorityMap[index])}`;
+            }
+        },
+        onHover: (event, activeElements) => {
+            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
         }
     }
 });
 
-// 4. Issues Trend
+(function() {
+    const total = priorityData.reduce((a, b) => a + b, 0);
+    const pct = total > 0 ? Math.round((priorityData[0] / total) * 100) : 0;
+    document.getElementById('priorityChartPct').textContent = pct + '%';
+})();
+
+// 4. Issues Trend (Clickable)
 const issuesTrendCtx = document.getElementById('issuesTrendChart').getContext('2d');
-new Chart(issuesTrendCtx, {
+const monthMetadata = <?php echo json_encode($monthMetadata); ?>;
+
+const issuesTrendChart = new Chart(issuesTrendCtx, {
     type: 'line',
     data: {
         labels: <?php echo json_encode($issueMonths); ?>,
@@ -796,25 +1025,52 @@ new Chart(issuesTrendCtx, {
             fill: true,
             tension: 0.4,
             pointRadius: 4,
-            pointBackgroundColor: chartColors.blue
+            pointBackgroundColor: chartColors.blue,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: chartColors.orange
         }]
     },
     options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    title: function(context) {
+                        const index = context[0].dataIndex;
+                        return monthMetadata[index].year_month;
+                    },
+                    label: function(context) {
+                        const count = context.parsed.y;
+                        return count === 1 ? '1 issue assigned' : count + ' issues assigned';
+                    },
+                    afterLabel: function(context) {
+                        return '\n👆 Click to view detailed breakdown';
+                    }
+                }
+            }
         },
         scales: {
             y: {
                 beginAtZero: true,
                 grid: { color: '#f3f4f6' },
-                ticks: { font: { size: 10 } }
+                ticks: { font: { size: 10 }, stepSize: 1 }
             },
             x: {
                 grid: { display: false },
                 ticks: { font: { size: 10 } }
             }
+        },
+        onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+                const monthIndex = activeElements[0].index;
+                const currentYear = new Date().getFullYear();
+                window.location.href = `historical_issues.php?month=${monthIndex}&year=${currentYear}`;
+            }
+        },
+        onHover: (event, activeElements) => {
+            event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
         }
     }
 });
@@ -833,7 +1089,7 @@ new Chart(resolvedTrendCtx, {
         }]
     },
     options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
