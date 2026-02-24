@@ -264,7 +264,7 @@ $pcStmt->close();
         <!-- Modal Body -->
         <div class="overflow-hidden p-6">
 
-        <form id="issueForm" class="space-y-4" method="post">
+        <form id="issueForm" class="space-y-4" method="post" enctype="multipart/form-data">
             <input type="hidden" name="category" id="issueCategory" value="">
             <input type="hidden" name="component_asset_id" id="componentAssetId" value="">
             
@@ -391,6 +391,20 @@ $pcStmt->close();
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                 <textarea name="description" rows="4" class="block w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A] focus:ring-opacity-50 transition-all" placeholder="Provide more details about the issue..."></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Attach Image (Optional)</label>
+                <div class="mt-1 flex items-center">
+                    <input type="file" name="issue_image" id="issueImageInput" accept="image/jpeg,image/png,image/gif,image/webp" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-[#1E3A8A]">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Accepted formats: JPG, PNG, GIF, WEBP. Max size: 5MB</p>
+                <div id="imagePreviewContainer" class="mt-2 hidden">
+                    <img id="imagePreview" src="" alt="Image preview" class="max-w-full h-auto max-h-48 rounded-lg border border-gray-300">
+                    <button type="button" onclick="removeImagePreview()" class="mt-2 text-sm text-red-600 hover:text-red-800">
+                        <i class="fas fa-times-circle"></i> Remove image
+                    </button>
+                </div>
             </div>
 
             <?php if ($_SESSION['role'] === 'Faculty'): ?>
@@ -587,6 +601,9 @@ function closeIssueModal() {
     modal.classList.remove('flex', 'items-center', 'justify-center');
     issueForm.reset();
     
+    // Reset image preview
+    removeImagePreview();
+    
     // Hide conditional fields
     hardwareComponentField.classList.add('hidden');
     hardwareOthersField.classList.add('hidden');
@@ -739,6 +756,56 @@ document.addEventListener('click', function(e) {
         closeIssueModal();
     }
 });
+
+// Image preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('issueImageInput');
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Invalid file type. Please select a JPG, PNG, GIF, or WEBP image.');
+                    imageInput.value = '';
+                    return;
+                }
+                
+                // Validate file size (5MB max)
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert('File size exceeds 5MB limit. Please select a smaller image.');
+                    imageInput.value = '';
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('imagePreview');
+                    const container = document.getElementById('imagePreviewContainer');
+                    if (preview && container) {
+                        preview.src = event.target.result;
+                        container.classList.remove('hidden');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+
+// Remove image preview
+function removeImagePreview() {
+    const imageInput = document.getElementById('issueImageInput');
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('imagePreviewContainer');
+    
+    if (imageInput) imageInput.value = '';
+    if (preview) preview.src = '';
+    if (container) container.classList.add('hidden');
+}
 
 // Load hardware components for selected PC
 async function loadHardwareComponents(pcId) {

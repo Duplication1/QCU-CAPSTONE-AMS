@@ -29,6 +29,7 @@ try {
             r.name as room,
             pc.terminal_number,
             i.assigned_technician as technician_name,
+            i.image_path,
             CASE 
                 WHEN i.status = 'Open' AND i.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 'Overdue'
                 ELSE i.status
@@ -120,6 +121,7 @@ include '../components/layout_header.php';
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Room</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Terminal No</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Image</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Submitted</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Assigned To</th>
                             <th class="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Status</th>
@@ -156,6 +158,17 @@ include '../components/layout_header.php';
                             </td>
                             <td class="px-3 py-2 text-xs text-gray-900 max-w-xs truncate">
                                 <?php echo htmlspecialchars($issue['description']); ?>
+                            </td>
+                            <td class="px-3 py-2 text-left">
+                                <?php if (!empty($issue['image_path'])): ?>
+                                    <button onclick="openImageModal('../../<?php echo htmlspecialchars($issue['image_path']); ?>', event)" 
+                                            class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] rounded transition"
+                                            title="View attached image">
+                                        <i class="fas fa-image mr-1"></i>View
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-gray-300 text-[10px]">—</span>
+                                <?php endif; ?>
                             </td>
                             <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                 <?php echo date('M d, Y', strtotime($issue['created_at'])); ?>
@@ -231,7 +244,31 @@ include '../components/layout_header.php';
     </div>
 </div>
 
+<!-- Image Preview Modal -->
+<div id="imageModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" onclick="closeImageModal(event)">
+    <div class="absolute inset-0 bg-black opacity-90"></div>
+    <div class="relative max-w-[90vw] max-h-[90vh]" onclick="event.stopPropagation()">
+        <button type="button" onclick="closeImageModal(event)" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalImage" src="" alt="Full size image" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" onclick="event.stopPropagation()">
+    </div>
+</div>
+
 <script>
+// Image modal functions
+function openImageModal(imageSrc, event) {
+    if (event) event.stopPropagation();
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal(event) {
+    if (event) event.stopPropagation();
+    document.getElementById('imageModal').classList.add('hidden');
+    document.getElementById('modalImage').src = '';
+}
+
 // Pagination variables
 let currentPage = 1;
 const itemsPerPage = 10;
@@ -448,6 +485,14 @@ async function viewIssueDetails(issueId) {
                     <label class="block text-[10px] font-medium text-gray-700 mb-1">Description</label>
                     <p class="text-xs bg-gray-50 p-2 rounded border border-gray-200">${issue.description}</p>
                 </div>
+                ${issue.image_path ? `
+                <div>
+                    <label class="block text-[10px] font-medium text-gray-700 mb-1">Attached Image</label>
+                    <div class="mt-2 border border-gray-200 rounded-lg p-2 bg-gray-50">
+                        <img src="../../${issue.image_path}" alt="Issue image" class="max-w-full h-auto max-h-96 rounded-lg mx-auto cursor-pointer" onclick="openImageModal('../../${issue.image_path}', event)" title="Click to view full size">
+                    </div>
+                </div>
+                ` : ''}
                 ${issue.technician_notes ? `
                 <div>
                     <label class="block text-[10px] font-medium text-gray-700 mb-1">Technician Notes</label>

@@ -271,7 +271,7 @@ $whereClause = implode(' AND ', $whereConditions);
 $query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number AS terminal, i.title, i.description, 
                  i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
                  u.full_name AS reporter_name, i.component_asset_id,
-                 a.asset_name AS component_name, a.asset_tag AS component_tag
+                 a.asset_name AS component_name, a.asset_tag AS component_tag, i.image_path
           FROM issues i
           LEFT JOIN users u ON u.id = i.user_id
           LEFT JOIN rooms r ON r.id = i.room_id
@@ -690,6 +690,17 @@ include '../components/layout_header.php';
     </div>
 </div>
 
+<!-- Image Modal -->
+<div id="imageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" onclick="closeImageModal(event)">
+    <div class="absolute inset-0 bg-black opacity-75"></div>
+    <div class="relative z-10 max-w-4xl max-h-screen p-4" onclick="event.stopPropagation()">
+        <button onclick="closeImageModal(event)" class="absolute top-2 right-2 text-white bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full w-8 h-8 flex items-center justify-center">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalImage" src="" alt="Ticket Image" class="max-w-full max-h-screen rounded" onclick="event.stopPropagation()">
+    </div>
+</div>
+
 <!-- Update Status Modal -->
 <div id="statusModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black opacity-50" onclick="closeStatusModal()"></div>
@@ -848,6 +859,12 @@ function viewTicket(ticketId) {
                         <p class="text-sm font-medium text-gray-500">Description</p>
                         <p class="text-base text-gray-900 whitespace-pre-wrap">${ticket.description || 'No description provided'}</p>
                     </div>
+                    ${ticket.image_path ? `
+                    <div class="mt-4">
+                        <p class="text-sm font-medium text-gray-500">Attached Image</p>
+                        <img src="../../${ticket.image_path}" alt="Ticket Image" class="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-90 transition" onclick="openImageModal('../../${ticket.image_path}', event)" style="max-height: 400px;">
+                    </div>
+                    ` : ''}
                 `;
                 document.getElementById('viewModal').classList.remove('hidden');
             }
@@ -1025,6 +1042,19 @@ function applyFilters() {
 
 function clearAllFilters() {
     window.location.href = 'tickets.php?type=all';
+}
+
+// Image Modal Functions
+function openImageModal(imageSrc, event) {
+    if (event) event.stopPropagation();
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal(event) {
+    if (event) event.stopPropagation();
+    document.getElementById('imageModal').classList.add('hidden');
+    document.getElementById('modalImage').src = '';
 }
 </script>
 

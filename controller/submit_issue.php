@@ -60,12 +60,53 @@ if ($title === '') {
     }
 }
 
+// Handle image upload
+$image_path = null;
+if (isset($_FILES['issue_image']) && $_FILES['issue_image']['error'] === UPLOAD_ERR_OK) {
+    $upload_dir = __DIR__ . '/../uploads/ticket_images/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+    
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $file_type = $_FILES['issue_image']['type'];
+    $file_size = $_FILES['issue_image']['size'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+    
+    // Validate file type
+    if (!in_array($file_type, $allowed_types)) {
+        echo json_encode(['success'=>false,'message'=>'Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.']); 
+        exit;
+    }
+    
+    // Validate file size
+    if ($file_size > $max_size) {
+        echo json_encode(['success'=>false,'message'=>'File size exceeds 5MB limit.']); 
+        exit;
+    }
+    
+    // Generate unique filename
+    $file_extension = pathinfo($_FILES['issue_image']['name'], PATHINFO_EXTENSION);
+    $unique_filename = date('Y-m-d_His') . '_' . uniqid() . '.' . $file_extension;
+    $target_path = $upload_dir . $unique_filename;
+    
+    // Move uploaded file
+    if (move_uploaded_file($_FILES['issue_image']['tmp_name'], $target_path)) {
+        $image_path = 'uploads/ticket_images/' . $unique_filename;
+    } else {
+        echo json_encode(['success'=>false,'message'=>'Failed to upload image.']); 
+        exit;
+    }
+}
+
 // insert into issues
-$stmt = $conn->prepare("INSERT INTO issues (category, title, description, building_id, room_id, pc_id, component_asset_id, hardware_component, hardware_component_other, software_name, network_issue_type, network_issue_type_other, laboratory_concern_type, laboratory_concern_other, other_concern_category, other_concern_other, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
+$stmt = $conn->prepare("INSERT INTO issues (category, title, description, image_path, building_id, room_id, pc_id, component_asset_id, hardware_component, hardware_component_other, software_name, network_issue_type, network_issue_type_other, laboratory_concern_type, laboratory_concern_other, other_concern_category, other_concern_other, priority, status, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Open', ?, NOW())");
 if (!$stmt) { echo json_encode(['success'=>false,'message'=>'DB prepare failed: ' . $conn->error]); exit; }
 $user_id = $_SESSION['user_id'] ?? null;
 $priority = $_POST['priority'] ?? 'Medium';
-$stmt->bind_param('sssiiisssssssssssi', $category, $title, $description, $building_id, $room_id, $pc_id, $component_asset_id, $hardware_component, $hardware_component_other, $software_name, $network_issue_type, $network_issue_type_other, $laboratory_concern_type, $laboratory_concern_other, $other_concern_category, $other_concern_other, $priority, $user_id);
+$stmt->bind_param('ssssiiisssssssssssi', $category, $title, $description, $image_path, $building_id, $room_id, $pc_id, $component_asset_id, $hardware_component, $hardware_component_other, $software_name, $network_issue_type, $network_issue_type_other, $laboratory_concern_type, $laboratory_concern_other, $other_concern_category, $other_concern_other, $priority, $user_id);
 $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();

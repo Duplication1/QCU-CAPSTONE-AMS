@@ -100,7 +100,8 @@ $sql = "SELECT i.*,
                b.name AS building_name,
                pc.terminal_number,
                a.asset_name AS component_name,
-               a.asset_tag AS component_tag
+               a.asset_tag AS component_tag,
+               i.image_path
         FROM issues i
         LEFT JOIN users u ON u.id = i.user_id
         LEFT JOIN rooms r ON r.id = i.room_id
@@ -241,6 +242,7 @@ if (!$result || $result->num_rows === 0): ?>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Title / Details</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Location</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Component</th>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Image</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Priority</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Status</th>
             <?php if ($viewMode === 'active'): ?>
@@ -306,6 +308,17 @@ if (!$result || $result->num_rows === 0): ?>
                 <span class="text-gray-400 text-[10px]">N/A</span>
               <?php endif; ?>
             </td>
+            <td class="px-3 py-2 text-left">
+              <?php if (!empty($ticket['image_path'])): ?>
+                <button onclick="openImageModal('../../<?php echo htmlspecialchars($ticket['image_path']); ?>', event)" 
+                        class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] rounded transition"
+                        title="View attached image">
+                  <i class="fas fa-image mr-1"></i>View
+                </button>
+              <?php else: ?>
+                <span class="text-gray-300 text-[10px]">—</span>
+              <?php endif; ?>
+            </td>
             <td class="px-3 py-2 text-xs">
               <?php
                 $priorityEsc = htmlspecialchars($priority);
@@ -357,6 +370,17 @@ if (!$result || $result->num_rows === 0): ?>
   </div>
 </main>
 
+<!-- Image Preview Modal -->
+<div id="imageModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" onclick="closeImageModal(event)">
+  <div class="absolute inset-0 bg-black opacity-90"></div>
+  <div class="relative max-w-[90vw] max-h-[90vh]" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeImageModal(event)" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
+      <i class="fas fa-times"></i>
+    </button>
+    <img id="modalImage" src="" alt="Full size image" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" onclick="event.stopPropagation()">
+  </div>
+</div>
+
 <!-- Archive Confirmation Modal -->
 <div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
   <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -384,6 +408,19 @@ if (!$result || $result->num_rows === 0): ?>
 
 <script>
 const apiUrl = '../../controller/technician_update_status.php';
+
+// Image modal functions
+function openImageModal(imageSrc, event) {
+  if (event) event.stopPropagation();
+  document.getElementById('modalImage').src = imageSrc;
+  document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('imageModal').classList.add('hidden');
+  document.getElementById('modalImage').src = '';
+}
 
 // Pagination variables
 let currentPage = 1;
