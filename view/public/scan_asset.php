@@ -122,6 +122,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_condition']) &
     exit();
 }
 
+// Handle status update (Technician only)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status']) && $is_logged_in && $user_role === 'Technician') {
+    header('Content-Type: application/json');
+
+    $new_status  = $_POST['status']   ?? '';
+    $asset_id    = intval($_POST['asset_id'] ?? 0);
+    $notes       = trim($_POST['notes'] ?? '');
+
+    $allowed_statuses = ['Available', 'In Use', 'Under Maintenance', 'Retired', 'Disposed', 'Lost', 'Broken', 'Archive'];
+    if (!in_array($new_status, $allowed_statuses)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid status value']);
+        exit();
+    }
+
+    $conn = new mysqli('localhost', 'root', '', 'ams_database');
+
+    // Get old status
+    $old_stmt = $conn->prepare("SELECT status FROM assets WHERE id = ?");
+    $old_stmt->bind_param('i', $asset_id);
+    $old_stmt->execute();
+    $old_data  = $old_stmt->get_result()->fetch_assoc();
+    $old_status = $old_data['status'];
+    $old_stmt->close();
+
+    // Update status
+    $stmt = $conn->prepare("UPDATE assets SET status = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param('si', $new_status, $asset_id);
+
+    if ($stmt->execute()) {
+        // Log history
+        require_once '../../controller/AssetHistoryHelper.php';
+        $helper = AssetHistoryHelper::getInstance();
+        $helper->logStatusChange($asset_id, $old_status, $new_status, $user_id);
+
+        // Log to activity logs
+        try {
+            $description = "Status changed from {$old_status} to {$new_status} via QR scanner";
+            if ($notes) $description .= ". Note: {$notes}";
+            ActivityLog::record($user_id, 'update', 'asset', $asset_id, $description);
+        } catch (Exception $e) {
+            error_log("ActivityLog failed: " . $e->getMessage());
+        }
+
+        // Notify all Laboratory Staff users
+        $tech_name = $_SESSION['full_name'] ?? 'A Technician';
+
+        // Get asset tag for the notification message
+        $asset_tag_stmt = $conn->prepare("SELECT asset_tag, asset_name FROM assets WHERE id = ?");
+        $asset_tag_stmt->bind_param('i', $asset_id);
+        $asset_tag_stmt->execute();
+        $asset_info = $asset_tag_stmt->get_result()->fetch_assoc();
+        $asset_tag_stmt->close();
+        $asset_label = $asset_info ? "{$asset_info['asset_tag']} - {$asset_info['asset_name']}" : "Asset #{$asset_id}";
+
+        $notif_title   = "Asset Status Changed";
+        $notif_message = "{$tech_name} changed status of [{$asset_label}] from \"{$old_status}\" to \"{$new_status}\" via QR scanner.";
+        if ($notes) $notif_message .= " Note: {$notes}";
+        $notif_type    = $new_status === 'Available' ? 'success' : ($new_status === 'Under Maintenance' || $new_status === 'Broken' ? 'warning' : 'info');
+
+        // Get all active Laboratory Staff user IDs
+        $staff_stmt = $conn->prepare("SELECT id FROM users WHERE role = 'Laboratory Staff' AND status = 'Active'");
+        $staff_stmt->execute();
+        $staff_result = $staff_stmt->get_result();
+
+        $notif_stmt = $conn->prepare(
+            "INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, ?, 'asset', ?)"
+        );
+        while ($staff = $staff_result->fetch_assoc()) {
+            $notif_stmt->bind_param('isssi', $staff['id'], $notif_title, $notif_message, $notif_type, $asset_id);
+            $notif_stmt->execute();
+        }
+        $notif_stmt->close();
+        $staff_stmt->close();
+
+        echo json_encode(['success' => true, 'message' => 'Status updated successfully', 'new_status' => $new_status]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+    }
+
+    $stmt->close();
+    $conn->close();
+    exit();
+}
+
 // Handle laboratory staff updates (PC assignment, room, status)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_asset']) && $is_logged_in && $user_role === 'Laboratory Staff') {
     header('Content-Type: application/json');
@@ -338,6 +422,10 @@ if ($asset_id <= 0) {
         }
         input, select, textarea {
             color: black !important;
+        }
+        option {
+            color: #111827 !important;
+            background-color: white !important;
         }
         .status-badge {
             display: inline-block;
@@ -691,27 +779,81 @@ if ($asset_id <= 0) {
                 <!-- Action Buttons Based on Role -->
                 <?php if ($user_role === 'Technician'): ?>
                 <div class="mt-6 border-t pt-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <h3 class="text-lg font-bold mb-4" style="color:#fff;">
                         <i class="fas fa-tools mr-2"></i>Technician Actions
                     </h3>
-                    <form id="updateConditionForm" class="flex gap-4 items-end">
-                        <input type="hidden" name="asset_id" value="<?php echo $asset_id; ?>">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Update Condition</label>
-                            <select name="condition" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="Excellent" <?php echo $asset['condition'] === 'Excellent' ? 'selected' : ''; ?>>Excellent</option>
-                                <option value="Good" <?php echo $asset['condition'] === 'Good' ? 'selected' : ''; ?>>Good</option>
-                                <option value="Fair" <?php echo $asset['condition'] === 'Fair' ? 'selected' : ''; ?>>Fair</option>
-                                <option value="Poor" <?php echo $asset['condition'] === 'Poor' ? 'selected' : ''; ?>>Poor</option>
-                                <option value="Non-Functional" <?php echo $asset['condition'] === 'Non-Functional' ? 'selected' : ''; ?>>Non-Functional</option>
-                            </select>
+
+                    <!-- ── Quick Resolve / Un-resolve Buttons ── -->
+                    <div class="mb-5">
+                        <p class="text-sm font-medium mb-2" style="color:rgba(255,255,255,0.85);">Quick Action</p>
+                        <div class="flex gap-3 flex-wrap">
+                            <?php if ($asset['status'] !== 'Available'): ?>
+                            <button id="quickResolveBtn"
+                                    class="flex-1 py-3 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95"
+                                    style="background:linear-gradient(135deg,#16a34a,#15803d);">
+                                <i class="fas fa-check-circle mr-2"></i>Mark as Resolved (Available)
+                            </button>
+                            <?php else: ?>
+                            <button id="quickMaintenanceBtn"
+                                    class="flex-1 py-3 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95"
+                                    style="background:linear-gradient(135deg,#b45309,#92400e);">
+                                <i class="fas fa-wrench mr-2"></i>Mark as Under Maintenance
+                            </button>
+                            <?php endif; ?>
                         </div>
-                        <button type="submit" 
-                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-save mr-2"></i>Update
-                        </button>
-                    </form>
+                    </div>
+
+                    <div id="techActionMsg" class="hidden mb-4 p-3 rounded-lg text-sm font-semibold"></div>
+
+                    <!-- ── Update Status (full dropdown) ── -->
+                    <div class="mb-5">
+                        <p class="text-sm font-medium mb-2" style="color:rgba(255,255,255,0.85);">Update Status</p>
+                        <form id="updateStatusForm" class="space-y-3">
+                            <input type="hidden" name="asset_id" value="<?php echo $asset_id; ?>">
+                            <select name="status" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    style="color:#111827 !important; background-color:#ffffff;">
+                                <option value="Available"          <?php echo $asset['status'] === 'Available'          ? 'selected' : ''; ?>>Available</option>
+                                <option value="In Use"             <?php echo $asset['status'] === 'In Use'             ? 'selected' : ''; ?>>In Use</option>
+                                <option value="Under Maintenance"  <?php echo $asset['status'] === 'Under Maintenance'  ? 'selected' : ''; ?>>Under Maintenance</option>
+                                <option value="Broken"             <?php echo $asset['status'] === 'Broken'             ? 'selected' : ''; ?>>Broken</option>
+                                <option value="Lost"               <?php echo $asset['status'] === 'Lost'               ? 'selected' : ''; ?>>Lost</option>
+                                <option value="Retired"            <?php echo $asset['status'] === 'Retired'            ? 'selected' : ''; ?>>Retired</option>
+                                <option value="Disposed"           <?php echo $asset['status'] === 'Disposed'           ? 'selected' : ''; ?>>Disposed</option>
+                                <option value="Archive"            <?php echo $asset['status'] === 'Archive'            ? 'selected' : ''; ?>>Archive</option>
+                            </select>
+                            <textarea name="notes" rows="2" placeholder="Optional note (e.g. replaced fan, reinstalled OS)"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                                      style="color:#111827 !important; background-color:#fff;"></textarea>
+                            <button type="submit"
+                                    class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Status
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- ── Update Condition ── -->
+                    <div>
+                        <p class="text-sm font-medium mb-2" style="color:rgba(255,255,255,0.85);">Update Condition</p>
+                        <form id="updateConditionForm" class="flex gap-3 items-end">
+                            <input type="hidden" name="asset_id" value="<?php echo $asset_id; ?>">
+                            <div class="flex-1">
+                                <select name="condition" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        style="color:#111827 !important; background-color:#ffffff;">
+                                    <option value="Excellent"     <?php echo $asset['condition'] === 'Excellent'     ? 'selected' : ''; ?>>Excellent</option>
+                                    <option value="Good"          <?php echo $asset['condition'] === 'Good'          ? 'selected' : ''; ?>>Good</option>
+                                    <option value="Fair"          <?php echo $asset['condition'] === 'Fair'          ? 'selected' : ''; ?>>Fair</option>
+                                    <option value="Poor"          <?php echo $asset['condition'] === 'Poor'          ? 'selected' : ''; ?>>Poor</option>
+                                    <option value="Non-Functional"<?php echo $asset['condition'] === 'Non-Functional'? 'selected' : ''; ?>>Non-Functional</option>
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">
+                                <i class="fas fa-save mr-1"></i>Save
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <?php elseif ($user_role === 'Laboratory Staff'): ?>
                 <div class="mt-6 border-t pt-6">
@@ -1076,6 +1218,77 @@ if ($asset_id <= 0) {
             button.disabled = false;
             button.innerHTML = originalText;
         }
+    });
+
+    // ── Update Status Form (Technician) ──────────────────────────
+    async function submitStatusUpdate(statusValue, notesValue) {
+        const msgEl = document.getElementById('techActionMsg');
+        const statusForm = document.getElementById('updateStatusForm');
+
+        const formData = new FormData();
+        formData.append('update_status', '1');
+        formData.append('asset_id', (statusForm ? statusForm.querySelector('[name=asset_id]').value : <?php echo $asset_id; ?>));
+        formData.append('status', statusValue);
+        if (notesValue) formData.append('notes', notesValue);
+
+        try {
+            const response = await fetch('', { method: 'POST', body: formData });
+            const text = await response.text();
+            let result;
+            try { result = JSON.parse(text); } catch { throw new Error('Invalid server response'); }
+
+            if (result.success) {
+                if (msgEl) {
+                    msgEl.textContent = '✓ ' + result.message;
+                    msgEl.className = 'mb-4 p-3 rounded-lg text-sm font-semibold bg-green-100 text-green-800';
+                    msgEl.classList.remove('hidden');
+                }
+                showAlert('success', result.message);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                if (msgEl) {
+                    msgEl.textContent = '✗ ' + result.message;
+                    msgEl.className = 'mb-4 p-3 rounded-lg text-sm font-semibold bg-red-100 text-red-800';
+                    msgEl.classList.remove('hidden');
+                }
+                showAlert('error', result.message);
+            }
+        } catch (err) {
+            showAlert('error', err.message || 'An error occurred.');
+        }
+    }
+
+    document.getElementById('updateStatusForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+        const statusValue = e.target.querySelector('[name=status]').value;
+        const notesValue  = e.target.querySelector('[name=notes]').value;
+        await submitStatusUpdate(statusValue, notesValue);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+
+    document.getElementById('quickResolveBtn')?.addEventListener('click', async (btn) => {
+        const el = document.getElementById('quickResolveBtn');
+        const orig = el.innerHTML;
+        el.disabled = true;
+        el.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Marking as Resolved...';
+        await submitStatusUpdate('Available', 'Marked as resolved via QR scanner');
+        el.disabled = false;
+        el.innerHTML = orig;
+    });
+
+    document.getElementById('quickMaintenanceBtn')?.addEventListener('click', async () => {
+        const el = document.getElementById('quickMaintenanceBtn');
+        const orig = el.innerHTML;
+        el.disabled = true;
+        el.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        await submitStatusUpdate('Under Maintenance', 'Marked as Under Maintenance via QR scanner');
+        el.disabled = false;
+        el.innerHTML = orig;
     });
     
     // Update Asset Form (Laboratory Staff)
