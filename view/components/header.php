@@ -121,7 +121,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       </a>
     </li>
     <li class="hover:bg-gray-100 hover:rounded-md transition-all duration-200">
-      <a href="../../controller/logout_controller.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-red-600 w-full">
+      <a id="logout-link" href="../../controller/logout_controller.php" class="px-4 py-2 cursor-pointer flex items-center gap-2 text-gray-800 hover:text-red-600 w-full">
         <i class="fa-solid fa-right-from-bracket text-red-600"></i>
         Logout
       </a>
@@ -408,7 +408,86 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     }
   });
 
+  // Logout confirmation modal
+  document.addEventListener('DOMContentLoaded', function () {
+    const logoutLink = document.getElementById('logout-link');
+    const logoutModal = document.getElementById('logout-confirm-modal');
+    const logoutConfirmBtn = document.getElementById('logout-confirm-btn');
+    const logoutCancelBtn = document.getElementById('logout-cancel-btn');
+    const sidebar = document.getElementById('sidebar');
+
+    function freezeSidebar() {
+      if (sidebar) {
+        sidebar.style.width = '5rem';
+        sidebar.style.pointerEvents = 'none';
+        sidebar.style.transition = 'none';
+        sidebar.style.filter = 'blur(4px) brightness(0.6)';
+      }
+    }
+
+    function unfreezeSidebar() {
+      if (sidebar) {
+        sidebar.style.width = '';
+        sidebar.style.pointerEvents = '';
+        sidebar.style.transition = '';
+        sidebar.style.filter = '';
+      }
+    }
+
+    if (logoutLink && logoutModal) {
+      logoutLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        freezeSidebar();
+        logoutModal.classList.remove('hidden');
+      });
+    }
+
+    if (logoutCancelBtn && logoutModal) {
+      logoutCancelBtn.addEventListener('click', function () {
+        logoutModal.classList.add('hidden');
+        unfreezeSidebar();
+      });
+    }
+
+    if (logoutConfirmBtn && logoutModal) {
+      logoutConfirmBtn.addEventListener('click', function () {
+        logoutModal.classList.add('hidden');
+        const overlay = document.getElementById('logout-loading-overlay');
+        if (overlay) overlay.classList.remove('hidden');
+        setTimeout(() => { if (logoutLink) window.location.href = logoutLink.href; }, 2000);
+      });
+    }
+  });
   </script>
+
+<!-- Logout Confirmation Modal -->
+<div id="logout-confirm-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col items-center gap-5 animate-fade-in">
+    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
+      <i class="fa-solid fa-right-from-bracket text-red-600 text-2xl"></i>
+    </div>
+    <div class="text-center">
+      <h2 class="text-lg font-bold text-gray-800 mb-1">Log Out</h2>
+      <p class="text-gray-500 text-sm">Are you sure you want to Log out?</p>
+    </div>
+    <div class="flex gap-3 w-full">
+      <button id="logout-cancel-btn" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition">Cancel</button>
+      <button id="logout-confirm-btn" class="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Logout Loading Overlay -->
+<div id="logout-loading-overlay" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm" style="z-index: 999999; pointer-events: all;">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col items-center gap-5">
+    <svg class="animate-spin h-12 w-12 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    <p class="text-red-600 text-lg font-semibold tracking-wide">Logging out...</p>
+  </div>
+</div>
+
 </header>
 
 

@@ -38,6 +38,6 @@ session_start();
 $_SESSION['success'] = "You have been successfully logged out.";
 
 // Redirect to unified login page
-header("Location: ../view/login.php");
+header("Location: ../");
 exit();
 ?>
