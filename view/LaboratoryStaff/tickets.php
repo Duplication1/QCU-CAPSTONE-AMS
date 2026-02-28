@@ -27,6 +27,12 @@ if (!isset($conn)) {
     }
 }
 
+// Add assignment_status column if it doesn't exist
+$_colCheck = $conn->query("SHOW COLUMNS FROM issues LIKE 'assignment_status'");
+if ($_colCheck && $_colCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE issues ADD COLUMN assignment_status ENUM('Pending','Confirmed','Refused') NULL DEFAULT NULL");
+}
+
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $ticketId = intval($_POST['ticket_id']);
@@ -58,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician']))
         $ticketData = $ticketResult->fetch_assoc();
         $ticketStmt->close();
 
-        $assignStmt = $conn->prepare("UPDATE issues SET assigned_technician = ? WHERE id = ?");
+        $assignStmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, assignment_status = 'Pending', updated_at = NOW() WHERE id = ?");
         $assignStmt->bind_param('si', $technicianName, $ticketId);
         $assignStmt->execute();
         $affected = $assignStmt->affected_rows;
@@ -269,7 +275,7 @@ if (!empty($filterStatus)) {
 $whereClause = implode(' AND ', $whereConditions);
 
 $query = "SELECT i.id, i.user_id, i.category, r.name AS room, p.terminal_number AS terminal, i.title, i.description, 
-                 i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician,
+                 i.priority, i.status, i.created_at, i.updated_at, i.assigned_technician, i.assignment_status,
                  u.full_name AS reporter_name, i.component_asset_id,
                  a.asset_name AS component_name, a.asset_tag AS component_tag, i.image_path
           FROM issues i
@@ -487,9 +493,19 @@ include '../components/layout_header.php';
                                  </td>
                                  <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900 assigned-cell">
                                     <?php 
-                                    $technician = $ticket['assigned_technician'] ?? null;
+                                    $technician   = $ticket['assigned_technician'] ?? null;
+                                    $assignStatus = $ticket['assignment_status'] ?? null;
                                     if ($technician) {
+                                        echo '<div class="flex flex-col gap-0.5">';
                                         echo '<span class="text-green-700 font-medium">' . htmlspecialchars($technician) . '</span>';
+                                        if ($assignStatus === 'Pending') {
+                                            echo '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-yellow-100 text-yellow-800 w-fit"><i class="fas fa-clock text-[8px]"></i> Pending</span>';
+                                        } elseif ($assignStatus === 'Confirmed') {
+                                            echo '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-green-100 text-green-800 w-fit"><i class="fas fa-check text-[8px]"></i> Confirmed</span>';
+                                        } elseif ($assignStatus === 'Refused') {
+                                            echo '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-red-100 text-red-800 w-fit"><i class="fas fa-times text-[8px]"></i> Refused</span>';
+                                        }
+                                        echo '</div>';
                                     } else {
                                         echo '<span class="text-gray-400 italic">Not assigned</span>';
                                     }
@@ -534,9 +550,17 @@ include '../components/layout_header.php';
                                      <button onclick="viewTicket(<?php echo $ticketId; ?>)" class="text-[#1E3A8A] hover:text-blue-700 mr-2" title="View Details">
                                          <i class="fa-solid fa-eye"></i>
                                      </button>
-                                     <button class="assignBtn text-gray-600 hover:text-[#1E3A8A]" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>" title="Assign Technician">
-                                         <i class="fa-solid fa-user-plus"></i>
-                                     </button>
+                                     <?php
+                                     $isAssigned = !empty($ticket['assigned_technician']) && in_array($ticket['assignment_status'] ?? '', ['Pending', 'Confirmed']);
+                                     if ($isAssigned): ?>
+                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-400 cursor-not-allowed" title="Already assigned to <?php echo htmlspecialchars($ticket['assigned_technician']); ?>">
+                                             <i class="fa-solid fa-user-check"></i> Assigned
+                                         </span>
+                                     <?php else: ?>
+                                         <button class="assignBtn text-gray-600 hover:text-[#1E3A8A]" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>" title="Assign Technician">
+                                             <i class="fa-solid fa-user-plus"></i>
+                                         </button>
+                                     <?php endif; ?>
                                  </td>
                              </tr>
                              <?php endwhile; ?>
@@ -956,8 +980,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (row) {
                         const assignedCell = row.querySelector('.assigned-cell');
                         if (assignedCell) {
-                            assignedCell.innerHTML = '<span class="text-green-700 font-medium">'+ (json.assigned_technician||'') +'</span>';
-                        }
+                                    assignedCell.innerHTML = '<div class="flex flex-col gap-0.5"><span class="text-green-700 font-medium">'+ (json.assigned_technician||'') +'</span><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-yellow-100 text-yellow-800 w-fit"><i class="fas fa-clock text-[8px]"></i> Pending</span></div>';
+                                }
                     } else {
                         console.error('FAILED: Row not found for ticket ID:', ticketIdForUpdate);
                         // Row not found but assignment succeeded - just reload the page

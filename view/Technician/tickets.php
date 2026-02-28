@@ -30,6 +30,12 @@ if ($checkArchivedAt->num_rows === 0) {
 // Auto-delete archived tickets older than 30 days
 $conn->query("DELETE FROM issues WHERE is_archived = 1 AND archived_at IS NOT NULL AND archived_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
 
+// Add assignment_status column if it doesn't exist
+$checkAssignStatus = $conn->query("SHOW COLUMNS FROM issues LIKE 'assignment_status'");
+if ($checkAssignStatus->num_rows === 0) {
+    $conn->query("ALTER TABLE issues ADD COLUMN assignment_status ENUM('Pending','Confirmed','Refused') NULL DEFAULT NULL");
+}
+
 // AJAX endpoint for archiving tickets
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'archive_ticket') {
     header('Content-Type: application/json');
@@ -94,7 +100,7 @@ $viewMode = $_GET['view'] ?? 'active';
 $isArchivedFilter = ($viewMode === 'archived') ? 1 : 0;
 
 // fetch tickets assigned to this technician (only show tickets assigned to the logged-in technician)
-$sql = "SELECT i.*, 
+$sql = "SELECT i.*, i.assignment_status,
                u.full_name AS reporter_name,
                r.name AS room_name,
                b.name AS building_name,
@@ -246,6 +252,7 @@ if (!$result || $result->num_rows === 0): ?>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Priority</th>
             <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Status</th>
             <?php if ($viewMode === 'active'): ?>
+            <th class="px-3 py-2 text-left text-[10px] font-medium uppercase">Assignment</th>
             <th class="px-3 py-2 text-center text-[10px] font-medium uppercase">Actions</th>
             <?php endif; ?>
           </tr>
@@ -267,8 +274,12 @@ if (!$result || $result->num_rows === 0): ?>
             $rawPriority = $ticket['priority'] ?? '';
             $priority = trim((string)$rawPriority);
             if ($priority === '') $priority = 'Medium';
+            
+            // Assignment status for row highlight
+            $rowAssignStatus = $ticket['assignment_status'] ?? null;
+            $rowIsPending    = ($rowAssignStatus === 'Pending');
           ?>
-          <tr class="ticket-row hover:bg-blue-50 transition" 
+          <tr class="ticket-row hover:bg-blue-50 transition <?php echo $rowIsPending ? 'border-l-4 border-yellow-400 bg-yellow-50 hover:bg-yellow-100' : ''; ?>" 
               data-ticket-id="<?php echo (int)$ticket['id']; ?>" 
               data-category="<?php echo $category; ?>"
               data-priority="<?php echo htmlspecialchars($priority); ?>"
@@ -333,21 +344,52 @@ if (!$result || $result->num_rows === 0): ?>
                 echo $status === 'Open' ? 'bg-blue-100 text-blue-800' : ($status === 'In Progress' ? 'bg-purple-100 text-purple-800' : ($status === 'Resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'));
               ?>"><?php echo htmlspecialchars($status); ?></span>
             </td>
-            <?php if ($viewMode === 'active'): ?>
+            <?php if ($viewMode === 'active'):
+              $assignStatus = $ticket['assignment_status'] ?? null;
+              $isPending    = ($assignStatus === 'Pending');
+            ?>
+            <!-- Assignment status badge -->
+            <td class="px-3 py-2 text-xs">
+              <?php if ($isPending): ?>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-800">
+                  <i class="fas fa-clock text-[9px]"></i> Pending
+                </span>
+              <?php elseif ($assignStatus === 'Confirmed'): ?>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
+                  <i class="fas fa-check text-[9px]"></i> Confirmed
+                </span>
+              <?php else: ?>
+                <span class="text-gray-400 text-[10px]">—</span>
+              <?php endif; ?>
+            </td>
+            <!-- Actions column -->
             <td class="px-3 py-2 text-center text-xs">
-              <div class="flex items-center justify-center gap-1">
-                <select class="statusSelect border rounded px-2 py-1 text-[10px]">
-                  <option value="Open" <?php if ($status==='Open') echo 'selected'; ?>>Open</option>
-                  <option value="In Progress" <?php if ($status==='In Progress') echo 'selected'; ?>>In Progress</option>
-                  <option value="Resolved" <?php if ($status==='Resolved') echo 'selected'; ?>>Resolved</option>
-                  <option value="Closed" <?php if ($status==='Closed') echo 'selected'; ?>>Closed</option>
-                </select>
-                <?php if ($status === 'Resolved'): ?>
-                  <button class="archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700" title="Archive this ticket">
-                    <i class="fa-solid fa-box-archive"></i>
+              <?php if ($isPending): ?>
+                <!-- Pending: show Confirm / Refuse buttons -->
+                <div class="flex items-center justify-center gap-1">
+                  <button class="confirmBtn px-2 py-1 rounded text-[10px] bg-green-600 text-white hover:bg-green-700 font-medium" title="Accept this ticket">
+                    <i class="fas fa-check mr-1"></i>Confirm
                   </button>
-                <?php endif; ?>
-              </div>
+                  <button class="refuseBtn px-2 py-1 rounded text-[10px] bg-red-600 text-white hover:bg-red-700 font-medium" title="Refuse this ticket">
+                    <i class="fas fa-times mr-1"></i>Refuse
+                  </button>
+                </div>
+              <?php else: ?>
+                <!-- Confirmed or no status: show normal status select -->
+                <div class="flex items-center justify-center gap-1">
+                  <select class="statusSelect border rounded px-2 py-1 text-[10px]">
+                    <option value="Open" <?php if ($status==='Open') echo 'selected'; ?>>Open</option>
+                    <option value="In Progress" <?php if ($status==='In Progress') echo 'selected'; ?>>In Progress</option>
+                    <option value="Resolved" <?php if ($status==='Resolved') echo 'selected'; ?>>Resolved</option>
+                    <option value="Closed" <?php if ($status==='Closed') echo 'selected'; ?>>Closed</option>
+                  </select>
+                  <?php if ($status === 'Resolved'): ?>
+                    <button class="archiveBtn px-2 py-1 rounded text-[10px] bg-gray-600 text-white hover:bg-gray-700" title="Archive this ticket">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
             </td>
             <?php endif; ?>
           </tr>
@@ -382,6 +424,56 @@ if (!$result || $result->num_rows === 0): ?>
 </div>
 
 <!-- Archive Confirmation Modal -->
+<!-- Refuse Ticket Confirmation Modal -->
+<!-- Confirm Assignment Modal -->
+<div id="confirmAssignModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+  <div class="p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Confirm Assignment</h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Are you sure you want to accept this ticket? You will be responsible for resolving it.
+        </p>
+      </div>
+      <div class="flex gap-3 px-4 py-3">
+        <button id="cancelConfirmAssign" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition">
+          Cancel
+        </button>
+        <button id="proceedConfirmAssign" class="flex-1 px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="refuseModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+  <div class="p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Refuse Ticket</h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500">
+          Are you sure you want to refuse this ticket? It will be returned to the queue and unassigned.
+        </p>
+      </div>
+      <div class="flex gap-3 px-4 py-3">
+        <button id="cancelRefuse" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition">
+          Cancel
+        </button>
+        <button id="confirmRefuse" class="flex-1 px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+          Refuse
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
   <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
     <div class="mt-3 text-center">
@@ -666,6 +758,66 @@ function hideArchiveModal() {
   pendingArchiveTicketId = null;
 }
 
+// Confirm Assignment Modal
+let pendingConfirmTicketId = null;
+let pendingConfirmRow = null;
+
+function showConfirmAssignModal(ticketId, row) {
+  pendingConfirmTicketId = ticketId;
+  pendingConfirmRow = row;
+  document.getElementById('confirmAssignModal').classList.remove('hidden');
+}
+
+function hideConfirmAssignModal() {
+  document.getElementById('confirmAssignModal').classList.add('hidden');
+  pendingConfirmTicketId = null;
+  pendingConfirmRow = null;
+}
+
+document.getElementById('cancelConfirmAssign')?.addEventListener('click', hideConfirmAssignModal);
+
+document.getElementById('proceedConfirmAssign')?.addEventListener('click', function() {
+  if (!pendingConfirmTicketId || !pendingConfirmRow) { hideConfirmAssignModal(); return; }
+  const ticketId = pendingConfirmTicketId;
+  const row = pendingConfirmRow;
+  hideConfirmAssignModal();
+  handleRespondAssignment(ticketId, row, 'confirm');
+});
+
+document.getElementById('confirmAssignModal')?.addEventListener('click', function(e) {
+  if (e.target.id === 'confirmAssignModal') hideConfirmAssignModal();
+});
+
+// Refuse Modal
+let pendingRefuseTicketId = null;
+let pendingRefuseRow = null;
+
+function showRefuseModal(ticketId, row) {
+  pendingRefuseTicketId = ticketId;
+  pendingRefuseRow = row;
+  document.getElementById('refuseModal').classList.remove('hidden');
+}
+
+function hideRefuseModal() {
+  document.getElementById('refuseModal').classList.add('hidden');
+  pendingRefuseTicketId = null;
+  pendingRefuseRow = null;
+}
+
+document.getElementById('cancelRefuse')?.addEventListener('click', hideRefuseModal);
+
+document.getElementById('confirmRefuse')?.addEventListener('click', function() {
+  if (!pendingRefuseTicketId || !pendingRefuseRow) { hideRefuseModal(); return; }
+  const ticketId = pendingRefuseTicketId;
+  const row = pendingRefuseRow;
+  hideRefuseModal();
+  handleRespondAssignment(ticketId, row, 'refuse');
+});
+
+document.getElementById('refuseModal')?.addEventListener('click', function(e) {
+  if (e.target.id === 'refuseModal') hideRefuseModal();
+});
+
 // Archive Modal Event Listeners
 document.getElementById('cancelArchive')?.addEventListener('click', hideArchiveModal);
 
@@ -738,12 +890,86 @@ document.getElementById('archiveModal')?.addEventListener('click', function(e) {
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
+    const confirmAssignMod = document.getElementById('confirmAssignModal');
+    if (confirmAssignMod && !confirmAssignMod.classList.contains('hidden')) {
+      hideConfirmAssignModal(); return;
+    }
+    const refModal = document.getElementById('refuseModal');
+    if (refModal && !refModal.classList.contains('hidden')) {
+      hideRefuseModal(); return;
+    }
     const modal = document.getElementById('archiveModal');
     if (modal && !modal.classList.contains('hidden')) {
       hideArchiveModal();
     }
   }
 });
+
+// Handle confirm / refuse assignment
+const respondUrl = '../../controller/technician_respond_ticket.php';
+
+function handleRespondAssignment(ticketId, row, action) {
+  const started = Date.now();
+  
+  // Disable both buttons while processing
+  row.querySelectorAll('.confirmBtn, .refuseBtn').forEach(b => b.disabled = true);
+
+  fetch(respondUrl, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {'Accept': 'application/json'},
+    body: new URLSearchParams({ticket_id: ticketId, action: action})
+  }).then(r => r.json()).then(j => {
+    const elapsed = Date.now() - started;
+    const wait = Math.max(0, ROW_MIN_MS - elapsed);
+    setTimeout(() => {
+      if (j.success) {
+        if (action === 'confirm') {
+          showToast('Ticket confirmed — you are now working on it.');
+          // Replace confirm/refuse buttons with status select, update assignment badge
+          const actionsCell = row.querySelector('td:last-child');
+          if (actionsCell) {
+            actionsCell.innerHTML = `<div class="flex items-center justify-center gap-1">
+              <select class="statusSelect border rounded px-2 py-1 text-[10px]">
+                <option value="Open">Open</option>
+                <option value="In Progress" selected>In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>`;
+          }
+          // Update assignment badge
+          const badgeCell = row.querySelector('td:nth-last-child(2)');
+          if (badgeCell) {
+            badgeCell.innerHTML = '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800"><i class="fas fa-check text-[9px]"></i> Confirmed</span>';
+          }
+          // Update status badge
+          updateRowStatus(row, 'In Progress');
+          row.dataset.status = 'In Progress';
+          // Re-attach handlers for the new select
+          attachTicketHandlers();
+        } else {
+          showToast('Ticket refused — it has been returned to the queue.');
+          // Remove the row from the technician's view
+          row.style.transition = 'opacity 0.3s';
+          row.style.opacity = '0';
+          setTimeout(() => {
+            row.remove();
+            allTicketRows = allTicketRows.filter(r => r !== row);
+            filterTickets();
+          }, 300);
+        }
+      } else {
+        row.querySelectorAll('.confirmBtn, .refuseBtn').forEach(b => b.disabled = false);
+        showToast(j.message || 'Action failed', false);
+      }
+    }, wait);
+  }).catch(err => {
+    console.error(err);
+    row.querySelectorAll('.confirmBtn, .refuseBtn').forEach(b => b.disabled = false);
+    showToast('Request failed', false);
+  });
+}
 
 // Attach handlers to visible rows
 function attachTicketHandlers() {
@@ -753,37 +979,52 @@ function attachTicketHandlers() {
     const ticketId = row.dataset.ticketId;
     const select = row.querySelector('.statusSelect');
     const archiveBtn = row.querySelector('.archiveBtn');
+    const confirmBtn = row.querySelector('.confirmBtn');
+    const refuseBtn = row.querySelector('.refuseBtn');
 
     // Remove old listeners by cloning select
     if (select) {
       const newSelect = select.cloneNode(true);
       select.parentNode.replaceChild(newSelect, select);
-      
-      // Add change listener to new select
       newSelect.addEventListener('change', () => handleStatusChange(ticketId, row, newSelect));
     }
     
-    // Add archive button listener (don't clone it, just add listener)
+    // Confirm button
+    if (confirmBtn) {
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+      newConfirmBtn.addEventListener('click', function() {
+        const clickedRow = this.closest('tr.ticket-row');
+        if (clickedRow) showConfirmAssignModal(clickedRow.getAttribute('data-ticket-id'), clickedRow);
+      });
+    }
+
+    // Refuse button
+    if (refuseBtn) {
+      const newRefuseBtn = refuseBtn.cloneNode(true);
+      refuseBtn.parentNode.replaceChild(newRefuseBtn, refuseBtn);
+      newRefuseBtn.addEventListener('click', function() {
+        const clickedRow = this.closest('tr.ticket-row');
+        if (clickedRow) {
+          showRefuseModal(clickedRow.getAttribute('data-ticket-id'), clickedRow);
+        }
+      });
+    }
+    
+    // Archive button listener
     if (archiveBtn) {
-      // Remove old listener by replacing
       const newArchiveBtn = archiveBtn.cloneNode(true);
       archiveBtn.parentNode.replaceChild(newArchiveBtn, archiveBtn);
-      
-      // Add click handler - get ticket ID fresh from the row when clicked
       newArchiveBtn.addEventListener('click', function() {
-        // Find the parent row
         const clickedRow = this.closest('tr.ticket-row');
         if (clickedRow) {
           const clickedTicketId = clickedRow.getAttribute('data-ticket-id');
-          console.log('Archive button clicked, found row:', clickedRow, 'ticket ID:', clickedTicketId);
           if (clickedTicketId) {
             showArchiveModal(clickedTicketId, clickedRow);
           } else {
-            console.error('No ticket ID found on row');
             showToast('Error: Ticket ID not found', false);
           }
         } else {
-          console.error('Could not find parent row');
           showToast('Could not find ticket row', false);
         }
       });

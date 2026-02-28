@@ -65,17 +65,29 @@ try {
     $technicianName = $techData['full_name'];
     error_log("Technician lookup - ID: $technicianId, Name: $technicianName");
 
+    // Ensure assignment_status column exists
+    $colCheck = $conn->query("SHOW COLUMNS FROM issues LIKE 'assignment_status'");
+    if ($colCheck->num_rows === 0) {
+        $conn->query("ALTER TABLE issues ADD COLUMN assignment_status ENUM('Pending','Confirmed','Refused') NULL DEFAULT NULL");
+    }
+
     // Check current state before update
-    $checkStmt = $conn->prepare("SELECT status, assigned_technician, assigned_at FROM issues WHERE id = ?");
+    $checkStmt = $conn->prepare("SELECT status, assigned_technician, assigned_at, assignment_status FROM issues WHERE id = ?");
     $checkStmt->bind_param('i', $ticketId);
     $checkStmt->execute();
     $beforeResult = $checkStmt->get_result();
     $beforeData = $beforeResult->fetch_assoc();
     $checkStmt->close();
+
+    // Block reassignment if a technician is already actively assigned
+    if (!empty($beforeData['assigned_technician']) && in_array($beforeData['assignment_status'] ?? '', ['Pending', 'Confirmed'])) {
+        throw new Exception('This ticket is already assigned to ' . $beforeData['assigned_technician'] . '. Cannot reassign while assignment is ' . $beforeData['assignment_status'] . '.');
+    }
     error_log("BEFORE UPDATE - Ticket #$ticketId: status={$beforeData['status']}, assigned_tech={$beforeData['assigned_technician']}, assigned_at={$beforeData['assigned_at']}");
 
-    // update assigned_technician with the technician's full name, set status to In Progress, record assignment time and who assigned it
-    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, assigned_at = NOW(), assigned_by = ?, status = 'In Progress', updated_at = NOW() WHERE id = ?");
+    // update assigned_technician with the technician's full name, set assignment_status to Pending
+    // Status will change to 'In Progress' only after the technician confirms
+    $stmt = $conn->prepare("UPDATE issues SET assigned_technician = ?, assigned_at = NOW(), assigned_by = ?, assignment_status = 'Pending', updated_at = NOW() WHERE id = ?");
     if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
     $assignedBy = $_SESSION['user_id'];
     $stmt->bind_param('sii', $technicianName, $assignedBy, $ticketId);
@@ -145,7 +157,7 @@ try {
                 $techNotifTitle = "New Ticket Assigned #" . $ticketId;
                 $ticketCategory = $ticketData['category'] ?? 'Technical';
                 $ticketTitle = $ticketData['title'] ?? 'Untitled';
-                $techNotifMessage = "You have been assigned to a {$ticketCategory} ticket: \"{$ticketTitle}\". Please review and take action.";
+                $techNotifMessage = "You have been assigned to a {$ticketCategory} ticket: \"{$ticketTitle}\". Please confirm or refuse the assignment in your Tickets page.";
                 $techNotifStmt->bind_param('issi', $technicianUserId, $techNotifTitle, $techNotifMessage, $ticketId);
                 $techNotifStmt->execute();
                 $techNotifStmt->close();
@@ -162,8 +174,9 @@ try {
         'success' => true,
         'ticket_id' => $ticketId,
         'assigned_technician' => $technicianName,
+        'assignment_status' => 'Pending',
         // user-visible message
-        'message' => $affected > 0 ? 'Successfully Technician Assigned!' : 'No change'
+        'message' => $affected > 0 ? 'Technician assigned! Waiting for their confirmation.' : 'No change'
     ]);
     exit;
 } catch (Exception $e) {
