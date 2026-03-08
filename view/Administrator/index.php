@@ -133,7 +133,9 @@ if (empty($assetTypes)) {
 // ============================================
 // Asset Additions
 $monthlyAdditionsResult = $conn->query("
-    SELECT DATE_FORMAT(created_at, '%b') as month, COUNT(*) as count 
+    SELECT DATE_FORMAT(created_at, '%b') as month,
+           DATE_FORMAT(created_at, '%Y-%m') as acq_ym,
+           COUNT(*) as count 
     FROM assets 
     WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
     GROUP BY DATE_FORMAT(created_at, '%Y-%m')
@@ -141,16 +143,19 @@ $monthlyAdditionsResult = $conn->query("
 ");
 $additionMonths = [];
 $additionCounts = [];
+$additionYearMonths = [];
 if ($monthlyAdditionsResult) {
     while ($row = $monthlyAdditionsResult->fetch_assoc()) {
         $additionMonths[] = $row['month'];
         $additionCounts[] = $row['count'];
+        $additionYearMonths[] = $row['acq_ym'];
     }
 }
 // Ensure we have data for charts
 if (empty($additionMonths)) {
     $additionMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     $additionCounts = [0, 0, 0, 0, 0, 0];
+    $additionYearMonths = ['', '', '', '', '', ''];
 }
 
 // Issues Trends
@@ -213,81 +218,7 @@ $recentUsersCount = $conn->query("
 
 
 
-// ============================================
-// LAB STAFF ASSIGNMENT SPEED (How fast they assign tickets)
-// ============================================
-$labStaffAssignmentResult = $conn->query("
-    SELECT 
-        u.full_name,
-        COUNT(i.id) as total_assigned,
-        AVG(TIMESTAMPDIFF(HOUR, i.created_at, i.assigned_at)) as avg_assignment_hours
-    FROM users u
-    INNER JOIN issues i ON u.id = i.assigned_by
-    WHERE u.role = 'Laboratory Staff'
-        AND i.assigned_at IS NOT NULL
-        AND i.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
-    GROUP BY u.id, u.full_name
-    HAVING total_assigned > 0
-    ORDER BY avg_assignment_hours ASC
-    LIMIT 10
-");
-
-$labStaffNames = [];
-$labStaffAssignedCount = [];
-$labStaffAvgAssignmentHours = [];
-
-if ($labStaffAssignmentResult && $labStaffAssignmentResult->num_rows > 0) {
-    while ($row = $labStaffAssignmentResult->fetch_assoc()) {
-        $labStaffNames[] = $row['full_name'];
-        $labStaffAssignedCount[] = $row['total_assigned'];
-        $labStaffAvgAssignmentHours[] = round($row['avg_assignment_hours'] ?? 0, 1);
-    }
-}
-
-if (empty($labStaffNames)) {
-    $labStaffNames = ['No Data'];
-    $labStaffAssignedCount = [0];
-    $labStaffAvgAssignmentHours = [0];
-}
-
-// ============================================
-// TECHNICIAN RESOLUTION SPEED (How fast they resolve tickets)
-// ============================================
-$technicianResolutionResult = $conn->query("
-    SELECT 
-        assigned_technician as tech_name,
-        COUNT(id) as total_resolved,
-        AVG(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as avg_resolution_hours,
-        MIN(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as fastest_resolution_hours,
-        MAX(TIMESTAMPDIFF(HOUR, assigned_at, updated_at)) as slowest_resolution_hours
-    FROM issues
-    WHERE status = 'Resolved'
-        AND assigned_technician IS NOT NULL
-        AND assigned_at IS NOT NULL
-        AND assigned_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
-    GROUP BY assigned_technician
-    HAVING total_resolved > 0
-    ORDER BY avg_resolution_hours ASC
-    LIMIT 10
-");
-
-$technicianNames = [];
-$technicianResolvedCount = [];
-$technicianAvgResolutionHours = [];
-
-if ($technicianResolutionResult && $technicianResolutionResult->num_rows > 0) {
-    while ($row = $technicianResolutionResult->fetch_assoc()) {
-        $technicianNames[] = $row['tech_name'];
-        $technicianResolvedCount[] = $row['total_resolved'];
-        $technicianAvgResolutionHours[] = round($row['avg_resolution_hours'] ?? 0, 1);
-    }
-}
-
-if (empty($technicianNames)) {
-    $technicianNames = ['No Data'];
-    $technicianResolvedCount = [0];
-    $technicianAvgResolutionHours = [0];
-}
+// Lab Staff Assignment Speed and Technician Resolution Speed removed.
 
 // Include the layout header (includes sidebar and header components)
 include '../components/layout_header.php';
@@ -295,212 +226,240 @@ include '../components/layout_header.php';
         <style>
             body, html { overflow: hidden !important; height: 100vh; }
             main { height: calc(100vh - 85px); }
+            .kpi-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+            .kpi-card:hover { transform: translateY(-1px); }
         </style>
         <!-- Main Content -->
-        <main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
-            <!-- Key Financial & Inventory Metrics -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-2 flex-shrink-0">
+        <main class="px-3 py-2 bg-gray-50 overflow-hidden flex flex-col gap-2" style="height: calc(100vh - 85px);">
+
+            <!-- Primary KPI Cards -->
+            <div class="grid grid-cols-5 gap-2 flex-shrink-0">
+
                 <!-- Total Assets -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-boxes-stacked text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Inventory</span>
+                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md hover:border-blue-100" onclick="openAssetModal('asset_status','all')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
+                            <i class="fas fa-boxes-stacked text-sm text-blue-700"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Inventory</span>
                     </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">Total Assets</p>
-                    <p class="text-lg font-bold"><?php echo number_format($totalAssets); ?></p>
+                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Total Assets</p>
+                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($totalAssets); ?></p>
+                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#1e3a8a,#3b82f6);"></div>
                 </div>
 
                 <!-- Available Assets -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-check-circle text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Status</span>
+                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md hover:border-emerald-100" onclick="openAssetModal('asset_status','Available')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50">
+                            <i class="fas fa-check-circle text-sm text-emerald-600"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Ready</span>
                     </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">Available</p>
-                    <p class="text-lg font-bold"><?php echo number_format($availableAssets); ?></p>
+                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Available</p>
+                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($availableAssets); ?></p>
+                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#059669,#34d399);"></div>
                 </div>
 
                 <!-- In Use Assets -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-laptop text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
+                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md hover:border-indigo-100" onclick="openAssetModal('asset_status','In Use')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50">
+                            <i class="fas fa-laptop text-sm text-indigo-600"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Active</span>
                     </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">In Use</p>
-                    <p class="text-lg font-bold"><?php echo number_format($inUseAssets); ?></p>
+                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">In Use</p>
+                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($inUseAssets); ?></p>
+                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#4338ca,#818cf8);"></div>
                 </div>
 
-                <!-- Asset Health -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-heart-pulse text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Health</span>
+                <!-- Health Score -->
+                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-rose-50">
+                            <i class="fas fa-heart-pulse text-sm text-rose-500"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">Health</span>
                     </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">Health Score</p>
-                    <p class="text-lg font-bold"><?php echo $assetHealthPercentage; ?>%</p>
+                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Health Score</p>
+                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo $assetHealthPercentage; ?><span class="text-sm font-normal text-gray-400">%</span></p>
+                    <div class="mt-2 h-0.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div class="h-full rounded-full" style="width:<?php echo min($assetHealthPercentage,100); ?>%;background:linear-gradient(to right,#e11d48,#fb7185);"></div>
+                    </div>
                 </div>
 
                 <!-- Utilization Rate -->
-                <div class="bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
-                    <div class="flex items-center justify-between mb-1">
-                        <i class="fas fa-chart-line text-lg opacity-80"></i>
-                        <span class="text-[9px] font-medium bg-blue-100 px-1.5 py-0.5 rounded">Usage</span>
+                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50">
+                            <i class="fas fa-chart-line text-sm text-amber-500"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Usage</span>
                     </div>
-                    <p class="text-[9px] opacity-70 mb-0.5">Utilization</p>
-                    <p class="text-lg font-bold"><?php echo $utilizationRate; ?>%</p>
+                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Utilization</p>
+                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo $utilizationRate; ?><span class="text-sm font-normal text-gray-400">%</span></p>
+                    <div class="mt-2 h-0.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div class="h-full rounded-full" style="width:<?php echo min($utilizationRate,100); ?>%;background:linear-gradient(to right,#d97706,#fbbf24);"></div>
+                    </div>
                 </div>
+
             </div>
 
             <!-- Secondary Metrics Row -->
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1.5 mb-2 flex-shrink-0">
-                <!-- Pending Approvals -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Pending Approvals</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $pendingApprovals; ?></p>
+            <div class="grid grid-cols-8 gap-2 flex-shrink-0">
+
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-yellow-200 hover:shadow-sm transition-all" onclick="openAssetModal('borrowing_status','Pending')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Pending</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $pendingApprovals; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Approvals</p>
                 </div>
 
-                <!-- Active Borrowings -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Active Borrowings</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $activeBorrowings; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-blue-200 hover:shadow-sm transition-all" onclick="openAssetModal('borrowing_status','Approved')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Active</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $activeBorrowings; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Borrowings</p>
                 </div>
 
-                <!-- Pending Issues -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Pending Issues</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $pendingIssues; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-orange-200 hover:shadow-sm transition-all" onclick="openAssetModal('issue_status','Pending')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Pending</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $pendingIssues; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Issues</p>
                 </div>
 
-                <!-- In Progress Issues -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">In Progress</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $inProgressIssues; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-blue-200 hover:shadow-sm transition-all" onclick="openAssetModal('issue_status','In Progress')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">In Progress</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $inProgressIssues; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Issues</p>
                 </div>
 
-                <!-- Resolved Issues -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Resolved</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $resolvedIssues; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-green-200 hover:shadow-sm transition-all" onclick="openAssetModal('issue_status','Resolved')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Resolved</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $resolvedIssues; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Issues</p>
                 </div>
 
-                <!-- Under Maintenance -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Maintenance</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $maintenanceAssets; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-yellow-200 hover:shadow-sm transition-all" onclick="openAssetModal('asset_status','Under Maintenance')">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Maintenance</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $maintenanceAssets; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Assets</p>
                 </div>
 
-                <!-- Avg Resolution Time -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Avg Resolution</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo round($avgResolutionTime, 1); ?> days</p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Avg Resolution</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo round($avgResolutionTime, 1); ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Days</p>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-                    <p class="text-[9px] text-gray-500 mb-0.5">Week Activity</p>
-                    <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $recentActivityCount; ?></p>
+                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-teal-400 flex-shrink-0"></span>
+                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Week Activity</p>
+                    </div>
+                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $recentActivityCount; ?></p>
+                    <p class="text-[8px] text-gray-400 mt-0.5">Actions</p>
                 </div>
+
             </div>
 
             <!-- Charts Section -->
-            <div class="flex-1 min-h-0 overflow-hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 h-full">
-                    <!-- Asset Type Distribution -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 lg:col-span-1">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Type Distribution</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Breakdown by asset category</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="typeChart"></canvas>
-                        </div>
-                    </div>
+            <div class="flex gap-2" style="flex:1;min-height:0;max-height:280px;">
 
-                    <!-- Lab Staff Assignment Speed -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 col-span-1 md:col-span-1 lg:col-span-2 lg:row-span-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Lab Staff Assignment Speed</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Avg hours to assign tickets (faster is better)</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="labStaffAssignmentChart"></canvas>
+                <!-- Asset Type Distribution -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0" style="flex:1;">
+                    <div class="px-3 pt-2 pb-1.5 border-b border-gray-50 flex-shrink-0 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-700">Asset Type Distribution</h3>
+                            <p class="text-[9px] text-gray-400">By category</p>
                         </div>
+                        <span class="text-[9px] font-medium text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">Click segment</span>
                     </div>
-
-                    <!-- Technician Resolution Speed -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 col-span-1 md:col-span-1 lg:col-span-3 lg:row-span-2">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Technician Resolution Speed</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Avg hours to resolve tickets (faster is better)</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="technicianResolutionChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Monthly Asset Additions -->
-                    <div class="bg-white rounded shadow-sm border border-gray-200 p-2 lg:col-span-1">
-                        <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Asset Acquisition Trend</h3>
-                        <p class="text-[9px] text-gray-500 mb-1">Last 6 months additions</p>
-                        <div style="height: calc(100% - 2.5rem);">
-                            <canvas id="additionsChart"></canvas>
-                        </div>
+                    <div class="flex-1 min-h-0 relative">
+                        <canvas id="typeChart" style="position:absolute;inset:6px;width:calc(100% - 12px)!important;height:calc(100% - 12px)!important;"></canvas>
                     </div>
                 </div>
+
+                <!-- Asset Acquisition Trend -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0" style="flex:1;">
+                    <div class="px-3 pt-2 pb-1.5 border-b border-gray-50 flex-shrink-0 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-semibold text-gray-700">Asset Acquisition Trend</h3>
+                            <p class="text-[9px] text-gray-400">Last 6 months</p>
+                        </div>
+                        <span class="text-[9px] font-medium text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">Click point</span>
+                    </div>
+                    <div class="flex-1 min-h-0 relative">
+                        <canvas id="additionsChart" style="position:absolute;inset:6px;width:calc(100% - 12px)!important;height:calc(100% - 12px)!important;"></canvas>
+                    </div>
+                </div>
+
             </div>
         </main>
 
         <!-- Chart.js Library -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        
+
         <script>
-        // Chart.js configuration
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = '#6B7280';
-        Chart.defaults.plugins.legend.display = true;
-        Chart.defaults.plugins.legend.position = 'bottom';
 
         const chartColors = {
-            blue: '#1E3A8A',
-            purple: '#2563eb',
-            green: '#10B981',
-            orange: '#F97316',
-            red: '#EF4444',
-            teal: '#14B8A6',
-            indigo: '#3b82f6',
-            amber: '#F59E0B',
-            pink: '#60a5fa',
-            cyan: '#1e40af'
+            blue: '#1E3A8A', purple: '#2563eb', green: '#10B981',
+            orange: '#F97316', teal: '#14B8A6', indigo: '#3b82f6',
+            amber: '#F59E0B', pink: '#60a5fa'
         };
 
-        // 1. Asset Type Distribution (Doughnut Chart)
+        const assetTypeLabels = <?php echo json_encode($assetTypes); ?>;
+
+        // 1. Asset Type Distribution (Doughnut)
         const typeCtx = document.getElementById('typeChart').getContext('2d');
         new Chart(typeCtx, {
             type: 'doughnut',
             data: {
-                labels: <?php echo json_encode($assetTypes); ?>,
+                labels: assetTypeLabels,
                 datasets: [{
                     data: <?php echo json_encode($assetTypeCounts); ?>,
-                    backgroundColor: [
-                        chartColors.blue,
-                        chartColors.purple,
-                        chartColors.green,
-                        chartColors.orange,
-                        chartColors.teal,
-                        chartColors.indigo,
-                        chartColors.pink
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
+                    backgroundColor: [chartColors.blue, chartColors.purple, chartColors.green, chartColors.orange, chartColors.teal, chartColors.indigo, chartColors.pink],
+                    borderWidth: 2, borderColor: '#fff'
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { font: { size: 10 }, padding: 10 }
+                responsive: true, maintainAspectRatio: false,
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const assetType = assetTypeLabels[elements[0].index];
+                        if (assetType && assetType !== 'No Data') openAssetModal('type', assetType);
                     }
-                }
+                },
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 10 } } }
             }
         });
+        document.getElementById('typeChart').style.cursor = 'pointer';
 
-        // 2. Monthly Asset Additions (Line Chart)
+        const additionYearMonths = <?php echo json_encode($additionYearMonths); ?>;
+
+        // 2. Asset Acquisition Trend (Line)
         const additionsCtx = document.getElementById('additionsChart').getContext('2d');
         new Chart(additionsCtx, {
             type: 'line',
@@ -510,167 +469,205 @@ include '../components/layout_header.php';
                     label: 'New Assets',
                     data: <?php echo json_encode($additionCounts); ?>,
                     borderColor: chartColors.blue,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    borderWidth: 2, fill: true, tension: 0.4,
+                    pointRadius: 5, pointHoverRadius: 7,
                     pointBackgroundColor: chartColors.blue
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6' },
-                        ticks: { font: { size: 10 } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
+                responsive: true, maintainAspectRatio: false,
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const ym = additionYearMonths[elements[0].index];
+                        if (ym) openAssetModal('month', ym);
                     }
+                },
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
                 }
             }
         });
+        document.getElementById('additionsChart').style.cursor = 'pointer';
 
-        // 3. Lab Staff Assignment Speed Chart (Bar Chart)
-        const labStaffAssignmentCtx = document.getElementById('labStaffAssignmentChart').getContext('2d');
-        new Chart(labStaffAssignmentCtx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode($labStaffNames); ?>,
-                datasets: [{
-                    label: 'Avg Hours to Assign',
-                    data: <?php echo json_encode($labStaffAvgAssignmentHours); ?>,
-                    backgroundColor: chartColors.blue,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    title: {
-                        display: true,
-                        text: 'Lab Staff Names & Assignment Time',
-                        font: { size: 11, weight: 'bold' },
-                        padding: { bottom: 5 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: function(context) {
-                                return 'Lab Staff: ' + context[0].label;
-                            },
-                            afterLabel: function(context) {
-                                const dataIndex = context.dataIndex;
-                                const assigned = <?php echo json_encode($labStaffAssignedCount); ?>[dataIndex];
-                                return 'Total Assigned: ' + assigned + ' tickets';
-                            }
+        // ── Modal helpers ────────────────────────────────────────────────
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(str ?? ''));
+            return d.innerHTML;
+        }
+
+        function openAssetModal(filter, value) {
+            const modal   = document.getElementById('assetDetailModal');
+            const title   = document.getElementById('assetModalTitle');
+            const count   = document.getElementById('assetModalCount');
+            const loading = document.getElementById('assetModalLoading');
+            const thead   = document.getElementById('assetModalThead');
+            const tbody   = document.getElementById('assetModalBody');
+
+            title.textContent = 'Loading…';
+            count.textContent = '';
+            loading.style.display = 'flex';
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            modal.classList.remove('hidden');
+
+            fetch(`../../controller/get_dashboard_asset_details.php?filter=${encodeURIComponent(filter)}&value=${encodeURIComponent(value)}`)
+                .then(r => r.text())
+                .then(text => {
+                    let data;
+                    try { data = JSON.parse(text); }
+                    catch(e) { console.error('Non-JSON:', text); throw new Error('Invalid JSON'); }
+
+                    loading.style.display = 'none';
+                    title.textContent = data.title || 'Details';
+                    count.textContent = data.total ? `${data.total} record(s)` : '';
+
+                    if (data.error) {
+                        tbody.innerHTML = `<tr><td colspan="7" class="px-3 py-6 text-xs text-center text-red-500">Server error: ${escHtml(data.error)}</td></tr>`;
+                        return;
+                    }
+
+                    const mode = data.mode || 'asset';
+
+                    if (mode === 'borrowing') {
+                        thead.innerHTML = `<tr>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Tag</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Asset Name</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Type</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Borrower</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Status</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Borrowed Date</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Return Date</th>
+                        </tr>`;
+                        if (data.assets && data.assets.length > 0) {
+                            data.assets.forEach(a => {
+                                const tr = document.createElement('tr');
+                                tr.className = 'hover:bg-gray-50 transition-colors';
+                                tr.innerHTML = `
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600 whitespace-nowrap">${escHtml(a.asset_tag)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] font-medium text-gray-800">${escHtml(a.asset_name)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.asset_type)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.borrower ?? '—')}</td>
+                                    <td class="px-3 py-1.5 text-[11px]"><span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${a.status === 'Approved' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}">${escHtml(a.status)}</span></td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-500 whitespace-nowrap">${escHtml(a.borrowed_date ?? '—')}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-500 whitespace-nowrap">${escHtml(a.return_date ?? '—')}</td>`;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-xs text-center text-gray-400">No records found.</td></tr>';
+                        }
+
+                    } else if (mode === 'issue') {
+                        thead.innerHTML = `<tr>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">#</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Issue Title</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Category</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Status</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Technician</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Room</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Reported</th>
+                        </tr>`;
+                        if (data.assets && data.assets.length > 0) {
+                            data.assets.forEach(a => {
+                                const tr = document.createElement('tr');
+                                tr.className = 'hover:bg-gray-50 transition-colors';
+                                const sc = a.status === 'Resolved' ? 'bg-green-100 text-green-700' : a.status === 'In Progress' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700';
+                                tr.innerHTML = `
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-400">#${escHtml(String(a.id))}</td>
+                                    <td class="px-3 py-1.5 text-[11px] font-medium text-gray-800">${escHtml(a.issue_title)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.category ?? '—')}</td>
+                                    <td class="px-3 py-1.5 text-[11px]"><span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${sc}">${escHtml(a.status)}</span></td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.assigned_technician ?? 'Unassigned')}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.room ?? '—')}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-500 whitespace-nowrap">${escHtml(a.reported_date ?? '—')}</td>`;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-xs text-center text-gray-400">No records found.</td></tr>';
+                        }
+
+                    } else {
+                        thead.innerHTML = `<tr>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Tag</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Asset Name</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Type</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Status</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Condition</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Location</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-b">Acquired</th>
+                        </tr>`;
+                        if (data.assets && data.assets.length > 0) {
+                            data.assets.forEach(a => {
+                                const tr = document.createElement('tr');
+                                tr.className = 'hover:bg-gray-50 transition-colors';
+                                const sc = a.status === 'Available' ? 'bg-green-100 text-green-700' : a.status === 'In Use' ? 'bg-blue-100 text-blue-700' : a.status === 'Under Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
+                                tr.innerHTML = `
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600 whitespace-nowrap">${escHtml(a.asset_tag)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] font-medium text-gray-800">${escHtml(a.asset_name)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.asset_type)}</td>
+                                    <td class="px-3 py-1.5 text-[11px]"><span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${sc}">${escHtml(a.status)}</span></td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.condition)}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-600">${escHtml(a.location ?? '—')}</td>
+                                    <td class="px-3 py-1.5 text-[11px] text-gray-500 whitespace-nowrap">${escHtml(a.acquired_date ?? '—')}</td>`;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-xs text-center text-gray-400">No assets found.</td></tr>';
                         }
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6' },
-                        ticks: { 
-                            font: { size: 10 },
-                            callback: function(value) {
-                                return value + 'h';
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Average Hours to Assign',
-                            font: { size: 10, weight: 'bold' }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { 
-                            font: { size: 10, weight: 'bold' },
-                            color: '#1E3A8A',
-                            maxRotation: 45,
-                            minRotation: 45,
-                            autoSkip: false
-                        }
-                    }
-                }
-            }
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    loading.style.display = 'none';
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-xs text-center text-red-500">Error loading data. Please try again.</td></tr>';
+                });
+        }
+
+        function closeAssetModal() {
+            document.getElementById('assetDetailModal').classList.add('hidden');
+        }
+        document.getElementById('assetDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAssetModal();
         });
-
-        // 4. Technician Resolution Speed Chart (Bar Chart)
-        const technicianResolutionCtx = document.getElementById('technicianResolutionChart').getContext('2d');
-        new Chart(technicianResolutionCtx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode($technicianNames); ?>,
-                datasets: [{
-                    label: 'Avg Hours to Resolve',
-                    data: <?php echo json_encode($technicianAvgResolutionHours); ?>,
-                    backgroundColor: chartColors.blue,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    title: {
-                        display: true,
-                        text: 'Technician Names & Resolution Time',
-                        font: { size: 11, weight: 'bold' },
-                        padding: { bottom: 5 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: function(context) {
-                                return 'Technician: ' + context[0].label;
-                            },
-                            afterLabel: function(context) {
-                                const dataIndex = context.dataIndex;
-                                const resolved = <?php echo json_encode($technicianResolvedCount); ?>[dataIndex];
-                                return 'Total Resolved: ' + resolved + ' tickets';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#f3f4f6' },
-                        ticks: { 
-                            font: { size: 10 },
-                            callback: function(value) {
-                                return value + 'h';
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Average Hours to Resolve',
-                            font: { size: 10, weight: 'bold' }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { 
-                            font: { size: 10, weight: 'bold' },
-                            color: '#1E3A8A',
-                            maxRotation: 45,
-                            minRotation: 45,
-                            autoSkip: false
-                        }
-                    }
-                }
-            }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAssetModal();
         });
         </script>
+
+        <!-- Asset Detail Modal -->
+        <div id="assetDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);">
+            <div class="bg-white rounded-2xl shadow-2xl flex flex-col border border-gray-100" style="width:92%;max-width:880px;max-height:84vh;">
+                <div class="flex items-center justify-between px-5 py-3.5 flex-shrink-0" style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);border-radius:1rem 1rem 0 0;">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,0.15);">
+                            <i class="fas fa-table-list text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <h2 id="assetModalTitle" class="text-sm font-semibold text-white leading-none"></h2>
+                            <span id="assetModalCount" class="text-[10px] text-blue-200"></span>
+                        </div>
+                    </div>
+                    <button onclick="closeAssetModal()" class="w-7 h-7 rounded-lg flex items-center justify-center text-white hover:bg-white hover:bg-opacity-20" aria-label="Close">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <div id="assetModalLoading" class="items-center justify-center p-8 text-xs text-gray-400" style="display:none;">
+                    <svg class="animate-spin h-5 w-5 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Loading data&hellip;
+                </div>
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full border-collapse">
+                        <thead id="assetModalThead" class="bg-gray-50 sticky top-0 z-10"></thead>
+                        <tbody id="assetModalBody" class="divide-y divide-gray-50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
 <?php include '../components/layout_footer.php'; ?>
