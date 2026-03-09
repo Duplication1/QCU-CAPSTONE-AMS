@@ -48,11 +48,6 @@ $navigation_items = [
             'href' => 'analytics.php',
             'submenu' => [
                 [
-                    'id' => 'overview-analytics',
-                    'label' => 'Overview Analytics',
-                    'href' => 'analytics.php'
-                ],
-                [
                     'id' => 'predictive-analytics',
                     'label' => 'Predictive Analytics',
                     'href' => 'predictive_analytics.php'
