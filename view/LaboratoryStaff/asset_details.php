@@ -56,6 +56,10 @@ switch ($filter) {
         $pageTitle = "Healthy Assets (Good/Excellent Condition)";
         $whereClause = "a.condition IN ('Good', 'Excellent')";
         break;
+    case 'EndOfLife':
+        $pageTitle = "End of Life Assets";
+        $whereClause = "ac.end_of_life IS NOT NULL AND DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR) <= CURDATE() AND a.status NOT IN ('Disposed', 'Retired', 'Archive')";
+        break;
     case 'All':
         $pageTitle = "All Assets";
         $whereClause = "1=1";
@@ -81,11 +85,22 @@ $query = "
         pc.terminal_number,
         r.name as room_name,
         b.name as building_name,
+        ac.end_of_life as category_lifespan,
+        ac.name as category_name,
+        CASE 
+            WHEN ac.end_of_life IS NOT NULL THEN DATE_ADD(a.created_at, INTERVAL ac.end_of_life YEAR)
+            ELSE NULL
+        END as eol_date,
+        CASE 
+            WHEN ac.end_of_life IS NOT NULL THEN TIMESTAMPDIFF(YEAR, a.created_at, CURDATE())
+            ELSE NULL
+        END as asset_age_years,
         CASE 
             WHEN a.status = 'In Use' AND pc.id IS NOT NULL THEN CONCAT(r.name, ' - ', b.name)
             ELSE 'Storage/Not Assigned'
         END as location
     FROM assets a
+    LEFT JOIN asset_categories ac ON a.category = ac.id
     LEFT JOIN pc_units pc ON a.pc_unit_id = pc.id
     LEFT JOIN rooms r ON pc.room_id = r.id
     LEFT JOIN buildings b ON r.building_id = b.id
@@ -278,6 +293,30 @@ include '../components/layout_header.php';
                                 <div class="mt-2 text-xs text-gray-500">
                                     <i class="far fa-calendar mr-1"></i>
                                     Added: <?php echo date('M d, Y', strtotime($asset['created_at'])); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($filter === 'EndOfLife' && $asset['eol_date']): ?>
+                                <div class="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-semibold text-red-800">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>End of Life
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-red-700">
+                                        <div class="flex justify-between mb-1">
+                                            <span>Expected Lifespan:</span>
+                                            <span class="font-semibold"><?php echo $asset['category_lifespan']; ?> years</span>
+                                        </div>
+                                        <div class="flex justify-between mb-1">
+                                            <span>Current Age:</span>
+                                            <span class="font-semibold"><?php echo $asset['asset_age_years']; ?> years</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>EOL Date:</span>
+                                            <span class="font-semibold"><?php echo date('M d, Y', strtotime($asset['eol_date'])); ?></span>
+                                        </div>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>

@@ -140,26 +140,27 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-    body, html { overflow: hidden !important; height: 100vh; }
-    main { height: calc(100vh - 85px); }
-    
-    /* Fixed chart sizes - no resizing */
-    #statusChart, #typeChart {
-        width: 120px !important;
-        height: 120px !important;
+    body, html { 
+        overflow: hidden !important; 
+        height: 100vh; 
+        margin: 0;
+        padding: 0;
     }
     
-    #issuesTrendChart {
-        width: 100% !important;
-        height: 100% !important;
+    main { 
+        height: calc(100vh - 85px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
-
+    
     /* Professional metric card styling */
     .metric-card {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: block;
         position: relative;
         overflow: hidden;
+        height: 100%;
     }
     
     .metric-card::before {
@@ -179,65 +180,59 @@ include '../components/layout_header.php';
     }
     
     .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(30, 58, 138, 0.15);
-        z-index: 10;
-    }
-    
-    /* Icon pulse animation */
-    @keyframes pulse-subtle {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
-    }
-    
-    .metric-icon {
-        animation: pulse-subtle 3s ease-in-out infinite;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(30, 58, 138, 0.12);
     }
     
     /* Professional gradient backgrounds */
-    .gradient-blue {
-        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
-    }
-    
-    .gradient-green {
-        background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-    }
-    
-    .gradient-amber {
-        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
-    }
-    
-    .gradient-red {
-        background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
-    }
+    .gradient-blue { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); }
+    .gradient-green { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
+    .gradient-amber { background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%); }
+    .gradient-red { background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); }
+    .gradient-purple { background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%); }
     
     /* Chart container styling */
-    .chart-container {
-        background: linear-gradient(to bottom, #ffffff, #f9fafb);
-        border: 1px solid #e5e7eb;
+    .chart-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
     
-    .chart-container:hover {
-        border-color: #3B82F6;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    .chart-card:hover {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    
+    /* Ensure charts fit properly */
+    .chart-wrapper {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+    }
+    
+    canvas {
+        max-width: 100%;
+        max-height: 100%;
     }
 </style>
 
 <!-- Main Content -->
-<main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
+<main class="bg-gray-50 p-2">
     
-    <!-- Key Metrics Row -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 mb-2 flex-shrink-0">
+    <!-- Metrics Row - Fixed Height -->
+    <div class="grid grid-cols-7 gap-2 mb-2" style="height: 90px;">
         <!-- Unassigned Tickets -->
-        <a href="issue_details.php?status=Open" class="metric-card bg-white rounded-lg shadow-sm p-2 hover:shadow-md cursor-pointer" style="color: #1E3A8A; text-decoration: none;">
-            <div class="flex items-center justify-between mb-1">
-                <div class="metric-icon w-8 h-8 rounded-full gradient-blue flex items-center justify-center">
+        <a href="issue_details.php?status=Open" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: inherit; text-decoration: none;">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-ticket text-white text-xs"></i>
                 </div>
-                <span class="text-[8px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full">Pending</span>
+                <span class="text-[8px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">Pending</span>
             </div>
-            <p class="text-[9px] text-gray-500 mb-0.5 font-medium">Unassigned Tickets</p>
+            <p class="text-[9px] text-gray-500 mb-0.5">Unassigned</p>
             <p class="text-xl font-bold text-gray-900"><?php echo $unassignedIssues; ?></p>
         </a>
 
@@ -431,9 +426,9 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Trends Row -->
-                <div class="grid grid-cols-1 gap-2" style="height: 55%;">
+                <div class="grid grid-cols-1 gap-2 min-h-0" style="height: 55%;">
                     <!-- Issues Trend -->
-                    <div class="chart-container bg-white rounded-lg shadow-sm p-3 hover:shadow-md transition-all flex flex-col h-full overflow-hidden">
+                    <div class="chart-container bg-white rounded-lg shadow-sm p-2 hover:shadow-md transition-all flex flex-col h-full">
                         <div class="flex items-center justify-between mb-2 flex-shrink-0">
                             <h3 class="text-xs font-bold text-gray-900 flex items-center gap-2">
                                 <span class="w-1 h-4 bg-indigo-600 rounded"></span>
@@ -447,16 +442,18 @@ include '../components/layout_header.php';
                             </div>
                         </div>
                         
-                        <p class="text-[9px] text-gray-500 mb-2 flex-shrink-0">
-                            Click any data point to view details
-                            <span class="ml-1 text-indigo-900 font-bold">
-                                (Total: <?php echo array_sum($issueCounts); ?>)
-                            </span>
-                        </p>
-                        
-                        <!-- Chart Container with fixed height -->
-                        <div class="flex-shrink-0" style="height: 180px; position: relative;">
-                            <canvas id="issuesTrendChart"></canvas>
+                        <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
+                            <p class="text-[9px] text-gray-500 mb-2 flex-shrink-0">
+                                Click any data point to view details
+                                <span class="ml-1 text-indigo-900 font-bold">
+                                    (Total: <?php echo array_sum($issueCounts); ?>)
+                                </span>
+                            </p>
+                            
+                            <!-- Chart Container -->
+                            <div class="flex-1 min-h-0 relative">
+                                <canvas id="issuesTrendChart"></canvas>
+                            </div>
                         </div>
                         
                         <!-- Monthly breakdown -->
@@ -640,11 +637,6 @@ const typeChart = new Chart(typeCtx, {
 const issuesTrendCtx = document.getElementById('issuesTrendChart').getContext('2d');
 const monthMetadata = <?php echo json_encode($monthMetadata); ?>;
 
-// Set canvas size explicitly
-const trendCanvas = document.getElementById('issuesTrendChart');
-trendCanvas.width = trendCanvas.parentElement.offsetWidth;
-trendCanvas.height = 180;
-
 const issuesTrendChart = new Chart(issuesTrendCtx, {
     type: 'line',
     data: {
@@ -657,11 +649,11 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
             borderWidth: 3,
             fill: true,
             tension: 0.4,
-            pointRadius: 5,
+            pointRadius: 6,
             pointBackgroundColor: '#4F46E5',
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
-            pointHoverRadius: 7,
+            pointHoverRadius: 8,
             pointHoverBackgroundColor: '#F59E0B',
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 3
@@ -682,15 +674,15 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
                 backgroundColor: 'rgba(17, 24, 39, 0.95)',
                 titleColor: '#fff',
                 bodyColor: '#fff',
-                padding: 10,
-                cornerRadius: 6,
+                padding: 12,
+                cornerRadius: 8,
                 displayColors: false,
                 titleFont: {
-                    size: 12,
+                    size: 13,
                     weight: 'bold'
                 },
                 bodyFont: {
-                    size: 11
+                    size: 12
                 },
                 callbacks: {
                     title: function(context) {
@@ -719,22 +711,22 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
                 },
                 ticks: { 
                     font: { 
-                        size: 10,
+                        size: 11,
                         weight: '500'
                     },
                     color: '#6B7280',
                     stepSize: 1,
-                    padding: 6
+                    padding: 8
                 },
                 title: {
                     display: true,
-                    text: 'Issues',
+                    text: 'Number of Issues',
                     font: { 
-                        size: 10, 
+                        size: 11, 
                         weight: 'bold' 
                     },
                     color: '#374151',
-                    padding: { top: 0, bottom: 8 }
+                    padding: { top: 0, bottom: 10 }
                 }
             },
             x: {
@@ -747,11 +739,11 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
                 },
                 ticks: { 
                     font: { 
-                        size: 10,
+                        size: 11,
                         weight: '600'
                     },
                     color: '#374151',
-                    padding: 6
+                    padding: 8
                 }
             }
         },
