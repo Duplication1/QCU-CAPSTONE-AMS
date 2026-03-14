@@ -2523,7 +2523,7 @@ main {
 
 <!-- QR Code Print Modal -->
 <div id="qrPrintModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div id="qrPrintModalContent" class="bg-white rounded-xl shadow-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto transition-all duration-300">
         <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
             <h3 class="text-xl font-semibold text-white">Print QR Codes</h3>
             <button onclick="closeQRPrintModal()" class="text-white hover:text-gray-200">
@@ -2531,7 +2531,7 @@ main {
             </button>
         </div>
         <div class="p-6">
-            <div id="qrPrintContent" class="grid grid-cols-3 gap-4">
+            <div id="qrPrintContent" class="flex flex-wrap justify-center gap-4">
                 <!-- QR codes will be dynamically inserted here -->
             </div>
             <div class="flex gap-3 justify-end mt-6 print:hidden">
@@ -2828,12 +2828,34 @@ main {
         background: white;
     }
     #qrPrintContent {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2rem !important;
+        padding: 2rem !important;
     }
     .qr-item {
         page-break-inside: avoid;
+        page-break-after: always;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        padding: 2rem !important;
+        border: 2px solid #333 !important;
+        border-radius: 8px !important;
+    }
+    .qr-item:last-child {
+        page-break-after: auto;
+    }
+    .qr-item img {
+        display: block !important;
+        margin: 0 auto 1rem auto !important;
     }
 }
 
@@ -3824,7 +3846,8 @@ async function openQRPrintModalForAssets(assetIds) {
             
             result.assets.forEach(asset => {
                 const qrItem = document.createElement('div');
-                qrItem.className = 'qr-item p-4 border border-gray-300 rounded-lg text-center';
+                qrItem.className = 'qr-item p-4 border border-gray-300 rounded-lg flex flex-col items-center justify-center text-center';
+                qrItem.style.width = '280px'; // Fixed width for each QR item
                 qrItem.innerHTML = `
                     <div class="mb-2">
                         <img src="${asset.qr_code || 'placeholder.png'}" alt="QR Code" class="w-48 h-48 mx-auto">
@@ -3835,6 +3858,24 @@ async function openQRPrintModalForAssets(assetIds) {
                 `;
                 qrContent.appendChild(qrItem);
             });
+            
+            // Dynamically adjust modal width based on number of QR codes
+            const modalContent = document.getElementById('qrPrintModalContent');
+            const qrCount = result.assets.length;
+            
+            if (qrCount === 1) {
+                modalContent.style.width = '400px';
+                modalContent.style.maxWidth = '400px';
+            } else if (qrCount === 2) {
+                modalContent.style.width = '700px';
+                modalContent.style.maxWidth = '700px';
+            } else if (qrCount === 3) {
+                modalContent.style.width = '1000px';
+                modalContent.style.maxWidth = '1000px';
+            } else {
+                modalContent.style.width = '90%';
+                modalContent.style.maxWidth = '1200px';
+            }
             
             closeAddAssetModal();
             document.getElementById('qrPrintModal').classList.remove('hidden');

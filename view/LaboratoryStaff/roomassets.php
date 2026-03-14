@@ -2489,7 +2489,7 @@ main {
 
 <!-- QR Code Print Modal -->
 <div id="qrPrintModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div id="qrPrintModalContent" class="bg-white rounded-xl shadow-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto transition-all duration-300">
         <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
             <h3 class="text-xl font-semibold text-white">Print QR Codes</h3>
             <button onclick="closeQRPrintModal()" class="text-white hover:text-gray-200">
@@ -2497,7 +2497,7 @@ main {
             </button>
         </div>
         <div class="p-6">
-            <div id="qrPrintContent" class="grid grid-cols-3 gap-4">
+            <div id="qrPrintContent" class="flex flex-wrap justify-center gap-4">
                 <!-- QR codes will be dynamically inserted here -->
             </div>
             <div class="flex gap-3 justify-end mt-6 print:hidden">
@@ -2819,16 +2819,34 @@ main {
         left: 0;
         top: 0;
         width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        padding: 20px;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2rem !important;
+        padding: 2rem !important;
     }
     .qr-item {
         page-break-inside: avoid;
-        border: 1px solid #000;
-        padding: 10px;
-        text-align: center;
+        page-break-after: always;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        padding: 2rem !important;
+        border: 2px solid #333 !important;
+        border-radius: 8px !important;
+    }
+    .qr-item:last-child {
+        page-break-after: auto;
+    }
+    .qr-item img {
+        display: block !important;
+        margin: 0 auto 1rem auto !important;
     }
 }
 

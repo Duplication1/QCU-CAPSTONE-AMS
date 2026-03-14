@@ -436,7 +436,7 @@ main {
 
     <!-- QR Code Print Modal -->
     <div id="qrPrintModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div id="qrPrintModalContent" class="bg-white rounded-lg shadow-xl mx-4 max-h-[90vh] overflow-y-auto transition-all duration-300">
             <div class="p-6 border-b border-gray-200 flex items-center justify-between">
                 <h3 class="text-xl font-semibold text-gray-800">Print QR Codes</h3>
                 <button onclick="closeQRPrintModal()" class="text-gray-400 hover:text-gray-600">
@@ -444,7 +444,7 @@ main {
                 </button>
             </div>
             <div class="p-6">
-                <div id="qrPrintContent" class="grid grid-cols-3 gap-4">
+                <div id="qrPrintContent" class="flex flex-wrap justify-center gap-4">
                     <!-- QR codes will be dynamically loaded here -->
                 </div>
             </div>
@@ -478,11 +478,35 @@ main {
                 background: white;
             }
             #qrPrintContent {
-                page-break-inside: avoid;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 2rem !important;
+                padding: 2rem !important;
             }
             .qr-item {
                 page-break-inside: avoid;
+                page-break-after: always;
                 break-inside: avoid;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                width: 100% !important;
+                max-width: 400px !important;
+                margin: 0 auto !important;
+                padding: 2rem !important;
+                border: 2px solid #333 !important;
+                border-radius: 8px !important;
+            }
+            .qr-item:last-child {
+                page-break-after: auto;
+            }
+            .qr-item img {
+                display: block !important;
+                margin: 0 auto 1rem auto !important;
             }
         }
     </style>
@@ -767,7 +791,7 @@ main {
             
             // Show loading
             document.getElementById('qrPrintModal').classList.remove('hidden');
-            document.getElementById('qrPrintContent').innerHTML = '<div class="col-span-3 text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-gray-600">Generating QR codes...</p></div>';
+            document.getElementById('qrPrintContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i><p class="mt-2 text-gray-600">Generating QR codes...</p></div>';
             
             try {
                 const formData = new URLSearchParams();
@@ -792,7 +816,7 @@ main {
                     let qrHtml = '';
                     result.qr_codes.forEach(asset => {
                         qrHtml += `
-                            <div class="qr-item border border-gray-300 rounded-lg p-4 text-center">
+                            <div class="qr-item border border-gray-300 rounded-lg p-4 text-center flex flex-col items-center justify-center" style="width: 280px;">
                                 <img src="${asset.qr_code}" alt="QR Code" class="mx-auto mb-2" style="width: 150px; height: 150px;">
                                 <p class="text-sm font-semibold text-gray-800">${asset.asset_tag}</p>
                                 <p class="text-xs text-gray-600 truncate">${asset.asset_name}</p>
@@ -800,12 +824,30 @@ main {
                         `;
                     });
                     document.getElementById('qrPrintContent').innerHTML = qrHtml;
+                    
+                    // Dynamically adjust modal width based on number of QR codes
+                    const modalContent = document.getElementById('qrPrintModalContent');
+                    const qrCount = result.qr_codes.length;
+                    
+                    if (qrCount === 1) {
+                        modalContent.style.width = '400px';
+                        modalContent.style.maxWidth = '400px';
+                    } else if (qrCount === 2) {
+                        modalContent.style.width = '700px';
+                        modalContent.style.maxWidth = '700px';
+                    } else if (qrCount === 3) {
+                        modalContent.style.width = '1000px';
+                        modalContent.style.maxWidth = '1000px';
+                    } else {
+                        modalContent.style.width = '90%';
+                        modalContent.style.maxWidth = '1200px';
+                    }
                 } else {
-                    document.getElementById('qrPrintContent').innerHTML = '<div class="col-span-3 text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p>Failed to generate QR codes</p></div>';
+                    document.getElementById('qrPrintContent').innerHTML = '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p>Failed to generate QR codes</p></div>';
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('qrPrintContent').innerHTML = '<div class="col-span-3 text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p>Error loading QR codes</p></div>';
+                document.getElementById('qrPrintContent').innerHTML = '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p>Error loading QR codes</p></div>';
             }
         }
 
