@@ -11,7 +11,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 }
 
 // Allow Laboratory Staff, Student, and Faculty roles
-$allowed_roles = ['Laboratory Staff', 'Faculty'];
+$allowed_roles = ['Laboratory Staff', 'Student', 'Faculty'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
@@ -55,7 +55,7 @@ if (!$borrower_id || !$lab_staff_id) {
 }
 
 // If user is Student, Faculty, or Laboratory Staff, only allow them to access their own signature
-if (in_array($_SESSION['role'], ['Faculty', 'Laboratory Staff']) && $_SESSION['user_id'] != $borrower_id) {
+if (in_array($_SESSION['role'], ['Student', 'Faculty', 'Laboratory Staff']) && $_SESSION['user_id'] != $borrower_id) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'You can only access your own signature']);
     exit();

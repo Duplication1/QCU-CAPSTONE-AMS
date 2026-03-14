@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../model/Database.php';
 
 // Check if user is logged in and has appropriate role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Faculty', 'Laboratory Staff'])) {
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Student', 'Faculty', 'Laboratory Staff'])) {
     $_SESSION['error_message'] = "Unauthorized access.";
     header("Location: ../view/login.php");
     exit();

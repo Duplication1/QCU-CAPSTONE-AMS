@@ -706,20 +706,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
         $serial_number = trim($_POST['serial_number'] ?? '');
         $status = trim($_POST['status'] ?? 'Available');
         $condition = trim($_POST['condition'] ?? 'Good');
-        $is_borrowable = isset($_POST['is_borrowable']) ? 1 : 0;
-        
+        $is_borrowable = isset($_POST['is_borrowable']) && $_POST['is_borrowable'] == '1' ? 1 : 0;
+
         if ($id <= 0 || empty($asset_tag) || empty($asset_name)) {
             echo json_encode(['success' => false, 'message' => 'Invalid parameters']);
             exit;
         }
-        
+
         try {
+            // Fetch old values before updating
+            $old_stmt = $conn->prepare("SELECT asset_tag, asset_name, asset_type, brand, model, serial_number, status, `condition`, is_borrowable FROM assets WHERE id = ? AND room_id = ?");
+            $old_stmt->bind_param('ii', $id, $room_id);
+            $old_stmt->execute();
+            $old_data = $old_stmt->get_result()->fetch_assoc();
+            $old_stmt->close();
+
             $stmt = $conn->prepare("UPDATE assets SET asset_tag = ?, asset_name = ?, asset_type = ?, brand = ?, model = ?, serial_number = ?, status = ?, `condition` = ?, is_borrowable = ?, updated_by = ? WHERE id = ? AND room_id = ?");
             $updated_by = $_SESSION['user_id'];
-            $stmt->bind_param('sssssssiisis', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $status, $condition, $is_borrowable, $updated_by, $id, $room_id);
+            $stmt->bind_param('ssssssssiiii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $status, $condition, $is_borrowable, $updated_by, $id, $room_id);
             $success = $stmt->execute();
             $stmt->close();
-            
+
             if ($success) {
                 require_once '../../model/ActivityLog.php';
                 ActivityLog::record(
@@ -729,6 +736,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     $id,
                     "Updated asset: {$asset_tag} - {$asset_name} in room {$room['name']}"
                 );
+
+                // Log changes to asset_history
+                if ($old_data) {
+                    $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+                    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+                    $user_id = $_SESSION['user_id'];
+
+                    // Get user's full name
+                    $performed_by_name = null;
+                    $user_query = $conn->prepare("SELECT full_name FROM users WHERE id = ?");
+                    $user_query->bind_param('i', $user_id);
+                    $user_query->execute();
+                    $user_result = $user_query->get_result();
+                    if ($user_row = $user_result->fetch_assoc()) {
+                        $performed_by_name = $user_row['full_name'];
+                    }
+                    $user_query->close();
+
+                    // Log condition change
+                    if ($old_data['condition'] != $condition) {
+                        $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $action_type = 'Condition Changed';
+                        $field_changed = 'Condition';
+                        $description = "Condition changed from {$old_data['condition']} to {$condition}";
+                        $history_stmt->bind_param('isssssssss', $id, $action_type, $field_changed, $old_data['condition'], $condition, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                        $history_stmt->execute();
+                        $history_stmt->close();
+                    }
+
+                    // Log status change
+                    if ($old_data['status'] != $status) {
+                        $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $action_type = 'Status Changed';
+                        $field_changed = 'Status';
+                        $description = "Status changed from {$old_data['status']} to {$status}";
+                        $history_stmt->bind_param('isssssssss', $id, $action_type, $field_changed, $old_data['status'], $status, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                        $history_stmt->execute();
+                        $history_stmt->close();
+                    }
+
+                    // Log other field changes
+                    $field_map = [
+                        'asset_name' => ['new' => $asset_name, 'label' => 'Asset Name'],
+                        'asset_type' => ['new' => $asset_type, 'label' => 'Asset Type'],
+                        'is_borrowable' => ['new' => $is_borrowable, 'label' => 'Is Borrowable'],
+                    ];
+                    foreach ($field_map as $field => $info) {
+                        if ($old_data[$field] != $info['new']) {
+                            $old_display = $field === 'is_borrowable' ? ($old_data[$field] ? 'Yes' : 'No') : $old_data[$field];
+                            $new_display = $field === 'is_borrowable' ? ($info['new'] ? 'Yes' : 'No') : $info['new'];
+                            $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $action_type = 'Updated';
+                            $description = "{$info['label']} changed from {$old_display} to {$new_display}";
+                            $history_stmt->bind_param('isssssssss', $id, $action_type, $info['label'], $old_display, $new_display, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                            $history_stmt->execute();
+                            $history_stmt->close();
+                        }
+                    }
+                }
+
                 echo json_encode(['success' => true, 'message' => 'Asset updated successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to update asset']);
@@ -930,83 +997,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
     
     if ($action === 'bulk_update_assets') {
         $ids = json_decode($_POST['ids'] ?? '[]', true);
-        
+
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['success' => false, 'message' => 'Invalid asset IDs']);
             exit;
         }
-        
+
         // Collect update fields
         $updates = [];
         $params = [];
         $types = '';
-        
+        $changed_fields = [];
+
         if (isset($_POST['asset_name']) && $_POST['asset_name'] !== '') {
             $updates[] = 'asset_name = ?';
             $params[] = $_POST['asset_name'];
             $types .= 's';
+            $changed_fields['asset_name'] = $_POST['asset_name'];
         }
-        
+
         if (isset($_POST['asset_type']) && $_POST['asset_type'] !== '') {
             $updates[] = 'asset_type = ?';
             $params[] = $_POST['asset_type'];
             $types .= 's';
+            $changed_fields['asset_type'] = $_POST['asset_type'];
         }
-        
+
         if (isset($_POST['room_id']) && $_POST['room_id'] !== '') {
             $updates[] = 'room_id = ?';
             // Handle "No Room" as NULL
             $room_value = $_POST['room_id'] === '0' ? null : intval($_POST['room_id']);
             $params[] = $room_value;
             $types .= 'i';
+            $changed_fields['room_id'] = $room_value;
         }
-        
+
         if (isset($_POST['status']) && $_POST['status'] !== '') {
             $updates[] = 'status = ?';
             $params[] = $_POST['status'];
             $types .= 's';
+            $changed_fields['status'] = trim($_POST['status']);
         }
-        
+
         if (isset($_POST['condition']) && $_POST['condition'] !== '') {
-            $updates[] = 'condition = ?';
+            $updates[] = '`condition` = ?';
             $params[] = $_POST['condition'];
             $types .= 's';
+            $changed_fields['condition'] = trim($_POST['condition']);
         }
-        
+
         if (isset($_POST['is_borrowable']) && $_POST['is_borrowable'] !== '') {
             $updates[] = 'is_borrowable = ?';
             $params[] = intval($_POST['is_borrowable']);
             $types .= 'i';
+            $changed_fields['is_borrowable'] = intval($_POST['is_borrowable']);
         }
-        
+
         if (isset($_POST['notes']) && $_POST['notes'] !== '') {
             $updates[] = 'notes = ?';
             $params[] = $_POST['notes'];
             $types .= 's';
         }
-        
+
         if (empty($updates)) {
             echo json_encode(['success' => false, 'message' => 'No fields to update']);
             exit;
         }
-        
+
         try {
+            $conn->begin_transaction();
+
+            // Fetch old values for each asset before updating
+            $placeholders_select = implode(',', array_fill(0, count($ids), '?'));
+            $select_sql = "SELECT id, asset_tag, asset_name, asset_type, room_id, status, `condition`, is_borrowable FROM assets WHERE id IN ($placeholders_select)";
+            $select_stmt = $conn->prepare($select_sql);
+            $select_types = str_repeat('i', count($ids));
+            $select_stmt->bind_param($select_types, ...$ids);
+            $select_stmt->execute();
+            $result = $select_stmt->get_result();
+            $old_values = [];
+            while ($row = $result->fetch_assoc()) {
+                $old_values[$row['id']] = $row;
+            }
+            $select_stmt->close();
+
+            // Update assets
             $placeholders = str_repeat('?,', count($ids) - 1) . '?';
             $sql = "UPDATE assets SET " . implode(', ', $updates) . ", updated_by = ? WHERE id IN ($placeholders)";
-            
+
             $stmt = $conn->prepare($sql);
             $updated_by = $_SESSION['user_id'];
-            
+
             // Build final parameters: update values + updated_by + ids
-            $types .= 'i' . str_repeat('i', count($ids));
+            $update_types = $types . 'i' . str_repeat('i', count($ids));
             $final_params = array_merge($params, [$updated_by], $ids);
-            
-            $stmt->bind_param($types, ...$final_params);
+
+            $stmt->bind_param($update_types, ...$final_params);
             $success = $stmt->execute();
             $affected = $stmt->affected_rows;
             $stmt->close();
-            
-            if ($success) {
+
+            if ($success && $affected > 0) {
                 require_once '../../model/ActivityLog.php';
                 ActivityLog::record(
                     $_SESSION['user_id'],
@@ -1015,8 +1106,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     null,
                     "Bulk updated {$affected} asset(s) in room {$room['name']}"
                 );
+
+                // Log to asset_history for each asset
+                $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+                $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+                $user_id = $_SESSION['user_id'];
+
+                $performed_by_name = null;
+                $user_query = $conn->prepare("SELECT full_name FROM users WHERE id = ?");
+                $user_query->bind_param('i', $user_id);
+                $user_query->execute();
+                $user_result = $user_query->get_result();
+                if ($user_row = $user_result->fetch_assoc()) {
+                    $performed_by_name = $user_row['full_name'];
+                }
+                $user_query->close();
+
+                foreach ($old_values as $asset_id => $old_data) {
+                    try {
+                        // Log condition change
+                        if (isset($changed_fields['condition']) && $old_data['condition'] != $changed_fields['condition']) {
+                            $old_condition = $old_data['condition'];
+                            $new_condition = $changed_fields['condition'];
+                            $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $action_type = 'Condition Changed';
+                            $field_changed = 'Condition';
+                            $description = "Condition changed from {$old_condition} to {$new_condition}";
+                            $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_changed, $old_condition, $new_condition, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                            $history_stmt->execute();
+                            $history_stmt->close();
+                        }
+
+                        // Log status change
+                        if (isset($changed_fields['status']) && $old_data['status'] != $changed_fields['status']) {
+                            $old_status = $old_data['status'];
+                            $new_status = $changed_fields['status'];
+                            $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            $action_type = 'Status Changed';
+                            $field_changed = 'Status';
+                            $description = "Status changed from {$old_status} to {$new_status}";
+                            $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_changed, $old_status, $new_status, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                            $history_stmt->execute();
+                            $history_stmt->close();
+                        }
+
+                        // Log other field changes
+                        foreach (['asset_name', 'asset_type', 'is_borrowable'] as $field) {
+                            if (isset($changed_fields[$field]) && $old_data[$field] != $changed_fields[$field]) {
+                                $field_label = str_replace('_', ' ', ucwords(str_replace('_', ' ', $field)));
+                                $old_display = $field === 'is_borrowable' ? ($old_data[$field] ? 'Yes' : 'No') : $old_data[$field];
+                                $new_display = $field === 'is_borrowable' ? ($changed_fields[$field] ? 'Yes' : 'No') : $changed_fields[$field];
+                                $history_stmt = $conn->prepare("INSERT INTO asset_history (asset_id, action_type, field_changed, old_value, new_value, description, performed_by, performed_by_name, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                $action_type = 'Updated';
+                                $description = "{$field_label} changed from {$old_display} to {$new_display}";
+                                $history_stmt->bind_param('isssssssss', $asset_id, $action_type, $field_label, $old_display, $new_display, $description, $user_id, $performed_by_name, $ip_address, $user_agent);
+                                $history_stmt->execute();
+                                $history_stmt->close();
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log("Failed to log asset history for asset {$asset_id}: " . $e->getMessage());
+                    }
+                }
+
+                $conn->commit();
                 echo json_encode(['success' => true, 'message' => "$affected asset(s) updated successfully"]);
+            } else if ($success) {
+                $conn->commit();
+                echo json_encode(['success' => true, 'message' => 'No changes were needed']);
             } else {
+                $conn->rollback();
                 echo json_encode(['success' => false, 'message' => 'Failed to update assets']);
             }
         } catch (Exception $e) {
@@ -3178,9 +3337,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         const result = await response.json();
-        
+
         if (result.success) {
-            window.location.reload();
+            showAlert('success', result.message);
+            setTimeout(() => window.location.reload(), 1000);
         } else {
             showAlert('error', result.message);
         }
