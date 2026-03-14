@@ -25,9 +25,14 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true && !$
         case 'Laboratory Staff':
             header("Location: LaboratoryStaff/index.php");
             exit();
-        case 'Student':
         case 'Faculty':
             header("Location: StudentFaculty/index.php");
+            exit();
+        case 'Student':
+            session_destroy();
+            session_start();
+            $_SESSION['error_message'] = "Student access is currently disabled.";
+            header("Location: login.php");
             exit();
     }
 }

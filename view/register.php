@@ -116,7 +116,6 @@ session_start();
               <select id="role" name="role" required
                       class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
                 <option value="">Select Role</option>
-                <option value="Student">Student</option>
                 <option value="Faculty">Faculty</option>
                 <option value="Technician">Technician</option>
                 <option value="Laboratory Staff">Laboratory Staff</option>

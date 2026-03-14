@@ -4,7 +4,7 @@ require_once '../config/config.php';
 require_once '../model/AssetBorrowing.php';
 
 // Check if user is logged in and has student or faculty role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Student', 'Faculty'])) {
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Faculty'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
     exit();

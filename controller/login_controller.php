@@ -148,10 +148,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'Laboratory Staff':
                 $_SESSION['redirect_url'] = "../view/LaboratoryStaff/index.php";
                 break;
-            case 'Student':
             case 'Faculty':
                 $_SESSION['redirect_url'] = "../view/StudentFaculty/index.php";
                 break;
+            case 'Student':
+                session_destroy();
+                session_start();
+                $_SESSION['error_message'] = "Student access is currently disabled.";
+                header("Location: ../view/login.php");
+                exit();
             default:
                 $_SESSION['error_message'] = "Invalid user role.";
                 header("Location: ../view/login.php");

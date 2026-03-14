@@ -6,8 +6,8 @@ header("Pragma: no-cache");
 
 session_start();
 
-// Check if user is logged in and has student or faculty role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Student', 'Faculty'])) {
+// Check if user is logged in and has faculty role
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Faculty') {
     header("Location: ../login.php");
     exit();
 }

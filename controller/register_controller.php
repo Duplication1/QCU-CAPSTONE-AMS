@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Validate role
-    $validRoles = ['Student', 'Faculty', 'Technician', 'Laboratory Staff'];
+    $validRoles = ['Faculty', 'Technician', 'Laboratory Staff'];
     if (!in_array($role, $validRoles)) {
         $_SESSION['error_message'] = "Invalid role selected.";
         header("Location: ../view/register.php");
