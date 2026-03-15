@@ -12,6 +12,9 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !
     exit();
 }
 
+$borrowSuccessChipMessage = $_SESSION['borrow_success_message'] ?? '';
+unset($_SESSION['borrow_success_message']);
+
 require_once '../../config/config.php';
 include '../components/layout_header.php';
 
@@ -1931,6 +1934,35 @@ function showConfirmModal(options) {
 
     return promise;
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const borrowSuccessChipMessage = <?php echo json_encode($borrowSuccessChipMessage); ?>;
+    if (!borrowSuccessChipMessage) {
+        return;
+    }
+
+    const existingChip = document.getElementById('borrow-success-chip');
+    if (existingChip) {
+        existingChip.remove();
+    }
+
+    const chip = document.createElement('div');
+    chip.id = 'borrow-success-chip';
+    chip.className = 'fixed top-6 right-6 z-[9999] bg-green-50 border border-green-300 text-green-800 px-5 py-3 rounded-lg shadow-lg flex items-start gap-3 max-w-sm';
+    chip.innerHTML = `
+        <i class="fa-solid fa-circle-check text-green-600 mt-0.5"></i>
+        <div class="text-sm font-medium leading-relaxed">${borrowSuccessChipMessage}</div>
+    `;
+
+    document.body.appendChild(chip);
+
+    setTimeout(() => {
+        chip.style.transition = 'all 0.3s ease';
+        chip.style.opacity = '0';
+        chip.style.transform = 'translateX(16px)';
+        setTimeout(() => chip.remove(), 300);
+    }, 4500);
+});
 </script>
 
 <?php $conn->close(); ?>
