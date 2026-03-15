@@ -36,9 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // Validate password length
-    if (strlen($password) < 6) {
-        $_SESSION['error_message'] = "Password must be at least 6 characters long.";
+    // Validate password strength: minimum 8 characters, one uppercase letter, one special character
+    if (strlen($password) < 8) {
+        $_SESSION['error_message'] = "Password must be at least 8 characters long.";
+        header("Location: ../view/register.php");
+        exit();
+    }
+
+    if (!preg_match('/[A-Z]/', $password)) {
+        $_SESSION['error_message'] = "Password must contain at least one uppercase letter.";
+        header("Location: ../view/register.php");
+        exit();
+    }
+
+    if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
+        $_SESSION['error_message'] = "Password must contain at least one special character.";
         header("Location: ../view/register.php");
         exit();
     }
@@ -113,6 +125,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $security_question_2,
             $hashed_answer_2
         ]);
+
+        $registrationRequestId = (int) $conn->lastInsertId();
+
+        // Ensure notifications table exists
+        $conn->exec("CREATE TABLE IF NOT EXISTS notifications (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+            related_type ENUM('issue', 'borrowing', 'asset', 'system') DEFAULT 'system',
+            related_id INT DEFAULT NULL,
+            is_read TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_user_id (user_id),
+            INDEX idx_is_read (is_read),
+            INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        // Notify all administrators about the new pending registration request
+        $adminStmt = $conn->prepare("SELECT id FROM users WHERE role = 'Administrator' AND status = 'Active'");
+        $adminStmt->execute();
+        $adminIds = $adminStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($adminIds)) {
+            $notifTitle = 'New Registration Request';
+            $notifMessage = $full_name . ' (' . $role . ') submitted a registration request and is pending approval.';
+            $notifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'info', 'system', ?)");
+
+            foreach ($adminIds as $adminId) {
+                $notifStmt->execute([(int) $adminId, $notifTitle, $notifMessage, $registrationRequestId]);
+            }
+        }
         
         $_SESSION['success_message'] = "Registration request submitted successfully! Please wait for administrator approval.";
         header("Location: ../view/login.php");
