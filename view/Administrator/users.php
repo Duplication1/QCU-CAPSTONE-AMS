@@ -909,7 +909,7 @@ main {
 </div>
 
 <!-- Toast notification -->
-<div id="globalToast" class="fixed bottom-6 right-6 z-60 hidden">
+<div id="globalToast" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-60 hidden">
     <div id="globalToastInner" class="px-4 py-2 rounded shadow text-sm"></div>
 </div>
 

@@ -458,9 +458,15 @@ if (!$result || $result->num_rows === 0): ?>
       </div>
       <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Refuse Ticket</h3>
       <div class="mt-2 px-7 py-3">
-        <p class="text-sm text-gray-500">
-          Are you sure you want to refuse this ticket? It will be returned to the queue and unassigned.
+        <p class="text-sm text-gray-500 mb-3">
+          Please provide a reason for refusing this ticket. This will help the lab staff understand and reassign appropriately.
         </p>
+        <textarea id="refusalReasonInput" 
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                  rows="4" 
+                  placeholder="Enter reason for refusal (required)..."
+                  required></textarea>
+        <p id="refusalReasonError" class="text-xs text-red-600 mt-1 hidden">Please provide a reason for refusing this ticket.</p>
       </div>
       <div class="flex gap-3 px-4 py-3">
         <button id="cancelRefuse" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition">
@@ -800,6 +806,8 @@ function showRefuseModal(ticketId, row) {
 
 function hideRefuseModal() {
   document.getElementById('refuseModal').classList.add('hidden');
+  document.getElementById('refusalReasonInput').value = '';
+  document.getElementById('refusalReasonError').classList.add('hidden');
   pendingRefuseTicketId = null;
   pendingRefuseRow = null;
 }
@@ -808,10 +816,21 @@ document.getElementById('cancelRefuse')?.addEventListener('click', hideRefuseMod
 
 document.getElementById('confirmRefuse')?.addEventListener('click', function() {
   if (!pendingRefuseTicketId || !pendingRefuseRow) { hideRefuseModal(); return; }
+  
+  // Get and validate refusal reason
+  const refusalReason = document.getElementById('refusalReasonInput').value.trim();
+  const errorElement = document.getElementById('refusalReasonError');
+  
+  if (!refusalReason) {
+    errorElement.classList.remove('hidden');
+    document.getElementById('refusalReasonInput').focus();
+    return;
+  }
+  
   const ticketId = pendingRefuseTicketId;
   const row = pendingRefuseRow;
   hideRefuseModal();
-  handleRespondAssignment(ticketId, row, 'refuse');
+  handleRespondAssignment(ticketId, row, 'refuse', refusalReason);
 });
 
 document.getElementById('refuseModal')?.addEventListener('click', function(e) {
@@ -908,17 +927,22 @@ document.addEventListener('keydown', function(e) {
 // Handle confirm / refuse assignment
 const respondUrl = '../../controller/technician_respond_ticket.php';
 
-function handleRespondAssignment(ticketId, row, action) {
+function handleRespondAssignment(ticketId, row, action, refusalReason = '') {
   const started = Date.now();
   
   // Disable both buttons while processing
   row.querySelectorAll('.confirmBtn, .refuseBtn').forEach(b => b.disabled = true);
 
+  const formData = new URLSearchParams({ticket_id: ticketId, action: action});
+  if (action === 'refuse' && refusalReason) {
+    formData.append('refusal_reason', refusalReason);
+  }
+
   fetch(respondUrl, {
     method: 'POST',
     credentials: 'same-origin',
     headers: {'Accept': 'application/json'},
-    body: new URLSearchParams({ticket_id: ticketId, action: action})
+    body: formData
   }).then(r => r.json()).then(j => {
     const elapsed = Date.now() - started;
     const wait = Math.max(0, ROW_MIN_MS - elapsed);

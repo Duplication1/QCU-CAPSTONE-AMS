@@ -828,6 +828,46 @@ function viewTicket(ticketId) {
             if (data.success) {
                 const ticket = data.ticket;
                 const issueType = ticket.category || 'Hardware';
+                
+                // Build refusal history HTML if there are refusals
+                let refusalHistoryHTML = '';
+                if (ticket.refusal_count > 0) {
+                    refusalHistoryHTML = `
+                        <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-red-900 flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Refusal History
+                                </h4>
+                                <span class="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
+                                    ${ticket.refusal_count} Refusal${ticket.refusal_count > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <div class="space-y-3">
+                                ${ticket.refusal_history.map((refusal, index) => `
+                                    <div class="bg-white p-3 rounded border border-red-100">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-6 h-6 bg-red-100 text-red-700 rounded-full flex items-center justify-center text-xs font-bold">
+                                                    ${index + 1}
+                                                </span>
+                                                <span class="font-semibold text-gray-900">${refusal.technician_name}</span>
+                                            </div>
+                                            <span class="text-xs text-gray-500">
+                                                ${new Date(refusal.refused_at).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div class="ml-8">
+                                            <p class="text-xs font-medium text-gray-500 mb-1">Reason:</p>
+                                            <p class="text-sm text-gray-700 whitespace-pre-wrap">${refusal.refusal_reason}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
                 document.getElementById('ticketDetails').innerHTML = `
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -889,6 +929,7 @@ function viewTicket(ticketId) {
                         <img src="../../${ticket.image_path}" alt="Ticket Image" class="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-90 transition" onclick="openImageModal('../../${ticket.image_path}', event)" style="max-height: 400px;">
                     </div>
                     ` : ''}
+                    ${refusalHistoryHTML}
                 `;
                 document.getElementById('viewModal').classList.remove('hidden');
             }

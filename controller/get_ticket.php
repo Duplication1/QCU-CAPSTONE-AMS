@@ -68,6 +68,23 @@ if ($result->num_rows === 0) {
 
 $ticket = $result->fetch_assoc();
 $stmt->close();
+
+// Fetch refusal history for this ticket
+$refusalHistory = [];
+$refusalCount = 0;
+$refusalQuery = "SELECT technician_name, refusal_reason, refused_at FROM ticket_refusal_history WHERE ticket_id = ? ORDER BY refused_at DESC";
+$refusalStmt = $conn->prepare($refusalQuery);
+if ($refusalStmt) {
+    $refusalStmt->bind_param('i', $ticketId);
+    $refusalStmt->execute();
+    $refusalResult = $refusalStmt->get_result();
+    while ($row = $refusalResult->fetch_assoc()) {
+        $refusalHistory[] = $row;
+        $refusalCount++;
+    }
+    $refusalStmt->close();
+}
+
 $conn->close();
 
 // Return ticket data
@@ -91,7 +108,9 @@ echo json_encode([
         'component_asset_id' => $ticket['component_asset_id'],
         'component_name' => $ticket['component_name'],
         'component_tag' => $ticket['component_tag'],
-        'image_path' => $ticket['image_path']
+        'image_path' => $ticket['image_path'],
+        'refusal_count' => $refusalCount,
+        'refusal_history' => $refusalHistory
     ]
 ]);
 ?>

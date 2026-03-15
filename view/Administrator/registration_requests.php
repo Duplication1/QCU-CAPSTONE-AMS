@@ -200,6 +200,74 @@ foreach ($requests as $request) {
         </div>
     </div>
 
+    <!-- Approve Confirmation Modal -->
+    <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200 bg-green-500">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-check-circle"></i>
+                        Approve Registration
+                    </h3>
+                    <button onclick="closeApproveModal()" class="text-white hover:opacity-75 rounded p-1">
+                        <i class="fa-solid fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 mb-6">Are you sure you want to approve this registration request?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeApproveModal()" 
+                            class="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded font-semibold">
+                        Cancel
+                    </button>
+                    <button onclick="confirmApprove()" 
+                            class="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold">
+                        <i class="fa-solid fa-check mr-1"></i>Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200 bg-red-500">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-times-circle"></i>
+                        Reject Registration
+                    </h3>
+                    <button onclick="closeRejectModal()" class="text-white hover:opacity-75 rounded p-1">
+                        <i class="fa-solid fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Reason for Rejection <span class="text-red-500">*</span>
+                </label>
+                <textarea id="rejectionReason" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                          rows="4" 
+                          placeholder="Please provide a reason for rejecting this request..."
+                          required></textarea>
+                <p id="rejectionError" class="text-red-500 text-sm mt-1 hidden">Please enter a reason for rejection</p>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="closeRejectModal()" 
+                            class="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded font-semibold">
+                        Cancel
+                    </button>
+                    <button onclick="confirmReject()" 
+                            class="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded font-semibold">
+                        <i class="fa-solid fa-times mr-1"></i>Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- DataTables -->
@@ -308,16 +376,48 @@ foreach ($requests as $request) {
             document.getElementById('viewModal').classList.remove('flex');
         }
 
+        let currentRequestId = null;
+
         function approveRequest(id) {
-            if (confirm('Are you sure you want to approve this registration request?')) {
-                window.location.href = `../../controller/process_registration.php?action=approve&id=${id}`;
+            currentRequestId = id;
+            document.getElementById('approveModal').classList.remove('hidden');
+            document.getElementById('approveModal').classList.add('flex');
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approveModal').classList.add('hidden');
+            document.getElementById('approveModal').classList.remove('flex');
+            currentRequestId = null;
+        }
+
+        function confirmApprove() {
+            if (currentRequestId) {
+                window.location.href = `../../controller/process_registration.php?action=approve&id=${currentRequestId}`;
             }
         }
 
         function rejectRequest(id) {
-            const reason = prompt('Please enter the reason for rejection:');
-            if (reason !== null && reason.trim() !== '') {
-                window.location.href = `../../controller/process_registration.php?action=reject&id=${id}&reason=${encodeURIComponent(reason)}`;
+            currentRequestId = id;
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectionError').classList.add('hidden');
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.getElementById('rejectModal').classList.add('flex');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('rejectModal').classList.remove('flex');
+            currentRequestId = null;
+        }
+
+        function confirmReject() {
+            const reason = document.getElementById('rejectionReason').value.trim();
+            if (reason === '') {
+                document.getElementById('rejectionError').classList.remove('hidden');
+                return;
+            }
+            if (currentRequestId) {
+                window.location.href = `../../controller/process_registration.php?action=reject&id=${currentRequestId}&reason=${encodeURIComponent(reason)}`;
             }
         }
     </script>

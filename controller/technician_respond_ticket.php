@@ -23,9 +23,11 @@ try {
 
     $ticketId = intval($_POST['ticket_id'] ?? 0);
     $action   = trim($_POST['action'] ?? ''); // 'confirm' or 'refuse'
+    $refusalReason = trim($_POST['refusal_reason'] ?? '');
 
     if ($ticketId <= 0) throw new Exception('Invalid ticket ID');
     if (!in_array($action, ['confirm', 'refuse'])) throw new Exception('Invalid action');
+    if ($action === 'refuse' && empty($refusalReason)) throw new Exception('Refusal reason is required');
 
     // Get technician name from session or DB
     $technicianName = $_SESSION['full_name'] ?? null;
@@ -45,6 +47,23 @@ try {
     if ($colCheck->num_rows === 0) {
         $conn->query("ALTER TABLE issues ADD COLUMN assignment_status ENUM('Pending','Confirmed','Refused') NULL DEFAULT NULL");
     }
+    
+    // Ensure refusal_reason column exists
+    $refusalReasonCheck = $conn->query("SHOW COLUMNS FROM issues LIKE 'refusal_reason'");
+    if ($refusalReasonCheck->num_rows === 0) {
+        $conn->query("ALTER TABLE issues ADD COLUMN refusal_reason TEXT NULL DEFAULT NULL AFTER assignment_status");
+    }
+    
+    // Create refusal history table if it doesn't exist
+    $conn->query("CREATE TABLE IF NOT EXISTS ticket_refusal_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ticket_id INT NOT NULL,
+        technician_name VARCHAR(255) NOT NULL,
+        technician_id INT NOT NULL,
+        refusal_reason TEXT NOT NULL,
+        refused_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_ticket_id (ticket_id)
+    )");
 
     // Verify the ticket is assigned to this technician and is pending
     $s = $conn->prepare("SELECT id, assigned_technician, assignment_status, user_id, title, assigned_by FROM issues WHERE id = ?");
@@ -95,11 +114,18 @@ try {
 
         echo json_encode(['success' => true, 'action' => 'confirm', 'message' => 'You have confirmed this ticket assignment.']);
     } else {
-        // Technician refuses: reset ticket to Open and unassign
-        $stmt = $conn->prepare("UPDATE issues SET assignment_status = 'Refused', assigned_technician = NULL, assigned_at = NULL, status = 'Open', updated_at = NOW() WHERE id = ?");
-        $stmt->bind_param('i', $ticketId);
+        // Technician refuses: reset ticket to Open and unassign, save refusal reason
+        $stmt = $conn->prepare("UPDATE issues SET assignment_status = 'Refused', refusal_reason = ?, assigned_technician = NULL, assigned_at = NULL, status = 'Open', updated_at = NOW() WHERE id = ?");
+        $stmt->bind_param('si', $refusalReason, $ticketId);
         $stmt->execute();
         $stmt->close();
+        
+        // Save refusal to history table
+        $historyStmt = $conn->prepare("INSERT INTO ticket_refusal_history (ticket_id, technician_name, technician_id, refusal_reason) VALUES (?, ?, ?, ?)");
+        $technicianId = $_SESSION['user_id'];
+        $historyStmt->bind_param('isis', $ticketId, $technicianName, $technicianId, $refusalReason);
+        $historyStmt->execute();
+        $historyStmt->close();
 
         // Notify reporter and lab staff about refusal
         try {
@@ -118,7 +144,7 @@ try {
             )");
 
             $notifTitle   = "Ticket #{$ticketId} — Technician Refused";
-            $notifMessage = "{$technicianName} has refused the assignment for ticket: \"{$ticket['title']}\". A new technician needs to be assigned.";
+            $notifMessage = "{$technicianName} has refused the assignment for ticket: \"{$ticket['title']}\".\n\nReason: {$refusalReason}\n\nA new technician needs to be assigned.";
 
             // Notify the reporter (student/faculty)
             if (!empty($ticket['user_id'])) {
@@ -132,7 +158,7 @@ try {
             if (!empty($ticket['assigned_by'])) {
                 $labNotifStmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, 'warning', 'issue', ?)");
                 $labNotifTitle   = "Ticket #{$ticketId} — Assignment Refused";
-                $labNotifMessage = "{$technicianName} has refused the assignment for ticket \"{$ticket['title']}\". Please assign a different technician.";
+                $labNotifMessage = "{$technicianName} has refused the assignment for ticket \"{$ticket['title']}\".\n\nReason: {$refusalReason}\n\nPlease assign a different technician.";
                 $labNotifStmt->bind_param('issi', $ticket['assigned_by'], $labNotifTitle, $labNotifMessage, $ticketId);
                 $labNotifStmt->execute();
                 $labNotifStmt->close();
