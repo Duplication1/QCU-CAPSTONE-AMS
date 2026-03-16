@@ -256,16 +256,16 @@ $pcStmt->close();
 </main>
 
 <!-- Single Dynamic Issue Modal -->
-<div id="issueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+<div id="issueModal" class="hidden fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto">
     <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeIssueModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden transform transition-all">
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] my-4 sm:my-0 overflow-hidden transform transition-all flex flex-col">
         <!-- Close Button -->
         <button type="button" onclick="closeIssueModal()" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
             <i class="fas fa-times text-2xl"></i>
         </button>
         
         <!-- Modal Body -->
-        <div class="overflow-hidden p-6">
+        <div class="p-6 overflow-y-auto flex-1 min-h-0">
 
         <form id="issueForm" class="space-y-4" method="post" enctype="multipart/form-data">
             <input type="hidden" name="category" id="issueCategory" value="">

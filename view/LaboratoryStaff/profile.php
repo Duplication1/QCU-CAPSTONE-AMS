@@ -29,6 +29,16 @@ try {
     $stmt->execute([$user_id]);
     $user_data = $stmt->fetch();
     $current_signature = $user_data['e_signature'] ?? null;
+
+    if (!empty($current_signature) && strpos($current_signature, 'data:image/') !== 0) {
+        $signature_file = basename($current_signature);
+        $signature_path = __DIR__ . '/../../uploads/signatures/' . $signature_file;
+        if (is_file($signature_path)) {
+            $current_signature = '../../uploads/signatures/' . rawurlencode($signature_file);
+        } else {
+            $current_signature = null;
+        }
+    }
     
     // Check if user data was found
     if (!$user_data) {
@@ -153,7 +163,7 @@ include '../components/layout_header.php';
                         <label class="block text-[10px] font-medium text-gray-700 mb-2">Current Signature</label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 140px;">
                             <?php if ($current_signature): ?>
-                                <img src="<?php echo htmlspecialchars($current_signature); ?>" 
+                                  <img src="<?php echo htmlspecialchars($current_signature); ?>" 
                                      alt="Current E-Signature" 
                                      class="max-h-28 max-w-full object-contain">
                             <?php else: ?>
@@ -397,7 +407,10 @@ document.getElementById('signatureForm').addEventListener('submit', async functi
     try {
         const response = await fetch('../../controller/upload_signature.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
         });
         
         const result = await response.json();
@@ -420,7 +433,11 @@ async function removeSignature() {
     }
     
     try {
-        const response = await fetch('../../controller/delete_signature.php');
+        const response = await fetch('../../controller/delete_signature.php', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         const result = await response.json();
         
         if (result.success) {

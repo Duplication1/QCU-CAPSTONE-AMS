@@ -25,6 +25,16 @@ try {
     $stmt = $conn->prepare("SELECT e_signature FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $current_signature = $stmt->fetchColumn();
+
+  if (!empty($current_signature) && strpos($current_signature, 'data:image/') !== 0) {
+    $signature_file = basename($current_signature);
+    $signature_path = __DIR__ . '/../../uploads/signatures/' . $signature_file;
+    if (is_file($signature_path)) {
+      $current_signature = '../../uploads/signatures/' . rawurlencode($signature_file);
+    } else {
+      $current_signature = null;
+    }
+  }
 } catch (PDOException $e) {
     // Handle error silently
 }

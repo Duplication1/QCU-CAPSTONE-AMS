@@ -3,6 +3,29 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/Database.php';
 
+function resolveSignatureSource($signature) {
+    if (!$signature) {
+        return null;
+    }
+
+    $signature = trim($signature);
+    if ($signature === '') {
+        return null;
+    }
+
+    if (strpos($signature, 'data:image/') === 0) {
+        return $signature;
+    }
+
+    $fileName = basename($signature);
+    $filePath = __DIR__ . '/../uploads/signatures/' . $fileName;
+    if (!is_file($filePath)) {
+        return null;
+    }
+
+    return '../../uploads/signatures/' . rawurlencode($fileName);
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
     http_response_code(403);
@@ -35,7 +58,7 @@ if (!$borrower_id && !$lab_staff_id) {
         
         echo json_encode([
             'success' => true,
-            'borrower_signature' => $user_signature
+            'borrower_signature' => resolveSignatureSource($user_signature)
         ]);
         exit();
     } catch (PDOException $e) {
@@ -78,8 +101,8 @@ try {
     // Signatures are stored as Base64 data URIs
     echo json_encode([
         'success' => true,
-        'borrower_signature' => $borrower_signature,
-        'lab_staff_signature' => $lab_staff_signature
+        'borrower_signature' => resolveSignatureSource($borrower_signature),
+        'lab_staff_signature' => resolveSignatureSource($lab_staff_signature)
     ]);
     
 } catch (PDOException $e) {

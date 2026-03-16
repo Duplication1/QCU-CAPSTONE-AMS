@@ -38,6 +38,19 @@ try {
     
     // Extract e_signature from user data
     $current_signature = $user_data['e_signature'] ?? null;
+
+    $signature_src = null;
+    if (!empty($current_signature)) {
+        if (strpos($current_signature, 'data:image/') === 0) {
+            $signature_src = $current_signature;
+        } else {
+            $signature_file = basename($current_signature);
+            $signature_path = __DIR__ . '/../../uploads/signatures/' . $signature_file;
+            if (is_file($signature_path)) {
+                $signature_src = '../../uploads/signatures/' . rawurlencode($signature_file);
+            }
+        }
+    }
 } catch (PDOException $e) {
     // Log the actual error for debugging
     error_log("Profile page database error: " . $e->getMessage());
@@ -120,9 +133,9 @@ include '../components/layout_header.php';
                     <div class="flex flex-col">
                         <h4 class="text-xs font-semibold text-gray-700 mb-3">Current Signature</h4>
                         <div class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center" style="min-height: 150px;">
-                            <?php if ($current_signature): ?>
+                            <?php if ($signature_src): ?>
                             <div class="text-center w-full">
-                                <img src="<?php echo $current_signature; ?>" 
+                                <img src="<?php echo htmlspecialchars($signature_src); ?>" 
                                      alt="Signature" 
                                      onerror="this.parentElement.innerHTML='<p class=\'text-red-600 text-xs\'>Error loading signature. Please re-upload.</p>';"
                                      class="max-h-20 max-w-full object-contain mx-auto mb-3">

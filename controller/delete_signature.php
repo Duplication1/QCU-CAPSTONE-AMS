@@ -3,6 +3,30 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/Database.php';
 
+function wantsJsonResponse() {
+    $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $requestedWith = strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '');
+    return strpos($acceptHeader, 'application/json') !== false || $requestedWith === 'xmlhttprequest';
+}
+
+function finishDeleteResponse($success, $message, $redirectUrl, $isJson, $statusCode = 200) {
+    if ($isJson) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'message' => $message]);
+        exit();
+    }
+
+    if ($success) {
+        $_SESSION['success_message'] = $message;
+    } else {
+        $_SESSION['error_message'] = $message;
+    }
+
+    header("Location: $redirectUrl");
+    exit();
+}
+
 // Check if user is logged in and has appropriate role
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || !in_array($_SESSION['role'], ['Student', 'Faculty', 'Laboratory Staff'])) {
     $_SESSION['error_message'] = "Unauthorized access.";
@@ -18,6 +42,8 @@ $redirect_url = match($_SESSION['role']) {
     default => '../view/StudentFaculty/profile.php'
 };
 
+$isJson = wantsJsonResponse();
+
 try {
     $db = new Database();
     $conn = $db->getConnection();
@@ -28,6 +54,14 @@ try {
     $signature_data = $stmt->fetchColumn();
     
     if ($signature_data) {
+        if (strpos($signature_data, 'data:image/') !== 0) {
+            $signature_file = basename($signature_data);
+            $signature_path = __DIR__ . '/../uploads/signatures/' . $signature_file;
+            if (is_file($signature_path)) {
+                @unlink($signature_path);
+            }
+        }
+
         // Update database to remove signature
         $stmt = $conn->prepare("UPDATE users SET e_signature = NULL WHERE id = ?");
         $stmt->execute([$user_id]);
@@ -46,14 +80,13 @@ try {
             error_log('Failed to log signature deletion: ' . $logError->getMessage());
         }
         
-        $_SESSION['success_message'] = "E-signature removed successfully.";
+        finishDeleteResponse(true, 'E-signature removed successfully.', $redirect_url, $isJson);
     } else {
-        $_SESSION['error_message'] = "No signature found to remove.";
+        finishDeleteResponse(false, 'No signature found to remove.', $redirect_url, $isJson, 404);
     }
 } catch (PDOException $e) {
-    $_SESSION['error_message'] = "Failed to remove e-signature.";
+    finishDeleteResponse(false, 'Failed to remove e-signature.', $redirect_url, $isJson, 500);
 }
 
-header("Location: $redirect_url");
-exit();
+finishDeleteResponse(false, 'Failed to remove e-signature.', $redirect_url, $isJson, 500);
 ?>
