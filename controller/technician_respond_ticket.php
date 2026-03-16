@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 if (file_exists(__DIR__ . '/../config/config.php')) {
     require_once __DIR__ . '/../config/config.php';
 }
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 if (!isset($conn) || !$conn) {
     $conn = new mysqli('127.0.0.1', 'root', '', 'ams_database', 3306);
@@ -107,6 +108,7 @@ try {
                 $notifStmt->bind_param('issi', $ticket['user_id'], $notifTitle, $notifMessage, $ticketId);
                 $notifStmt->execute();
                 $notifStmt->close();
+                pushRealtimeNotifications([(int)$ticket['user_id']]);
             }
         } catch (Exception $notifError) {
             error_log('Notification error: ' . $notifError->getMessage());
@@ -163,6 +165,8 @@ try {
                 $labNotifStmt->execute();
                 $labNotifStmt->close();
             }
+
+            pushRealtimeNotifications([(int)$ticket['user_id'], (int)$ticket['assigned_by']]);
         } catch (Exception $notifError) {
             error_log('Notification error: ' . $notifError->getMessage());
         }

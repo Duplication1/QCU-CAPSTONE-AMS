@@ -2,6 +2,7 @@
 session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'ams_database');
@@ -121,6 +122,7 @@ if ($stmt->execute()) {
             $staffNotifTitle = "New Network Ticket Submitted";
             $staffNotifMessage = "{$requesterName} submitted a network ticket: {$titleWithType}";
             $staffNotifType = 'info';
+            $notifiedUserIds = [];
             
             $staffNotifStmt = $conn->prepare("
                 INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
@@ -131,8 +133,11 @@ if ($stmt->execute()) {
                 $staffId = $staff['id'];
                 $staffNotifStmt->bind_param('isssi', $staffId, $staffNotifTitle, $staffNotifMessage, $staffNotifType, $ticketId);
                 $staffNotifStmt->execute();
+                $notifiedUserIds[] = (int)$staffId;
             }
             $staffNotifStmt->close();
+
+            pushRealtimeNotifications($notifiedUserIds);
         }
     } catch (Exception $notifError) {
         error_log("Failed to create notification: " . $notifError->getMessage());

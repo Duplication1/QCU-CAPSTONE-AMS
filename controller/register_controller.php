@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/config.php';
 require_once '../model/Database.php';
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_number = trim($_POST['id_number']);
@@ -157,6 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($adminIds as $adminId) {
                 $notifStmt->execute([(int) $adminId, $notifTitle, $notifMessage, $registrationRequestId]);
             }
+
+            pushRealtimeNotifications(array_map('intval', $adminIds));
         }
         
         $_SESSION['success_message'] = "Registration request submitted successfully! Please wait for administrator approval.";

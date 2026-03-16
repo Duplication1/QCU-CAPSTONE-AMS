@@ -5,6 +5,7 @@ require_once '../../config/config.php';
 require_once '../../model/Database.php';
 require_once '../../model/AssetHistory.php';
 require_once '../../model/ActivityLog.php';
+require_once '../../controller/realtime_notification_helper.php';
 
 // Check if user is logged in
 $is_logged_in = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true;
@@ -189,12 +190,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status']) && $
         $notif_stmt = $conn->prepare(
             "INSERT INTO notifications (user_id, title, message, type, related_type, related_id) VALUES (?, ?, ?, ?, 'asset', ?)"
         );
+        $notifiedUserIds = [];
         while ($staff = $staff_result->fetch_assoc()) {
             $notif_stmt->bind_param('isssi', $staff['id'], $notif_title, $notif_message, $notif_type, $asset_id);
             $notif_stmt->execute();
+            $notifiedUserIds[] = (int)$staff['id'];
         }
         $notif_stmt->close();
         $staff_stmt->close();
+
+        pushRealtimeNotifications($notifiedUserIds);
 
         echo json_encode(['success' => true, 'message' => 'Status updated successfully', 'new_status' => $new_status]);
     } else {

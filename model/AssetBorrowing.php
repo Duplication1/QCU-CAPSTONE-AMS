@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/../controller/realtime_notification_helper.php';
 
 class AssetBorrowing {
     private $conn;
@@ -155,6 +156,7 @@ class AssetBorrowing {
                     VALUES (?, ?, ?, ?, 'borrowing', ?)
                 ");
                 $notifStmt->execute([$this->borrower_id, $notifTitle, $notifMessage, $notifType, $insertId]);
+                pushRealtimeNotifications([(int)$this->borrower_id]);
             } catch (Exception $e) {
                 error_log("Failed to create notification: " . $e->getMessage());
             }
@@ -220,6 +222,7 @@ class AssetBorrowing {
                         VALUES (?, ?, ?, ?, 'borrowing', ?)
                     ");
                     $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                    pushRealtimeNotifications([(int)$borrowingData['borrower_id']]);
                 } catch (Exception $e) {
                     error_log("Failed to create notification: " . $e->getMessage());
                 }
@@ -339,6 +342,7 @@ class AssetBorrowing {
                         VALUES (?, ?, ?, ?, 'borrowing', ?)
                     ");
                     $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                    pushRealtimeNotifications([(int)$borrowingData['borrower_id']]);
                 } catch (Exception $e) {
                     error_log("Failed to create notification: " . $e->getMessage());
                 }
@@ -413,6 +417,7 @@ class AssetBorrowing {
                         VALUES (?, ?, ?, ?, 'borrowing', ?)
                     ");
                     $notifStmt->execute([$borrowingData['borrower_id'], $notifTitle, $notifMessage, $notifType, $id]);
+                    pushRealtimeNotifications([(int)$borrowingData['borrower_id']]);
                 } catch (Exception $e) {
                     error_log("Failed to create notification: " . $e->getMessage());
                 }

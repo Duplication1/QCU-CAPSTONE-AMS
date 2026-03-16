@@ -18,6 +18,7 @@ if (file_exists(__DIR__ . '/../../config/config.php')) {
 } elseif (file_exists(__DIR__ . '/../../config/database.php')) {
     require_once __DIR__ . '/../../config/database.php';
 }
+require_once __DIR__ . '/../../controller/realtime_notification_helper.php';
 
 // Check if $conn exists, if not create connection manually
 if (!isset($conn)) {
@@ -94,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_technician']))
                 $notifStmt->bind_param('issi', $ticketData['user_id'], $notifTitle, $notifMessage, $ticketId);
                 $notifStmt->execute();
                 $notifStmt->close();
+                pushRealtimeNotifications([(int)$ticketData['user_id']]);
             } catch (Exception $notifError) {
                 error_log('Failed to create notification: ' . $notifError->getMessage());
             }

@@ -13,6 +13,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 }
 
 require_once '../../config/config.php';
+require_once '../../controller/realtime_notification_helper.php';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -100,6 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $notif_stmt->bind_param('issi', $technician_id, $notif_title, $notif_message, $building_id);
                     $notif_stmt->execute();
                     $notif_stmt->close();
+
+                    pushRealtimeNotifications([(int)$technician_id]);
                     
                     $assigned_count++;
                 } else {

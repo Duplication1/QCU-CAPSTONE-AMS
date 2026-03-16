@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 if (file_exists(__DIR__ . '/../config/config.php')) {
     require_once __DIR__ . '/../config/config.php';
 }
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 // ensure $conn
 if (!isset($conn) || !$conn) {
@@ -128,6 +129,8 @@ try {
     // Create notification for the student
     if ($affected > 0) {
         try {
+            $notifiedUserIds = [];
+
             // Create notifications table if it doesn't exist
             $conn->query("CREATE TABLE IF NOT EXISTS notifications (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -150,6 +153,7 @@ try {
             $notifStmt->bind_param('issi', $ticketData['user_id'], $notifTitle, $notifMessage, $ticketId);
             $notifStmt->execute();
             $notifStmt->close();
+            $notifiedUserIds[] = (int)$ticketData['user_id'];
             
             // Notification for the technician who is assigned to the ticket
             if ($technicianUserId) {
@@ -161,10 +165,13 @@ try {
                 $techNotifStmt->bind_param('issi', $technicianUserId, $techNotifTitle, $techNotifMessage, $ticketId);
                 $techNotifStmt->execute();
                 $techNotifStmt->close();
+                $notifiedUserIds[] = (int)$technicianUserId;
                 error_log("Technician notification created for user_id: $technicianUserId, ticket: $ticketId");
             } else {
                 error_log("WARNING: Could not create technician notification - technician user_id not found for ID: $technicianId");
             }
+
+            pushRealtimeNotifications($notifiedUserIds);
         } catch (Exception $notifError) {
             error_log('Failed to create notification: ' . $notifError->getMessage());
         }

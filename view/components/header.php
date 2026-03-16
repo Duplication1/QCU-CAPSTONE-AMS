@@ -134,6 +134,57 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   <script>
   // Load notifications on page load
   let notificationsInterval;
+  let notificationSocket;
+  let notificationReconnectDelay = 1000;
+
+  function initRealtimeNotifications() {
+    const userId = <?php echo json_encode((int)($_SESSION['user_id'] ?? 0)); ?>;
+    if (!userId) {
+      return;
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const host = window.location.hostname;
+    const port = <?php echo json_encode((int)(Config::get('WS_PORT', 8081) ?: 8081)); ?>;
+    const socketUrl = `${protocol}://${host}:${port}/?user_id=${encodeURIComponent(userId)}`;
+
+    function connect() {
+      try {
+        notificationSocket = new WebSocket(socketUrl);
+      } catch (error) {
+        setTimeout(connect, notificationReconnectDelay);
+        return;
+      }
+
+      notificationSocket.onopen = function() {
+        console.log('Realtime notifications connected');
+        notificationReconnectDelay = 1000;
+        loadNotifications();
+      };
+
+      notificationSocket.onmessage = function(event) {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.event === 'notification') {
+            loadNotifications();
+          }
+        } catch (error) {
+          console.error('Realtime notification parse error:', error);
+        }
+      };
+
+      notificationSocket.onclose = function() {
+        setTimeout(connect, notificationReconnectDelay);
+        notificationReconnectDelay = Math.min(notificationReconnectDelay * 2, 5000);
+      };
+
+      notificationSocket.onerror = function(error) {
+        console.error('Realtime notifications error:', error);
+      };
+    }
+
+    connect();
+  }
   
   function loadNotifications() {
     const currentPath = window.location.pathname;
@@ -370,8 +421,9 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   document.addEventListener('DOMContentLoaded', function() {
     console.log('Loading initial notifications...');
     loadNotifications();
-    // Refresh every 30 seconds
-    notificationsInterval = setInterval(loadNotifications, 30000);
+    initRealtimeNotifications();
+    // Fallback refresh every 5 seconds when websocket is unavailable/intermittent
+    notificationsInterval = setInterval(loadNotifications, 5000);
   });
 
   // Handle dropdown clicks

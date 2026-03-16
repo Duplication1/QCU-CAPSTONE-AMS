@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 if (file_exists(__DIR__ . '/../config/config.php')) {
     require_once __DIR__ . '/../config/config.php';
 }
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 // ensure DB connection
 if (!isset($conn) || !$conn) {
@@ -138,6 +139,7 @@ try {
             $notifStmt->bind_param('isssi', $issueUserId, $notifTitle, $notifMessage, $notifType, $ticketId);
             $notifStmt->execute();
             $notifStmt->close();
+            pushRealtimeNotifications([(int)$issueUserId]);
         } catch (Exception $notifError) {
             // Log but don't fail the main operation
             error_log("Failed to create notification: " . $notifError->getMessage());

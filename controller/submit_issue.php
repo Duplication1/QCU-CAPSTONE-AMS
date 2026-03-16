@@ -2,6 +2,7 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../config/config.php'; // adjust path
+require_once __DIR__ . '/realtime_notification_helper.php';
 
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'ams_database');
@@ -131,6 +132,8 @@ if ($id > 0) {
 // Create notification for successful submission
 if ($id > 0) {
     try {
+        $notifiedUserIds = [$user_id];
+
         // Create notifications table if it doesn't exist
         $createTableQuery = "
             CREATE TABLE IF NOT EXISTS notifications (
@@ -184,9 +187,12 @@ if ($id > 0) {
                 $staffId = $staff['id'];
                 $staffNotifStmt->bind_param('isssi', $staffId, $staffNotifTitle, $staffNotifMessage, $staffNotifType, $id);
                 $staffNotifStmt->execute();
+                $notifiedUserIds[] = (int)$staffId;
             }
             $staffNotifStmt->close();
         }
+
+        pushRealtimeNotifications($notifiedUserIds);
     } catch (Exception $notifError) {
         error_log("Failed to create notification: " . $notifError->getMessage());
     }
