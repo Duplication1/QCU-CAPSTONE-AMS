@@ -36,8 +36,8 @@ include '../components/layout_header.php';
         </style>
 
         <!-- Main Content -->
-        <main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
-            <div class="flex-1 min-h-0 overflow-hidden">
+        <main class="p-2 bg-gray-50 overflow-y-auto flex flex-col" style="height: calc(100vh - 85px);">
+            <div class="flex-1 min-h-0 overflow-visible">
                 <!-- Loading State -->
                 <div id="loadingState" class="flex items-center justify-center py-12">
                     <div class="text-center">
@@ -57,7 +57,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Analytics Content -->
-                <div id="analyticsContent" class="hidden flex-col" style="gap: 0.375rem; height: 100%; overflow: hidden;">
+                <div id="analyticsContent" class="hidden flex-col" style="gap: 0.375rem; height: auto; overflow: visible;">
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2 flex-shrink-0">
                         <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
