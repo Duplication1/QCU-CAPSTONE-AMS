@@ -159,9 +159,6 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-    body, html { overflow: hidden !important; height: 100vh; }
-    main { height: calc(100vh - 85px); }
-    
     .metric-card {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -184,7 +181,7 @@ include '../components/layout_header.php';
 </style>
 
 <!-- Main Content -->
-<main class="p-3 bg-gray-50 overflow-hidden flex flex-col">
+<main class="p-3 bg-gray-50 overflow-y-auto" style="height: calc(100vh - 85px);">
     
     <!-- Page Header -->
     <div class="mb-4">
@@ -193,7 +190,7 @@ include '../components/layout_header.php';
     </div>
 
     <!-- Key Metrics Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4 flex-shrink-0">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
         <!-- Total Assets -->
         <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
             <div class="flex items-center justify-between mb-2">
@@ -262,8 +259,7 @@ include '../components/layout_header.php';
     </div>
 
     <!-- Charts Grid -->
-    <div class="flex-1 min-h-0 overflow-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
             
             <!-- Equipment Condition Distribution -->
             <div class="chart-container p-4">
@@ -376,7 +372,6 @@ include '../components/layout_header.php';
             </div>
 
         </div>
-    </div>
 </main>
 
 <!-- Chart.js Library -->
