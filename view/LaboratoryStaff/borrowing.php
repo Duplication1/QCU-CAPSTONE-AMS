@@ -117,10 +117,24 @@ include '../components/layout_header.php';
 ?>
 
         <!-- Main Content -->
-        <main class="p-2">
+        <main class="p-4">
             
             <!-- Session Messages -->
             <?php include '../components/session_messages.php'; ?>
+
+            <!-- Page Header -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between border-b border-gray-200 pb-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">Borrowing Management</h1>
+                        <p class="text-gray-600 text-sm mt-1">Manage asset borrowing requests and track equipment loans</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">

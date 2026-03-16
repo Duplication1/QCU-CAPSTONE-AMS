@@ -42,7 +42,7 @@ $navigation_items = [
         ],
         [
             'id' => 'analytics',
-            'label' => 'Analytics',
+            'label' => 'Descriptive Analytics',
             'icon' => 'fa-solid fa-chart-column',
             'color' => 'blue',
             'href' => 'analytics.php',
@@ -67,6 +67,13 @@ $navigation_items = [
             'icon' => 'fa-solid fa-gauge',
             'color' => 'blue',
             'href' => 'index.php'
+        ],
+        [
+            'id' => 'analytics',
+            'label' => 'Descriptive Analytics',
+            'icon' => 'fa-solid fa-chart-line',
+            'color' => 'blue',
+            'href' => 'analytics.php'
         ],
         [
             'id' => 'submit-tickets',
