@@ -304,6 +304,8 @@ function getMaintenanceForecast($conn) {
  * Get ticket resolution-time analytics and forecast
  */
 function getResolutionTimeAnalytics($conn) {
+    $slaThresholdHours = 48;
+
     $historicalQuery = "
         SELECT
             DATE_FORMAT(updated_at, '%Y-%m') as month,
@@ -350,7 +352,7 @@ function getResolutionTimeAnalytics($conn) {
         SELECT
             COUNT(*) as resolved_last_30_days,
             AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_last_30_days,
-            SUM(CASE WHEN TIMESTAMPDIFF(HOUR, created_at, updated_at) > 48 THEN 1 ELSE 0 END) as sla_breach_count
+            SUM(CASE WHEN TIMESTAMPDIFF(HOUR, created_at, updated_at) > {$slaThresholdHours} THEN 1 ELSE 0 END) as sla_breach_count
         FROM issues
         WHERE status IN ('Resolved', 'Closed')
           AND updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -380,6 +382,83 @@ function getResolutionTimeAnalytics($conn) {
 
     $nextMonthAvgHours = count($predictions) > 0 ? (float)$predictions[0] : $currentAvgHours;
 
+    $slaBreachQuery = "
+        SELECT
+            i.id,
+            i.title,
+            i.priority,
+            i.status,
+            i.created_at,
+            i.updated_at,
+            COALESCE(u.full_name, i.submitted_by, 'Unknown') as requester_name,
+            CASE
+                WHEN i.status IN ('Resolved', 'Closed') THEN TIMESTAMPDIFF(HOUR, i.created_at, i.updated_at)
+                ELSE TIMESTAMPDIFF(HOUR, i.created_at, NOW())
+            END as elapsed_hours
+        FROM issues i
+        LEFT JOIN users u ON u.id = i.user_id
+        WHERE i.created_at IS NOT NULL
+          AND (
+            CASE
+                WHEN i.status IN ('Resolved', 'Closed') THEN TIMESTAMPDIFF(HOUR, i.created_at, i.updated_at)
+                ELSE TIMESTAMPDIFF(HOUR, i.created_at, NOW())
+            END
+          ) > {$slaThresholdHours}
+        ORDER BY elapsed_hours DESC, i.created_at DESC
+        LIMIT 200
+    ";
+
+    $slaBreachResult = $conn->query($slaBreachQuery);
+    if (!$slaBreachResult) {
+        throw new Exception('SLA breach tickets query failed: ' . $conn->error);
+    }
+
+    $slaBreachTickets = [];
+    while ($row = $slaBreachResult->fetch_assoc()) {
+        $slaBreachTickets[] = [
+            'id' => (int)$row['id'],
+            'title' => $row['title'],
+            'priority' => $row['priority'],
+            'status' => $row['status'],
+            'requester_name' => $row['requester_name'],
+            'created_at' => $row['created_at'],
+            'updated_at' => $row['updated_at'],
+            'elapsed_hours' => (int)$row['elapsed_hours']
+        ];
+    }
+
+    $technicianResolutionQuery = "
+        SELECT
+            COALESCE(NULLIF(TRIM(i.assigned_technician), ''), 'Unassigned') as technician_name,
+            COUNT(*) as resolved_count,
+            AVG(TIMESTAMPDIFF(HOUR, i.created_at, i.updated_at)) as avg_resolution_hours,
+            MIN(TIMESTAMPDIFF(HOUR, i.created_at, i.updated_at)) as fastest_resolution_hours,
+            MAX(TIMESTAMPDIFF(HOUR, i.created_at, i.updated_at)) as slowest_resolution_hours
+        FROM issues i
+        WHERE i.status IN ('Resolved', 'Closed')
+          AND i.updated_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+          AND i.updated_at >= i.created_at
+        GROUP BY technician_name
+        ORDER BY avg_resolution_hours ASC, resolved_count DESC
+        LIMIT 200
+    ";
+
+    $technicianResolutionResult = $conn->query($technicianResolutionQuery);
+    if (!$technicianResolutionResult) {
+        throw new Exception('Technician resolution query failed: ' . $conn->error);
+    }
+
+    $technicianResolution = [];
+    while ($row = $technicianResolutionResult->fetch_assoc()) {
+        $technicianResolution[] = [
+            'technician_name' => $row['technician_name'],
+            'resolved_count' => (int)$row['resolved_count'],
+            'avg_resolution_hours' => round((float)$row['avg_resolution_hours'], 2),
+            'fastest_resolution_hours' => (int)$row['fastest_resolution_hours'],
+            'slowest_resolution_hours' => (int)$row['slowest_resolution_hours']
+        ];
+    }
+
     return [
         'historical' => $historical,
         'predictions' => $predictions,
@@ -389,7 +468,9 @@ function getResolutionTimeAnalytics($conn) {
         'next_month_avg_hours' => round($nextMonthAvgHours, 2),
         'resolved_last_30_days' => $resolvedLast30Days,
         'sla_breach_rate' => $slaBreachRate,
-        'sla_threshold_hours' => 48
+        'sla_threshold_hours' => $slaThresholdHours,
+        'sla_breach_tickets' => $slaBreachTickets,
+        'technician_resolution' => $technicianResolution
     ];
 }
 

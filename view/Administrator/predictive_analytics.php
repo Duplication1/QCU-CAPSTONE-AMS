@@ -102,7 +102,7 @@ include '../components/layout_header.php';
                             <p class="text-xs opacity-70">Predicted issues</p>
                         </div>
 
-                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                        <button type="button" onclick="openTechnicianResolutionModal()" class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3 text-left w-full hover:bg-gray-50 cursor-pointer" style="color: #1E3A8A;">
                             <div class="flex items-center justify-between mb-1">
                                 <div>
                                     <p class="text-xs opacity-70 mb-0.5">Avg Resolution</p>
@@ -115,10 +115,10 @@ include '../components/layout_header.php';
                                     <i class="fas fa-clock text-xl text-indigo-600"></i>
                                 </div>
                             </div>
-                            <p class="text-xs opacity-70">Resolved tickets (latest period)</p>
-                        </div>
+                            <p id="avgResolutionText" class="text-xs opacity-70">Resolved tickets by technician (click to view)</p>
+                        </button>
 
-                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                        <button type="button" onclick="openSlaTicketsModal()" class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3 text-left w-full hover:bg-gray-50 cursor-pointer" style="color: #1E3A8A;">
                             <div class="flex items-center justify-between mb-1">
                                 <div>
                                     <p class="text-xs opacity-70 mb-0.5">SLA Risk</p>
@@ -132,7 +132,7 @@ include '../components/layout_header.php';
                                 </div>
                             </div>
                             <p id="slaRiskText" class="text-xs opacity-70">Ticket breaches beyond 48h</p>
-                        </div>
+                        </button>
                     </div>
 
                     <!-- Main Charts Grid -->
@@ -300,6 +300,68 @@ include '../components/layout_header.php';
             </div>
         </main>
 
+        <div id="slaTicketsModal" class="hidden fixed inset-0 z-[70]">
+            <div class="absolute inset-0 bg-black/40" onclick="closeSlaTicketsModal()"></div>
+            <div class="relative w-[95%] max-w-6xl mx-auto mt-10 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col max-h-[85vh]">
+                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between" style="background-color: rgba(30, 58, 138, 0.05);">
+                    <div>
+                        <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Tickets Beyond SLA Threshold</h3>
+                        <p class="text-xs text-gray-600">Showing tickets above <span id="slaThresholdLabel">48</span> hours</p>
+                    </div>
+                    <button type="button" onclick="closeSlaTicketsModal()" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">Close</button>
+                </div>
+                <div class="px-4 py-2 text-xs text-gray-600 border-b border-gray-200 bg-gray-50">
+                    Total tickets: <span id="slaTicketCount">0</span>
+                </div>
+                <div class="overflow-auto flex-1 min-h-0">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="sticky top-0 bg-white">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Ticket #</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Title</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Requester</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Priority</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Elapsed</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slaTicketsTableBody" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="technicianResolutionModal" class="hidden fixed inset-0 z-[70]">
+            <div class="absolute inset-0 bg-black/40" onclick="closeTechnicianResolutionModal()"></div>
+            <div class="relative w-[95%] max-w-5xl mx-auto mt-10 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col max-h-[85vh]">
+                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between" style="background-color: rgba(30, 58, 138, 0.05);">
+                    <div>
+                        <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Technician Resolution Time</h3>
+                        <p class="text-xs text-gray-600">Average resolution hours per technician (last 90 days)</p>
+                    </div>
+                    <button type="button" onclick="closeTechnicianResolutionModal()" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">Close</button>
+                </div>
+                <div class="px-4 py-2 text-xs text-gray-600 border-b border-gray-200 bg-gray-50">
+                    Total technicians: <span id="technicianResolutionCount">0</span>
+                </div>
+                <div class="overflow-auto flex-1 min-h-0">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="sticky top-0 bg-white">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Technician</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Resolved</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Average</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Fastest</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Slowest</th>
+                            </tr>
+                        </thead>
+                        <tbody id="technicianResolutionTableBody" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Chart.js Library -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         
@@ -316,7 +378,9 @@ include '../components/layout_header.php';
                 allFailures: [],
                 filteredFailures: [],
                 currentPage: 1,
-                perPage: 7
+                perPage: 7,
+                slaBreachTickets: [],
+                technicianResolution: []
             };
 
             function byId(id) {
@@ -326,6 +390,15 @@ include '../components/layout_header.php';
             function setText(id, value) {
                 const element = byId(id);
                 if (element) element.textContent = String(value);
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
             }
 
             function showContent() {
@@ -343,8 +416,13 @@ include '../components/layout_header.php';
                 setText('avgConditionScore', 0);
                 setText('predictedIssues', 0);
                 setText('avgResolutionHours', 0);
+                setText('avgResolutionText', 'Resolved tickets by technician (click to view)');
                 setText('slaRiskRate', 0);
                 setText('slaRiskText', 'Ticket breaches beyond 48h');
+                state.slaBreachTickets = [];
+                state.technicianResolution = [];
+                renderSlaTicketsModalRows();
+                renderTechnicianResolutionRows();
 
                 const health = byId('healthExplanation');
                 if (health) {
@@ -420,6 +498,12 @@ include '../components/layout_header.php';
                 normalized.resolution_time.sla_breach_rate = Number(normalized.resolution_time.sla_breach_rate) || 0;
                 normalized.resolution_time.sla_threshold_hours = Number(normalized.resolution_time.sla_threshold_hours) || 48;
                 normalized.resolution_time.resolved_last_30_days = Number(normalized.resolution_time.resolved_last_30_days) || 0;
+                normalized.resolution_time.sla_breach_tickets = Array.isArray(normalized.resolution_time.sla_breach_tickets)
+                    ? normalized.resolution_time.sla_breach_tickets
+                    : [];
+                normalized.resolution_time.technician_resolution = Array.isArray(normalized.resolution_time.technician_resolution)
+                    ? normalized.resolution_time.technician_resolution
+                    : [];
 
                 return normalized;
             }
@@ -450,8 +534,10 @@ include '../components/layout_header.php';
                 setText('avgConditionScore', Math.round(lastCondition));
                 setText('predictedIssues', nextIssues);
                 setText('avgResolutionHours', avgResolutionHours.toFixed(1));
+                setText('avgResolutionText', `${(data.resolution_time.technician_resolution || []).length} technicians tracked (click to view)`);
                 setText('slaRiskRate', slaRiskRate.toFixed(1));
-                setText('slaRiskText', `Tickets above ${data.resolution_time.sla_threshold_hours || 48}h`);
+                const breachCount = (data.resolution_time.sla_breach_tickets || []).length;
+                setText('slaRiskText', `${breachCount} tickets above ${data.resolution_time.sla_threshold_hours || 48}h (click to view)`);
 
                 const health = byId('healthExplanation');
                 if (health) {
@@ -705,6 +791,77 @@ include '../components/layout_header.php';
                 renderFailuresPage();
             }
 
+            function renderSlaTicketsModalRows() {
+                const tbody = byId('slaTicketsTableBody');
+                if (!tbody) return;
+
+                setText('slaTicketCount', state.slaBreachTickets.length);
+
+                if (!state.slaBreachTickets.length) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="px-3 py-6 text-center text-sm text-gray-500">No tickets are currently above the SLA threshold.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = state.slaBreachTickets.map(ticket => {
+                    const elapsed = Number(ticket.elapsed_hours) || 0;
+                    const title = escapeHtml(ticket.title || '-');
+                    const requester = escapeHtml(ticket.requester_name || '-');
+                    const priority = escapeHtml(ticket.priority || '-');
+                    const status = escapeHtml(ticket.status || '-');
+                    const created = escapeHtml(ticket.created_at || '-');
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-2 text-xs font-semibold text-gray-800">#${escapeHtml(ticket.id || '-')}</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${title}</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${requester}</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${priority}</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${status}</td>
+                            <td class="px-3 py-2 text-xs font-medium text-rose-700">${elapsed}h</td>
+                            <td class="px-3 py-2 text-xs text-gray-600">${created}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderTechnicianResolutionRows() {
+                const tbody = byId('technicianResolutionTableBody');
+                if (!tbody) return;
+
+                setText('technicianResolutionCount', state.technicianResolution.length);
+
+                if (!state.technicianResolution.length) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500">No resolved tickets found for technician resolution metrics.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = state.technicianResolution.map(row => {
+                    const name = escapeHtml(row.technician_name || 'Unassigned');
+                    const resolvedCount = Number(row.resolved_count) || 0;
+                    const avg = Number(row.avg_resolution_hours || 0).toFixed(2);
+                    const fastest = Number(row.fastest_resolution_hours) || 0;
+                    const slowest = Number(row.slowest_resolution_hours) || 0;
+
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-2 text-xs font-medium text-gray-900">${name}</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${resolvedCount}</td>
+                            <td class="px-3 py-2 text-xs font-semibold text-indigo-700">${avg}h</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${fastest}h</td>
+                            <td class="px-3 py-2 text-xs text-gray-700">${slowest}h</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
             function applyFailureFilter() {
                 const query = ((byId('failureSearch') || {}).value || '').toLowerCase().trim();
                 const riskLevel = ((byId('riskLevelFilter') || {}).value || '').trim();
@@ -797,6 +954,28 @@ include '../components/layout_header.php';
                 applyFailureFilter();
             };
 
+            window.openSlaTicketsModal = function () {
+                renderSlaTicketsModalRows();
+                byId('slaTicketsModal')?.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            };
+
+            window.closeSlaTicketsModal = function () {
+                byId('slaTicketsModal')?.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            window.openTechnicianResolutionModal = function () {
+                renderTechnicianResolutionRows();
+                byId('technicianResolutionModal')?.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            };
+
+            window.closeTechnicianResolutionModal = function () {
+                byId('technicianResolutionModal')?.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            };
+
             async function bootstrap() {
                 try {
                     const data = normalizeData(await fetchAnalytics());
@@ -805,6 +984,11 @@ include '../components/layout_header.php';
                     renderMaintenanceChart(data);
                     renderResolutionChart(data);
                     renderFailures(data.predicted_failures);
+                    state.slaBreachTickets = data.resolution_time.sla_breach_tickets || [];
+                    state.technicianResolution = data.resolution_time.technician_resolution || [];
+                    setText('slaThresholdLabel', data.resolution_time.sla_threshold_hours || 48);
+                    renderSlaTicketsModalRows();
+                    renderTechnicianResolutionRows();
                     showContent();
                 } catch (error) {
                     console.error('Predictive analytics bootstrap error:', error);
