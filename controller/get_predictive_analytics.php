@@ -42,6 +42,24 @@ try {
     exit();
 }
 
+function hasTableColumn($conn, $table, $column) {
+    static $cache = [];
+    $key = $table . '.' . $column;
+    if (array_key_exists($key, $cache)) {
+        return $cache[$key];
+    }
+
+    $safeTable = $conn->real_escape_string($table);
+    $safeColumn = $conn->real_escape_string($column);
+    $result = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE '{$safeColumn}'");
+    $exists = $result && $result->num_rows > 0;
+    if ($result) {
+        $result->free();
+    }
+    $cache[$key] = $exists;
+    return $exists;
+}
+
 /**
  * Calculate linear regression for time series data
  * Returns slope, intercept, and R-squared
@@ -106,6 +124,10 @@ function conditionToScore($condition) {
  * Get asset failure risk prediction
  */
 function getAssetFailureRisk($conn) {
+    $hasIssueAssetLink = hasTableColumn($conn, 'issues', 'component_asset_id');
+    $issueJoin = $hasIssueAssetLink ? "LEFT JOIN issues i ON i.component_asset_id = a.id" : "";
+    $issueCountSelect = $hasIssueAssetLink ? "COUNT(DISTINCT i.id) as issue_count," : "0 as issue_count,";
+
     // Get assets with their age, condition changes, and issue counts
     $query = "
         SELECT 
@@ -114,14 +136,14 @@ function getAssetFailureRisk($conn) {
             a.asset_name,
             a.condition,
             DATEDIFF(NOW(), a.created_at) as age_days,
-            COUNT(DISTINCT i.id) as issue_count,
+            {$issueCountSelect}
             COUNT(DISTINCT ah.id) as condition_changes,
             (SELECT COUNT(*) FROM asset_history ah2 
              WHERE ah2.asset_id = a.id 
              AND ah2.action_type = 'Condition Changed'
              AND ah2.created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)) as recent_condition_changes
         FROM assets a
-        LEFT JOIN issues i ON i.component_asset_id = a.id
+        {$issueJoin}
         LEFT JOIN asset_history ah ON ah.asset_id = a.id AND ah.action_type = 'Condition Changed'
         WHERE a.status NOT IN ('Disposed', 'Archive')
         GROUP BY a.id
@@ -130,6 +152,9 @@ function getAssetFailureRisk($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Asset failure risk query failed: ' . $conn->error);
+    }
     $assets = [];
     
     while ($row = $result->fetch_assoc()) {
@@ -187,6 +212,9 @@ function getConditionDegradationTrend($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Condition degradation query failed: ' . $conn->error);
+    }
     $data = [];
     $x_values = [];
     $y_values = [];
@@ -236,6 +264,9 @@ function getMaintenanceForecast($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Maintenance forecast query failed: ' . $conn->error);
+    }
     $data = [];
     $x_values = [];
     $y_values = [];
@@ -266,6 +297,99 @@ function getMaintenanceForecast($conn) {
         'regression' => $regression,
         'predictions' => $predictions,
         'trend' => $regression['slope'] > 0 ? 'increasing' : 'decreasing'
+    ];
+}
+
+/**
+ * Get ticket resolution-time analytics and forecast
+ */
+function getResolutionTimeAnalytics($conn) {
+    $historicalQuery = "
+        SELECT
+            DATE_FORMAT(updated_at, '%Y-%m') as month,
+            AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_resolution_hours,
+            COUNT(*) as resolved_count
+        FROM issues
+        WHERE status IN ('Resolved', 'Closed')
+          AND updated_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+          AND updated_at >= created_at
+        GROUP BY month
+        ORDER BY month ASC
+    ";
+
+    $historicalResult = $conn->query($historicalQuery);
+    if (!$historicalResult) {
+        throw new Exception('Resolution-time historical query failed: ' . $conn->error);
+    }
+
+    $historical = [];
+    $xValues = [];
+    $yValues = [];
+    $index = 0;
+
+    while ($row = $historicalResult->fetch_assoc()) {
+        $hours = round((float)$row['avg_resolution_hours'], 2);
+        $historical[] = [
+            'month' => $row['month'],
+            'hours' => $hours,
+            'count' => (int)$row['resolved_count']
+        ];
+        $xValues[] = $index++;
+        $yValues[] = $hours;
+    }
+
+    $regression = calculateLinearRegression($xValues, $yValues);
+    $predictions = [];
+    $lastIndex = count($xValues);
+    for ($i = 1; $i <= 6; $i++) {
+        $predicted = $regression['slope'] * ($lastIndex + $i - 1) + $regression['intercept'];
+        $predictions[] = max(0, round($predicted, 2));
+    }
+
+    $summaryQuery = "
+        SELECT
+            COUNT(*) as resolved_last_30_days,
+            AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_last_30_days,
+            SUM(CASE WHEN TIMESTAMPDIFF(HOUR, created_at, updated_at) > 48 THEN 1 ELSE 0 END) as sla_breach_count
+        FROM issues
+        WHERE status IN ('Resolved', 'Closed')
+          AND updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+          AND updated_at >= created_at
+    ";
+
+    $summaryResult = $conn->query($summaryQuery);
+    if (!$summaryResult) {
+        throw new Exception('Resolution-time summary query failed: ' . $conn->error);
+    }
+
+    $summary = $summaryResult->fetch_assoc() ?: [
+        'resolved_last_30_days' => 0,
+        'avg_last_30_days' => 0,
+        'sla_breach_count' => 0
+    ];
+
+    $resolvedLast30Days = (int)($summary['resolved_last_30_days'] ?? 0);
+    $slaBreachCount = (int)($summary['sla_breach_count'] ?? 0);
+    $slaBreachRate = $resolvedLast30Days > 0
+        ? round(($slaBreachCount / $resolvedLast30Days) * 100, 2)
+        : 0;
+
+    $currentAvgHours = count($historical) > 0
+        ? (float)$historical[count($historical) - 1]['hours']
+        : round((float)($summary['avg_last_30_days'] ?? 0), 2);
+
+    $nextMonthAvgHours = count($predictions) > 0 ? (float)$predictions[0] : $currentAvgHours;
+
+    return [
+        'historical' => $historical,
+        'predictions' => $predictions,
+        'regression' => $regression,
+        'trend' => $regression['slope'] > 0 ? 'slower' : 'faster',
+        'current_avg_hours' => round($currentAvgHours, 2),
+        'next_month_avg_hours' => round($nextMonthAvgHours, 2),
+        'resolved_last_30_days' => $resolvedLast30Days,
+        'sla_breach_rate' => $slaBreachRate,
+        'sla_threshold_hours' => 48
     ];
 }
 
@@ -305,6 +429,9 @@ function getAssetLifecyclePredictions($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Lifecycle prediction query failed: ' . $conn->error);
+    }
     $data = [];
     
     while ($row = $result->fetch_assoc()) {
@@ -322,6 +449,11 @@ function getAssetLifecyclePredictions($conn) {
  * Get critical assets requiring immediate attention
  */
 function getCriticalAssets($conn) {
+    $hasIssueAssetLink = hasTableColumn($conn, 'issues', 'component_asset_id');
+    $issueJoin = $hasIssueAssetLink ? "LEFT JOIN issues i ON i.component_asset_id = a.id" : "";
+    $issueCountSelect = $hasIssueAssetLink ? "COUNT(i.id) as issue_count," : "0 as issue_count,";
+    $lastIssueDateSelect = $hasIssueAssetLink ? "MAX(i.created_at) as last_issue_date" : "NULL as last_issue_date";
+
     $query = "
         SELECT 
             a.id,
@@ -330,10 +462,10 @@ function getCriticalAssets($conn) {
             a.condition,
             a.status,
             DATEDIFF(NOW(), a.created_at) as age_days,
-            COUNT(i.id) as issue_count,
-            MAX(i.created_at) as last_issue_date
+            {$issueCountSelect}
+            {$lastIssueDateSelect}
         FROM assets a
-        LEFT JOIN issues i ON i.component_asset_id = a.id
+        {$issueJoin}
         WHERE a.status NOT IN ('Disposed', 'Archive')
         AND (
             a.condition IN ('Poor', 'Non-Functional')
@@ -347,6 +479,9 @@ function getCriticalAssets($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Critical assets query failed: ' . $conn->error);
+    }
     $assets = [];
     
     while ($row = $result->fetch_assoc()) {
@@ -370,6 +505,10 @@ function getCriticalAssets($conn) {
  * If a power supply of age X failed, predict similar power supplies will fail soon
  */
 function getPredictedFailures($conn) {
+    $hasIssueAssetLink = hasTableColumn($conn, 'issues', 'component_asset_id');
+    $issueJoin = $hasIssueAssetLink ? "LEFT JOIN issues i ON i.component_asset_id = a.id" : "";
+    $issueCountSelect = $hasIssueAssetLink ? "COUNT(i.id) as issue_count" : "0 as issue_count";
+
     // Find recently failed or broken assets
     $query = "
         SELECT 
@@ -388,6 +527,9 @@ function getPredictedFailures($conn) {
     ";
     
     $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception('Predicted failures pattern query failed: ' . $conn->error);
+    }
     $failure_patterns = [];
     
     while ($row = $result->fetch_assoc()) {
@@ -416,9 +558,9 @@ function getPredictedFailures($conn) {
                 a.asset_name,
                 a.condition,
                 DATEDIFF(NOW(), a.created_at) as current_age,
-                COUNT(i.id) as issue_count
+                {$issueCountSelect}
             FROM assets a
-            LEFT JOIN issues i ON i.component_asset_id = a.id
+            {$issueJoin}
             WHERE a.asset_name = ?
             AND a.condition NOT IN ('Poor', 'Non-Functional')
             AND a.status NOT IN ('Disposed', 'Archive', 'Under Maintenance')
@@ -434,7 +576,10 @@ function getPredictedFailures($conn) {
         }
         
         $stmt->bind_param('sii', $asset_name, $min_age, $max_age);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            $stmt->close();
+            continue;
+        }
         $similar_result = $stmt->get_result();
         
         while ($similar = $similar_result->fetch_assoc()) {
@@ -483,6 +628,7 @@ try {
             'asset_failure_risk' => getAssetFailureRisk($conn),
             'condition_degradation' => getConditionDegradationTrend($conn),
             'maintenance_forecast' => getMaintenanceForecast($conn),
+            'resolution_time' => getResolutionTimeAnalytics($conn),
             'lifecycle_predictions' => getAssetLifecyclePredictions($conn),
             'critical_assets' => getCriticalAssets($conn),
             'predicted_failures' => getPredictedFailures($conn)
@@ -491,7 +637,7 @@ try {
     ];
     
     echo json_encode($response);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,

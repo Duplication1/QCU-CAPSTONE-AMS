@@ -9,6 +9,10 @@
  * Make sure $_SESSION is available before including this component.
  */
 
+if (!class_exists('Config')) {
+  require_once __DIR__ . '/../../config/config.php';
+}
+
 // Define titles for each role
 $role_titles = [
     'Administrator' => 'Administrator Panel',
@@ -81,7 +85,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 <div class="relative group">
 <button id="notification-button" class="p-2 rounded-full hover:bg-blue-800 text-lg md:text-xl focus:outline-none relative" style="color: white;" title="Notifications">
     <img src="../../assets/images/ri_notification-line.png" style="filter: brightness(0) invert(1);"></img>
-    <div id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md">
+    <div id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full items-center justify-center shadow-md">
       0
     </div>
   </button>
@@ -231,8 +235,10 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       if (unreadCount > 0) {
         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
         badge.classList.remove('hidden');
+        badge.classList.add('flex');
       } else {
         badge.classList.add('hidden');
+        badge.classList.remove('flex');
       }
     }
     
@@ -294,8 +300,10 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
       if (newCount > 0) {
         badge.textContent = newCount > 99 ? '99+' : newCount;
         badge.classList.remove('hidden');
+        badge.classList.add('flex');
       } else {
         badge.classList.add('hidden');
+        badge.classList.remove('flex');
       }
       
       // Update notification item styling
@@ -382,6 +390,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     const badge = document.getElementById('notification-badge');
     if (badge) {
       badge.classList.add('hidden');
+      badge.classList.remove('flex');
     }
     
     const list = document.getElementById('notifications-list');
@@ -419,6 +428,18 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   
   // Load notifications on page load
   document.addEventListener('DOMContentLoaded', function() {
+    // Safety reset: ensure fullscreen overlays start hidden and non-blocking
+    const staleLogoutModal = document.getElementById('logout-confirm-modal');
+    const staleLogoutOverlay = document.getElementById('logout-loading-overlay');
+    if (staleLogoutModal) {
+      staleLogoutModal.classList.add('hidden');
+      staleLogoutModal.classList.remove('flex');
+    }
+    if (staleLogoutOverlay) {
+      staleLogoutOverlay.classList.add('hidden');
+      staleLogoutOverlay.classList.remove('flex');
+    }
+
     console.log('Loading initial notifications...');
     loadNotifications();
     initRealtimeNotifications();
@@ -432,6 +453,10 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     const bellDropdown = document.getElementById('notification-dropdown');
     const avatarBtn = document.getElementById('avatar-button');
     const profileDropdown = document.getElementById('profile-dropdown');
+
+    if (!bellDropdown || !profileDropdown) {
+      return;
+    }
 
     // Bell toggle
     if (bellBtn && bellBtn.contains(e.target)) {
@@ -491,12 +516,14 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
         e.preventDefault();
         freezeSidebar();
         logoutModal.classList.remove('hidden');
+        logoutModal.classList.add('flex');
       });
     }
 
     if (logoutCancelBtn && logoutModal) {
       logoutCancelBtn.addEventListener('click', function () {
         logoutModal.classList.add('hidden');
+        logoutModal.classList.remove('flex');
         unfreezeSidebar();
       });
     }
@@ -504,8 +531,12 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
     if (logoutConfirmBtn && logoutModal) {
       logoutConfirmBtn.addEventListener('click', function () {
         logoutModal.classList.add('hidden');
+        logoutModal.classList.remove('flex');
         const overlay = document.getElementById('logout-loading-overlay');
-        if (overlay) overlay.classList.remove('hidden');
+        if (overlay) {
+          overlay.classList.remove('hidden');
+          overlay.classList.add('flex');
+        }
         setTimeout(() => { if (logoutLink) window.location.href = logoutLink.href; }, 2000);
       });
     }
@@ -513,7 +544,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
   </script>
 
 <!-- Logout Confirmation Modal -->
-<div id="logout-confirm-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+<div id="logout-confirm-modal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40 backdrop-blur-sm">
   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col items-center gap-5 animate-fade-in">
     <div class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
       <i class="fa-solid fa-right-from-bracket text-red-600 text-2xl"></i>
@@ -530,7 +561,7 @@ $user_initial = strtoupper(substr($user_name, 0, 1));
 </div>
 
 <!-- Logout Loading Overlay -->
-<div id="logout-loading-overlay" class="hidden fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm" style="z-index: 999999; pointer-events: all;">
+<div id="logout-loading-overlay" class="hidden fixed inset-0 items-center justify-center bg-black/40 backdrop-blur-sm" style="z-index: 999999; pointer-events: all;">
   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 flex flex-col items-center gap-5">
     <svg class="animate-spin h-12 w-12 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

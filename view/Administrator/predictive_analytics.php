@@ -57,9 +57,9 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Analytics Content -->
-                <div id="analyticsContent" class="hidden flex flex-col" style="gap: 0.375rem; height: 100%; overflow: hidden;">
+                <div id="analyticsContent" class="hidden flex-col" style="gap: 0.375rem; height: 100%; overflow: hidden;">
                     <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-shrink-0">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2 flex-shrink-0">
                         <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
                             <div class="flex items-center justify-between mb-1">
                                 <div>
@@ -100,6 +100,38 @@ include '../components/layout_header.php';
                                 </div>
                             </div>
                             <p class="text-xs opacity-70">Predicted issues</p>
+                        </div>
+
+                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                            <div class="flex items-center justify-between mb-1">
+                                <div>
+                                    <p class="text-xs opacity-70 mb-0.5">Avg Resolution</p>
+                                    <div class="flex items-baseline">
+                                        <p id="avgResolutionHours" class="text-2xl font-bold">-</p>
+                                        <p class="text-sm opacity-70 ml-1">hrs</p>
+                                    </div>
+                                </div>
+                                <div class="bg-indigo-100 p-2 rounded">
+                                    <i class="fas fa-clock text-xl text-indigo-600"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs opacity-70">Resolved tickets (latest period)</p>
+                        </div>
+
+                        <div class="stat-card bg-white rounded-lg shadow-sm border border-gray-200 p-3" style="color: #1E3A8A;">
+                            <div class="flex items-center justify-between mb-1">
+                                <div>
+                                    <p class="text-xs opacity-70 mb-0.5">SLA Risk</p>
+                                    <div class="flex items-baseline">
+                                        <p id="slaRiskRate" class="text-2xl font-bold">-</p>
+                                        <p class="text-sm opacity-70 ml-1">%</p>
+                                    </div>
+                                </div>
+                                <div class="bg-rose-100 p-2 rounded">
+                                    <i class="fas fa-hourglass-half text-xl text-rose-600"></i>
+                                </div>
+                            </div>
+                            <p id="slaRiskText" class="text-xs opacity-70">Ticket breaches beyond 48h</p>
                         </div>
                     </div>
 
@@ -158,9 +190,42 @@ include '../components/layout_header.php';
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-2 flex-shrink-0 min-h-0">
+                    <!-- Resolution Time Forecast -->
+                    <div class="min-h-0">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
+                            <div class="flex items-center justify-between p-2 border-b border-gray-200" style="background-color: rgba(30, 58, 138, 0.05);">
+                                <div>
+                                    <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Resolution Time Forecast</h3>
+                                    <p class="text-xs text-gray-500">Average ticket resolution hours (12 months + 6 months forecast)</p>
+                                </div>
+                                <span id="resolutionTrendBadge" class="px-2 py-1 text-xs font-medium rounded">-</span>
+                            </div>
+                            <div class="p-3 flex-1 min-h-0 flex flex-col">
+                                <div class="h-36 flex-1 min-h-[140px]">
+                                    <canvas id="resolutionTimeChart"></canvas>
+                                </div>
+                                <div class="mt-2 grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">Current Avg</p>
+                                        <p id="resolutionCurrent" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">Next Month</p>
+                                        <p id="resolutionNext" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">Resolved (30d)</p>
+                                        <p id="resolutionCount30" class="text-sm font-bold" style="color: #1E3A8A;">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Predicted Failures Section -->
-                    <div class="flex-shrink-0">
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="min-h-0">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col overflow-hidden">
                             <!-- Header and Controls -->
                             <div class="border-b border-gray-200 p-2" style="background-color: rgba(30, 58, 138, 0.05);">
                                 <div class="flex items-center justify-between">
@@ -193,7 +258,7 @@ include '../components/layout_header.php';
                             </div>
                             
                             <!-- Table -->
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto flex-1 min-h-0">
                                 <table id="failuresTable" class="min-w-full divide-y divide-gray-200">
                                     <thead class="sticky top-0" style="background-color: rgba(30, 58, 138, 0.1);">
                                         <tr>
@@ -230,6 +295,7 @@ include '../components/layout_header.php';
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -238,401 +304,526 @@ include '../components/layout_header.php';
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         
         <script>
-        // Chart.js configuration
-        Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.color = '#6B7280';
-
-        let charts = {};
-
-        // Progress simulation
-        function simulateProgress() {
-            const steps = [
-                { percent: 20, text: 'Analyzing asset conditions...', subtext: 'Reading database...' },
-                { percent: 40, text: 'Calculating trends...', subtext: 'Running models...' },
-                { percent: 60, text: 'Predicting issues...', subtext: 'Processing data...' },
-                { percent: 80, text: 'Generating forecasts...', subtext: 'Almost done...' }
-            ];
-            
-            let currentStep = 0;
-            const interval = setInterval(() => {
-                if (currentStep < steps.length) {
-                    const step = steps[currentStep];
-                    document.getElementById('progressBar').style.width = step.percent + '%';
-                    document.getElementById('progressText').textContent = step.percent + '%';
-                    document.getElementById('loadingText').textContent = step.text;
-                    document.getElementById('loadingSubtext').textContent = step.subtext;
-                    currentStep++;
-                }
-            }, 600);
-            return interval;
-        }
-
-        // Fetch predictive analytics data
-        async function loadPredictiveAnalytics() {
-            const progressInterval = simulateProgress();
-            
-            try {
-                console.log('Starting API request...');
-                const response = await fetch('../../controller/get_predictive_analytics.php');
-                console.log('Response received:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Server error:', errorText.substring(0, 500));
-                    throw new Error(`Server error ${response.status}. Check browser console (F12)`);
-                }
-                
-                const result = await response.json();
-                console.log('Data loaded successfully');
-                
-                clearInterval(progressInterval);
-                
-                if (result.success) {
-                    document.getElementById('progressBar').style.width = '100%';
-                    document.getElementById('loadingText').textContent = 'Done!';
-                    
-                    setTimeout(() => {
-                        renderAnalytics(result.data);
-                        document.getElementById('loadingState').classList.add('hidden');
-                        document.getElementById('analyticsContent').classList.remove('hidden');
-                    }, 500);
-                } else {
-                    throw new Error(result.error || 'Failed to load analytics');
-                }
-            } catch (error) {
-                clearInterval(progressInterval);
-                console.error('Error:', error);
-                
-                document.getElementById('loadingState').innerHTML = `
-                    <div class="max-w-2xl mx-auto text-center">
-                        <p class="text-red-600 font-bold text-xl mb-2">Oops! Something went wrong</p>
-                        <p class="text-gray-600 mb-4">${error.message}</p>
-                        <div class="mt-4 bg-yellow-50 p-4 rounded-lg text-left">
-                            <p class="font-semibold text-yellow-800 mb-2">Quick fixes:</p>
-                            <ul class="text-sm text-yellow-700 space-y-1 list-disc list-inside">
-                                <li>Press F12 and check the Console tab for errors</li>
-                                <li>Make sure you're logged in as Administrator</li>
-                                <li>Check if XAMPP Apache & MySQL are running</li>
-                                <li>Try accessing the API: <a href="../../controller/get_predictive_analytics.php" target="_blank" class="underline">click here</a></li>
-                            </ul>
-                        </div>
-                        <div class="mt-6 space-x-3">
-                            <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                                Try Again
-                            </button>
-                            <button onclick="window.location.href='index.php'" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
-                                Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                `;
+        (function () {
+            const hasChartJs = typeof Chart !== 'undefined';
+            if (hasChartJs) {
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                Chart.defaults.color = '#6B7280';
             }
-        }
 
-        function renderAnalytics(data) {
-            // Calculate summary metrics
-            const highRiskAssets = data.asset_failure_risk.filter(a => a.risk_level === 'Critical' || a.risk_level === 'High');
-            const avgCondition = data.condition_degradation.historical.length > 0 
-                ? data.condition_degradation.historical[data.condition_degradation.historical.length - 1].score 
-                : 0;
-            const nextMonthIssues = data.maintenance_forecast.predictions[0] || 0;
-            const modelR2 = data.condition_degradation.regression.r_squared;
+            const charts = {};
+            const state = {
+                allFailures: [],
+                filteredFailures: [],
+                currentPage: 1,
+                perPage: 7
+            };
 
-            // Update summary cards
-            document.getElementById('highRiskCount').textContent = highRiskAssets.length;
-            document.getElementById('avgConditionScore').textContent = avgCondition.toFixed(0);
-            document.getElementById('predictedIssues').textContent = nextMonthIssues;
-            
-            // Health explanations
-            let healthText = avgCondition >= 80 ? 'Excellent - Assets in great shape!' :
-                           avgCondition >= 60 ? 'Good - Most assets doing fine' :
-                           avgCondition >= 40 ? 'Fair - Some attention needed' :
-                           'Poor - Many assets need help!';
-            let healthColor = avgCondition >= 80 ? 'text-green-600' : avgCondition >= 60 ? 'text-blue-600' : avgCondition >= 40 ? 'text-yellow-600' : 'text-red-600';
-            document.getElementById('healthExplanation').textContent = healthText;
-            document.getElementById('healthExplanation').className = `text-xs font-medium ${healthColor}`;
-
-            // Render charts
-            renderConditionTrendChart(data.condition_degradation);
-            renderMaintenanceForecastChart(data.maintenance_forecast);
-            renderPredictedFailures(data.predicted_failures);
-        }
-
-        // Pagination variables for failures table
-        let allFailures = [];
-        let filteredFailures = [];
-        let currentFailurePage = 1;
-        const failuresPerPage = 7;
-
-        function renderPredictedFailures(predictions) {
-            allFailures = predictions || [];
-            filteredFailures = [...allFailures];
-            currentFailurePage = 1;
-            
-            if (allFailures.length === 0) {
-                document.querySelector('#failuresTable tbody').innerHTML = `
-                    <tr>
-                        <td colspan="6" class="px-3 py-6 text-center">
-                            <p class="text-green-600 font-semibold">Good news!</p>
-                            <p class="text-xs text-gray-600 mt-1">No clear failure patterns detected yet. Keep monitoring!</p>
-                        </td>
-                    </tr>
-                `;
-                updateFailurePagination();
-                return;
+            function byId(id) {
+                return document.getElementById(id);
             }
-            
-            renderFailuresTable();
-        }
 
-        function renderFailuresTable() {
-            const tbody = document.querySelector('#failuresTable tbody');
-            const start = (currentFailurePage - 1) * failuresPerPage;
-            const end = start + failuresPerPage;
-            const pageData = filteredFailures.slice(start, end);
-            
-            if (pageData.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="px-3 py-4 text-center text-sm text-gray-500">No assets match your filters</td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = pageData.map(pred => {
-                    const ageMonths = Math.floor(pred.current_age_days / 30);
-                    
-                    return `
-                        <tr class="hover:bg-gray-50" 
-                            data-search="${(pred.asset_name + ' ' + pred.asset_tag + ' ' + pred.reason).toLowerCase()}"
-                            data-risk="${pred.risk_percentage}">
-                            <td class="px-3 py-2 text-xs font-medium text-gray-900">${pred.asset_name}</td>
-                            <td class="px-3 py-2 text-xs text-gray-600">${pred.asset_tag}</td>
-                            <td class="px-3 py-2 text-xs text-gray-600" style="max-width: 200px;" title="${pred.reason}">${pred.reason.length > 50 ? pred.reason.substring(0, 50) + '...' : pred.reason}</td>
-                            <td class="px-3 py-2 text-xs">
-                                <span class="px-2 py-1 rounded text-xs ${
-                                    pred.condition === 'Poor' ? 'bg-orange-100 text-orange-700' : 
-                                    pred.condition === 'Fair' ? 'bg-yellow-100 text-yellow-700' : 
-                                    'bg-gray-100 text-gray-700'
-                                }">${pred.condition}</span>
-                            </td>
-                            <td class="px-3 py-2 text-xs text-gray-600">${ageMonths} months</td>
-                            <td class="px-3 py-2 text-xs text-gray-600">${pred.issue_count}</td>
+            function setText(id, value) {
+                const element = byId(id);
+                if (element) element.textContent = String(value);
+            }
+
+            function showContent() {
+                const loading = byId('loadingState');
+                const content = byId('analyticsContent');
+                if (loading) loading.classList.add('hidden');
+                if (content) {
+                    content.classList.remove('hidden');
+                    content.classList.add('flex');
+                }
+            }
+
+            function renderFallback(message) {
+                setText('highRiskCount', 0);
+                setText('avgConditionScore', 0);
+                setText('predictedIssues', 0);
+                setText('avgResolutionHours', 0);
+                setText('slaRiskRate', 0);
+                setText('slaRiskText', 'Ticket breaches beyond 48h');
+
+                const health = byId('healthExplanation');
+                if (health) {
+                    health.textContent = message || 'Analytics unavailable';
+                    health.className = 'text-xs font-medium text-yellow-600';
+                }
+
+                renderFailures([]);
+                setText('degradationBadge', 'No Data');
+                setText('maintenanceBadge', 'No Data');
+                setText('currentHealth', '0/100');
+                setText('condition6M', '0/100');
+                setText('lastMonthIssues', '0 problems');
+                setText('maintenanceNext', '0 problems');
+                setText('resolutionCurrent', '0h');
+                setText('resolutionNext', '0h');
+                setText('resolutionCount30', 0);
+                setText('resolutionTrendBadge', 'No Data');
+                showContent();
+            }
+
+            async function fetchAnalytics() {
+                const response = await fetch('../../controller/get_predictive_analytics.php', {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const raw = await response.text();
+                let payload;
+                try {
+                    payload = JSON.parse(raw);
+                } catch (error) {
+                    throw new Error('Invalid JSON from predictive API');
+                }
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || payload.message || `API request failed (${response.status})`);
+                }
+
+                return payload.data || {};
+            }
+
+            function normalizeData(data) {
+                const normalized = data || {};
+                normalized.asset_failure_risk = Array.isArray(normalized.asset_failure_risk) ? normalized.asset_failure_risk : [];
+                normalized.predicted_failures = Array.isArray(normalized.predicted_failures) ? normalized.predicted_failures : [];
+
+                normalized.condition_degradation = normalized.condition_degradation || {};
+                normalized.condition_degradation.historical = Array.isArray(normalized.condition_degradation.historical)
+                    ? normalized.condition_degradation.historical
+                    : [];
+                normalized.condition_degradation.predictions = Array.isArray(normalized.condition_degradation.predictions)
+                    ? normalized.condition_degradation.predictions
+                    : [];
+
+                normalized.maintenance_forecast = normalized.maintenance_forecast || {};
+                normalized.maintenance_forecast.historical = Array.isArray(normalized.maintenance_forecast.historical)
+                    ? normalized.maintenance_forecast.historical
+                    : [];
+                normalized.maintenance_forecast.predictions = Array.isArray(normalized.maintenance_forecast.predictions)
+                    ? normalized.maintenance_forecast.predictions
+                    : [];
+
+                normalized.resolution_time = normalized.resolution_time || {};
+                normalized.resolution_time.historical = Array.isArray(normalized.resolution_time.historical)
+                    ? normalized.resolution_time.historical
+                    : [];
+                normalized.resolution_time.predictions = Array.isArray(normalized.resolution_time.predictions)
+                    ? normalized.resolution_time.predictions
+                    : [];
+                normalized.resolution_time.current_avg_hours = Number(normalized.resolution_time.current_avg_hours) || 0;
+                normalized.resolution_time.next_month_avg_hours = Number(normalized.resolution_time.next_month_avg_hours) || 0;
+                normalized.resolution_time.sla_breach_rate = Number(normalized.resolution_time.sla_breach_rate) || 0;
+                normalized.resolution_time.sla_threshold_hours = Number(normalized.resolution_time.sla_threshold_hours) || 48;
+                normalized.resolution_time.resolved_last_30_days = Number(normalized.resolution_time.resolved_last_30_days) || 0;
+
+                return normalized;
+            }
+
+            function monthSeries(count) {
+                const result = [];
+                const base = new Date();
+                for (let i = count - 1; i >= 0; i--) {
+                    const d = new Date(base);
+                    d.setMonth(base.getMonth() - i);
+                    result.push(d.toISOString().slice(0, 7));
+                }
+                return result;
+            }
+
+            function renderSummary(data) {
+                const highRisk = data.asset_failure_risk.filter(item => item.risk_level === 'Critical' || item.risk_level === 'High').length;
+                const lastCondition = data.condition_degradation.historical.length
+                    ? Number(data.condition_degradation.historical[data.condition_degradation.historical.length - 1].score) || 0
+                    : 0;
+                const nextIssues = data.maintenance_forecast.predictions.length
+                    ? Number(data.maintenance_forecast.predictions[0]) || 0
+                    : 0;
+                const avgResolutionHours = data.resolution_time.current_avg_hours || 0;
+                const slaRiskRate = data.resolution_time.sla_breach_rate || 0;
+
+                setText('highRiskCount', highRisk);
+                setText('avgConditionScore', Math.round(lastCondition));
+                setText('predictedIssues', nextIssues);
+                setText('avgResolutionHours', avgResolutionHours.toFixed(1));
+                setText('slaRiskRate', slaRiskRate.toFixed(1));
+                setText('slaRiskText', `Tickets above ${data.resolution_time.sla_threshold_hours || 48}h`);
+
+                const health = byId('healthExplanation');
+                if (health) {
+                    let text = 'Poor - Many assets need help!';
+                    let cls = 'text-red-600';
+                    if (lastCondition >= 80) {
+                        text = 'Excellent - Assets in great shape!';
+                        cls = 'text-green-600';
+                    } else if (lastCondition >= 60) {
+                        text = 'Good - Most assets doing fine';
+                        cls = 'text-blue-600';
+                    } else if (lastCondition >= 40) {
+                        text = 'Fair - Some attention needed';
+                        cls = 'text-yellow-600';
+                    }
+                    health.textContent = text;
+                    health.className = `text-xs font-medium ${cls}`;
+                }
+            }
+
+            function renderResolutionChart(data) {
+                if (!hasChartJs) return;
+                const canvas = byId('resolutionTimeChart');
+                if (!canvas) return;
+
+                const historical = data.resolution_time.historical;
+                const predictions = data.resolution_time.predictions;
+
+                let labels = historical.map(item => item.month);
+                let values = historical.map(item => Number(item.hours) || 0);
+                if (!labels.length) {
+                    labels = monthSeries(6);
+                    values = Array(6).fill(0);
+                }
+
+                const lastDate = new Date(labels[labels.length - 1] + '-01');
+                const future = [];
+                for (let i = 1; i <= 6; i++) {
+                    const d = new Date(lastDate);
+                    d.setMonth(lastDate.getMonth() + i);
+                    future.push(d.toISOString().slice(0, 7));
+                }
+
+                const safePredictions = predictions.length ? predictions.map(v => Number(v) || 0) : Array(6).fill(values[values.length - 1] || 0);
+
+                if (charts.resolutionTime) charts.resolutionTime.destroy();
+                charts.resolutionTime = new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: [...labels, ...future],
+                        datasets: [
+                            {
+                                label: 'Historical Hours',
+                                data: values,
+                                borderColor: '#4F46E5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 4
+                            },
+                            {
+                                label: 'Predicted Hours',
+                                data: Array(values.length - 1).fill(null).concat([values[values.length - 1], ...safePredictions]),
+                                borderColor: '#4F46E5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                                borderDash: [6, 6],
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Hours'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                setText('resolutionCurrent', `${(data.resolution_time.current_avg_hours || 0).toFixed(1)}h`);
+                setText('resolutionNext', `${(data.resolution_time.next_month_avg_hours || 0).toFixed(1)}h`);
+                setText('resolutionCount30', data.resolution_time.resolved_last_30_days || 0);
+
+                const badge = byId('resolutionTrendBadge');
+                if (badge) {
+                    const slower = data.resolution_time.trend === 'slower';
+                    badge.textContent = slower ? '↑ Slower' : '↓ Faster';
+                    badge.className = slower
+                        ? 'px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700'
+                        : 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
+                }
+            }
+
+            function renderConditionChart(data) {
+                if (!hasChartJs) return;
+                const canvas = byId('conditionTrendChart');
+                if (!canvas) return;
+
+                const historical = data.condition_degradation.historical;
+                const predictions = data.condition_degradation.predictions;
+
+                let labels = historical.map(item => item.month);
+                let values = historical.map(item => Number(item.score) || 0);
+                if (!labels.length) {
+                    labels = monthSeries(6);
+                    values = Array(6).fill(0);
+                }
+
+                const lastDate = new Date(labels[labels.length - 1] + '-01');
+                const future = [];
+                for (let i = 1; i <= 6; i++) {
+                    const d = new Date(lastDate);
+                    d.setMonth(lastDate.getMonth() + i);
+                    future.push(d.toISOString().slice(0, 7));
+                }
+
+                const safePredictions = predictions.length ? predictions.map(v => Number(v) || 0) : Array(6).fill(values[values.length - 1] || 0);
+                const predictedSeries = Array(values.length - 1).fill(null).concat([values[values.length - 1], ...safePredictions]);
+
+                if (charts.conditionTrend) charts.conditionTrend.destroy();
+                charts.conditionTrend = new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: [...labels, ...future],
+                        datasets: [
+                            {
+                                label: 'Historical',
+                                data: values,
+                                borderColor: '#1E3A8A',
+                                backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 4
+                            },
+                            {
+                                label: 'Predicted',
+                                data: predictedSeries,
+                                borderColor: '#1E3A8A',
+                                backgroundColor: 'rgba(30, 58, 138, 0.05)',
+                                borderDash: [6, 6],
+                                borderWidth: 3,
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+
+                setText('currentHealth', `${Math.round(values[values.length - 1] || 0)}/100`);
+                setText('condition6M', `${Math.round(safePredictions[5] || 0)}/100`);
+
+                const badge = byId('degradationBadge');
+                if (badge) {
+                    const degrading = data.condition_degradation.trend === 'degrading';
+                    badge.textContent = degrading ? '↓ Degrading' : '↑ Improving';
+                    badge.className = degrading
+                        ? 'px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700'
+                        : 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
+                }
+            }
+
+            function renderMaintenanceChart(data) {
+                if (!hasChartJs) return;
+                const canvas = byId('maintenanceForecastChart');
+                if (!canvas) return;
+
+                const historical = data.maintenance_forecast.historical;
+                const predictions = data.maintenance_forecast.predictions;
+
+                let labels = historical.map(item => item.month);
+                let values = historical.map(item => Number(item.count) || 0);
+                if (!labels.length) {
+                    labels = monthSeries(6);
+                    values = Array(6).fill(0);
+                }
+
+                const lastDate = new Date(labels[labels.length - 1] + '-01');
+                const future = [];
+                for (let i = 1; i <= 6; i++) {
+                    const d = new Date(lastDate);
+                    d.setMonth(lastDate.getMonth() + i);
+                    future.push(d.toISOString().slice(0, 7));
+                }
+
+                const safePredictions = predictions.length ? predictions.map(v => Number(v) || 0) : Array(6).fill(values[values.length - 1] || 0);
+
+                if (charts.maintenanceForecast) charts.maintenanceForecast.destroy();
+                charts.maintenanceForecast = new Chart(canvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: [...labels, ...future],
+                        datasets: [
+                            {
+                                label: 'Historical Issues',
+                                data: values,
+                                backgroundColor: '#1E3A8A',
+                                borderRadius: 6
+                            },
+                            {
+                                label: 'Predicted Issues',
+                                data: Array(values.length).fill(null).concat(safePredictions),
+                                backgroundColor: 'rgba(30, 58, 138, 0.6)',
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                setText('lastMonthIssues', `${values[values.length - 1] || 0} problems`);
+                setText('maintenanceNext', `${safePredictions[0] || 0} problems`);
+
+                const badge = byId('maintenanceBadge');
+                if (badge) {
+                    const increasing = data.maintenance_forecast.trend === 'increasing';
+                    badge.textContent = increasing ? '↑ Increasing' : '↓ Decreasing';
+                    badge.className = increasing
+                        ? 'px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700'
+                        : 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
+                }
+            }
+
+            function renderFailures(predictions) {
+                state.allFailures = Array.isArray(predictions) ? predictions : [];
+                state.filteredFailures = [...state.allFailures];
+                state.currentPage = 1;
+                renderFailuresPage();
+            }
+
+            function applyFailureFilter() {
+                const query = ((byId('failureSearch') || {}).value || '').toLowerCase().trim();
+                const riskLevel = ((byId('riskLevelFilter') || {}).value || '').trim();
+
+                state.filteredFailures = state.allFailures.filter(item => {
+                    const text = `${item.asset_name || ''} ${item.asset_tag || ''} ${item.reason || ''}`.toLowerCase();
+                    const risk = Number(item.risk_percentage) || 0;
+                    const textMatch = !query || text.includes(query);
+
+                    let riskMatch = true;
+                    if (riskLevel === 'high') riskMatch = risk >= 80;
+                    else if (riskLevel === 'medium') riskMatch = risk >= 50 && risk < 80;
+                    else if (riskLevel === 'low') riskMatch = risk < 50;
+
+                    return textMatch && riskMatch;
+                });
+
+                state.currentPage = 1;
+                renderFailuresPage();
+            }
+
+            function renderFailuresPage() {
+                const tbody = document.querySelector('#failuresTable tbody');
+                if (!tbody) return;
+
+                const startIndex = (state.currentPage - 1) * state.perPage;
+                const endIndex = startIndex + state.perPage;
+                const rows = state.filteredFailures.slice(startIndex, endIndex);
+
+                if (!rows.length) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-3 py-5 text-center text-sm text-gray-500">No assets match your current filters</td>
                         </tr>
                     `;
-                }).join('');
-            }
-            
-            updateFailurePagination();
-        }
+                } else {
+                    tbody.innerHTML = rows.map(item => {
+                        const ageMonths = Math.floor((Number(item.current_age_days) || 0) / 30);
+                        const reason = item.reason || '-';
+                        const shortReason = reason.length > 70 ? `${reason.slice(0, 70)}...` : reason;
+                        const condition = item.condition || 'Unknown';
+                        let conditionClass = 'bg-gray-100 text-gray-700';
+                        if (condition === 'Poor') conditionClass = 'bg-orange-100 text-orange-700';
+                        else if (condition === 'Fair') conditionClass = 'bg-yellow-100 text-yellow-700';
 
-        function filterFailures() {
-            const searchQuery = (document.getElementById('failureSearch')?.value || '').toLowerCase().trim();
-            const riskLevel = document.getElementById('riskLevelFilter')?.value || '';
-            
-            filteredFailures = allFailures.filter(pred => {
-                const searchText = (pred.asset_name + ' ' + pred.asset_tag + ' ' + pred.reason).toLowerCase();
-                const matchesSearch = !searchQuery || searchText.includes(searchQuery);
-                
-                let matchesRisk = true;
-                if (riskLevel === 'high') matchesRisk = pred.risk_percentage >= 80;
-                else if (riskLevel === 'medium') matchesRisk = pred.risk_percentage >= 50 && pred.risk_percentage < 80;
-                else if (riskLevel === 'low') matchesRisk = pred.risk_percentage < 50;
-                
-                return matchesSearch && matchesRisk;
-            });
-            
-            currentFailurePage = 1;
-            renderFailuresTable();
-        }
-
-        function updateFailurePagination() {
-            const total = filteredFailures.length;
-            const totalPages = Math.ceil(total / failuresPerPage);
-            const start = total === 0 ? 0 : (currentFailurePage - 1) * failuresPerPage + 1;
-            const end = Math.min(currentFailurePage * failuresPerPage, total);
-            
-            document.getElementById('failureStart').textContent = start;
-            document.getElementById('failureEnd').textContent = end;
-            document.getElementById('failureTotal').textContent = total;
-            document.getElementById('failureCurrentPage').textContent = currentFailurePage;
-            document.getElementById('failureTotalPages').textContent = totalPages || 1;
-            
-            document.getElementById('failurePrevBtn').disabled = currentFailurePage === 1;
-            document.getElementById('failureNextBtn').disabled = currentFailurePage >= totalPages || total === 0;
-        }
-
-        function changeFailurePage(direction) {
-            const totalPages = Math.ceil(filteredFailures.length / failuresPerPage);
-            const newPage = currentFailurePage + direction;
-            
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentFailurePage = newPage;
-                renderFailuresTable();
-            }
-        }
-
-        function renderConditionTrendChart(data) {
-            const ctx = document.getElementById('conditionTrendChart').getContext('2d');
-            
-            const historicalMonths = data.historical.map(d => d.month);
-            const historicalScores = data.historical.map(d => d.score);
-            
-            // Generate future months
-            const lastMonthDate = new Date(historicalMonths[historicalMonths.length - 1] + '-01');
-            const futureMonths = [];
-            for (let i = 1; i <= 6; i++) {
-                const nextMonth = new Date(lastMonthDate);
-                nextMonth.setMonth(lastMonthDate.getMonth() + i);
-                futureMonths.push(nextMonth.toISOString().slice(0, 7));
-            }
-            
-            const allMonths = [...historicalMonths, ...futureMonths];
-            const allScores = [...historicalScores, ...data.predictions];
-            
-            charts.conditionTrend = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: allMonths,
-                    datasets: [
-                        {
-                            label: 'Historical',
-                            data: historicalScores,
-                            borderColor: '#1E3A8A',
-                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
-                            borderWidth: 3,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#1E3A8A'
-                        },
-                        {
-                            label: 'Predicted',
-                            data: Array(historicalScores.length - 1).fill(null).concat([historicalScores[historicalScores.length - 1], ...data.predictions]),
-                            borderColor: '#1E3A8A',
-                            backgroundColor: 'rgba(30, 58, 138, 0.05)',
-                            borderWidth: 3,
-                            borderDash: [5, 5],
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#1E3A8A'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            backgroundColor: '#1f2937',
-                            padding: 12,
-                            cornerRadius: 8
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Condition Score'
-                            }
-                        }
-                    }
+                        return `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-3 py-2 text-xs font-medium text-gray-900">${item.asset_name || '-'}</td>
+                                <td class="px-3 py-2 text-xs text-gray-600">${item.asset_tag || '-'}</td>
+                                <td class="px-3 py-2 text-xs text-gray-600" style="max-width: 220px;" title="${reason.replace(/"/g, '&quot;')}">${shortReason}</td>
+                                <td class="px-3 py-2 text-xs"><span class="px-2 py-1 rounded text-xs ${conditionClass}">${condition}</span></td>
+                                <td class="px-3 py-2 text-xs text-gray-600">${ageMonths} months</td>
+                                <td class="px-3 py-2 text-xs text-gray-600">${item.issue_count || 0}</td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
-            });
 
-            // Update stats
-            const currentScore = historicalScores[historicalScores.length - 1];
-            document.getElementById('currentHealth').textContent = currentScore.toFixed(0) + '/100';
-            document.getElementById('condition6M').textContent = data.predictions[5].toFixed(0) + '/100';
-            
-            const badge = document.getElementById('degradationBadge');
-            if (data.trend === 'degrading') {
-                badge.textContent = '↓ Degrading';
-                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700';
-            } else {
-                badge.textContent = '↑ Improving';
-                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
+                updatePagination();
             }
-        }
 
-        function renderMaintenanceForecastChart(data) {
-            const ctx = document.getElementById('maintenanceForecastChart').getContext('2d');
-            
-            const historicalMonths = data.historical.map(d => d.month);
-            const historicalCounts = data.historical.map(d => d.count);
-            
-            // Generate future months
-            const lastMonthDate = new Date(historicalMonths[historicalMonths.length - 1] + '-01');
-            const futureMonths = [];
-            for (let i = 1; i <= 6; i++) {
-                const nextMonth = new Date(lastMonthDate);
-                nextMonth.setMonth(lastMonthDate.getMonth() + i);
-                futureMonths.push(nextMonth.toISOString().slice(0, 7));
+            function updatePagination() {
+                const total = state.filteredFailures.length;
+                const totalPages = Math.max(1, Math.ceil(total / state.perPage));
+                const start = total === 0 ? 0 : (state.currentPage - 1) * state.perPage + 1;
+                const end = Math.min(state.currentPage * state.perPage, total);
+
+                setText('failureStart', start);
+                setText('failureEnd', end);
+                setText('failureTotal', total);
+                setText('failureCurrentPage', state.currentPage);
+                setText('failureTotalPages', totalPages);
+
+                const prev = byId('failurePrevBtn');
+                const next = byId('failureNextBtn');
+                if (prev) prev.disabled = state.currentPage <= 1;
+                if (next) next.disabled = state.currentPage >= totalPages;
             }
-            
-            charts.maintenanceForecast = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [...historicalMonths, ...futureMonths],
-                    datasets: [
-                        {
-                            label: 'Historical Issues',
-                            data: historicalCounts,
-                            backgroundColor: '#1E3A8A',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'Predicted Issues',
-                            data: Array(historicalCounts.length).fill(null).concat(data.predictions),
-                            backgroundColor: 'rgba(30, 58, 138, 0.6)',
-                            borderRadius: 6
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Issue Count'
-                            }
-                        }
-                    }
+
+            window.changeFailurePage = function (direction) {
+                const totalPages = Math.max(1, Math.ceil(state.filteredFailures.length / state.perPage));
+                const nextPage = state.currentPage + Number(direction || 0);
+                if (nextPage >= 1 && nextPage <= totalPages) {
+                    state.currentPage = nextPage;
+                    renderFailuresPage();
                 }
-            });
+            };
 
-            // Update stats
-            const lastMonthCount = historicalCounts[historicalCounts.length - 1] || 0;
-            document.getElementById('lastMonthIssues').textContent = lastMonthCount + ' problems';
-            document.getElementById('maintenanceNext').textContent = data.predictions[0] + ' problems';
-            
-            const badge = document.getElementById('maintenanceBadge');
-            if (data.trend === 'increasing') {
-                badge.textContent = '↑ Increasing';
-                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700';
-            } else {
-                badge.textContent = '↓ Decreasing';
-                badge.className = 'px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700';
+            window.filterFailures = function () {
+                applyFailureFilter();
+            };
+
+            async function bootstrap() {
+                try {
+                    const data = normalizeData(await fetchAnalytics());
+                    renderSummary(data);
+                    renderConditionChart(data);
+                    renderMaintenanceChart(data);
+                    renderResolutionChart(data);
+                    renderFailures(data.predicted_failures);
+                    showContent();
+                } catch (error) {
+                    console.error('Predictive analytics bootstrap error:', error);
+                    renderFallback(error.message || 'Could not load predictive analytics');
+                }
             }
-        }
 
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', loadPredictiveAnalytics);
+            document.addEventListener('DOMContentLoaded', function () {
+                // Hard escape hatch for any unexpected blocker
+                setTimeout(() => {
+                    const loading = byId('loadingState');
+                    if (loading && !loading.classList.contains('hidden')) {
+                        renderFallback('Loading timeout. Showing fallback view.');
+                    }
+                }, 8000);
+
+                bootstrap();
+            });
+        })();
         </script>
 
 <?php include '../components/layout_footer.php'; ?>
