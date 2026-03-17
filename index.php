@@ -206,7 +206,7 @@
         .navbar-scrolled #navbar-menu {
             background-color: #291F8B;
             padding: 8px 24px;
-            border-radius: 10px; 
+            border-radius: 15px; 
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
                         0 2px 4px -1px rgba(0, 0, 0, 0.2);
