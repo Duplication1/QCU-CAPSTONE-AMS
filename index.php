@@ -170,65 +170,93 @@
         
         /* Navbar scroll transition */
         .navbar-scrolled {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: transparent !important;
+            backdrop-filter: none;
+            box-shadow: none;
         }
         
         .dark .navbar-scrolled {
-            background-color: rgba(30, 41, 59, 0.95) !important;
+            background-color: transparent !important;
+            box-shadow: none;
+        }
+        
+        /* Center navbar when scrolled */
+        .navbar-scrolled #navbar-container {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .navbar-scrolled #navbar-content {
+            justify-content: center;
+            width: auto;
+        }
+        
+        /* Hide left logo when scrolled */
+        .navbar-scrolled #navbar-logo-left {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+        }
+        
+        /* Show logo inside menu when scrolled */
+        .navbar-scrolled #navbar-logo-inside {
+            opacity: 1 !important;
+        }
+        
+        .navbar-scrolled #navbar-menu {
+            background-color: #291F8B;
+            padding: 8px 24px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
         
         .navbar-scrolled .nav-link {
-            color: #1f2937 !important;
+            color: #ffffff !important;
         }
         
         .navbar-scrolled .nav-link:hover {
-            color: #2563eb !important;
+            color: #fde047 !important;
         }
         
-        .dark .navbar-scrolled .nav-link {
-            color: #e2e8f0 !important;
+        .navbar-scrolled .nav-login-btn {
+            background-color: rgba(255, 255, 255, 0.2) !important;
         }
         
-        .dark .navbar-scrolled .nav-link:hover {
-            color: #60a5fa !important;
-        }
-        
-        .navbar-scrolled .logo-text {
-            color: #1f2937 !important;
-        }
-        
-        .dark .navbar-scrolled .logo-text {
-            color: #f1f5f9 !important;
+        .navbar-scrolled .nav-login-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3) !important;
         }
     </style>
 </head>
 <body class="bg-gray-50">
     
     <!-- Navigation -->
-    <nav id="navbar" class="fixed w-full z-50 bg-transparent transition-all duration-300">
-         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
+    <nav id="navbar" class="fixed w-full z-50 bg-transparent transition-all duration-700 ease-out">
+         <div id="navbar-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out">
+            <div id="navbar-content" class="flex justify-between items-center h-20 transition-all duration-700 ease-out">
+                <!-- Logo (separate when not scrolled) -->
+                <div id="navbar-logo-left" class="flex items-center gap-3 transition-all duration-700 ease-out">
+                    <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14 transition-all duration-700 ease-out">
                     <div>
-                        <h1 class="text-xl font-bold text-white logo-text transition-colors">QCU AMS</h1>
-                        <p class="text-xs text-white logo-text transition-colors">Asset Management System</p>
+                        <h1 class="text-xl font-bold text-white logo-text transition-all duration-700 ease-out">QCU AMS</h1>
+                        <p class="text-xs text-white logo-text transition-all duration-700 ease-out">Asset Management System</p>
                     </div>
                 </div>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="#home" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Home</a>
-                    <a href="#features" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Features</a>
-                    <a href="#about" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">About</a>
-                    <a href="#contact" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Contact</a>
+                <div id="navbar-menu" class="hidden md:flex items-center gap-8 transition-all duration-700 ease-out">
+                    <!-- Logo (inside menu when scrolled) -->
+                    <div id="navbar-logo-inside" class="flex items-center gap-3 transition-all duration-700 ease-out opacity-0">
+                        <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-10 w-10 transition-all duration-700 ease-out">
+                    </div>
+                    
+                    <a href="#home" class="nav-link text-white hover:text-yellow-300 transition-all duration-300 font-medium">Home</a>
+                    <a href="#features" class="nav-link text-white hover:text-yellow-300 transition-all duration-300 font-medium">Features</a>
+                    <a href="#about" class="nav-link text-white hover:text-yellow-300 transition-all duration-300 font-medium">About</a>
+                    <a href="#contact" class="nav-link text-white hover:text-yellow-300 transition-all duration-300 font-medium">Contact</a>
                     
                     <!-- Dark Mode Toggle -->
-                    <button onclick="toggleDarkMode()" class="theme-toggle bg-gray-300 hover:bg-gray-200" aria-label="Toggle dark mode">
+                    <button onclick="toggleDarkMode()" class="theme-toggle bg-gray-300 hover:bg-gray-200 transition-all duration-300" aria-label="Toggle dark mode">
                         <div class="theme-toggle-slider">
                             <i class="fa-solid fa-sun text-yellow-500 text-xs dark-mode-icon-light"></i>
                             <i class="fa-solid fa-moon text-blue-400 text-xs dark-mode-icon-dark hidden"></i>
@@ -236,7 +264,7 @@
                     </button>
                     
                     <a href="view/login.php" 
-                    class="flex items-center gap-2 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                    class="nav-login-btn flex items-center gap-2 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-300"
                     style="background-color: rgba(41, 31, 139, 0.5);">
                     <i class="fa-solid fa-sign-in-alt"></i>
                     Login
@@ -244,7 +272,7 @@
                 </div>
                 
                 <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-blue-600">
+                <button id="mobile-menu-btn" class="md:hidden text-white hover:text-yellow-300 transition-all duration-300">
                     <i class="fa-solid fa-bars text-2xl"></i>
                 </button>
             </div>
@@ -814,17 +842,52 @@
 
     <!-- Mobile Menu Script -->
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
+        // Navbar scroll effect with smooth transitions
+        let lastScrollY = 0;
+        let ticking = false;
+        
+        function updateNavbar() {
             const navbar = document.getElementById('navbar');
-            const scrollPosition = window.scrollY;
+            const navbarContainer = document.getElementById('navbar-container');
+            const navbarContent = document.getElementById('navbar-content');
+            const navbarMenu = document.getElementById('navbar-menu');
+            const logoLeft = document.getElementById('navbar-logo-left');
+            const logoInside = document.getElementById('navbar-logo-inside');
             
-            if (scrollPosition > 50) {
+            const scrollPosition = window.scrollY;
+            const maxScroll = 100; // Distance over which transition occurs
+            const progress = Math.min(scrollPosition / maxScroll, 1);
+            
+            // Apply smooth transitions based on scroll progress
+            if (progress > 0.1) {
                 navbar.classList.add('navbar-scrolled');
+                
+                // Smooth opacity transitions
+                logoLeft.style.opacity = Math.max(0, 1 - (progress * 2));
+                logoInside.style.opacity = Math.min(1, progress * 2);
+                
+                // Smooth background transition
+                const bgOpacity = Math.min(0.95, progress);
+                navbarMenu.style.backgroundColor = `rgba(41, 31, 139, ${bgOpacity})`;
+                
             } else {
                 navbar.classList.remove('navbar-scrolled');
+                logoLeft.style.opacity = '1';
+                logoInside.style.opacity = '0';
+                navbarMenu.style.backgroundColor = '';
             }
-        });
+            
+            ticking = false;
+        }
+        
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateNavbar);
+                ticking = true;
+            }
+        }
+        
+        window.addEventListener('scroll', requestTick);
         
         // Dark Mode Toggle
         function toggleDarkMode() {
