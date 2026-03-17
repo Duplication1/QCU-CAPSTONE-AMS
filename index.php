@@ -206,10 +206,12 @@
         .navbar-scrolled #navbar-menu {
             background-color: #291F8B;
             padding: 8px 24px;
-            border-radius: 50px;
+            border-radius: 10px; 
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+                        0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
+
         
         .navbar-scrolled .nav-link {
             color: #ffffff !important;
@@ -935,7 +937,7 @@ function updateNavbar() {
         navbarMenu.style.backgroundColor = `rgba(41, 31, 139, ${bgOpacity})`;
         
         // 🔹 Add border radius when scrolled
-        navbar.style.borderRadius = "0 0 1rem 1rem"; // bottom corners rounded
+        navbar.style.borderRadius = "0 0 0.25 0.25rem"; // bottom corners rounded
     } else {
         navbar.classList.remove('navbar-scrolled');
         logoLeft.style.opacity = '1';
