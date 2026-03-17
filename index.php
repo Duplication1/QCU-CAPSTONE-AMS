@@ -167,29 +167,65 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
+        /* Navbar scroll transition */
+        .navbar-scrolled {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .dark .navbar-scrolled {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+        
+        .navbar-scrolled .nav-link {
+            color: #1f2937 !important;
+        }
+        
+        .navbar-scrolled .nav-link:hover {
+            color: #2563eb !important;
+        }
+        
+        .dark .navbar-scrolled .nav-link {
+            color: #e2e8f0 !important;
+        }
+        
+        .dark .navbar-scrolled .nav-link:hover {
+            color: #60a5fa !important;
+        }
+        
+        .navbar-scrolled .logo-text {
+            color: #1f2937 !important;
+        }
+        
+        .dark .navbar-scrolled .logo-text {
+            color: #f1f5f9 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     
     <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-transparent">
+    <nav id="navbar" class="fixed w-full z-50 bg-transparent transition-all duration-300">
          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
                     <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
                     <div>
-                        <h1 class="text-xl font-bold text-white">QCU AMS</h1>
-                        <p class="text-xs text-white">Asset Management System</p>
+                        <h1 class="text-xl font-bold text-white logo-text transition-colors">QCU AMS</h1>
+                        <p class="text-xs text-white logo-text transition-colors">Asset Management System</p>
                     </div>
                 </div>
                 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#home" class="text-white hover:text-yellow-300 transition-colors font-medium">Home</a>
-                    <a href="#features" class="text-white hover:text-yellow-300 transition-colors font-medium">Features</a>
-                    <a href="#about" class="text-white hover:text-yellow-300 transition-colors font-medium">About</a>
-                    <a href="#contact" class="text-white hover:text-yellow-300 transition-colors font-medium">Contact</a>
+                    <a href="#home" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Home</a>
+                    <a href="#features" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Features</a>
+                    <a href="#about" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">About</a>
+                    <a href="#contact" class="nav-link text-white hover:text-yellow-300 transition-colors font-medium">Contact</a>
                     
                     <!-- Dark Mode Toggle -->
                     <button onclick="toggleDarkMode()" class="theme-toggle bg-gray-300 hover:bg-gray-200" aria-label="Toggle dark mode">
@@ -778,6 +814,18 @@
 
     <!-- Mobile Menu Script -->
     <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition > 50) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+        
         // Dark Mode Toggle
         function toggleDarkMode() {
             const html = document.documentElement;

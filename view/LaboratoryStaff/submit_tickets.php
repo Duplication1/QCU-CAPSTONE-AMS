@@ -50,8 +50,6 @@ $pcStmt->close();
 ?>
 
 <style>
-    body, html { overflow: hidden !important; height: 100vh; }
-    
     /* Red asterisk for required fields */
     label:has(+ input[required])::after,
     label:has(+ select[required])::after,
@@ -148,24 +146,39 @@ $pcStmt->close();
     #assetsTable tbody tr:hover {
         background-color: #eff6ff;
     }
+    
+    /* Professional card hover effects */
+    .option-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .option-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(30, 58, 138, 0.15);
+    }
+    
+    .option-card:active {
+        transform: translateY(-2px);
+    }
 </style>
 
 <!-- Main Content -->
-<main class="p-2 bg-gray-50 h-screen overflow-hidden flex flex-col">
+<main class="p-4 bg-gray-50 overflow-y-auto" style="height: calc(100vh - 85px);">
     <!-- Session Messages -->
     <?php include '../components/session_messages.php'; ?>
     
-    <!-- Header Section -->
-    <div class="bg-white rounded shadow-sm border border-gray-200 p-6 mb-4 flex-shrink-0">
-        <h2 class="text-xl font-bold text-gray-800">
-            Hi <?php echo htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['name'] ?? 'Laboratory Staff'); ?>, what do you need help with?
-        </h2>
-        <p class="text-sm text-gray-500 mt-1">Choose from the available options below.</p>
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between border-b border-gray-200 pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Submit Ticket</h1>
+                <p class="text-gray-600 text-sm mt-1">Hi <?php echo htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['name'] ?? 'Laboratory Staff'); ?>, what do you need help with?</p>
+            </div>
+        </div>
     </div>
 
     <!-- Options Grid -->
-    <div class="flex-1 overflow-y-auto">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl">
 
             <!-- Hardware Issue -->
             <div onclick="handleIssueClick('hardware')" role="button" tabindex="0"
@@ -258,14 +271,14 @@ $pcStmt->close();
 <!-- Single Dynamic Issue Modal -->
 <div id="issueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeIssueModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden transform transition-all">
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col transform transition-all">
         <!-- Close Button -->
         <button type="button" onclick="closeIssueModal()" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
             <i class="fas fa-times text-2xl"></i>
         </button>
         
         <!-- Modal Body -->
-        <div class="overflow-hidden p-6">
+        <div class="overflow-y-auto p-6 flex-1">
 
         <form id="issueForm" class="space-y-4" method="post" enctype="multipart/form-data">
             <input type="hidden" name="category" id="issueCategory" value="">
