@@ -481,9 +481,10 @@
         
         <div class="space-y-4">
           <div class="flex items-start gap-4">
-            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-              <i class="fa-solid fa-check text-white text-xl"></i>
-            </div>
+<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+  <i class="fa-solid fa-check text-white text-xl"></i>
+</div>
+
             <div>
               <h4 class="font-semibold mb-1">Real-time Tracking</h4>
               <p class="text-gray-200">Monitor all assets across multiple locations in real-time</p>
@@ -491,9 +492,10 @@
           </div>
           
           <div class="flex items-start gap-4">
-            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-              <i class="fa-solid fa-check text-white text-xl"></i>
-            </div>
+<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+  <i class="fa-solid fa-check text-white text-xl"></i>
+</div>
+
             <div>
               <h4 class="font-semibold mb-1">Automated Workflows</h4>
               <p class="text-gray-200">Streamline approval processes and notifications</p>
@@ -501,9 +503,10 @@
           </div>
           
           <div class="flex items-start gap-4">
-            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-              <i class="fa-solid fa-check text-white text-xl"></i>
-            </div>
+<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+  <i class="fa-solid fa-check text-white text-xl"></i>
+</div>
+
             <div>
               <h4 class="font-semibold mb-1">Comprehensive Reporting</h4>
               <p class="text-gray-200">Generate detailed reports for better decision making</p>
@@ -514,25 +517,35 @@
       
       <!-- Right Column: Stats -->
       <div class="grid grid-cols-2 gap-4">
-        <div class="bg-blue-600 text-white p-8 rounded-xl">
-          <i class="fa-solid fa-users text-4xl mb-4"></i>
-          <h3 class="text-3xl font-bold mb-2">500+</h3>
-          <p class="text-blue-100">Active Users</p>
+        <div class="bg-gray-300/70 text-black p-8 rounded-xl">
+            <div class="w-16 h-16 flex items-center justify-center mb-6">
+            <img src="assets/images/people.svg" alt="Folder Icon" class="h-14 w-14">
         </div>
-        <div class="bg-green-600 text-white p-8 rounded-xl">
-          <i class="fa-solid fa-building text-4xl mb-4"></i>
-          <h3 class="text-3xl font-bold mb-2">5+</h3>
-          <p class="text-green-100">Buildings</p>
+        <h3 class="text-3xl font-bold mb-2">500+</h3>
+          <p class="text-gray-black">Active Users</p>
         </div>
-        <div class="bg-purple-600 text-white p-8 rounded-xl">
-          <i class="fa-solid fa-desktop text-4xl mb-4"></i>
+
+        <div class="bg-gray-300/70 text-black p-8 rounded-xl">
+            <div class="w-16 h-16 flex items-center justify-center mb-6">
+            <img src="assets/images/bldg.svg" alt="Folder Icon" class="h-14 w-14">
+        </div>
+        <h3 class="text-3xl font-bold mb-2">5+</h3>
+        <p class="text-black">Buildings</p>
+      </div>
+
+        <div class="bg-gray-300/70 text-black p-8 rounded-xl">
+            <div class="w-16 h-16 flex items-center justify-center mb-6">
+            <img src="assets/images/monitor.svg" alt="Folder Icon" class="h-14 w-14">
+        </div>
           <h3 class="text-3xl font-bold mb-2">800+</h3>
-          <p class="text-purple-100">Computers</p>
+          <p class="text-black">Computers</p>
         </div>
-        <div class="bg-yellow-600 text-white p-8 rounded-xl">
-          <i class="fa-solid fa-handshake text-4xl mb-4"></i>
+        <div class="bg-gray-300/70 text-black p-8 rounded-xl">
+            <div class="w-16 h-16 flex items-center justify-center mb-6">
+            <img src="assets/images/hand.svg" alt="Folder Icon" class="h-14 w-14">
+        </div>
           <h3 class="text-3xl font-bold mb-2">95%</h3>
-          <p class="text-yellow-100">Satisfaction</p>
+          <p class="text-black">Satisfaction</p>
         </div>
       </div>
     </div>
