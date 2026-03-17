@@ -284,7 +284,7 @@
     <!-- Overlay for readability -->
     <div class="absolute inset-0" 
      style="background: linear-gradient(to bottom, rgba(41,31,139,0.5) 0%, rgba(255,255,255,0.4) 100%);">
-</div>
+    </div>
 
     <!-- Hero Content -->
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -340,157 +340,177 @@
     </div>
 </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
-                <p class="text-xl text-gray-600">Everything you need to manage your assets effectively</p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-clipboard-list text-blue-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Asset Tracking</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Track all your assets in real-time with comprehensive details including location, condition, and maintenance history.
-                    </p>
-                </div>
-                
-                <!-- Feature 2 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-heart-pulse text-green-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">PC Health Monitor</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Monitor computer systems health, performance metrics, and receive alerts for potential issues before they escalate.
-                    </p>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-ticket text-purple-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Ticket Management</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Streamline issue reporting and resolution with an integrated ticket management system for maintenance requests.
-                    </p>
-                </div>
-                
-                <!-- Feature 4 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-right-left text-yellow-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Borrowing System</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Manage asset borrowing with automated approval workflows, tracking, and return notifications.
-                    </p>
-                </div>
-                
-                <!-- Feature 5 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-chart-column text-red-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Analytics & Reports</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Generate detailed reports and analytics to make data-driven decisions about your assets and resources.
-                    </p>
-                </div>
-                
-                <!-- Feature 6 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-qrcode text-indigo-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">QR Code Integration</h3>
-                    <p class="text-gray-600 leading-relaxed">
-                        Quick asset identification and tracking using QR codes for faster inventory management and audits.
-                    </p>
-                </div>
-            </div>
+<!-- Features Section -->
+<section id="features" class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+<!-- Section Header -->
+<div class="text-center mb-16 mt-6">
+  <h2 class="text-4xl font-bold text-gray-900 mb-4">Features</h2>
+  <p class="text-xl text-gray-600">Everything you need to manage your assets effectively</p>
+</div>
+    
+    <!-- Feature Cards Grid -->
+    <div class="grid md:grid-cols-3 gap-10">
+      
+      <!-- Feature 1 -->
+      <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/folder.svg" alt="Folder Icon" class="h-12 w-12">
         </div>
-    </section>
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Asset Tracking</h3>
+        <p class="text-gray-600 text-sm">
+          Track all your assets in real-time with comprehensive details including location, condition, and maintenance history.
+        </p>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/pchealth.svg" alt="pchealth Icon" class="h-12 w-12">
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-4">PC Health Monitor</h3>
+        <p class="text-gray-600 text-sm">
+          Monitor computer systems health, performance metrics, and receive alerts for potential issues before they escalate.
+        </p>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/ticket.svg" alt="Ticket Icon" class="h-12 w-12">
+        </div>
 
-    <!-- About Section -->
-    <section id="about" class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h2 class="text-4xl font-bold text-gray-900 mb-6">About QCU Asset Management System</h2>
-                    <p class="text-lg text-gray-600 mb-6 leading-relaxed">
-                        The Quezon City University Asset Management System is a comprehensive solution designed to streamline 
-                        the tracking, maintenance, and management of all university assets.
-                    </p>
-                    <p class="text-lg text-gray-600 mb-6 leading-relaxed">
-                        Our system provides real-time monitoring, automated workflows, and detailed reporting capabilities 
-                        to ensure efficient resource utilization and accountability.
-                    </p>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-4">
-                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-check text-blue-600 text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-1">Real-time Tracking</h4>
-                                <p class="text-gray-600">Monitor all assets across multiple locations in real-time</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start gap-4">
-                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-check text-blue-600 text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-1">Automated Workflows</h4>
-                                <p class="text-gray-600">Streamline approval processes and notifications</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start gap-4">
-                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-check text-blue-600 text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-1">Comprehensive Reporting</h4>
-                                <p class="text-gray-600">Generate detailed reports for better decision making</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-blue-600 text-white p-8 rounded-xl">
-                        <i class="fa-solid fa-users text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">500+</h3>
-                        <p class="text-blue-100">Active Users</p>
-                    </div>
-                    <div class="bg-green-600 text-white p-8 rounded-xl">
-                        <i class="fa-solid fa-building text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">5+</h3>
-                        <p class="text-green-100">Buildings</p>
-                    </div>
-                    <div class="bg-purple-600 text-white p-8 rounded-xl">
-                        <i class="fa-solid fa-desktop text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">800+</h3>
-                        <p class="text-purple-100">Computers</p>
-                    </div>
-                    <div class="bg-yellow-600 text-white p-8 rounded-xl">
-                        <i class="fa-solid fa-handshake text-4xl mb-4"></i>
-                        <h3 class="text-3xl font-bold mb-2">95%</h3>
-                        <p class="text-yellow-100">Satisfaction</p>
-                    </div>
-                </div>
-            </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Ticket Management</h3>
+        <p class="text-gray-600 text-sm">
+          Streamline issue reporting and resolution with an integrated ticket management system for maintenance requests.
+        </p>
+      </div>
+      
+      <!-- Feature 4 -->
+      <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/borrow.svg" alt="Borrow Icon" class="h-12 w-12">
         </div>
-    </section>
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Borrowing System</h3>
+        <p class="text-gray-600 text-sm">
+          Manage asset borrowing with automated approval workflows, tracking, and return notifications.
+        </p>
+      </div>
+      
+      <!-- Feature 5 -->
+      <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/analytics.svg" alt="Analytics Icon" class="h-12 w-12">
+        </div>
+
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Analytics & Reports</h3>
+        <p class="text-gray-600 text-sm">
+          Generate detailed reports and analytics to make data-driven decisions about your assets and resources.
+        </p>
+      </div>
+      
+      <!-- Feature 6 -->
+     <div class="bg-white p-10 rounded-xl shadow-lg hover:shadow-xl transition-all h-64">
+        <div class="w-16 h-16 flex items-center justify-center mb-6">
+        <img src="assets/images/qr.svg" alt="QR Icon" class="h-12 w-12">
+        </div>
+
+        <h3 class="text-xl font-bold text-gray-900 mb-4">QR Code Integration</h3>
+        <p class="text-gray-600 text-sm">
+          Quick asset identification and tracking using QR codes for faster inventory management and audits.
+        </p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="about" 
+    class="relative bg-cover bg-center min-h-screen flex items-center justify-center" 
+    style="background-image: url('assets/images/about.jpg');">
+        <!-- Overlay for readability -->
+    <div class="absolute inset-0" 
+     style="background: linear-gradient(to bottom, rgba(41,31,139,0.5) 0%, rgba(255,255,255,0.4) 100%);">
+    </div>
+
+  <!-- Content -->
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      
+      <!-- Left Column: Text -->
+      <div class="text-white">
+        <h2 class="text-4xl font-bold mb-6">About QCU Asset Management System</h2>
+        <p class="text-lg mb-6 leading-relaxed">
+          The Quezon City University Asset Management System is a comprehensive solution designed to streamline 
+          the tracking, maintenance, and management of all university assets.
+        </p>
+        <p class="text-lg mb-6 leading-relaxed">
+          Our system provides real-time monitoring, automated workflows, and detailed reporting capabilities 
+          to ensure efficient resource utilization and accountability.
+        </p>
+        
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-white text-xl"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-1">Real-time Tracking</h4>
+              <p class="text-gray-200">Monitor all assets across multiple locations in real-time</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-white text-xl"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-1">Automated Workflows</h4>
+              <p class="text-gray-200">Streamline approval processes and notifications</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-white text-xl"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-1">Comprehensive Reporting</h4>
+              <p class="text-gray-200">Generate detailed reports for better decision making</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Stats -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-blue-600 text-white p-8 rounded-xl">
+          <i class="fa-solid fa-users text-4xl mb-4"></i>
+          <h3 class="text-3xl font-bold mb-2">500+</h3>
+          <p class="text-blue-100">Active Users</p>
+        </div>
+        <div class="bg-green-600 text-white p-8 rounded-xl">
+          <i class="fa-solid fa-building text-4xl mb-4"></i>
+          <h3 class="text-3xl font-bold mb-2">5+</h3>
+          <p class="text-green-100">Buildings</p>
+        </div>
+        <div class="bg-purple-600 text-white p-8 rounded-xl">
+          <i class="fa-solid fa-desktop text-4xl mb-4"></i>
+          <h3 class="text-3xl font-bold mb-2">800+</h3>
+          <p class="text-purple-100">Computers</p>
+        </div>
+        <div class="bg-yellow-600 text-white p-8 rounded-xl">
+          <i class="fa-solid fa-handshake text-4xl mb-4"></i>
+          <h3 class="text-3xl font-bold mb-2">95%</h3>
+          <p class="text-yellow-100">Satisfaction</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
     <!-- User Roles Section -->
     <section class="py-20 bg-white">
