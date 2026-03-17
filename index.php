@@ -172,35 +172,38 @@
 <body class="bg-gray-50">
     
     <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-white shadow-md">
-        <div class="px-4 sm:px-6 lg:px-8">
+    <nav class="fixed w-full z-50 bg-transparent">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
                     <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-14 w-14">
                     <div>
-                        <h1 class="text-xl font-bold text-blue-900">QCU AMS</h1>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Asset Management System</p>
+                        <h1 class="text-xl font-bold text-white">QCU AMS</h1>
+                        <p class="text-xs text-white">Asset Management System</p>
                     </div>
                 </div>
                 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#home" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Home</a>
-                    <a href="#features" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Features</a>
-                    <a href="#about" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">About</a>
-                    <a href="#contact" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contact</a>
+                    <a href="#home" class="text-white hover:text-yellow-300 transition-colors font-medium">Home</a>
+                    <a href="#features" class="text-white hover:text-yellow-300 transition-colors font-medium">Features</a>
+                    <a href="#about" class="text-white hover:text-yellow-300 transition-colors font-medium">About</a>
+                    <a href="#contact" class="text-white hover:text-yellow-300 transition-colors font-medium">Contact</a>
                     
                     <!-- Dark Mode Toggle -->
-                    <button onclick="toggleDarkMode()" class="theme-toggle" aria-label="Toggle dark mode">
+                    <button onclick="toggleDarkMode()" class="theme-toggle bg-gray-300 hover:bg-gray-200" aria-label="Toggle dark mode">
                         <div class="theme-toggle-slider">
                             <i class="fa-solid fa-sun text-yellow-500 text-xs dark-mode-icon-light"></i>
                             <i class="fa-solid fa-moon text-blue-400 text-xs dark-mode-icon-dark hidden"></i>
                         </div>
                     </button>
                     
-                    <a href="view/login.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-colors font-medium">
-                        <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
+                    <a href="view/login.php" 
+                    class="flex items-center gap-2 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                    style="background-color: rgba(41, 31, 139, 0.5);">
+                    <i class="fa-solid fa-sign-in-alt"></i>
+                    Login
                     </a>
                 </div>
                 
@@ -212,7 +215,7 @@
         </div>
         
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+        <div id="mobile-menu" class="hidden md:hidden bg-[#291F8B]/90 border-t">
             <div class="px-4 py-4 space-y-3">
                 <a href="#home" class="block text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">Home</a>
                 <a href="#features" class="block text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">Features</a>
@@ -237,54 +240,69 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero-gradient min-h-screen flex items-center justify-center pt-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <!-- Left Content -->
-                <div class="text-white fade-in-up">
-                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                        Manage Your Assets <span class="text-yellow-300">Efficiently</span>
-                    </h1>
-                    <p class="text-xl mb-8 text-blue-100">
-                        Streamline asset tracking, maintenance, and reporting with Quezon City University's comprehensive Asset Management System.
-                    </p>
-                    <div class="flex flex-wrap gap-4">
-                        <a href="view/login.php" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg">
-                            <i class="fa-solid fa-rocket mr-2"></i>Get Started
-                        </a>
-                        <a href="#features" class="glass-effect text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-all">
-                            <i class="fa-solid fa-circle-play mr-2"></i>Learn More
-                        </a>
-                    </div>
-                    
-                    <!-- Stats -->
-                    <div class="grid grid-cols-3 gap-6 mt-12">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-yellow-300">1000+</div>
-                            <div class="text-sm text-blue-100">Assets Tracked</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-yellow-300">50+</div>
-                            <div class="text-sm text-blue-100">Rooms Managed</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-yellow-300">24/7</div>
-                            <div class="text-sm text-blue-100">Monitoring</div>
-                        </div>
-                    </div>
+<!-- Hero Section -->
+<section id="home" 
+    class="relative bg-cover bg-center min-h-screen flex items-center justify-center pt-20" 
+    style="background-image: url('assets/images/lab.png');">
+    
+    <!-- Overlay for readability -->
+    <div class="absolute inset-0" 
+     style="background: linear-gradient(to bottom, rgba(41,31,139,0.5) 0%, rgba(255,255,255,0.4) 100%);">
+</div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            
+            <!-- Left Content -->
+            <div class="text-white fade-in-up">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    Manage Your Assets <span class="text-yellow-300">Efficiently</span>
+                </h1>
+                <p class="text-xl mb-8 text-blue-100">
+                    Streamline asset tracking, maintenance, and reporting with Quezon City University's comprehensive Asset Management System.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="view/login.php" 
+                    class="bg-[#291F8B] text-white px-8 py-4 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg hover:bg-[#1E40AF]">
+                        <i class="fa-solid fa-rocket mr-2"></i>Get Started
+                    </a>    
+
+                    <a href="#features" 
+                    class="text-gray-700 px-8 py-4 rounded-lg font-semibold transition-alltransform hover:scale-105 shadow-lg hover:bg-gray-700"
+                    style="background-color: rgba(243, 244, 246, 0.7);">
+                    Learn More
+                    </a>
+
                 </div>
-                
-                <!-- Right Content - Illustration -->
-                <div class="hidden md:block float-animation">
-                    <div class="relative">
-                        <div class="absolute inset-0 bg-blue-400 rounded-full blur-3xl opacity-30"></div>
-                        <img src="assets/images/QCU-LOGO.png" alt="Asset Management" class="relative w-full max-w-lg mx-auto drop-shadow-2xl">
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-6 mt-12">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-300">1000+</div>
+                        <div class="text-sm text-blue-100">Assets Tracked</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-300">50+</div>
+                        <div class="text-sm text-blue-100">Rooms Managed</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-300">24/7</div>
+                        <div class="text-sm text-blue-100">Monitoring</div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Right Content - Illustration -->
+            <div class="hidden md:block float-animation">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-blue-400 rounded-full blur-3xl opacity-30"></div>
+                    <img src="assets/images/QCU-LOGO.png" alt="Asset Management" class="relative w-full max-w-sm mx-auto drop-shadow-2xl">
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- Features Section -->
     <section id="features" class="py-20 bg-white">
