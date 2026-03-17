@@ -266,8 +266,8 @@
                     <a href="view/login.php" 
                     class="nav-login-btn flex items-center gap-2 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-300"
                     style="background-color: rgba(41, 31, 139, 0.5);">
-                    <i class="fa-solid fa-sign-in-alt"></i>
                     Login
+                    <i class="fa-solid fa-sign-in-alt"></i>
                     </a>
                 </div>
                 
@@ -458,6 +458,7 @@
 <section id="about" 
     class="relative bg-cover bg-center min-h-screen flex items-center justify-center" 
     style="background-image: url('assets/images/about.jpg');">
+    
         <!-- Overlay for readability -->
     <div class="absolute inset-0" 
      style="background: linear-gradient(to bottom, rgba(41,31,139,0.5) 0%, rgba(255,255,255,0.4) 100%);">
@@ -481,9 +482,9 @@
         
         <div class="space-y-4">
           <div class="flex items-start gap-4">
-<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-  <i class="fa-solid fa-check text-white text-xl"></i>
-</div>
+    <div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-check text-white text-xl"></i>
+    </div>
 
             <div>
               <h4 class="font-semibold mb-1">Real-time Tracking</h4>
@@ -492,20 +493,20 @@
           </div>
           
           <div class="flex items-start gap-4">
-<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-  <i class="fa-solid fa-check text-white text-xl"></i>
-</div>
+                <div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-check text-white text-xl"></i>
+                </div>
 
             <div>
               <h4 class="font-semibold mb-1">Automated Workflows</h4>
               <p class="text-gray-200">Streamline approval processes and notifications</p>
             </div>
-          </div>
+            </div>
           
           <div class="flex items-start gap-4">
-<div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-  <i class="fa-solid fa-check text-white text-xl"></i>
-</div>
+            <div class="bg-blue-600/70 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-check text-white text-xl"></i>
+            </div>
 
             <div>
               <h4 class="font-semibold mb-1">Comprehensive Reporting</h4>
@@ -553,53 +554,88 @@
 </section>
 
 
-    <!-- User Roles Section -->
-    <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Access for Everyone</h2>
-                <p class="text-xl text-gray-600">Different portals for different user types</p>
-            </div>
-            
-            <div class="grid md:grid-cols-4 gap-6">
-                <div class="bg-gradient-to-br from-red-500 to-red-600 text-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105">
-                    <i class="fa-solid fa-user-tie text-5xl mb-4"></i>
-                    <h3 class="text-2xl font-bold mb-3">Administrator</h3>
-                    <p class="text-red-100 mb-4">Full system control and management</p>
-                    <a href="view/login.php" class="inline-block bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors">
-                        Login <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-                
-                <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105">
-                    <i class="fa-solid fa-user-gear text-5xl mb-4"></i>
-                    <h3 class="text-2xl font-bold mb-3">Laboratory Staff</h3>
-                    <p class="text-yellow-100 mb-4">Asset and borrowing management</p>
-                    <a href="view/login.php" class="inline-block bg-white text-yellow-600 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-50 transition-colors">
-                        Login <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-                
-                <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105">
-                    <i class="fa-solid fa-screwdriver-wrench text-5xl mb-4"></i>
-                    <h3 class="text-2xl font-bold mb-3">Technician</h3>
-                    <p class="text-purple-100 mb-4">Ticket and maintenance handling</p>
-                    <a href="view/login.php" class="inline-block bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-colors">
-                        Login <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-                
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105">
-                    <i class="fa-solid fa-graduation-cap text-5xl mb-4"></i>
-                    <h3 class="text-2xl font-bold mb-3">Student/Faculty</h3>
-                    <p class="text-blue-100 mb-4">Asset borrowing and requests</p>
-                    <a href="view/login.php" class="inline-block bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
-                        Login <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </a>
-                </div>
-            </div>
+<!-- User Roles Section -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">Access for Everyone</h2>
+      <p class="text-xl text-gray-600">Different portals for different user types</p>
+    </div>
+    
+    <div class="grid md:grid-cols-4 gap-6">
+
+      <!-- Administrator -->
+      <div class="text-white rounded-xl shadow-lg flex justify-between items-center p-8 aspect-square relative transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+           style="background: linear-gradient(to bottom right, #5E93F2, #AFCBF9);">
+        <div class="flex-1">
+          <h3 class="text-2xl font-bold mb-2 text-black">Administrator</h3>
+          <p class="text-black mb-4">Full system control and management</p>
+          <a href="view/login.php" 
+             class="inline-block px-6 py-2 rounded-lg font-semibold transition-colors"
+             style="background-color: rgba(255,255,255,0.8); color: black;">
+            Login <i class="fa-solid fa-sign-in-alt"></i>
+          </a>
         </div>
-    </section>
+        <div class="absolute top-16 right-0">
+          <img src="assets/images/admin.svg" alt="Administrator Icon" class="w-25 h-25 object-contain opacity-90">
+        </div>
+      </div>
+
+      <!-- Laboratory Staff -->
+      <div class="text-white rounded-xl shadow-lg relative p-8 aspect-square transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+           style="background: linear-gradient(to bottom right, rgba(94,147,242,0.8), #AFCBF9);">
+        <div class="flex-1"><br>
+          <h3 class="text-2xl font-bold mb-2 text-black">Laboratory Staff</h3>
+          <p class="text-black mb-4">Asset and borrowing management</p>
+          <a href="view/login.php" 
+             class="inline-block px-6 py-2 rounded-lg font-semibold transition-colors"
+             style="background-color: rgba(255,255,255,0.8); color: black;">
+            Login <i class="fa-solid fa-sign-in-alt"></i>
+          </a>
+        </div>
+        <div class="absolute top-16 right-0">
+          <img src="assets/images/lab.svg" alt="Laboratory Staff Icon" class="w-25 h-25 object-contain opacity-90">
+        </div>
+      </div>
+
+      <!-- Technician -->
+      <div class="text-white rounded-xl shadow-lg relative p-8 aspect-square transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+           style="background: linear-gradient(to bottom right, rgba(94,147,242,0.6), #AFCBF9);">
+        <div class="flex-1"><br>
+          <h3 class="text-2xl font-bold mb-2 text-black">Technician</h3>
+          <p class="text-black mb-4">Ticket and maintenance handling</p>
+          <a href="view/login.php" 
+             class="inline-block px-6 py-2 rounded-lg font-semibold transition-colors"
+             style="background-color: rgba(255,255,255,0.8); color: black;">
+            Login <i class="fa-solid fa-sign-in-alt"></i>
+          </a>
+        </div>
+        <div class="absolute top-16 right-0">
+          <img src="assets/images/tech.svg" alt="Technician Icon" class="w-25 h-25 object-contain opacity-90">
+        </div>
+      </div>
+
+      <!-- Student/Faculty -->
+      <div class="text-white rounded-xl shadow-lg relative p-8 aspect-square transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+           style="background: linear-gradient(to bottom right, rgba(94,147,242,0.4), #AFCBF9);">
+        <div class="flex-1"><br>
+          <h3 class="text-2xl font-bold mb-2 text-black">Student/Faculty</h3>
+          <p class="text-black mb-4">Asset borrowing and requests</p>
+          <a href="view/login.php" 
+             class="inline-block px-6 py-2 rounded-lg font-semibold transition-colors"
+             style="background-color: rgba(255,255,255,0.8); color: black;">
+            Login <i class="fa-solid fa-sign-in-alt"></i>
+          </a>
+        </div>
+        <div class="absolute top-16 right-0">
+          <img src="assets/images/stud.svg" alt="Student/Faculty Icon" class="w-25 h-25 object-contain opacity-90">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
     <!-- Our Team Section -->
     <section id="team" class="team-section py-20 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
@@ -786,26 +822,26 @@
             </div>
             
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fa-solid fa-location-dot text-blue-600 text-2xl"></i>
-                    </div>
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+          <img src="assets/images/address.svg" alt="Address Icon" class="w-12 h-12 object-contain">
+        </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Address</h3>
                     <p class="text-gray-600">673 Quirino Highway, San Bartolome<br>Novaliches, Quezon City</p>
                 </div>
                 
-                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
-                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fa-solid fa-phone text-green-600 text-2xl"></i>
-                    </div>
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+          <img src="assets/images/phone.svg" alt="Phone Icon" class="w-12 h-12 object-contain">
+        </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Phone</h3>
                     <p class="text-gray-600">(02) 8806-3333<br>Local 8100</p>
                 </div>
                 
-                <div class="bg-white p-8 rounded-xl shadow-lg text-center">
-                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fa-solid fa-envelope text-purple-600 text-2xl"></i>
-                    </div>
+      <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+        <div class="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+          <img src="assets/images/email.svg" alt="Email Icon" class="w-12 h-12 object-contain">
+        </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Email</h3>
                     <p class="text-gray-600">info@qcu.edu.ph<br>support@qcu.edu.ph</p>
                 </div>
@@ -814,25 +850,21 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
+    <footer class="bg-[#291F8B] text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-8">
-                <div>
+                <div><br>
                     <div class="flex items-center gap-3 mb-4">
-                        <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-12 w-12">
-                        <div>
-                            <h3 class="font-bold text-lg text-blue-900">QCU AMS</h3>
-                            <p class="text-sm text-gray-400">Asset Management</p>
+    <img src="assets/images/QCU-LOGO.png" alt="QCU Logo" class="h-16 w-16 mb-2">                        <div>
+                            <h3 class="font-bold text-lg text-white">QCU AMS</h3>
+                            <p class="text-sm text-white">Asset Management</p>
                         </div>
                     </div>
-                    <p class="text-gray-400 text-sm">
-                        Empowering Quezon City University with efficient asset management solutions.
-                    </p>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
+                    <ul class="space-y-2 text-white text-sm">
                         <li><a href="#home" class="hover:text-white transition-colors">Home</a></li>
                         <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
                         <li><a href="#about" class="hover:text-white transition-colors">About</a></li>
@@ -842,7 +874,7 @@
                 
                 <div>
                     <h4 class="font-bold mb-4">Resources</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
+                    <ul class="space-y-2 text-white text-sm">
                         <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
                         <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
                         <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
@@ -853,14 +885,14 @@
                 <div>
                     <h4 class="font-bold mb-4">Follow Us</h4>
                     <div class="flex gap-3">
-                        <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        <a href="#" class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
                             <i class="fa-brands fa-facebook"></i>
                         </a>
                        
-                        <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
+                        <a href="#" class="bg-pink-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
                             <i class="fa-brands fa-instagram"></i>
                         </a>
-                        <a href="#" class="bg-gray-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
+                        <a href="#" class="bg-blue-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
                             <i class="fa-brands fa-linkedin"></i>
                         </a>
                     </div>
@@ -875,51 +907,67 @@
 
     <!-- Mobile Menu Script -->
     <script>
-        // Navbar scroll effect with smooth transitions
-        let lastScrollY = 0;
-        let ticking = false;
+// Navbar scroll effect with smooth transitions
+let lastScrollY = 0;
+let ticking = false;
+
+function updateNavbar() {
+    const navbar = document.getElementById('navbar');
+    const navbarContainer = document.getElementById('navbar-container');
+    const navbarContent = document.getElementById('navbar-content');
+    const navbarMenu = document.getElementById('navbar-menu');
+    const logoLeft = document.getElementById('navbar-logo-left');
+    const logoInside = document.getElementById('navbar-logo-inside');
+    
+    const scrollPosition = window.scrollY;
+    const maxScroll = 100; // Distance over which transition occurs
+    const progress = Math.min(scrollPosition / maxScroll, 1);
+    
+    if (progress > 0.1) {
+        navbar.classList.add('navbar-scrolled');
         
-        function updateNavbar() {
-            const navbar = document.getElementById('navbar');
-            const navbarContainer = document.getElementById('navbar-container');
-            const navbarContent = document.getElementById('navbar-content');
-            const navbarMenu = document.getElementById('navbar-menu');
-            const logoLeft = document.getElementById('navbar-logo-left');
-            const logoInside = document.getElementById('navbar-logo-inside');
-            
-            const scrollPosition = window.scrollY;
-            const maxScroll = 100; // Distance over which transition occurs
-            const progress = Math.min(scrollPosition / maxScroll, 1);
-            
-            // Apply smooth transitions based on scroll progress
-            if (progress > 0.1) {
-                navbar.classList.add('navbar-scrolled');
-                
-                // Smooth opacity transitions
-                logoLeft.style.opacity = Math.max(0, 1 - (progress * 2));
-                logoInside.style.opacity = Math.min(1, progress * 2);
-                
-                // Smooth background transition
-                const bgOpacity = Math.min(0.95, progress);
-                navbarMenu.style.backgroundColor = `rgba(41, 31, 139, ${bgOpacity})`;
-                
-            } else {
-                navbar.classList.remove('navbar-scrolled');
-                logoLeft.style.opacity = '1';
-                logoInside.style.opacity = '0';
-                navbarMenu.style.backgroundColor = '';
-            }
-            
-            ticking = false;
-        }
+        // Smooth opacity transitions
+        logoLeft.style.opacity = Math.max(0, 1 - (progress * 2));
+        logoInside.style.opacity = Math.min(1, progress * 2);
         
-        function requestTick() {
-            if (!ticking) {
-                requestAnimationFrame(updateNavbar);
-                ticking = true;
-            }
-        }
+        // Smooth background transition
+        const bgOpacity = Math.min(0.95, progress);
+        navbarMenu.style.backgroundColor = `rgba(41, 31, 139, ${bgOpacity})`;
         
+        // 🔹 Add border radius when scrolled
+        navbar.style.borderRadius = "0 0 1rem 1rem"; // bottom corners rounded
+    } else {
+        navbar.classList.remove('navbar-scrolled');
+        logoLeft.style.opacity = '1';
+        logoInside.style.opacity = '0';
+        navbarMenu.style.backgroundColor = '';
+        
+        // 🔹 Reset radius when back at top
+        navbar.style.borderRadius = "0"; 
+    }
+    
+    ticking = false;
+}
+
+function requestTick() {
+    if (!ticking) {
+        requestAnimationFrame(updateNavbar);
+        ticking = true;
+    }
+}
+
+window.addEventListener('scroll', requestTick);
+
+// Optional: toggle radius on click
+document.getElementById('navbar').addEventListener('click', () => {
+    const navbar = document.getElementById('navbar');
+    if (navbar.style.borderRadius === "0") {
+        navbar.style.borderRadius = "0 0 1rem 1rem";
+    } else {
+        navbar.style.borderRadius = "0";
+    }
+});
+
         window.addEventListener('scroll', requestTick);
         
         // Dark Mode Toggle
