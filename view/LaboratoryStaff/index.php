@@ -169,7 +169,7 @@ include '../components/layout_header.php';
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #1E3A8A, #3B82F6);
+        background: #1E3A8A;
         transform: scaleX(0);
         transition: transform 0.3s ease;
     }
@@ -196,24 +196,24 @@ include '../components/layout_header.php';
     
     /* Professional gradient backgrounds */
     .gradient-blue {
-        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        background: #1E3A8A;
     }
     
     .gradient-green {
-        background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+        background: #10B981;
     }
     
     .gradient-amber {
-        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        background: #F59E0B;
     }
     
     .gradient-red {
-        background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+        background: #EF4444;
     }
     
     /* Chart container styling */
     .chart-container {
-        background: linear-gradient(to bottom, #ffffff, #f9fafb);
+        background: #ffffff;
         border: 1px solid #e5e7eb;
         transition: all 0.3s ease;
     }

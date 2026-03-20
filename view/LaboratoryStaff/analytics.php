@@ -159,218 +159,116 @@ include '../components/layout_header.php';
 ?>
 
 <style>
-    .metric-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-    
+    .metric-card,
     .chart-container {
-        background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+        transition: transform 0.2s ease;
     }
-    
+
+    .metric-card:hover,
     .chart-container:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
     }
 </style>
 
 <!-- Main Content -->
-<main class="p-3 bg-gray-50 overflow-y-auto" style="height: calc(100vh - 85px);">
-    
+<main class="p-4 md:p-6 bg-slate-50 overflow-y-auto" style="height: calc(100vh - 85px);">
+
     <!-- Page Header -->
-    <div class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-900">Asset Analytics Dashboard</h1>
-        <p class="text-sm text-gray-600 mt-1">Comprehensive overview of asset usage, maintenance, and equipment conditions</p>
-    </div>
-
-    <!-- Key Metrics Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
-        <!-- Total Assets -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <i class="fas fa-boxes text-blue-600 text-lg"></i>
-                </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-5 mb-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Asset Analytics Dashboard</h1>
+                <p class="text-sm text-slate-600 mt-1">Comprehensive overview of asset usage, maintenance, and equipment conditions</p>
             </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">Total Assets</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $totalAssets; ?></p>
-        </div>
-
-        <!-- In Use -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-green-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600 text-lg"></i>
-                </div>
+            <div class="flex items-center gap-2 text-xs font-semibold">
+                <span class="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Live Snapshot</span>
+                <span class="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Updated: <?php echo date('M d, Y'); ?></span>
             </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">In Use</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $inUseAssets; ?></p>
-        </div>
-
-        <!-- Available -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-indigo-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <i class="fas fa-box-open text-indigo-600 text-lg"></i>
-                </div>
-            </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">Available</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $availableAssets; ?></p>
-        </div>
-
-        <!-- Under Maintenance -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-amber-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <i class="fas fa-wrench text-amber-600 text-lg"></i>
-                </div>
-            </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">Maintenance</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $maintenanceAssets; ?></p>
-        </div>
-
-        <!-- Utilization Rate -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-purple-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <i class="fas fa-chart-line text-purple-600 text-lg"></i>
-                </div>
-            </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">Utilization</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $utilizationRate; ?>%</p>
-        </div>
-
-        <!-- Active Borrows -->
-        <div class="metric-card bg-white rounded-lg shadow-sm p-3 border-l-4 border-rose-500">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
-                    <i class="fas fa-hand-holding text-rose-600 text-lg"></i>
-                </div>
-            </div>
-            <p class="text-xs text-gray-500 mb-1 font-medium">Active Borrows</p>
-            <p class="text-2xl font-bold text-gray-900"><?php echo $activeBorrows; ?></p>
         </div>
     </div>
 
     <!-- Charts Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
             
             <!-- Equipment Condition Distribution -->
-            <div class="chart-container p-4">
+            <div class="chart-container bg-white rounded-xl border border-slate-200 p-4">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-900">Equipment Condition Statistics</h3>
-                        <p class="text-xs text-gray-500 mt-1">Current condition of all assets</p>
+                        <h3 class="text-sm font-bold text-slate-900">Equipment Condition Statistics</h3>
+                        <p class="text-xs text-slate-500 mt-1">Current condition of all assets</p>
                     </div>
-                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-semibold">
+                    <span class="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-full font-semibold">
                         <?php echo $totalAssets; ?> Total
                     </span>
                 </div>
-                <div style="height: 280px;">
+                <div style="height: 220px;">
                     <canvas id="conditionChart"></canvas>
                 </div>
             </div>
 
             <!-- Asset Usage by Type -->
-            <div class="chart-container p-4">
+            <div class="chart-container bg-white rounded-xl border border-slate-200 p-4">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-900">Asset Distribution by Type</h3>
-                        <p class="text-xs text-gray-500 mt-1">Breakdown of asset categories</p>
+                        <h3 class="text-sm font-bold text-slate-900">Asset Distribution by Type</h3>
+                        <p class="text-xs text-slate-500 mt-1">Breakdown of asset categories</p>
                     </div>
-                    <span class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full font-semibold">
+                    <span class="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2 py-1 rounded-full font-semibold">
                         <?php echo count($assetTypes); ?> Types
                     </span>
                 </div>
-                <div style="height: 280px;">
+                <div style="height: 220px;">
                     <canvas id="assetTypeChart"></canvas>
                 </div>
             </div>
 
             <!-- Maintenance Reports -->
-            <div class="chart-container p-4">
+            <div class="chart-container bg-white rounded-xl border border-slate-200 p-4">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-900">Maintenance Reports (Last 30 Days)</h3>
-                        <p class="text-xs text-gray-500 mt-1">Issues by category</p>
+                        <h3 class="text-sm font-bold text-slate-900">Maintenance Reports (Last 30 Days)</h3>
+                        <p class="text-xs text-slate-500 mt-1">Issues by category</p>
                     </div>
-                    <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-semibold">
+                    <span class="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-full font-semibold">
                         <?php echo array_sum($maintenanceCounts); ?> Issues
                     </span>
                 </div>
-                <div style="height: 280px;">
+                <div style="height: 220px;">
                     <canvas id="maintenanceChart"></canvas>
                 </div>
             </div>
 
             <!-- Asset Usage Trend -->
-            <div class="chart-container p-4">
+            <div class="chart-container bg-white rounded-xl border border-slate-200 p-4">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-900">Asset Usage Trend</h3>
-                        <p class="text-xs text-gray-500 mt-1">Borrowing activity over last 6 months</p>
+                        <h3 class="text-sm font-bold text-slate-900">Asset Usage Trend</h3>
+                        <p class="text-xs text-slate-500 mt-1">Borrowing activity over last 6 months</p>
                     </div>
-                    <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full font-semibold">
+                    <span class="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-1 rounded-full font-semibold">
                         6 Months
                     </span>
                 </div>
-                <div style="height: 280px;">
+                <div style="height: 220px;">
                     <canvas id="usageTrendChart"></canvas>
                 </div>
             </div>
 
             <!-- Room Utilization -->
-            <div class="chart-container p-4 lg:col-span-2">
+            <div class="chart-container bg-white rounded-xl border border-slate-200 p-4">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-900">Room Utilization Analysis</h3>
-                        <p class="text-xs text-gray-500 mt-1">Asset distribution and usage across rooms</p>
+                        <h3 class="text-sm font-bold text-slate-900">Room Utilization Analysis</h3>
+                        <p class="text-xs text-slate-500 mt-1">Asset distribution and usage across rooms</p>
                     </div>
-                    <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full font-semibold">
+                    <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-1 rounded-full font-semibold">
                         Top <?php echo count($roomNames); ?> Rooms
                     </span>
                 </div>
-                <div style="height: 300px;">
+                <div style="height: 240px;">
                     <canvas id="roomUtilizationChart"></canvas>
                 </div>
             </div>
-
-            <!-- Maintenance Status Overview -->
-            <div class="chart-container p-4 lg:col-span-2">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="text-sm font-bold text-gray-900">Maintenance Status Overview</h3>
-                        <p class="text-xs text-gray-500 mt-1">Current status of all maintenance issues</p>
-                    </div>
-                    <span class="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded-full font-semibold">
-                        <?php echo ($openIssues + $inProgressIssues + $resolvedIssues); ?> Total
-                    </span>
-                </div>
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="text-center p-4 bg-red-50 rounded-lg">
-                        <div class="text-3xl font-bold text-red-600"><?php echo $openIssues; ?></div>
-                        <div class="text-sm text-gray-600 mt-1">Open Issues</div>
-                        <div class="text-xs text-gray-500 mt-1">Requires attention</div>
-                    </div>
-                    <div class="text-center p-4 bg-amber-50 rounded-lg">
-                        <div class="text-3xl font-bold text-amber-600"><?php echo $inProgressIssues; ?></div>
-                        <div class="text-sm text-gray-600 mt-1">In Progress</div>
-                        <div class="text-xs text-gray-500 mt-1">Being worked on</div>
-                    </div>
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <div class="text-3xl font-bold text-green-600"><?php echo $resolvedIssues; ?></div>
-                        <div class="text-sm text-gray-600 mt-1">Resolved</div>
-                        <div class="text-xs text-gray-500 mt-1">Completed</div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 </main>
 
