@@ -116,6 +116,7 @@ session_start();
               <select id="role" name="role" required
                       class="w-full px-4 py-2.5 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
                 <option value="">Select Role</option>
+                <option value="Student">Student</option>
                 <option value="Faculty">Faculty</option>
                 <option value="Technician">Technician</option>
                 <option value="Laboratory Staff">Laboratory Staff</option>
@@ -226,14 +227,14 @@ session_start();
 
         <!-- Submit Buttons -->
         <div class="flex flex-col sm:flex-row gap-3">
-          <button type="submit"
-                  class="flex-1 py-2.5 bg-[#1E3A8A] hover:bg-[#172c6e] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition">
-            <i class="fa-solid fa-user-plus mr-2"></i>Create Account
-          </button>
           <a href="login.php"
              class="flex-1 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:shadow-lg transition text-center">
             <i class="fa-solid fa-arrow-left mr-2"></i>Back to Login
           </a>
+          <button type="submit"
+                  class="flex-1 py-2.5 bg-[#1E3A8A] hover:bg-[#172c6e] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition">
+            <i class="fa-solid fa-user-plus mr-2"></i>Create Account
+          </button>
         </div>
       </form>
 

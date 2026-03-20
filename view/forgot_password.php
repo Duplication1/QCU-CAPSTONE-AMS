@@ -1,5 +1,14 @@
 <?php
 session_start();
+
+if (isset($_GET['cancel'])) {
+  unset($_SESSION['reset_user_id']);
+  unset($_SESSION['security_question_1']);
+  unset($_SESSION['security_question_2']);
+  unset($_SESSION['reset_verified']);
+  header("Location: login.php");
+  exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -137,11 +146,34 @@ session_start();
               New Password <span class="text-red-500">*</span>
             </label>
             <input type="password" id="new_password" name="new_password" required
+                   minlength="8"
+                   pattern="^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$"
                    placeholder="Enter new password"
                    class="w-full px-4 py-2.5 pr-10 text-base font-normal rounded-lg border border-gray-300 bg-gray-100 text-black focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] transition">
             <button type="button" onclick="togglePassword('new_password')" class="absolute right-3 top-[42px] text-gray-500">
               <i id="toggleIcon-new_password" class="fa-solid fa-eye"></i>
             </button>
+            <p class="text-xs text-gray-600 mt-1">At least 8 characters, with 1 uppercase letter and 1 special character.</p>
+            <div class="mt-2">
+              <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="passwordStrengthBar" class="h-2 w-0 bg-red-500 transition-all duration-300"></div>
+              </div>
+              <p id="passwordStrengthText" class="text-xs text-gray-600 mt-1">Strength: Too weak</p>
+              <ul class="mt-2 space-y-1 text-xs text-gray-600">
+                <li id="req-length" class="flex items-center gap-2">
+                  <i id="req-icon-length" class="fa-regular fa-circle text-gray-400"></i>
+                  At least 8 characters
+                </li>
+                <li id="req-uppercase" class="flex items-center gap-2">
+                  <i id="req-icon-uppercase" class="fa-regular fa-circle text-gray-400"></i>
+                  At least 1 uppercase letter
+                </li>
+                <li id="req-special" class="flex items-center gap-2">
+                  <i id="req-icon-special" class="fa-regular fa-circle text-gray-400"></i>
+                  At least 1 special character
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div class="relative">
@@ -181,6 +213,81 @@ session_start();
       icon.classList.toggle('fa-eye-slash');
     }
 
+    function updatePasswordStrength(password) {
+      const strengthBar = document.getElementById('passwordStrengthBar');
+      const strengthText = document.getElementById('passwordStrengthText');
+
+      if (!strengthBar || !strengthText) {
+        return;
+      }
+
+      const checks = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        special: /[^a-zA-Z0-9]/.test(password)
+      };
+
+      const score = Object.values(checks).filter(Boolean).length;
+
+      function setRequirementStatus(requirementId, iconId, isMet) {
+        const requirement = document.getElementById(requirementId);
+        const icon = document.getElementById(iconId);
+
+        if (!requirement || !icon) {
+          return;
+        }
+
+        requirement.classList.toggle('text-green-600', isMet);
+        requirement.classList.toggle('text-gray-600', !isMet);
+
+        icon.classList.toggle('fa-circle', !isMet);
+        icon.classList.toggle('fa-circle-check', isMet);
+        icon.classList.toggle('fa-regular', !isMet);
+        icon.classList.toggle('fa-solid', isMet);
+        icon.classList.toggle('text-gray-400', !isMet);
+        icon.classList.toggle('text-green-600', isMet);
+      }
+
+      setRequirementStatus('req-length', 'req-icon-length', checks.length);
+      setRequirementStatus('req-uppercase', 'req-icon-uppercase', checks.uppercase);
+      setRequirementStatus('req-special', 'req-icon-special', checks.special);
+
+      const colorClasses = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+      strengthBar.classList.remove(...colorClasses);
+
+      if (password.length === 0) {
+        strengthBar.style.width = '0%';
+        strengthBar.classList.add('bg-red-500');
+        strengthText.textContent = 'Strength: Too weak';
+        return;
+      }
+
+      if (score === 0) {
+        strengthBar.style.width = '20%';
+        strengthBar.classList.add('bg-red-500');
+        strengthText.textContent = 'Strength: Too weak';
+      } else if (score === 1) {
+        strengthBar.style.width = '33%';
+        strengthBar.classList.add('bg-orange-500');
+        strengthText.textContent = 'Strength: Weak';
+      } else if (score === 2) {
+        strengthBar.style.width = '66%';
+        strengthBar.classList.add('bg-yellow-500');
+        strengthText.textContent = 'Strength: Medium';
+      } else {
+        strengthBar.style.width = '100%';
+        strengthBar.classList.add('bg-green-500');
+        strengthText.textContent = 'Strength: Strong';
+      }
+    }
+
+    const newPasswordInput = document.getElementById('new_password');
+    if (newPasswordInput) {
+      newPasswordInput.addEventListener('input', function() {
+        updatePasswordStrength(this.value);
+      });
+    }
+
     // Password validation for step 3
     const step3Form = document.querySelector('#step3 form');
     if (step3Form) {
@@ -194,25 +301,26 @@ session_start();
           return false;
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
           e.preventDefault();
-          alert('Password must be at least 6 characters long!');
+          alert('Password must be at least 8 characters long!');
+          return false;
+        }
+
+        if (!/[A-Z]/.test(password)) {
+          e.preventDefault();
+          alert('Password must contain at least one uppercase letter!');
+          return false;
+        }
+
+        if (!/[^a-zA-Z0-9]/.test(password)) {
+          e.preventDefault();
+          alert('Password must contain at least one special character!');
           return false;
         }
       });
     }
   </script>
 
-  <?php
-  // Handle cancel action
-  if (isset($_GET['cancel'])) {
-      unset($_SESSION['reset_user_id']);
-      unset($_SESSION['security_question_1']);
-      unset($_SESSION['security_question_2']);
-      unset($_SESSION['reset_verified']);
-      header("Location: login.php");
-      exit();
-  }
-  ?>
 </body>
 </html>

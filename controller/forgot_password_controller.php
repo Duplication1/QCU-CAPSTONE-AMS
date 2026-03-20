@@ -114,8 +114,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             }
             
-            if (strlen($new_password) < 6) {
-                $_SESSION['error_message'] = "Password must be at least 6 characters long.";
+            if (strlen($new_password) < 8) {
+                $_SESSION['error_message'] = "Password must be at least 8 characters long.";
+                header("Location: ../view/forgot_password.php");
+                exit();
+            }
+
+            if (!preg_match('/[A-Z]/', $new_password)) {
+                $_SESSION['error_message'] = "Password must contain at least one uppercase letter.";
+                header("Location: ../view/forgot_password.php");
+                exit();
+            }
+
+            if (!preg_match('/[^a-zA-Z0-9]/', $new_password)) {
+                $_SESSION['error_message'] = "Password must contain at least one special character.";
                 header("Location: ../view/forgot_password.php");
                 exit();
             }
