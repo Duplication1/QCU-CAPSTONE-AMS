@@ -50,13 +50,12 @@ if (!$room) {
 }
 
 // Helper function to get next available terminal number
-function getNextAvailableTerminalNumber($conn, $prefix, $start_number = 1) {
+function getNextAvailableTerminalNumber($conn, $prefix, $start_number = 1, $max_attempts = 1000, $pad_length = 3) {
     $current_number = $start_number;
-    $max_attempts = 1000; // Prevent infinite loop
     $attempts = 0;
     
     while ($attempts < $max_attempts) {
-        $terminal_number = $prefix . str_pad($current_number, 2, '0', STR_PAD_LEFT);
+        $terminal_number = $prefix . str_pad($current_number, $pad_length, '0', STR_PAD_LEFT);
         
         $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
         $check_stmt->bind_param('s', $terminal_number);
@@ -181,18 +180,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
             $skipped_count = 0;
 
             // Find the next available starting number
-            $current_number = getNextAvailableTerminalNumber($conn, $prefix, $range_start);
+            $initial_search_window = max(1000, ($range_end - $range_start + 1) * 20);
+            $current_number = getNextAvailableTerminalNumber($conn, $prefix, $range_start, $initial_search_window, 3);
             
             if ($current_number === null) {
-                echo json_encode(['success' => false, 'message' => 'No available terminal numbers found in the specified range']);
-                exit();
+                // Fallback: continue searching from requested start using a larger safety window
+                $current_number = $range_start;
             }
 
             $units_to_create = $range_end - $range_start + 1;
             $created = 0;
 
-            while ($created < $units_to_create && $current_number <= ($range_start + 1000)) {
-                $terminal_number = $prefix . str_pad($current_number, 2, '0', STR_PAD_LEFT);
+            $search_limit = $range_start + max(5000, $units_to_create * 50);
+            while ($created < $units_to_create && $current_number <= $search_limit) {
+                $terminal_number = $prefix . str_pad($current_number, 3, '0', STR_PAD_LEFT);
                 
                 // Double-check if terminal number exists (shouldn't happen with our helper function)
                 $check_stmt = $conn->prepare("SELECT id FROM pc_units WHERE terminal_number = ?");
@@ -318,7 +319,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                 }
                 echo json_encode(['success' => true, 'message' => $message, 'created' => $created_count]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to create any PC units. Errors: ' . implode(', ', $errors)]);
+                $base_message = 'Failed to create any PC units';
+                if ($created < $units_to_create && $current_number > $search_limit) {
+                    $base_message .= '. No available terminal numbers were found within the search window';
+                }
+                if (!empty($errors)) {
+                    $base_message .= '. Errors: ' . implode(', ', $errors);
+                }
+                echo json_encode(['success' => false, 'message' => $base_message]);
             }
         } else {
             // Single PC creation logic
