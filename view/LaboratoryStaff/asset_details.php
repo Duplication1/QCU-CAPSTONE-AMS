@@ -34,6 +34,8 @@ if (!$filter) {
 // Build page title and query based on filter
 $pageTitle = '';
 $whereClause = '';
+$itemsPerPage = 12;
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 
 switch ($filter) {
     case 'Available':
@@ -69,7 +71,23 @@ switch ($filter) {
         exit();
 }
 
-// Fetch assets with related PC information
+// Total rows for pagination
+$countQuery = "
+    SELECT COUNT(*) as total
+    FROM assets a
+    LEFT JOIN asset_categories ac ON a.category = ac.id
+    WHERE $whereClause
+";
+$countResult = $conn->query($countQuery);
+$totalAssets = ($countResult && $countResult->num_rows > 0) ? (int)$countResult->fetch_assoc()['total'] : 0;
+
+$totalPages = max(1, (int)ceil($totalAssets / $itemsPerPage));
+if ($currentPage > $totalPages) {
+    $currentPage = $totalPages;
+}
+$offset = ($currentPage - 1) * $itemsPerPage;
+
+// Fetch paginated assets with related PC information
 $query = "
     SELECT 
         a.id,
@@ -114,25 +132,41 @@ $query = "
             WHEN 'Excellent' THEN 5
         END ASC,
         a.asset_name ASC
-";
+    LIMIT " . (int)$itemsPerPage . " OFFSET " . (int)$offset;
 
 $result = $conn->query($query);
 
 $assets = [];
-$totalAssets = 0;
-
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $assets[] = $row;
-        $totalAssets++;
     }
 }
 
 // Calculate stats
 $categoryCounts = [];
-foreach ($assets as $asset) {
-    $cat = $asset['category'] ?? 'Unknown';
-    $categoryCounts[$cat] = ($categoryCounts[$cat] ?? 0) + 1;
+$categoryQuery = "
+    SELECT COALESCE(a.category, 'Unknown') as category, COUNT(*) as total
+    FROM assets a
+    LEFT JOIN asset_categories ac ON a.category = ac.id
+    WHERE $whereClause
+    GROUP BY a.category
+";
+$categoryResult = $conn->query($categoryQuery);
+if ($categoryResult && $categoryResult->num_rows > 0) {
+    while ($catRow = $categoryResult->fetch_assoc()) {
+        $categoryCounts[$catRow['category']] = (int)$catRow['total'];
+    }
+}
+
+$startItem = $totalAssets > 0 ? $offset + 1 : 0;
+$endItem = min($offset + $itemsPerPage, $totalAssets);
+$showTableView = in_array($filter, ['All', 'Healthy'], true);
+
+function buildPageUrl($page) {
+    $params = $_GET;
+    $params['page'] = $page;
+    return '?' . http_build_query($params);
 }
 
 include '../components/layout_header.php';
@@ -156,6 +190,7 @@ include '../components/layout_header.php';
             <div>
                 <h1 class="text-2xl font-bold text-gray-900"><?php echo $pageTitle; ?></h1>
                 <p class="text-sm text-gray-600 mt-1">Detailed list of assets matching the selected filter</p>
+                <p class="text-xs text-gray-500 mt-1">Showing <?php echo $startItem; ?>-<?php echo $endItem; ?> of <?php echo $totalAssets; ?> assets</p>
             </div>
             <a href="index.php" class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
@@ -210,120 +245,200 @@ include '../components/layout_header.php';
             <p class="text-gray-500">There are no assets matching this filter.</p>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <?php foreach ($assets as $asset): ?>
-                <div class="asset-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden condition-<?php echo strtolower(str_replace(' ', '-', $asset['condition'])); ?>">
-                    <div class="p-4">
-                        <!-- Asset Header -->
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-bold text-gray-900 mb-1">
-                                    <?php echo htmlspecialchars($asset['asset_name']); ?>
-                                </h3>
-                                <p class="text-xs text-gray-500 font-mono">
-                                    <?php echo htmlspecialchars($asset['asset_tag']); ?>
-                                </p>
-                            </div>
-                            <div class="text-right">
-                                <span class="px-2 py-1 text-xs font-medium rounded <?php
-                                    echo $asset['status'] === 'Available' ? 'bg-green-100 text-green-800' :
-                                         ($asset['status'] === 'In Use' ? 'bg-blue-100 text-blue-800' :
-                                         'bg-gray-100 text-gray-800');
-                                ?>">
-                                    <?php echo htmlspecialchars($asset['status']); ?>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Asset Details -->
-                        <div class="space-y-2 mb-3">
-                            <div class="flex items-center text-sm">
-                                <i class="fas fa-tag w-5 text-gray-400"></i>
-                                <span class="text-gray-700"><?php echo htmlspecialchars($asset['category']); ?></span>
-                            </div>
-                            
-                            <?php if ($asset['brand']): ?>
-                                <div class="flex items-center text-sm">
-                                    <i class="fas fa-copyright w-5 text-gray-400"></i>
-                                    <span class="text-gray-700">
-                                        <?php echo htmlspecialchars($asset['brand']); ?>
-                                        <?php if ($asset['model']): ?>
-                                            - <?php echo htmlspecialchars($asset['model']); ?>
-                                        <?php endif; ?>
+        <?php if ($showTableView): ?>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Asset</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Category</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Brand/Model</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Location</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Condition</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Added</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php foreach ($assets as $asset): ?>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-gray-900"><?php echo htmlspecialchars($asset['asset_name']); ?></div>
+                                    <div class="text-xs text-gray-500 font-mono"><?php echo htmlspecialchars($asset['asset_tag']); ?></div>
+                                </td>
+                                <td class="px-4 py-3 text-gray-700"><?php echo htmlspecialchars($asset['category']); ?></td>
+                                <td class="px-4 py-3 text-gray-700">
+                                    <?php if ($asset['brand']): ?>
+                                        <?php echo htmlspecialchars($asset['brand']); ?><?php echo $asset['model'] ? ' - ' . htmlspecialchars($asset['model']) : ''; ?>
+                                    <?php else: ?>
+                                        <span class="text-gray-400">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-4 py-3 text-gray-700"><?php echo htmlspecialchars($asset['location']); ?></td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 text-xs font-medium rounded <?php
+                                        echo $asset['status'] === 'Available' ? 'bg-green-100 text-green-800' :
+                                             ($asset['status'] === 'In Use' ? 'bg-blue-100 text-blue-800' :
+                                             'bg-gray-100 text-gray-800');
+                                    ?>">
+                                        <?php echo htmlspecialchars($asset['status']); ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 text-xs font-bold rounded <?php
+                                        echo $asset['condition'] === 'Excellent' ? 'bg-green-100 text-green-800' :
+                                             ($asset['condition'] === 'Good' ? 'bg-blue-100 text-blue-800' :
+                                             ($asset['condition'] === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
+                                             ($asset['condition'] === 'Poor' ? 'bg-orange-100 text-orange-800' :
+                                             'bg-red-100 text-red-800')));
+                                    ?>">
+                                        <?php echo htmlspecialchars($asset['condition']); ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 text-xs">
+                                    <?php echo $asset['created_at'] ? date('M d, Y', strtotime($asset['created_at'])) : '—'; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <?php foreach ($assets as $asset): ?>
+                    <div class="asset-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden condition-<?php echo strtolower(str_replace(' ', '-', $asset['condition'])); ?>">
+                        <div class="p-4">
+                            <!-- Asset Header -->
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-1">
+                                        <?php echo htmlspecialchars($asset['asset_name']); ?>
+                                    </h3>
+                                    <p class="text-xs text-gray-500 font-mono">
+                                        <?php echo htmlspecialchars($asset['asset_tag']); ?>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-2 py-1 text-xs font-medium rounded <?php
+                                        echo $asset['status'] === 'Available' ? 'bg-green-100 text-green-800' :
+                                             ($asset['status'] === 'In Use' ? 'bg-blue-100 text-blue-800' :
+                                             'bg-gray-100 text-gray-800');
+                                    ?>">
+                                        <?php echo htmlspecialchars($asset['status']); ?>
                                     </span>
                                 </div>
-                            <?php endif; ?>
-
-                            <?php if ($asset['terminal_number']): ?>
-                                <div class="flex items-center text-sm">
-                                    <i class="fas fa-desktop w-5 text-gray-400"></i>
-                                    <span class="text-gray-700">PC: <?php echo htmlspecialchars($asset['terminal_number']); ?></span>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="flex items-center text-sm">
-                                <i class="fas fa-map-marker-alt w-5 text-gray-400"></i>
-                                <span class="text-gray-700"><?php echo htmlspecialchars($asset['location']); ?></span>
                             </div>
 
-                            <?php if ($asset['serial_number']): ?>
+                            <!-- Asset Details -->
+                            <div class="space-y-2 mb-3">
                                 <div class="flex items-center text-sm">
-                                    <i class="fas fa-barcode w-5 text-gray-400"></i>
-                                    <span class="text-gray-700 font-mono text-xs"><?php echo htmlspecialchars($asset['serial_number']); ?></span>
+                                    <i class="fas fa-tag w-5 text-gray-400"></i>
+                                    <span class="text-gray-700"><?php echo htmlspecialchars($asset['category']); ?></span>
                                 </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Condition Badge -->
-                        <div class="pt-3 border-t border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-500">Condition:</span>
-                                <span class="px-2 py-1 text-xs font-bold rounded <?php
-                                    echo $asset['condition'] === 'Excellent' ? 'bg-green-100 text-green-800' :
-                                         ($asset['condition'] === 'Good' ? 'bg-blue-100 text-blue-800' :
-                                         ($asset['condition'] === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
-                                         ($asset['condition'] === 'Poor' ? 'bg-orange-100 text-orange-800' :
-                                         'bg-red-100 text-red-800')));
-                                ?>">
-                                    <?php echo htmlspecialchars($asset['condition']); ?>
-                                </span>
-                            </div>
-
-                            <?php if ($asset['created_at']): ?>
-                                <div class="mt-2 text-xs text-gray-500">
-                                    <i class="far fa-calendar mr-1"></i>
-                                    Added: <?php echo date('M d, Y', strtotime($asset['created_at'])); ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <?php if ($filter === 'EndOfLife' && $asset['eol_date']): ?>
-                                <div class="mt-2 p-2 bg-red-50 rounded border border-red-200">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-xs font-semibold text-red-800">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i>End of Life
+                                
+                                <?php if ($asset['brand']): ?>
+                                    <div class="flex items-center text-sm">
+                                        <i class="fas fa-copyright w-5 text-gray-400"></i>
+                                        <span class="text-gray-700">
+                                            <?php echo htmlspecialchars($asset['brand']); ?>
+                                            <?php if ($asset['model']): ?>
+                                                - <?php echo htmlspecialchars($asset['model']); ?>
+                                            <?php endif; ?>
                                         </span>
                                     </div>
-                                    <div class="text-xs text-red-700">
-                                        <div class="flex justify-between mb-1">
-                                            <span>Expected Lifespan:</span>
-                                            <span class="font-semibold"><?php echo $asset['category_lifespan']; ?> years</span>
+                                <?php endif; ?>
+
+                                <?php if ($asset['terminal_number']): ?>
+                                    <div class="flex items-center text-sm">
+                                        <i class="fas fa-desktop w-5 text-gray-400"></i>
+                                        <span class="text-gray-700">PC: <?php echo htmlspecialchars($asset['terminal_number']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-map-marker-alt w-5 text-gray-400"></i>
+                                    <span class="text-gray-700"><?php echo htmlspecialchars($asset['location']); ?></span>
+                                </div>
+
+                                <?php if ($asset['serial_number']): ?>
+                                    <div class="flex items-center text-sm">
+                                        <i class="fas fa-barcode w-5 text-gray-400"></i>
+                                        <span class="text-gray-700 font-mono text-xs"><?php echo htmlspecialchars($asset['serial_number']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Condition Badge -->
+                            <div class="pt-3 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">Condition:</span>
+                                    <span class="px-2 py-1 text-xs font-bold rounded <?php
+                                        echo $asset['condition'] === 'Excellent' ? 'bg-green-100 text-green-800' :
+                                             ($asset['condition'] === 'Good' ? 'bg-blue-100 text-blue-800' :
+                                             ($asset['condition'] === 'Fair' ? 'bg-yellow-100 text-yellow-800' :
+                                             ($asset['condition'] === 'Poor' ? 'bg-orange-100 text-orange-800' :
+                                             'bg-red-100 text-red-800')));
+                                    ?>">
+                                        <?php echo htmlspecialchars($asset['condition']); ?>
+                                    </span>
+                                </div>
+
+                                <?php if ($asset['created_at']): ?>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        <i class="far fa-calendar mr-1"></i>
+                                        Added: <?php echo date('M d, Y', strtotime($asset['created_at'])); ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($filter === 'EndOfLife' && $asset['eol_date']): ?>
+                                    <div class="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-xs font-semibold text-red-800">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>End of Life
+                                            </span>
                                         </div>
-                                        <div class="flex justify-between mb-1">
-                                            <span>Current Age:</span>
-                                            <span class="font-semibold"><?php echo $asset['asset_age_years']; ?> years</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span>EOL Date:</span>
-                                            <span class="font-semibold"><?php echo date('M d, Y', strtotime($asset['eol_date'])); ?></span>
+                                        <div class="text-xs text-red-700">
+                                            <div class="flex justify-between mb-1">
+                                                <span>Expected Lifespan:</span>
+                                                <span class="font-semibold"><?php echo $asset['category_lifespan']; ?> years</span>
+                                            </div>
+                                            <div class="flex justify-between mb-1">
+                                                <span>Current Age:</span>
+                                                <span class="font-semibold"><?php echo $asset['asset_age_years']; ?> years</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>EOL Date:</span>
+                                                <span class="font-semibold"><?php echo date('M d, Y', strtotime($asset['eol_date'])); ?></span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($totalPages > 1): ?>
+            <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <a href="<?php echo buildPageUrl(max(1, $currentPage - 1)); ?>"
+                       class="px-3 py-1.5 rounded border border-gray-300 text-sm font-semibold <?php echo $currentPage <= 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'; ?>">
+                        Previous
+                    </a>
+
+                    <span class="text-sm text-gray-600 font-medium">
+                        Page <?php echo $currentPage; ?> of <?php echo $totalPages; ?>
+                    </span>
+
+                    <a href="<?php echo buildPageUrl(min($totalPages, $currentPage + 1)); ?>"
+                       class="px-3 py-1.5 rounded border border-gray-300 text-sm font-semibold <?php echo $currentPage >= $totalPages ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'; ?>">
+                        Next
+                    </a>
                 </div>
-            <?php endforeach; ?>
-        </div>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 </main>
 

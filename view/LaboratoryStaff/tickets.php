@@ -38,6 +38,10 @@ if ($_colCheck && $_colCheck->num_rows === 0) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $ticketId = intval($_POST['ticket_id']);
     $newStatus = $_POST['status'];
+    $redirectUrl = 'tickets.php';
+    if (!empty($_POST['return_url']) && strpos($_POST['return_url'], 'tickets.php') === 0) {
+        $redirectUrl = $_POST['return_url'];
+    }
 
     if (in_array($newStatus, ['Open', 'In Progress', 'Resolved', 'Closed'])) {
         $updateStmt = $conn->prepare("UPDATE issues SET status = ? WHERE id = ?");
@@ -46,9 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         $updateStmt->close();
 
         $_SESSION['success_message'] = 'Ticket status updated successfully!';
-        header("Location: tickets.php");
+        header("Location: " . $redirectUrl);
         exit;
     }
+
+    $_SESSION['error_message'] = 'Invalid status update request.';
+    header("Location: " . $redirectUrl);
+    exit;
 }
 
 // Handle assign technician (stored in assigned_technician column)
@@ -125,6 +133,7 @@ $filterType = isset($_GET['type']) ? $_GET['type'] : 'all';
 $filterBuilding = isset($_GET['building']) ? $_GET['building'] : '';
 $filterRoom = isset($_GET['room']) ? $_GET['room'] : '';
 $filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
+$currentReturnUrl = 'tickets.php' . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
 
 // Fetch buildings for filter
 $buildingsQuery = "SELECT id, name FROM buildings ORDER BY name";
@@ -334,10 +343,6 @@ if ($techWorkloadResult && $techWorkloadResult->num_rows > 0) {
     }
 }
 
-// Get success message
-$successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : '';
-unset($_SESSION['success_message']);
-
 include '../components/layout_header.php';
 ?>
 
@@ -345,12 +350,9 @@ include '../components/layout_header.php';
         <main class="p-3">
             <!-- Alert Container for AJAX messages -->
             <div id="alertContainer"></div>
-            
-            <?php if ($successMessage): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-3 text-xs">
-                <?php echo htmlspecialchars($successMessage); ?>
-            </div>
-            <?php endif; ?>
+
+            <div id="session-chip-container" class="fixed top-6 right-6 z-[9998] w-full max-w-md px-2"></div>
+            <?php include '../components/session_messages.php'; ?>
 
             <!-- Two Column Layout: Cards and Chart -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
@@ -554,11 +556,28 @@ include '../components/layout_header.php';
                                      </button>
                                      <?php
                                      $isAssigned = !empty($ticket['assigned_technician']) && in_array($ticket['assignment_status'] ?? '', ['Pending', 'Confirmed']);
-                                     if ($isAssigned): ?>
+                                     $isResolved = (($ticket['status'] ?? '') === 'Resolved');
+                                     $isClosed = (($ticket['status'] ?? '') === 'Closed');
+                                     $currentStatus = $ticket['status'] ?? 'Open';
+                                     $statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
+                                     ?>
+                                     <form method="POST" class="inline-flex items-center gap-1 mr-2">
+                                         <input type="hidden" name="update_status" value="1">
+                                         <input type="hidden" name="ticket_id" value="<?php echo $ticketId; ?>">
+                                         <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($currentReturnUrl); ?>">
+                                         <select name="status" onchange="this.form.submit()" class="text-[10px] border border-gray-300 rounded px-1.5 py-0.5" title="Update Status">
+                                             <?php foreach ($statusOptions as $statusOption): ?>
+                                                 <option value="<?php echo htmlspecialchars($statusOption); ?>" <?php echo $currentStatus === $statusOption ? 'selected' : ''; ?>>
+                                                     <?php echo htmlspecialchars($statusOption); ?>
+                                                 </option>
+                                             <?php endforeach; ?>
+                                         </select>
+                                     </form>
+                                     <?php if ($isAssigned): ?>
                                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-gray-100 text-gray-400 cursor-not-allowed" title="Already assigned to <?php echo htmlspecialchars($ticket['assigned_technician']); ?>">
                                              <i class="fa-solid fa-user-check"></i> Assigned
                                          </span>
-                                     <?php else: ?>
+                                     <?php elseif (!$isResolved && !$isClosed): ?>
                                          <button class="assignBtn text-gray-600 hover:text-[#1E3A8A]" data-ticket-id="<?php echo $ticketId; ?>" data-current-tech="<?php echo htmlspecialchars($ticket['assigned_technician'] ?? '', ENT_QUOTES); ?>" title="Assign Technician">
                                              <i class="fa-solid fa-user-plus"></i>
                                          </button>

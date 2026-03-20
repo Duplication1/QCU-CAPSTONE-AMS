@@ -4,7 +4,9 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
+
 session_start();
+
 
 // Check if user is logged in and has technician role
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Technician') {
@@ -12,7 +14,9 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
     exit();
 }
 
+
 require_once '../../config/config.php';
+
 
 // Establish mysqli database connection
 $dbConfig = Config::database();
@@ -23,8 +27,10 @@ try {
     die("Database connection error");
 }
 
+
 $technician_id = $_SESSION['user_id'];
 $technician_name = $_SESSION['full_name'] ?? '';
+
 
 // DEBUG: Check technician info
 echo "<!-- DEBUG: Technician ID: " . $technician_id . " -->";
@@ -35,69 +41,77 @@ echo "<!-- DEBUG: Total issues in database: " . ($debugResult['total'] ?? 'Query
 $debugAssigned = $conn->query("SELECT COUNT(*) as count FROM issues WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "'");
 echo "<!-- DEBUG: Issues assigned to " . $technician_name . ": " . ($debugAssigned ? $debugAssigned->fetch_assoc()['count'] : 'Query failed') . " -->";
 
+
 // ============================================
 // ASSIGNED ISSUES METRICS
 // ============================================
 // Total issues assigned to technician
 $totalIssuesResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
 ");
 $totalAssignedIssues = $totalIssuesResult ? ($totalIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Open (unstarted) issues — DB uses 'Open', not 'Pending'
 $pendingIssuesResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'Open'
 ");
 $pendingIssues = $pendingIssuesResult ? ($pendingIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // In Progress issues
 $inProgressIssuesResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'In Progress'
 ");
 $inProgressIssues = $inProgressIssuesResult ? ($inProgressIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Resolved issues
 $resolvedIssuesResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status IN ('Resolved', 'Closed')
 ");
 $resolvedIssues = $resolvedIssuesResult ? ($resolvedIssuesResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Issues by priority (active only — exclude Resolved & Closed)
 $highPriorityResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'High' AND status NOT IN ('Resolved', 'Closed')
 ");
 $highPriorityIssues = $highPriorityResult ? ($highPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 $mediumPriorityResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Medium' AND status NOT IN ('Resolved', 'Closed')
 ");
 $mediumPriorityIssues = $mediumPriorityResult ? ($mediumPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 $lowPriorityResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
+    SELECT COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND priority = 'Low' AND status NOT IN ('Resolved', 'Closed')
 ");
 $lowPriorityIssues = $lowPriorityResult ? ($lowPriorityResult->fetch_assoc()['count'] ?? 0) : 0;
+
 
 // ============================================
 // MAINTENANCE METRICS
 // ============================================
 // Assets under maintenance in technician's assigned buildings
 $maintenanceAssetsResult = $conn->query("
-    SELECT COUNT(DISTINCT a.id) as count 
+    SELECT COUNT(DISTINCT a.id) as count
     FROM assets a
     INNER JOIN rooms r ON a.room_id = r.id
     INNER JOIN building_technicians bt ON r.building_id = bt.building_id
@@ -105,69 +119,76 @@ $maintenanceAssetsResult = $conn->query("
 ");
 $maintenanceAssets = $maintenanceAssetsResult ? ($maintenanceAssetsResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Scheduled maintenance for technician's assigned buildings
 $scheduledMaintenanceResult = $conn->query("
-    SELECT COUNT(*) as count 
+    SELECT COUNT(*) as count
     FROM maintenance_schedules ms
     INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
     WHERE ms.status = 'Scheduled' AND ms.maintenance_date >= CURDATE() AND bt.technician_id = " . intval($technician_id) . "
 ");
 $scheduledMaintenance = $scheduledMaintenanceResult ? ($scheduledMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Overdue maintenance for technician's assigned buildings
 $overdueMaintenanceResult = $conn->query("
-    SELECT COUNT(*) as count 
+    SELECT COUNT(*) as count
     FROM maintenance_schedules ms
     INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
     WHERE ms.status = 'Scheduled' AND ms.maintenance_date < CURDATE() AND bt.technician_id = " . intval($technician_id) . "
 ");
 $overdueMaintenance = $overdueMaintenanceResult ? ($overdueMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // Completed maintenance this month for technician's assigned buildings
 $completedMaintenanceResult = $conn->query("
-    SELECT COUNT(*) as count 
+    SELECT COUNT(*) as count
     FROM maintenance_schedules ms
     INNER JOIN building_technicians bt ON ms.building_id = bt.building_id
     WHERE ms.status = 'Completed' AND MONTH(ms.updated_at) = MONTH(CURDATE()) AND YEAR(ms.updated_at) = YEAR(CURDATE()) AND bt.technician_id = " . intval($technician_id) . "
 ");
 $completedMaintenance = $completedMaintenanceResult ? ($completedMaintenanceResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // ============================================
 // PERFORMANCE METRICS
 // ============================================
 // Average resolution time (in hours)
 $avgResolutionResult = $conn->query("
-    SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_hours 
-    FROM issues 
+    SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_hours
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status = 'Resolved'
 ");
 $avgResolutionTime = $avgResolutionResult ? ($avgResolutionResult->fetch_assoc()['avg_hours'] ?? 0) : 0;
 
+
 // Today's activity count
 $todayActivityResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM activity_logs 
+    SELECT COUNT(*) as count
+    FROM activity_logs
     WHERE user_id = " . intval($technician_id) . " AND DATE(created_at) = CURDATE()
 ");
 $todayActivity = $todayActivityResult ? ($todayActivityResult->fetch_assoc()['count'] ?? 0) : 0;
 
+
 // This week's resolved issues
 $weekResolvedResult = $conn->query("
-    SELECT COUNT(*) as count 
-    FROM issues 
-    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' 
-    AND status = 'Resolved' 
-    AND WEEK(updated_at) = WEEK(CURDATE()) 
+    SELECT COUNT(*) as count
+    FROM issues
+    WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
+    AND status = 'Resolved'
+    AND WEEK(updated_at) = WEEK(CURDATE())
     AND YEAR(updated_at) = YEAR(CURDATE())
 ");
 $weekResolved = $weekResolvedResult ? ($weekResolvedResult->fetch_assoc()['count'] ?? 0) : 0;
+
 
 // ============================================
 // ISSUES BY TYPE
 // ============================================
 $issuesByTypeResult = $conn->query("
-    SELECT category, COUNT(*) as count 
-    FROM issues 
+    SELECT category, COUNT(*) as count
+    FROM issues
     WHERE assigned_technician = '" . $conn->real_escape_string($technician_name) . "' AND status NOT IN ('Resolved', 'Closed')
     GROUP BY category
     ORDER BY count DESC
@@ -185,6 +206,7 @@ if (empty($issueTypes)) {
     $issueTypeCounts = [0];
 }
 
+
 // ============================================
 // MONTHLY TRENDS (Last 6 months)
 // ============================================
@@ -192,6 +214,7 @@ $issueMonths = [];
 $issueCounts = [];
 $monthlyData = [];
 $monthMetadata = [];
+
 
 // Create array of last 6 months
 for ($i = 5; $i >= 0; $i--) {
@@ -206,6 +229,7 @@ for ($i = 5; $i >= 0; $i--) {
     ];
 }
 
+
 $monthlyIssuesResult = $conn->query("
     SELECT
         DATE_FORMAT(created_at, '%Y-%m') as ym,
@@ -217,6 +241,7 @@ $monthlyIssuesResult = $conn->query("
     ORDER BY created_at ASC
 ");
 
+
 if ($monthlyIssuesResult && $monthlyIssuesResult->num_rows > 0) {
     while ($row = $monthlyIssuesResult->fetch_assoc()) {
         if (isset($monthlyData[$row['ym']])) {
@@ -224,6 +249,7 @@ if ($monthlyIssuesResult && $monthlyIssuesResult->num_rows > 0) {
         }
     }
 }
+
 
 foreach ($monthlyData as $yearMonth => $data) {
     $issueMonths[] = $data['label'];
@@ -235,10 +261,12 @@ foreach ($monthlyData as $yearMonth => $data) {
     ];
 }
 
+
 // Resolution performance trend (avg hours per month)
 $resolvedMonths = [];
 $resolvedAvgHours = [];
 $resolvedData = [];
+
 
 for ($i = 5; $i >= 0; $i--) {
     $monthDate = date('Y-m', strtotime("-$i months"));
@@ -248,6 +276,7 @@ for ($i = 5; $i >= 0; $i--) {
         'avg_hours' => 0
     ];
 }
+
 
 $monthlyResolvedResult = $conn->query("
     SELECT
@@ -261,6 +290,7 @@ $monthlyResolvedResult = $conn->query("
     ORDER BY updated_at ASC
 ");
 
+
 if ($monthlyResolvedResult && $monthlyResolvedResult->num_rows > 0) {
     while ($row = $monthlyResolvedResult->fetch_assoc()) {
         if (isset($resolvedData[$row['ym']])) {
@@ -269,16 +299,18 @@ if ($monthlyResolvedResult && $monthlyResolvedResult->num_rows > 0) {
     }
 }
 
+
 foreach ($resolvedData as $yearMonth => $data) {
     $resolvedMonths[] = $data['label'];
     $resolvedAvgHours[] = $data['avg_hours'];
 }
 
+
 // ============================================
 // RECENT ISSUES (Last 10)
 // ============================================
 $recentIssuesResult = $conn->query("
-    SELECT 
+    SELECT
         i.id,
         i.category,
         i.priority,
@@ -293,14 +325,14 @@ $recentIssuesResult = $conn->query("
     LEFT JOIN assets a ON i.component_asset_id = a.id
     LEFT JOIN users u ON i.user_id = u.id
     WHERE i.assigned_technician = '" . $conn->real_escape_string($technician_name) . "'
-    ORDER BY 
-        CASE 
+    ORDER BY
+        CASE
             WHEN i.status = 'Open' THEN 1
             WHEN i.status = 'In Progress' THEN 2
             WHEN i.status = 'Resolved' THEN 3
             ELSE 4
         END,
-        CASE 
+        CASE
             WHEN i.priority = 'High' THEN 1
             WHEN i.priority = 'Medium' THEN 2
             ELSE 3
@@ -315,11 +347,12 @@ if ($recentIssuesResult && $recentIssuesResult->num_rows > 0) {
     }
 }
 
+
 // ============================================
 // UPCOMING MAINTENANCE (Next 7 days)
 // ============================================
 $upcomingMaintenanceQuery = "
-    SELECT 
+    SELECT
         ms.id,
         ms.maintenance_date,
         ms.maintenance_type,
@@ -331,7 +364,7 @@ $upcomingMaintenanceQuery = "
     LEFT JOIN rooms r ON ms.room_id = r.id
     LEFT JOIN buildings b ON ms.building_id = b.id
     WHERE bt.technician_id = " . intval($technician_id) . "
-    AND ms.status = 'Scheduled' 
+    AND ms.status = 'Scheduled'
     AND ms.maintenance_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
     ORDER BY ms.maintenance_date ASC
     LIMIT 5
@@ -340,15 +373,18 @@ echo "<!-- DEBUG Upcoming Maintenance Query: " . htmlspecialchars($upcomingMaint
 $upcomingMaintenanceResult = $conn->query($upcomingMaintenanceQuery);
 echo "<!-- DEBUG Upcoming Maintenance Result: " . ($upcomingMaintenanceResult ? "Success, Rows: " . $upcomingMaintenanceResult->num_rows : "Failed: " . $conn->error) . " -->";
 
+
 // Debug: Check all maintenance schedules for this technician
 $debugAllMaintenance = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules ms INNER JOIN building_technicians bt ON ms.building_id = bt.building_id WHERE bt.technician_id = " . intval($technician_id));
 $debugTotal = $debugAllMaintenance ? $debugAllMaintenance->fetch_assoc()['total'] : 0;
 echo "<!-- DEBUG Total maintenance schedules for technician $technician_id: $debugTotal -->";
 
+
 // Debug: Check scheduled maintenance
 $debugScheduled = $conn->query("SELECT COUNT(*) as total FROM maintenance_schedules ms INNER JOIN building_technicians bt ON ms.building_id = bt.building_id WHERE bt.technician_id = " . intval($technician_id) . " AND ms.status = 'Scheduled'");
 $debugScheduledTotal = $debugScheduled ? $debugScheduled->fetch_assoc()['total'] : 0;
 echo "<!-- DEBUG Scheduled maintenance for technician $technician_id: $debugScheduledTotal -->";
+
 
 $upcomingMaintenance = [];
 if ($upcomingMaintenanceResult && $upcomingMaintenanceResult->num_rows > 0) {
@@ -358,8 +394,10 @@ if ($upcomingMaintenanceResult && $upcomingMaintenanceResult->num_rows > 0) {
     }
 }
 
+
 include '../components/layout_header.php';
 ?>
+
 
 <style>
     body, html { overflow: hidden !important; height: 100vh; }
@@ -376,16 +414,19 @@ include '../components/layout_header.php';
         text-decoration: none;
     }
 
+
     /* Fixed chart sizes - no resizing */
     #statusChart, #typeChart, #priorityChart {
         width: 130px !important;
         height: 130px !important;
     }
 
+
     #issuesTrendChart {
         width: 420px !important;
         height: 190px !important;
     }
+
 
     #resolvedTrendChart {
         width: 420px !important;
@@ -393,9 +434,10 @@ include '../components/layout_header.php';
     }
 </style>
 
+
 <!-- Main Content -->
 <main class="p-2 bg-gray-50 overflow-hidden flex flex-col" style="height: calc(100vh - 85px);">
-    
+   
     <!-- Key Metrics Row -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2 flex-shrink-0">
         <!-- Total Assigned Issues -->
@@ -408,6 +450,7 @@ include '../components/layout_header.php';
             <p class="text-lg font-bold"><?php echo $totalAssignedIssues; ?></p>
         </a>
 
+
         <!-- Open Issues -->
         <a href="issue_details.php?status=Open" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
@@ -417,6 +460,7 @@ include '../components/layout_header.php';
             <p class="text-[9px] opacity-70 mb-0.5">Awaiting Action</p>
             <p class="text-lg font-bold"><?php echo $pendingIssues; ?></p>
         </a>
+
 
         <!-- In Progress -->
         <a href="issue_details.php?status=In+Progress" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
@@ -428,6 +472,7 @@ include '../components/layout_header.php';
             <p class="text-lg font-bold"><?php echo $inProgressIssues; ?></p>
         </a>
 
+
         <!-- Resolved Issues -->
         <a href="issue_details.php?status=Resolved" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
@@ -438,6 +483,7 @@ include '../components/layout_header.php';
             <p class="text-lg font-bold"><?php echo $resolvedIssues; ?></p>
         </a>
 
+
         <!-- High Priority -->
         <a href="issue_details.php?priority=High" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
             <div class="flex items-center justify-between mb-1">
@@ -447,6 +493,7 @@ include '../components/layout_header.php';
             <p class="text-[9px] opacity-70 mb-0.5">High Priority</p>
             <p class="text-lg font-bold"><?php echo $highPriorityIssues; ?></p>
         </a>
+
 
         <!-- Under Maintenance -->
         <a href="maintenance.php" class="metric-card bg-white rounded-lg shadow-sm p-2" style="color: #1E3A8A;">
@@ -459,55 +506,13 @@ include '../components/layout_header.php';
         </a>
     </div>
 
-    <!-- Secondary Metrics Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1.5 mb-2 flex-shrink-0">
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Scheduled Maintenance</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $scheduledMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Overdue Tasks</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $overdueMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Completed (Month)</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $completedMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Week Resolved</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $weekResolved; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Avg Resolution</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo round($avgResolutionTime, 1); ?> hours</p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Medium Priority</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $mediumPriorityIssues; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Low Priority</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $lowPriorityIssues; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Today's Activity</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $todayActivity; ?></p>
-        </div>
-    </div>
 
     <!-- Main Content Grid -->
     <div class="flex-1 min-h-0 overflow-hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 h-full">
-            
-            <!-- Left Column: Charts -->
-            <div class="lg:col-span-2 flex flex-col gap-2 overflow-hidden">
+        <div class="grid grid-cols-1 gap-2 h-full">
+           
+            <!-- Charts Section -->
+            <div class="flex flex-col gap-2 overflow-hidden">
                 <!-- Charts Row -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                     <!-- Issue Status Distribution -->
@@ -554,6 +559,7 @@ include '../components/layout_header.php';
                         </div>
                     </div>
 
+
                     <!-- Issue Types -->
                     <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
                         <h3 class="text-xs font-semibold text-gray-900 mb-2">Issue Types</h3>
@@ -595,6 +601,7 @@ include '../components/layout_header.php';
                             <?php endforeach; ?>
                         </div>
                     </div>
+
 
                     <!-- Priority Distribution -->
                     <div class="bg-white rounded shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow flex flex-col">
@@ -641,6 +648,7 @@ include '../components/layout_header.php';
                     </div>
                 </div>
 
+
                 <!-- Trends Row -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
                     <!-- Issues Trend -->
@@ -673,6 +681,7 @@ include '../components/layout_header.php';
                         </div>
                     </div>
 
+
                     <!-- Resolution Performance -->
                     <div class="bg-white rounded shadow-sm border border-gray-200 p-2">
                         <h3 class="text-xs font-semibold text-gray-900 mb-0.5">Resolution Performance</h3>
@@ -683,118 +692,14 @@ include '../components/layout_header.php';
                     </div>
                 </div>
             </div>
-
-            <!-- Right Column: Recent Activity -->
-            <div class="flex flex-col gap-2 overflow-hidden">
-                <!-- Recent Issues -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-xs font-semibold text-gray-900 mb-1">Recent Issues</h3>
-                    <div class="flex-1 overflow-y-auto space-y-1.5">
-                        <?php if (empty($recentIssues)): ?>
-                            <div class="flex items-center justify-center h-full">
-                                <p class="text-xs text-gray-500 text-center">No issues assigned yet</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($recentIssues as $issue): ?>
-                                <div class="border border-gray-200 rounded p-2 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                        <span class="text-[10px] font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($issue['asset_tag'] ?? 'N/A'); ?> - <?php echo htmlspecialchars($issue['asset_name'] ?? 'Unknown'); ?>
-                                        </span>
-                                        <?php 
-                                        $statusColors = [
-                                            'Pending' => 'bg-amber-100 text-amber-700',
-                                            'In Progress' => 'bg-blue-100 text-blue-700',
-                                            'Resolved' => 'bg-green-100 text-green-700'
-                                        ];
-                                        $statusColor = $statusColors[$issue['status']] ?? 'bg-gray-100 text-gray-700';
-                                        ?>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded <?php echo $statusColor; ?> whitespace-nowrap">
-                                            <?php echo htmlspecialchars($issue['status']); ?>
-                                        </span>
-                                    </div>
-                                    <p class="text-[9px] text-gray-600 mb-1">
-                                        <?php echo htmlspecialchars(substr($issue['description'], 0, 80)) . (strlen($issue['description']) > 80 ? '...' : ''); ?>
-                                    </p>
-                                    <div class="flex items-center justify-between text-[9px]">
-                                        <span class="text-gray-500">
-                                            <i class="fas fa-tag mr-0.5"></i>
-                                            <?php echo htmlspecialchars($issue['category']); ?>
-                                        </span>
-                                        <?php 
-                                        $priorityColors = [
-                                            'High' => 'text-red-600',
-                                            'Medium' => 'text-amber-600',
-                                            'Low' => 'text-gray-500'
-                                        ];
-                                        $priorityColor = $priorityColors[$issue['priority']] ?? 'text-gray-500';
-                                        ?>
-                                        <span class="<?php echo $priorityColor; ?> font-semibold">
-                                            <i class="fas fa-exclamation-circle mr-0.5"></i>
-                                            <?php echo htmlspecialchars($issue['priority']); ?>
-                                        </span>
-                                    </div>
-                                    <div class="text-[9px] text-gray-400 mt-1">
-                                        <i class="fas fa-clock mr-0.5"></i>
-                                        <?php echo date('M j, Y g:i A', strtotime($issue['created_at'])); ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Upcoming Maintenance -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-xs font-semibold text-gray-900 mb-1">Upcoming Maintenance</h3>
-                    <div class="flex-1 overflow-y-auto space-y-1.5">
-                        <?php if (empty($upcomingMaintenance)): ?>
-                            <div class="flex items-center justify-center h-full">
-                                <p class="text-xs text-gray-500 text-center">No upcoming maintenance</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($upcomingMaintenance as $maintenance): ?>
-                                <div class="border border-gray-200 rounded p-2 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                        <span class="text-[10px] font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($maintenance['building_name'] ?? 'Unknown Building'); ?>
-                                        </span>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 whitespace-nowrap">
-                                            <?php echo htmlspecialchars($maintenance['maintenance_type']); ?>
-                                        </span>
-                                    </div>
-                                    <p class="text-[10px] text-gray-700 font-medium mb-1">
-                                        <?php echo htmlspecialchars($maintenance['room_name'] ?? 'Unknown Room'); ?>
-                                    </p>
-                                    <p class="text-[9px] text-gray-600 mb-1">
-                                        <?php echo htmlspecialchars($maintenance['description'] ?? 'No description'); ?>
-                                    </p>
-                                    <div class="text-[9px] text-gray-500">
-                                        <i class="fas fa-calendar mr-0.5"></i>
-                                        <?php echo date('M j, Y', strtotime($maintenance['maintenance_date'])); ?>
-                                        <?php 
-                                        $daysUntil = ceil((strtotime($maintenance['maintenance_date']) - time()) / 86400);
-                                        if ($daysUntil == 0) {
-                                            echo '<span class="ml-1 text-red-600 font-semibold">(Today)</span>';
-                                        } elseif ($daysUntil == 1) {
-                                            echo '<span class="ml-1 text-amber-600 font-semibold">(Tomorrow)</span>';
-                                        } else {
-                                            echo '<span class="ml-1 text-blue-600">(' . $daysUntil . ' days)</span>';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </main>
 
+
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 
 <script>
 // Chart.js configuration
@@ -802,6 +707,7 @@ Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.color = '#6B7280';
 Chart.defaults.plugins.legend.display = true;
 Chart.defaults.plugins.legend.position = 'bottom';
+
 
 const chartColors = {
     blue: '#1E3A8A',
@@ -814,12 +720,14 @@ const chartColors = {
     gray: '#6B7280'
 };
 
+
 // 1. Issue Status Distribution
 const statusCtx = document.getElementById('statusChart').getContext('2d');
 const statusLabels = ['Open', 'In Progress', 'Resolved'];
 const statusMap = ['Open', 'In Progress', 'Resolved'];
 const statusData = [<?php echo $pendingIssues; ?>, <?php echo $inProgressIssues; ?>, <?php echo $resolvedIssues; ?>];
 const statusColors = ['#F6C762', '#3B3663', '#1E3A8A'];
+
 
 const statusCenterPlugin = {
     id: 'statusCenterText',
@@ -830,6 +738,7 @@ const statusCenterPlugin = {
         document.getElementById('statusChartPct').textContent = pct + '%';
     }
 };
+
 
 const statusChart = new Chart(statusCtx, {
     type: 'doughnut',
@@ -872,17 +781,20 @@ const statusChart = new Chart(statusCtx, {
     }
 });
 
+
 (function() {
     const total = statusData.reduce((a, b) => a + b, 0);
     const pct = total > 0 ? Math.round((statusData[0] / total) * 100) : 0;
     document.getElementById('statusChartPct').textContent = pct + '%';
 })();
 
+
 // 2. Issue Types — Donut with center text
 const typeCtx = document.getElementById('typeChart').getContext('2d');
 const issueTypeLabels = <?php echo json_encode(array_map('ucfirst', $issueTypes)); ?>;
 const issueTypeData   = <?php echo json_encode($issueTypeCounts); ?>;
 const typeBarColors   = ['#F6C762', '#3B3663', '#1E3A8A', '#8B5CF6', '#10B981'];
+
 
 const typeCenterTextPlugin = {
     id: 'typeCenterText',
@@ -893,6 +805,7 @@ const typeCenterTextPlugin = {
         document.getElementById('typeChartPct').textContent = pct + '%';
     }
 };
+
 
 const typeChart = new Chart(typeCtx, {
     type: 'doughnut',
@@ -938,11 +851,13 @@ const typeChart = new Chart(typeCtx, {
     }
 });
 
+
 (function() {
     const total = issueTypeData.reduce((a, b) => a + b, 0);
     const pct = total > 0 ? Math.round((issueTypeData[0] / total) * 100) : 0;
     document.getElementById('typeChartPct').textContent = pct + '%';
 })();
+
 
 // 3. Priority Distribution — Donut with center text
 const priorityCtx = document.getElementById('priorityChart').getContext('2d');
@@ -950,6 +865,7 @@ const priorityLabels = ['High', 'Medium', 'Low'];
 const priorityMap = ['High', 'Medium', 'Low'];
 const priorityData = [<?php echo $highPriorityIssues; ?>, <?php echo $mediumPriorityIssues; ?>, <?php echo $lowPriorityIssues; ?>];
 const priorityColors = ['#EF4444', '#F59E0B', '#6B7280'];
+
 
 const priorityCenterPlugin = {
     id: 'priorityCenterText',
@@ -960,6 +876,7 @@ const priorityCenterPlugin = {
         document.getElementById('priorityChartPct').textContent = pct + '%';
     }
 };
+
 
 const priorityChart = new Chart(priorityCtx, {
     type: 'doughnut',
@@ -1002,15 +919,18 @@ const priorityChart = new Chart(priorityCtx, {
     }
 });
 
+
 (function() {
     const total = priorityData.reduce((a, b) => a + b, 0);
     const pct = total > 0 ? Math.round((priorityData[0] / total) * 100) : 0;
     document.getElementById('priorityChartPct').textContent = pct + '%';
 })();
 
+
 // 4. Issues Trend (Clickable)
 const issuesTrendCtx = document.getElementById('issuesTrendChart').getContext('2d');
 const monthMetadata = <?php echo json_encode($monthMetadata); ?>;
+
 
 const issuesTrendChart = new Chart(issuesTrendCtx, {
     type: 'line',
@@ -1075,6 +995,7 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
     }
 });
 
+
 // 5. Resolution Performance (Bar Chart)
 const resolvedTrendCtx = document.getElementById('resolvedTrendChart').getContext('2d');
 new Chart(resolvedTrendCtx, {
@@ -1105,7 +1026,7 @@ new Chart(resolvedTrendCtx, {
             y: {
                 beginAtZero: true,
                 grid: { color: '#f3f4f6' },
-                ticks: { 
+                ticks: {
                     font: { size: 10 },
                     callback: function(value) {
                         return value + 'h';
@@ -1126,4 +1047,8 @@ new Chart(resolvedTrendCtx, {
 });
 </script>
 
+
 <?php include '../components/layout_footer.php'; ?>
+
+
+

@@ -31,6 +31,8 @@ $filterCategory = isset($_GET['category']) ? $_GET['category'] : null;
 $pageTitle = '';
 $whereClause = '';
 $filterValue = '';
+$itemsPerPage = 12;
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 
 if ($filterStatus) {
     $filterValue = $filterStatus;
@@ -48,6 +50,21 @@ if ($filterStatus) {
     header("Location: index.php");
     exit();
 }
+
+// Count total filtered issues for pagination
+$countQuery = "
+    SELECT COUNT(*) as total
+    FROM issues i
+    WHERE $whereClause
+";
+$countResult = $conn->query($countQuery);
+$totalFilteredIssues = ($countResult && $countResult->num_rows > 0) ? (int)$countResult->fetch_assoc()['total'] : 0;
+
+$totalPages = max(1, (int)ceil($totalFilteredIssues / $itemsPerPage));
+if ($currentPage > $totalPages) {
+    $currentPage = $totalPages;
+}
+$offset = ($currentPage - 1) * $itemsPerPage;
 
 // Fetch issues grouped by PC
 $query = "
@@ -71,13 +88,13 @@ $query = "
     LEFT JOIN users tech ON i.assigned_technician = tech.id
     WHERE $whereClause
     ORDER BY u.terminal_number ASC, i.created_at DESC
-";
+    LIMIT " . (int)$itemsPerPage . " OFFSET " . (int)$offset;
 
 $result = $conn->query($query);
 
 // Group issues by PC
 $pcGroups = [];
-$totalIssues = 0;
+$currentPageIssueCount = 0;
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -94,13 +111,27 @@ if ($result && $result->num_rows > 0) {
         }
         
         $pcGroups[$pcKey]['issues'][] = $row;
-        $totalIssues++;
+        $currentPageIssueCount++;
     }
 }
 
 // Calculate summary stats
-$totalPCs = count($pcGroups);
-$avgIssuesPerPC = $totalPCs > 0 ? round($totalIssues / $totalPCs, 1) : 0;
+$totalPCsQuery = "
+    SELECT COUNT(DISTINCT i.pc_id) as total_pcs
+    FROM issues i
+    WHERE $whereClause
+";
+$totalPCsResult = $conn->query($totalPCsQuery);
+$totalPCs = ($totalPCsResult && $totalPCsResult->num_rows > 0) ? (int)$totalPCsResult->fetch_assoc()['total_pcs'] : 0;
+$avgIssuesPerPC = $totalPCs > 0 ? round($totalFilteredIssues / $totalPCs, 1) : 0;
+$startItem = $totalFilteredIssues > 0 ? $offset + 1 : 0;
+$endItem = min($offset + $itemsPerPage, $totalFilteredIssues);
+
+function buildPageUrl($page) {
+    $params = $_GET;
+    $params['page'] = $page;
+    return '?' . http_build_query($params);
+}
 
 include '../components/layout_header.php';
 ?>
@@ -126,6 +157,7 @@ include '../components/layout_header.php';
                 <p class="text-sm text-gray-600 mt-1">
                     Detailed breakdown of computers with issues in this <?php echo $filterStatus ? 'status' : 'category'; ?>
                 </p>
+                <p class="text-xs text-gray-500 mt-1">Showing <?php echo $startItem; ?>-<?php echo $endItem; ?> of <?php echo $totalFilteredIssues; ?> issues</p>
             </div>
             <a href="index.php" class="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
@@ -138,7 +170,7 @@ include '../components/layout_header.php';
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Total Issues</p>
-                <p class="text-3xl font-bold text-blue-900"><?php echo $totalIssues; ?></p>
+                <p class="text-3xl font-bold text-blue-900"><?php echo $totalFilteredIssues; ?></p>
             </div>
             <div class="bg-blue-100 p-3 rounded-full">
                 <i class="fas fa-exclamation-circle text-2xl text-blue-900"></i>
@@ -219,6 +251,26 @@ include '../components/layout_header.php';
                 </tbody>
             </table>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+            <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <a href="<?php echo buildPageUrl(max(1, $currentPage - 1)); ?>"
+                       class="px-3 py-1.5 rounded border border-gray-300 text-sm font-semibold <?php echo $currentPage <= 1 ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'; ?>">
+                        Previous
+                    </a>
+
+                    <span class="text-sm text-gray-600 font-medium">
+                        Page <?php echo $currentPage; ?> of <?php echo $totalPages; ?>
+                    </span>
+
+                    <a href="<?php echo buildPageUrl(min($totalPages, $currentPage + 1)); ?>"
+                       class="px-3 py-1.5 rounded border border-gray-300 text-sm font-semibold <?php echo $currentPage >= $totalPages ? 'pointer-events-none opacity-50' : 'hover:bg-gray-50'; ?>">
+                        Next
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 </main>
 

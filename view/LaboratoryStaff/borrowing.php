@@ -118,6 +118,8 @@ include '../components/layout_header.php';
 
         <!-- Main Content -->
         <main class="p-4">
+
+            <div id="session-chip-container" class="fixed top-6 right-6 z-[9998] w-full max-w-md px-2"></div>
             
             <!-- Session Messages -->
             <?php include '../components/session_messages.php'; ?>
