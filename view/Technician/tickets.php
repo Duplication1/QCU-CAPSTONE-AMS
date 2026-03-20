@@ -377,7 +377,7 @@ if (!$result || $result->num_rows === 0): ?>
               <?php else: ?>
                 <!-- Confirmed or no status: show normal status select -->
                 <div class="flex items-center justify-center gap-1">
-                  <select class="statusSelect border rounded px-2 py-1 text-[10px]">
+                  <select class="statusSelect border rounded px-2 py-1 text-[10px]" <?php if (in_array($status, ['Resolved', 'Closed'])) echo 'disabled style="opacity: 0.6; cursor: not-allowed;"'; ?>>
                     <option value="Open" <?php if ($status==='Open') echo 'selected'; ?>>Open</option>
                     <option value="In Progress" <?php if ($status==='In Progress') echo 'selected'; ?>>In Progress</option>
                     <option value="Resolved" <?php if ($status==='Resolved') echo 'selected'; ?>>Resolved</option>
@@ -581,6 +581,20 @@ function updateRowStatus(row, newStatus) {
   
   // Update data attribute
   row.dataset.status = newStatus;
+  
+  // Disable the select control if status is Resolved or Closed
+  const select = row.querySelector('.statusSelect');
+  if (select) {
+    if (newStatus === 'Resolved' || newStatus === 'Closed') {
+      select.disabled = true;
+      select.style.opacity = '0.6';
+      select.style.cursor = 'not-allowed';
+    } else {
+      select.disabled = false;
+      select.style.opacity = '1';
+      select.style.cursor = 'pointer';
+    }
+  }
 }
 
 // Row-level processing indicator and 1.5s minimum visual delay
@@ -1060,6 +1074,13 @@ function attachTicketHandlers() {
 function handleStatusChange(ticketId, row, selectElement) {
   const newStatus = selectElement.value;
   const prevStatus = row.querySelector('.status-badge')?.textContent.trim() || 'Open';
+
+  // Prevent changing status if already Resolved or Closed
+  if (prevStatus === 'Resolved' || prevStatus === 'Closed') {
+    selectElement.value = prevStatus;
+    showToast('Cannot change status of a resolved or closed ticket', false);
+    return;
+  }
 
   const started = Date.now();
   showRowProcessing(row);
