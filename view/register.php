@@ -16,7 +16,7 @@ session_start();
   <div class="relative w-full max-w-2xl">
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
-      <img src="../assets/images/qcu-logo.png" alt="QCU Logo"
+      <img src="../assets/images/QCU-LOGO.png" alt="QCU Logo"
            class="w-20 h-20 rounded-full shadow-lg border-4 border-white dark:border-[#071127]">
     </div>
 
