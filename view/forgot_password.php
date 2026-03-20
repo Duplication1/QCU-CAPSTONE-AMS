@@ -17,7 +17,7 @@ session_start();
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
       <img src="../assets/images/qcu-logo.png" alt="QCU Logo"
-           class="w-20 h-20 rounded-full shadow-lg border-4 border-white dark:border-[#071127]">
+           class="w-20 h-20 rounded-full shadow-lg border-2 border-white dark:border-[#]">
     </div>
 
     <!-- Forgot Password Card -->
