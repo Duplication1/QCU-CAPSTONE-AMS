@@ -459,55 +459,12 @@ include '../components/layout_header.php';
         </a>
     </div>
 
-    <!-- Secondary Metrics Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-1.5 mb-2 flex-shrink-0">
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Scheduled Maintenance</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $scheduledMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Overdue Tasks</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $overdueMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Completed (Month)</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $completedMaintenance; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Week Resolved</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $weekResolved; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Avg Resolution</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo round($avgResolutionTime, 1); ?> hours</p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Medium Priority</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $mediumPriorityIssues; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Low Priority</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $lowPriorityIssues; ?></p>
-        </div>
-
-        <div class="bg-white rounded shadow-sm border border-gray-200 p-2 hover:shadow transition-shadow">
-            <p class="text-[9px] text-gray-500 mb-0.5">Today's Activity</p>
-            <p class="text-base font-bold" style="color: #1E3A8A;"><?php echo $todayActivity; ?></p>
-        </div>
-    </div>
-
     <!-- Main Content Grid -->
     <div class="flex-1 min-h-0 overflow-hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 h-full">
+        <div class="grid grid-cols-1 gap-2 h-full">
             
-            <!-- Left Column: Charts -->
-            <div class="lg:col-span-2 flex flex-col gap-2 overflow-hidden">
+            <!-- Charts Section -->
+            <div class="flex flex-col gap-2 overflow-hidden">
                 <!-- Charts Row -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
                     <!-- Issue Status Distribution -->
@@ -680,112 +637,6 @@ include '../components/layout_header.php';
                         <div style="width: 420px; height: 190px; margin: 0 auto;">
                             <canvas id="resolvedTrendChart" width="420" height="190"></canvas>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Recent Activity -->
-            <div class="flex flex-col gap-2 overflow-hidden">
-                <!-- Recent Issues -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-xs font-semibold text-gray-900 mb-1">Recent Issues</h3>
-                    <div class="flex-1 overflow-y-auto space-y-1.5">
-                        <?php if (empty($recentIssues)): ?>
-                            <div class="flex items-center justify-center h-full">
-                                <p class="text-xs text-gray-500 text-center">No issues assigned yet</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($recentIssues as $issue): ?>
-                                <div class="border border-gray-200 rounded p-2 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                        <span class="text-[10px] font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($issue['asset_tag'] ?? 'N/A'); ?> - <?php echo htmlspecialchars($issue['asset_name'] ?? 'Unknown'); ?>
-                                        </span>
-                                        <?php 
-                                        $statusColors = [
-                                            'Pending' => 'bg-amber-100 text-amber-700',
-                                            'In Progress' => 'bg-blue-100 text-blue-700',
-                                            'Resolved' => 'bg-green-100 text-green-700'
-                                        ];
-                                        $statusColor = $statusColors[$issue['status']] ?? 'bg-gray-100 text-gray-700';
-                                        ?>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded <?php echo $statusColor; ?> whitespace-nowrap">
-                                            <?php echo htmlspecialchars($issue['status']); ?>
-                                        </span>
-                                    </div>
-                                    <p class="text-[9px] text-gray-600 mb-1">
-                                        <?php echo htmlspecialchars(substr($issue['description'], 0, 80)) . (strlen($issue['description']) > 80 ? '...' : ''); ?>
-                                    </p>
-                                    <div class="flex items-center justify-between text-[9px]">
-                                        <span class="text-gray-500">
-                                            <i class="fas fa-tag mr-0.5"></i>
-                                            <?php echo htmlspecialchars($issue['category']); ?>
-                                        </span>
-                                        <?php 
-                                        $priorityColors = [
-                                            'High' => 'text-red-600',
-                                            'Medium' => 'text-amber-600',
-                                            'Low' => 'text-gray-500'
-                                        ];
-                                        $priorityColor = $priorityColors[$issue['priority']] ?? 'text-gray-500';
-                                        ?>
-                                        <span class="<?php echo $priorityColor; ?> font-semibold">
-                                            <i class="fas fa-exclamation-circle mr-0.5"></i>
-                                            <?php echo htmlspecialchars($issue['priority']); ?>
-                                        </span>
-                                    </div>
-                                    <div class="text-[9px] text-gray-400 mt-1">
-                                        <i class="fas fa-clock mr-0.5"></i>
-                                        <?php echo date('M j, Y g:i A', strtotime($issue['created_at'])); ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Upcoming Maintenance -->
-                <div class="bg-white rounded shadow-sm border border-gray-200 p-2 flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-xs font-semibold text-gray-900 mb-1">Upcoming Maintenance</h3>
-                    <div class="flex-1 overflow-y-auto space-y-1.5">
-                        <?php if (empty($upcomingMaintenance)): ?>
-                            <div class="flex items-center justify-center h-full">
-                                <p class="text-xs text-gray-500 text-center">No upcoming maintenance</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($upcomingMaintenance as $maintenance): ?>
-                                <div class="border border-gray-200 rounded p-2 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                        <span class="text-[10px] font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($maintenance['building_name'] ?? 'Unknown Building'); ?>
-                                        </span>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 whitespace-nowrap">
-                                            <?php echo htmlspecialchars($maintenance['maintenance_type']); ?>
-                                        </span>
-                                    </div>
-                                    <p class="text-[10px] text-gray-700 font-medium mb-1">
-                                        <?php echo htmlspecialchars($maintenance['room_name'] ?? 'Unknown Room'); ?>
-                                    </p>
-                                    <p class="text-[9px] text-gray-600 mb-1">
-                                        <?php echo htmlspecialchars($maintenance['description'] ?? 'No description'); ?>
-                                    </p>
-                                    <div class="text-[9px] text-gray-500">
-                                        <i class="fas fa-calendar mr-0.5"></i>
-                                        <?php echo date('M j, Y', strtotime($maintenance['maintenance_date'])); ?>
-                                        <?php 
-                                        $daysUntil = ceil((strtotime($maintenance['maintenance_date']) - time()) / 86400);
-                                        if ($daysUntil == 0) {
-                                            echo '<span class="ml-1 text-red-600 font-semibold">(Today)</span>';
-                                        } elseif ($daysUntil == 1) {
-                                            echo '<span class="ml-1 text-amber-600 font-semibold">(Tomorrow)</span>';
-                                        } else {
-                                            echo '<span class="ml-1 text-blue-600">(' . $daysUntil . ' days)</span>';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>

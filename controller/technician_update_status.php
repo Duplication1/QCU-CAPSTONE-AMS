@@ -44,7 +44,7 @@ try {
     }
 
     // verify ticket exists and assignment — require exact match to assigned technician
-    $s = $conn->prepare("SELECT assigned_technician, user_id, title FROM issues WHERE id = ?");
+    $s = $conn->prepare("SELECT assigned_technician, user_id, title, status FROM issues WHERE id = ?");
     $s->bind_param('i', $ticketId);
     $s->execute();
     $res = $s->get_result()->fetch_assoc();
@@ -55,6 +55,12 @@ try {
     $assigned = $res['assigned_technician'] ?? '';
     $issueUserId = $res['user_id'] ?? null;
     $issueTitle = $res['title'] ?? 'Your ticket';
+    $currentStatus = $res['status'] ?? '';
+
+    // Prevent changing status if ticket is already Resolved or Closed
+    if (in_array($currentStatus, ['Resolved', 'Closed'])) {
+        throw new Exception('Cannot change status of a resolved or closed ticket');
+    }
 
     // require that the ticket is assigned to this technician
     if ($assigned !== $technicianName) {
@@ -110,28 +116,35 @@ try {
             // Determine notification type and message based on status
             $notifType = 'info';
             $notifMessage = '';
+            $labStaffMessage = '';
             
             switch ($newStatus) {
                 case 'In Progress':
                     $notifType = 'info';
                     $notifMessage = "Your ticket is now being worked on by {$technicianName}.";
+                    $labStaffMessage = "{$technicianName} started working on ticket #{$ticketId}: {$issueTitle}";
                     break;
                 case 'Resolved':
                     $notifType = 'success';
                     $notifMessage = "Your ticket has been resolved by {$technicianName}.";
+                    $labStaffMessage = "{$technicianName} resolved ticket #{$ticketId}: {$issueTitle}";
                     break;
                 case 'Closed':
                     $notifType = 'info';
                     $notifMessage = "Your ticket has been closed.";
+                    $labStaffMessage = "{$technicianName} closed ticket #{$ticketId}: {$issueTitle}";
                     break;
                 case 'Open':
                     $notifType = 'warning';
                     $notifMessage = "Your ticket status has been changed to Open.";
+                    $labStaffMessage = "{$technicianName} reopened ticket #{$ticketId}: {$issueTitle}";
                     break;
             }
             
             $notifTitle = "Ticket #{$ticketId} - Status Updated";
+            $labStaffTitle = "Ticket #{$ticketId} - Status: {$newStatus}";
             
+            // Notify the ticket submitter
             $notifStmt = $conn->prepare("
                 INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
                 VALUES (?, ?, ?, ?, 'issue', ?)
@@ -139,6 +152,34 @@ try {
             $notifStmt->bind_param('isssi', $issueUserId, $notifTitle, $notifMessage, $notifType, $ticketId);
             $notifStmt->execute();
             $notifStmt->close();
+            
+            // Get all Laboratory Staff users to notify them
+            $labStaffQuery = $conn->query("SELECT id FROM users WHERE role = 'Laboratory Staff' AND status = 'Active'");
+            $labStaffIds = [];
+            if ($labStaffQuery) {
+                while ($row = $labStaffQuery->fetch_assoc()) {
+                    $labStaffIds[] = (int)$row['id'];
+                }
+            }
+            
+            // Notify all lab staff members
+            if (!empty($labStaffIds)) {
+                $labStaffNotifStmt = $conn->prepare("
+                    INSERT INTO notifications (user_id, title, message, type, related_type, related_id) 
+                    VALUES (?, ?, ?, ?, 'issue', ?)
+                ");
+                
+                foreach ($labStaffIds as $staffId) {
+                    $labStaffNotifStmt->bind_param('isssi', $staffId, $labStaffTitle, $labStaffMessage, $notifType, $ticketId);
+                    $labStaffNotifStmt->execute();
+                }
+                $labStaffNotifStmt->close();
+                
+                // Push realtime notifications to lab staff
+                pushRealtimeNotifications($labStaffIds);
+            }
+            
+            // Push realtime notification to ticket submitter
             pushRealtimeNotifications([(int)$issueUserId]);
         } catch (Exception $notifError) {
             // Log but don't fail the main operation
