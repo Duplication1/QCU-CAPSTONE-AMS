@@ -700,9 +700,6 @@ const issuesTrendChart = new Chart(issuesTrendCtx, {
                     label: function(context) {
                         const count = context.parsed.y;
                         return count === 1 ? '1 issue reported' : count + ' issues reported';
-                    },
-                    afterLabel: function(context) {
-                        return '\n👆 Click to view details';
                     }
                 }
             }
