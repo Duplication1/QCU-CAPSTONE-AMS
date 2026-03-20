@@ -1,3 +1,44 @@
+<?php
+// Fetch real statistics from database
+require_once 'config/config.php';
+
+// Initialize default values
+$totalAssets = 0;
+$totalRooms = 0;
+$activeUsers = 0;
+
+try {
+    $dbConfig = Config::database();
+    $conn = new mysqli($dbConfig['host'], $dbConfig['username'], $dbConfig['password'], $dbConfig['name']);
+    $conn->set_charset('utf8mb4');
+    
+    // Get total assets count
+    $assetQuery = $conn->query("SELECT COUNT(*) as total FROM assets WHERE status != 'Disposed'");
+    if ($assetQuery) {
+        $assetResult = $assetQuery->fetch_assoc();
+        $totalAssets = (int)$assetResult['total'];
+    }
+    
+    // Get total rooms count
+    $roomQuery = $conn->query("SELECT COUNT(DISTINCT room_id) as total FROM assets WHERE room_id IS NOT NULL AND room_id != ''");
+    if ($roomQuery) {
+        $roomResult = $roomQuery->fetch_assoc();
+        $totalRooms = (int)$roomResult['total'];
+    }
+    
+    // Get active users count (users with status 'Active')
+    $userQuery = $conn->query("SELECT COUNT(*) as total FROM users WHERE status = 'Active'");
+    if ($userQuery) {
+        $userResult = $userQuery->fetch_assoc();
+        $activeUsers = (int)$userResult['total'];
+    }
+    
+    $conn->close();
+} catch (Exception $e) {
+    // If database connection fails, use default values
+    error_log("Index.php database error: " . $e->getMessage());
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -335,8 +376,8 @@
                     </a>    
 
                     <a href="#features" 
-                    class="text-gray-700 px-8 py-4 rounded-lg font-semibold transition-alltransform hover:scale-105 shadow-lg hover:bg-gray-700"
-                    style="background-color: rgba(243, 244, 246, 0.7);">
+                    class="text-white px-8 py-4 rounded-lg font-semibold transition-alltransform hover:scale-105 shadow-lg hover:bg-gray-700"
+                    style="background-color: rgba(255, 0, 0, 0.7);">
                     Learn More
                     </a>
 
@@ -345,11 +386,11 @@
                 <!-- Stats -->
                 <div class="grid grid-cols-3 gap-6 mt-12">
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-yellow-300">1000+</div>
+                        <div class="text-3xl font-bold text-yellow-300"><?php echo number_format($totalAssets); ?></div>
                         <div class="text-sm text-blue-100">Assets Tracked</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-yellow-300">50+</div>
+                        <div class="text-3xl font-bold text-yellow-300"><?php echo number_format($totalRooms); ?></div>
                         <div class="text-sm text-blue-100">Rooms Managed</div>
                     </div>
                     <div class="text-center">
@@ -524,7 +565,7 @@
             <div class="w-16 h-16 flex items-center justify-center mb-6">
             <img src="assets/images/people.svg" alt="Folder Icon" class="h-14 w-14">
         </div>
-        <h3 class="text-3xl font-bold mb-2">500+</h3>
+        <h3 class="text-3xl font-bold mb-2"><?php echo number_format($activeUsers); ?></h3>
           <p class="text-gray-black">Active Users</p>
         </div>
 
@@ -532,7 +573,7 @@
             <div class="w-16 h-16 flex items-center justify-center mb-6">
             <img src="assets/images/bldg.svg" alt="Folder Icon" class="h-14 w-14">
         </div>
-        <h3 class="text-3xl font-bold mb-2">5+</h3>
+        <h3 class="text-3xl font-bold mb-2">4</h3>
         <p class="text-black">Buildings</p>
       </div>
 
@@ -540,7 +581,7 @@
             <div class="w-16 h-16 flex items-center justify-center mb-6">
             <img src="assets/images/monitor.svg" alt="Folder Icon" class="h-14 w-14">
         </div>
-          <h3 class="text-3xl font-bold mb-2">800+</h3>
+          <h3 class="text-3xl font-bold mb-2">972</h3>
           <p class="text-black">Computers</p>
         </div>
         <div class="bg-gray-300/70 text-black p-8 rounded-xl">
@@ -877,24 +918,24 @@
                 <div>
                     <h4 class="font-bold mb-4">Resources</h4>
                     <ul class="space-y-2 text-white text-sm">
-                        <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" onclick="openModal('documentation'); return false;" class="hover:text-yellow-300 transition-colors cursor-pointer">Documentation</a></li>
+                        <li><a href="#" onclick="openModal('help'); return false;" class="hover:text-yellow-300 transition-colors cursor-pointer">Help Center</a></li>
+                        <li><a href="#" onclick="openModal('privacy'); return false;" class="hover:text-yellow-300 transition-colors cursor-pointer">Privacy Policy</a></li>
+                        <li><a href="#" onclick="openModal('terms'); return false;" class="hover:text-yellow-300 transition-colors cursor-pointer">Terms of Service</a></li>
                     </ul>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Follow Us</h4>
                     <div class="flex gap-3">
-                        <a href="#" class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        <a href="https://www.facebook.com/qcu1994" target="_blank" class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
                             <i class="fa-brands fa-facebook"></i>
                         </a>
                        
-                        <a href="#" class="bg-pink-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
+                        <a href="https://www.instagram.com/quezoncityu/" target="_blank" class="bg-pink-600 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
                             <i class="fa-brands fa-instagram"></i>
                         </a>
-                        <a href="#" class="bg-blue-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
+                        <a href="https://www.linkedin.com/school/qcu/" target="_blank" class="bg-blue-800 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
                             <i class="fa-brands fa-linkedin"></i>
                         </a>
                     </div>
@@ -906,6 +947,271 @@
             </div>
         </div>
     </footer>
+
+    <!-- Resource Modals -->
+    <div id="resourceModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-11/12 max-h-[90vh] overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 id="modalTitle" class="text-2xl font-bold text-gray-900"></h2>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="p-6 overflow-y-auto max-h-[70vh]">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Script -->
+    <script>
+        // Modal Functions
+        function openModal(type) {
+            const modal = document.getElementById('resourceModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            let modalTitle = '';
+            let modalContent = '';
+            
+            switch(type) {
+                case 'documentation':
+                    modalTitle = 'Documentation';
+                    modalContent = `
+                        <div class="prose max-w-none">
+                            <h3 class="text-xl font-semibold mb-4">QCU Asset Management System Documentation</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-blue-600 mb-2">Getting Started</h4>
+                                    <p class="text-gray-700 mb-2">Welcome to the QCU Asset Management System. This comprehensive platform helps you track, manage, and monitor all university assets efficiently.</p>
+                                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                        <li>Login with your university credentials</li>
+                                        <li>Navigate through the dashboard to access different modules</li>
+                                        <li>Use the search function to quickly find assets</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-blue-600 mb-2">Key Features</h4>
+                                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                        <li><strong>Asset Tracking:</strong> Monitor all assets with real-time location and status updates</li>
+                                        <li><strong>PC Health Monitor:</strong> Track computer system performance and health metrics</li>
+                                        <li><strong>Ticket Management:</strong> Submit and track maintenance requests</li>
+                                        <li><strong>Borrowing System:</strong> Request and manage asset borrowing with approval workflows</li>
+                                        <li><strong>Analytics & Reports:</strong> Generate detailed reports for decision making</li>
+                                        <li><strong>QR Code Integration:</strong> Quick asset identification using QR codes</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-blue-600 mb-2">User Roles</h4>
+                                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                        <li><strong>Administrator:</strong> Full system access and user management</li>
+                                        <li><strong>Laboratory Staff:</strong> Asset and borrowing management</li>
+                                        <li><strong>Technician:</strong> Ticket and maintenance handling</li>
+                                        <li><strong>Student/Faculty:</strong> Asset borrowing and requests</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'help':
+                    modalTitle = 'Help Center';
+                    modalContent = `
+                        <div class="prose max-w-none">
+                            <h3 class="text-xl font-semibold mb-4">Frequently Asked Questions</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="border-b border-gray-200 pb-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">How do I reset my password?</h4>
+                                    <p class="text-gray-700">Click on "Forgot Password" on the login page and follow the instructions sent to your registered email address.</p>
+                                </div>
+                                
+                                <div class="border-b border-gray-200 pb-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">How do I borrow an asset?</h4>
+                                    <p class="text-gray-700">Navigate to the Borrowing section, search for available assets, select the item you need, fill out the borrowing form, and submit for approval.</p>
+                                </div>
+                                
+                                <div class="border-b border-gray-200 pb-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">How do I report a maintenance issue?</h4>
+                                    <p class="text-gray-700">Go to the Ticket Management section, click "Submit Ticket", describe the issue, attach photos if needed, and submit. You'll receive updates on the ticket status.</p>
+                                </div>
+                                
+                                <div class="border-b border-gray-200 pb-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Who do I contact for technical support?</h4>
+                                    <p class="text-gray-700">For technical support, please contact:</p>
+                                    <ul class="list-disc list-inside text-gray-700 mt-2">
+                                        <li>Email: support@qcu.edu.ph</li>
+                                        <li>Phone: (02) 8806-3333 Local 8100</li>
+                                        <li>Office Hours: Monday-Friday, 8:00 AM - 5:00 PM</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">How do I scan QR codes?</h4>
+                                    <p class="text-gray-700">Use your mobile device's camera or a QR code scanner app to scan the QR code on any asset. This will display detailed information about the asset.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'privacy':
+                    modalTitle = 'Privacy Policy';
+                    modalContent = `
+                        <div class="prose max-w-none">
+                            <p class="text-sm text-gray-500 mb-4">Last Updated: March 2026</p>
+                            
+                            <div class="space-y-4 text-gray-700">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">1. Information We Collect</h4>
+                                    <p>We collect information that you provide directly to us, including:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li>Name, email address, and university ID number</li>
+                                        <li>Login credentials and authentication information</li>
+                                        <li>Asset borrowing and usage records</li>
+                                        <li>Maintenance requests and ticket submissions</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">2. How We Use Your Information</h4>
+                                    <p>We use the information we collect to:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li>Provide, maintain, and improve our services</li>
+                                        <li>Process asset borrowing requests and track returns</li>
+                                        <li>Respond to maintenance requests and support inquiries</li>
+                                        <li>Generate reports and analytics for university administration</li>
+                                        <li>Communicate with you about system updates and notifications</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">3. Information Security</h4>
+                                    <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">4. Data Retention</h4>
+                                    <p>We retain your information for as long as necessary to fulfill the purposes outlined in this privacy policy, unless a longer retention period is required by law.</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">5. Your Rights</h4>
+                                    <p>You have the right to:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li>Access and review your personal information</li>
+                                        <li>Request corrections to inaccurate data</li>
+                                        <li>Request deletion of your data (subject to legal requirements)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">6. Contact Us</h4>
+                                    <p>If you have questions about this Privacy Policy, please contact us at:</p>
+                                    <p class="mt-2">Email: privacy@qcu.edu.ph<br>Phone: (02) 8806-3333</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'terms':
+                    modalTitle = 'Terms of Service';
+                    modalContent = `
+                        <div class="prose max-w-none">
+                            <p class="text-sm text-gray-500 mb-4">Last Updated: March 2026</p>
+                            
+                            <div class="space-y-4 text-gray-700">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">1. Acceptance of Terms</h4>
+                                    <p>By accessing and using the QCU Asset Management System, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the system.</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">2. User Responsibilities</h4>
+                                    <p>As a user of this system, you agree to:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li>Provide accurate and complete information</li>
+                                        <li>Maintain the confidentiality of your account credentials</li>
+                                        <li>Use the system only for authorized university purposes</li>
+                                        <li>Report any security breaches or unauthorized access</li>
+                                        <li>Return borrowed assets on time and in good condition</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">3. Asset Borrowing Terms</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>All borrowed assets must be returned by the specified due date</li>
+                                        <li>Users are responsible for any damage or loss of borrowed assets</li>
+                                        <li>Late returns may result in suspension of borrowing privileges</li>
+                                        <li>Assets must be used only for educational or official university purposes</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">4. Prohibited Activities</h4>
+                                    <p>You may not:</p>
+                                    <ul class="list-disc list-inside mt-2 space-y-1">
+                                        <li>Share your account credentials with others</li>
+                                        <li>Attempt to gain unauthorized access to the system</li>
+                                        <li>Use the system for any illegal or unauthorized purpose</li>
+                                        <li>Interfere with or disrupt the system's operation</li>
+                                        <li>Misuse or damage university assets</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">5. Limitation of Liability</h4>
+                                    <p>Quezon City University shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the system.</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">6. Modifications to Terms</h4>
+                                    <p>We reserve the right to modify these terms at any time. Continued use of the system after changes constitutes acceptance of the modified terms.</p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">7. Contact Information</h4>
+                                    <p>For questions about these Terms of Service, contact:</p>
+                                    <p class="mt-2">Email: info@qcu.edu.ph<br>Phone: (02) 8806-3333</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            title.textContent = modalTitle;
+            content.innerHTML = modalContent;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('resourceModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('resourceModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
 
     <!-- Mobile Menu Script -->
     <script>
