@@ -177,6 +177,13 @@ session_start();
               <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-3 top-[42px] text-gray-500">
                 <i id="toggleIcon-confirm_password" class="fa-solid fa-eye"></i>
               </button>
+              <!-- Password Match Indicator -->
+              <div id="passwordMatchIndicator" class="mt-2 hidden">
+                <div class="flex items-center gap-2 text-sm">
+                  <i id="matchIcon" class="fa-solid"></i>
+                  <span id="matchText"></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -319,7 +326,41 @@ session_start();
     const passwordInput = document.getElementById('password');
     passwordInput.addEventListener('input', function() {
       updatePasswordStrength(this.value);
+      checkPasswordMatch(); // Check match when password changes
     });
+
+    // Add event listener for confirm password field
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+    // Function to check if passwords match
+    function checkPasswordMatch() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm_password').value;
+      const indicator = document.getElementById('passwordMatchIndicator');
+      const matchIcon = document.getElementById('matchIcon');
+      const matchText = document.getElementById('matchText');
+
+      // Only show indicator if confirm password field has content
+      if (confirmPassword.length === 0) {
+        indicator.classList.add('hidden');
+        return;
+      }
+
+      indicator.classList.remove('hidden');
+
+      if (password === confirmPassword) {
+        // Passwords match
+        matchIcon.className = 'fa-solid fa-circle-check text-green-600';
+        matchText.textContent = 'Passwords match';
+        matchText.className = 'text-green-600 font-medium';
+      } else {
+        // Passwords don't match
+        matchIcon.className = 'fa-solid fa-circle-xmark text-red-600';
+        matchText.textContent = 'Passwords do not match';
+        matchText.className = 'text-red-600 font-medium';
+      }
+    }
 
     // Form validation
     document.querySelector('form').addEventListener('submit', function(e) {

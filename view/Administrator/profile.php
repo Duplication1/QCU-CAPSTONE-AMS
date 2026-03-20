@@ -451,4 +451,4 @@ function showToast(message, type = 'info') {
 }
 </script>
 
-<?php include '../components/layout_footer.php'; ?>
+<?php include '../components/layout_footer.php'; ?> 

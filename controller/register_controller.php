@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $_SESSION['success_message'] = "Registration request submitted successfully! Please wait for administrator approval.";
-        header("Location: ../view/login.php");
+        header("Location: ../view/register.php");
         exit();
         
     } catch (Exception $e) {

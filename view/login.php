@@ -218,7 +218,7 @@ window.onload = function() {
     <!-- Logo -->
     <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
       <img src="../assets/images/QCU-LOGO.png" alt="QCU Logo"
-           class="w-20 h-20 rounded-full shadow-lg border-4 border-white dark:border-[#071127]">
+           class="w-20 h-20 rounded-full shadow-lg border-2 border-white dark:border-[#]">
     </div>
 
     <!-- Login Card -->
@@ -240,10 +240,23 @@ window.onload = function() {
       
       // Display success message if exists
       if (isset($_SESSION['success'])) {
-          echo '<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">' .
+          echo '<div id="successMessage" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2 transition-all duration-500 ease-out">' .
                '<i class="fa-solid fa-circle-check"></i>' .
                htmlspecialchars($_SESSION['success']) . '</div>';
           unset($_SESSION['success']);
+          echo '<script>
+              // Auto-hide success message after 3 seconds with smooth fade-out
+              setTimeout(function() {
+                  const successMsg = document.getElementById("successMessage");
+                  if (successMsg) {
+                      successMsg.style.opacity = "0";
+                      successMsg.style.transform = "translateY(-10px)";
+                      setTimeout(function() {
+                          successMsg.remove();
+                      }, 500); // Wait for fade animation to complete
+                  }
+              }, 3000);
+          </script>';
       }
       ?>
 
