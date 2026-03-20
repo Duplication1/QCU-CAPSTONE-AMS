@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 24, 2026 at 01:20 PM
+-- Generation Time: Mar 20, 2026 at 04:52 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -427,7 +427,39 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_i
 (380, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 12:12:26'),
 (381, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 12:12:29'),
 (382, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 12:14:58'),
-(383, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 12:19:34');
+(383, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 12:19:34'),
+(384, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-24 13:58:44'),
+(385, 5, 'create', 'ticket', 157, 'Submitted hardware ticket: dsada', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-28 02:00:29'),
+(386, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-02-28 02:01:00'),
+(387, 2, 'login', 'user', NULL, 'User logged in to Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-11 16:28:00'),
+(388, 2, 'logout', 'user', NULL, 'User logged out from Technician panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-11 16:28:07'),
+(389, 1, 'export', 'report', NULL, 'Generated users report', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 07:59:40'),
+(390, 1, 'view', 'report', NULL, 'Previewed borrowing report (2026-02-13 to 2026-03-15)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 07:59:46'),
+(391, 1, 'view', 'report', NULL, 'Previewed assets report (2026-02-13 to 2026-03-15)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 07:59:52'),
+(392, 1, 'view', 'report', NULL, 'Previewed tickets report (2026-02-13 to 2026-03-15)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 07:59:53'),
+(393, 1, 'view', 'report', NULL, 'Previewed activity_logs report (2026-02-13 to 2026-03-15)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:00:04'),
+(394, 1, 'export', 'report', NULL, 'Generated activity_logs report (2026-02-13 to 2026-03-15)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:00:10'),
+(395, 5, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 4274', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:01:19'),
+(396, 5, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 4274', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:01:49'),
+(397, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:19:14'),
+(398, 3, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 4274', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:24:57'),
+(399, 3, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 933', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:32:29'),
+(400, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:33:07'),
+(401, 5, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 4274', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:35:02'),
+(402, 5, 'create', 'borrowing', NULL, 'Submitted borrowing request for asset ID: 4274', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-15 08:35:42'),
+(403, 5, 'delete', 'signature', 5, 'Deleted e-signature', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:21:04'),
+(404, 5, 'delete', 'signature', 5, 'Deleted e-signature', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:22:33'),
+(405, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:24:28'),
+(406, 5, 'create', 'ticket', 158, 'Submitted hardware ticket: dsadas', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:26:06'),
+(407, 5, 'create', 'ticket', 159, 'Submitted hardware ticket: dsadsa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:36:01'),
+(408, 5, 'create', 'ticket', 160, 'Submitted hardware ticket: dsadsa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:36:41'),
+(409, 5, 'create', 'ticket', 161, 'Submitted hardware ticket: dsada', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:38:49'),
+(410, 5, 'create', 'ticket', 162, 'Submitted hardware ticket: dsadsa', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 02:39:26'),
+(411, 1, 'view', 'report', NULL, 'Previewed tickets report (2026-02-14 to 2026-03-16)', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 03:52:04'),
+(412, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-20 03:38:31'),
+(413, 3, 'logout', 'user', NULL, 'User logged out from Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-20 03:38:42'),
+(414, 3, 'login', 'user', NULL, 'User logged in to Laboratory Staff panel', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-20 03:44:50'),
+(415, 3, 'assign', 'ticket', 162, 'Assigned ticket #162 to DASAS dasd', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-20 03:45:19');
 
 -- --------------------------------------------------------
 
@@ -3908,7 +3940,13 @@ INSERT INTO `asset_borrowing` (`id`, `asset_id`, `borrower_id`, `borrower_name`,
 (2, 476, 5, 'Student One', '2025-11-29 00:00:00', '2025-11-30 00:00:00', '2025-11-29 11:28:57', 'asdsada', 'Returned', 3, '2025-11-29 11:28:51', 'Excellent', 'dsada', '2025-11-29 03:19:25', '2025-11-29 03:28:57'),
 (3, 731, 5, 'Student One', '2025-12-03 00:00:00', '2025-12-04 00:00:00', NULL, 'dsadsadsa', 'Cancelled', NULL, NULL, NULL, NULL, '2025-12-03 06:35:50', '2026-02-22 14:59:14'),
 (4, 931, 31, 'Kim F. Gamot', '2026-01-30 00:00:00', '2026-01-31 00:00:00', NULL, 'dsadsa', 'Approved', 3, '2026-01-30 20:13:03', NULL, NULL, '2026-01-30 12:12:15', '2026-01-30 12:13:03'),
-(5, 932, 5, 'Student One', '2026-02-22 00:00:00', '2026-03-05 00:00:00', NULL, 'for study', 'Approved', 3, '2026-02-22 22:59:09', NULL, NULL, '2026-02-22 14:56:32', '2026-02-22 14:59:09');
+(5, 932, 5, 'Student One', '2026-02-22 00:00:00', '2026-03-05 00:00:00', NULL, 'for study', 'Approved', 3, '2026-02-22 22:59:09', NULL, NULL, '2026-02-22 14:56:32', '2026-02-22 14:59:09'),
+(6, 4274, 5, 'Student One', '2026-03-15 00:00:00', '2026-03-16 00:00:00', NULL, 'borrow', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:01:19', '2026-03-15 08:01:19'),
+(7, 4274, 5, 'Student One', '2026-03-15 00:00:00', '2026-03-26 00:00:00', NULL, 'dsadsa', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:01:49', '2026-03-15 08:01:49'),
+(8, 4274, 3, 'Maria Lab Staff', '2026-03-16 00:00:00', '2026-04-03 00:00:00', NULL, '332', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:24:57', '2026-03-15 08:24:57'),
+(9, 933, 3, 'Maria Lab Staff', '2026-03-15 00:00:00', '2026-03-17 00:00:00', NULL, 'dsadsa', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:32:29', '2026-03-15 08:32:29'),
+(10, 4274, 5, 'Student One', '2026-03-15 00:00:00', '2026-03-25 00:00:00', NULL, 'dsadsadsa', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:35:02', '2026-03-15 08:35:02'),
+(11, 4274, 5, 'Student One', '2026-03-16 00:00:00', '2026-03-24 00:00:00', NULL, 'dsadsada', 'Pending', NULL, NULL, NULL, NULL, '2026-03-15 08:35:42', '2026-03-15 08:35:42');
 
 -- --------------------------------------------------------
 
@@ -4192,14 +4230,6 @@ CREATE TABLE `building_technicians` (
   `assigned_by` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manages technician assignments at the building level';
 
---
--- Dumping data for table `building_technicians`
---
-
-INSERT INTO `building_technicians` (`id`, `building_id`, `technician_id`, `assigned_at`, `assigned_by`) VALUES
-(1, 16, 2, '2026-02-22 15:00:00', 3),
-(2, 16, 32, '2026-02-22 15:00:05', 3);
-
 -- --------------------------------------------------------
 
 --
@@ -4235,123 +4265,130 @@ CREATE TABLE `issues` (
   `submitted_by` varchar(255) DEFAULT NULL,
   `is_archived` tinyint(1) DEFAULT 0,
   `archived_at` datetime DEFAULT NULL,
-  `building_id` int(11) DEFAULT NULL
+  `building_id` int(11) DEFAULT NULL,
+  `assignment_status` enum('Pending','Confirmed','Refused') DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `issues`
 --
 
-INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `component_asset_id`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `image_path`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `assigned_at`, `assigned_by`, `submitted_by`, `is_archived`, `archived_at`, `building_id`) VALUES
-(48, 5, 'hardware', 13, 485, '12-04-2025-IK503-CABLE-002', 1117, '', '', '', '', '', '', '', '', 'dsads', '', NULL, 'Medium', 'Closed', '2025-12-04 12:31:22', '2026-01-30 07:12:14', 'John Technician', NULL, NULL, NULL, 0, NULL, 1),
-(49, 5, 'hardware', 13, 488, '12-04-2025-IK503-CABLE-005', 1171, '', '', '', '', '', '', '', '', 'DSADSA', 'DSADSA', NULL, 'Medium', 'Open', '2025-12-05 15:23:11', '2025-12-05 15:23:11', NULL, NULL, NULL, NULL, 0, NULL, 1),
-(50, 5, 'hardware', 13, 515, '12-04-2025-IK503-POWERSUPPLY-032', 1667, '', '', '', '', '', '', '', '', 'DAS', 'DSADA', NULL, 'Medium', 'Closed', '2025-12-24 13:32:34', '2026-01-30 07:12:13', 'John Technician', NULL, NULL, NULL, 0, NULL, 1),
-(51, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor display flickering', 'Monitor display flickering intermittently', NULL, 'Medium', 'Resolved', '2025-01-05 01:15:00', '2025-01-08 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(52, 5, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard malfunction', 'Keyboard keys not responding properly', NULL, 'Low', 'Resolved', '2025-01-12 02:20:00', '2025-01-15 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(53, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse scroll issue', 'Mouse scroll wheel stopped working', NULL, 'Low', 'Resolved', '2025-01-18 05:45:00', '2025-01-20 01:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(54, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PC won\'t boot', 'Computer won\'t boot - power supply issue', NULL, 'High', 'Resolved', '2025-02-02 00:30:00', '2025-02-05 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(55, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer paper jam', 'Printer paper jam - mechanical problem', NULL, 'Medium', 'Resolved', '2025-02-08 03:00:00', '2025-02-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(56, 4, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU overheating', 'CPU overheating - fan failure', NULL, 'High', 'Resolved', '2025-02-14 06:20:00', '2025-02-18 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(57, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Hard drive clicking', 'Hard drive making clicking noise', NULL, 'High', 'Resolved', '2025-02-20 01:00:00', '2025-02-24 07:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(58, 9, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB ports failed', 'USB ports not working', NULL, 'Medium', 'Resolved', '2025-02-26 02:30:00', '2025-02-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(59, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor dead pixels', 'Monitor screen has dead pixels', NULL, 'Low', 'Resolved', '2025-03-03 00:45:00', '2025-03-06 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(60, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM failure', 'RAM failure - system crashes', NULL, 'High', 'Resolved', '2025-03-10 03:30:00', '2025-03-14 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(61, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Projector bulb out', 'Projector bulb burnt out', NULL, 'Medium', 'Resolved', '2025-03-17 05:00:00', '2025-03-20 01:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(62, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery not charging', 'Laptop battery not charging', NULL, 'Medium', 'Resolved', '2025-03-25 07:20:00', '2025-03-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(63, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU artifacts', 'Graphics card artifacts on screen', NULL, 'High', 'Resolved', '2025-04-02 01:00:00', '2025-04-06 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(64, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard damage', 'Keyboard liquid damage', NULL, 'Medium', 'Resolved', '2025-04-08 02:15:00', '2025-04-10 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(65, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Motherboard failure', 'Motherboard failure - no POST', NULL, 'High', 'Resolved', '2025-04-12 00:30:00', '2025-04-18 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(66, 9, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Webcam issue', 'Webcam not detected', NULL, 'Low', 'Resolved', '2025-04-19 03:00:00', '2025-04-22 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(67, 2, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power adapter issue', 'Power adapter overheating', NULL, 'Medium', 'Resolved', '2025-04-24 06:30:00', '2025-04-26 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(68, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker crackling', 'Speakers producing crackling sound', NULL, 'Low', 'Resolved', '2025-04-28 01:45:00', '2025-04-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(69, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD full', 'Hard drive full - storage failure', NULL, 'Medium', 'Resolved', '2025-05-02 02:00:00', '2025-05-05 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(70, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD drive issue', 'CD/DVD drive not reading discs', NULL, 'Low', 'Resolved', '2025-05-07 03:30:00', '2025-05-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(71, 6, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Network card dead', 'Network card failure', NULL, 'High', 'Resolved', '2025-05-11 05:15:00', '2025-05-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(72, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor color issue', 'Monitor color distortion', NULL, 'Medium', 'Resolved', '2025-05-16 01:00:00', '2025-05-19 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(73, 7, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan noise', 'Cooling fan making loud noise', NULL, 'Medium', 'Resolved', '2025-05-21 06:00:00', '2025-05-23 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(74, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BIOS battery', 'BIOS battery dead', NULL, 'Low', 'Resolved', '2025-05-25 02:45:00', '2025-05-27 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(75, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDMI not working', 'HDMI port not working', NULL, 'Medium', 'Resolved', '2025-05-29 00:30:00', '2025-05-31 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(76, 5, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD failure', 'SSD failure - data corruption', NULL, 'High', 'Resolved', '2025-06-03 01:15:00', '2025-06-08 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(77, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchpad dead', 'Touchpad not responsive', NULL, 'Medium', 'Resolved', '2025-06-10 03:00:00', '2025-06-12 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(78, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer leak', 'Printer ink cartridge leaked', NULL, 'Low', 'Resolved', '2025-06-15 05:30:00', '2025-06-17 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(79, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack broken', 'Audio jack broken', NULL, 'Low', 'Resolved', '2025-06-20 02:00:00', '2025-06-22 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(80, 4, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor flickering', 'External monitor flickering', NULL, 'Medium', 'Resolved', '2025-06-26 06:15:00', '2025-06-28 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(81, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Overheating CPU', 'Thermal paste dried out - overheating', NULL, 'High', 'Resolved', '2025-07-02 00:45:00', '2025-07-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(82, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case fan broken', 'Case fan broken', NULL, 'Medium', 'Resolved', '2025-07-08 02:30:00', '2025-07-10 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(83, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM slot issue', 'RAM slot failure', NULL, 'High', 'Resolved', '2025-07-12 05:00:00', '2025-07-16 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(84, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power button stuck', 'Power button stuck', NULL, 'Low', 'Resolved', '2025-07-18 01:15:00', '2025-07-20 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(85, 3, 'software', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver issues', 'Graphics driver causing artifacts', NULL, 'Medium', 'Resolved', '2025-07-21 03:45:00', '2025-07-23 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(86, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB hub dead', 'USB hub malfunction', NULL, 'Low', 'Resolved', '2025-07-24 06:00:00', '2025-07-26 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(87, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse receiver lost', 'Wireless mouse receiver lost', NULL, 'Low', 'Resolved', '2025-07-27 02:00:00', '2025-07-29 01:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(88, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor stand issue', 'Monitor stand broken', NULL, 'Low', 'Resolved', '2025-07-30 07:30:00', '2025-07-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(89, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD bad sectors', 'Hard drive bad sectors detected', NULL, 'High', 'Resolved', '2025-08-01 01:00:00', '2025-08-05 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(90, 9, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight dead', 'Keyboard backlight not working', NULL, 'Low', 'Resolved', '2025-08-06 02:30:00', '2025-08-08 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(91, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU throttling', 'CPU thermal throttling', NULL, 'High', 'Resolved', '2025-08-09 05:15:00', '2025-08-13 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(92, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SATA cable loose', 'SATA cable loose - boot issues', NULL, 'Medium', 'Resolved', '2025-08-14 00:45:00', '2025-08-16 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(93, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Laptop hinge broken', 'Laptop hinge broken', NULL, 'Medium', 'Resolved', '2025-08-17 03:00:00', '2025-08-20 05:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(94, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer roller worn', 'Printer roller worn out', NULL, 'Medium', 'Resolved', '2025-08-21 06:30:00', '2025-08-23 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(95, 6, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Display cable damaged', 'Display cable damaged', NULL, 'Medium', 'Resolved', '2025-08-24 01:00:00', '2025-08-27 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(96, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth failure', 'Bluetooth adapter failure', NULL, 'Low', 'Resolved', '2025-08-28 02:45:00', '2025-08-30 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(97, 7, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Memory leak', 'Memory leak causing slowdown', NULL, 'Medium', 'Resolved', '2025-08-31 07:00:00', '2025-08-31 08:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(98, 9, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU fan stopped', 'GPU fan not spinning', NULL, 'High', 'Resolved', '2025-09-02 00:30:00', '2025-09-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(99, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU buzzing', 'PSU making buzzing noise', NULL, 'Medium', 'Resolved', '2025-09-07 02:00:00', '2025-09-09 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(100, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen cracked', 'Laptop screen cracked', NULL, 'High', 'Resolved', '2025-09-10 05:00:00', '2025-09-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(101, 3, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Ethernet port damaged', 'Ethernet port damaged', NULL, 'Medium', 'Resolved', '2025-09-16 01:15:00', '2025-09-18 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(102, 8, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery swollen', 'Battery swollen - safety hazard', NULL, 'High', 'Resolved', '2025-09-19 03:00:00', '2025-09-22 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(103, 6, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooling failure', 'Cooling system failure', NULL, 'High', 'Resolved', '2025-09-23 06:30:00', '2025-09-26 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(104, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchscreen issue', 'Touchscreen not calibrated', NULL, 'Low', 'Resolved', '2025-09-27 02:00:00', '2025-09-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(105, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD tray stuck', 'Optical drive tray stuck', NULL, 'Low', 'Resolved', '2025-09-29 05:45:00', '2025-09-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(106, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio crackling', 'Audio crackling - sound card issue', NULL, 'Medium', 'Resolved', '2025-09-30 07:00:00', '2025-09-30 08:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(107, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'VGA port damaged', 'VGA port bent pins', NULL, 'Low', 'Resolved', '2025-09-30 08:45:00', '2025-09-30 09:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(108, 5, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Capacitor bulging', 'Motherboard capacitor bulging', NULL, 'High', 'Resolved', '2025-10-01 01:00:00', '2025-10-07 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(109, 3, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM overheating', 'RAM overheating', NULL, 'High', 'Resolved', '2025-10-08 02:30:00', '2025-10-12 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(110, 8, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'WiFi antenna loose', 'WiFi antenna disconnected', NULL, 'Medium', 'Resolved', '2025-10-13 03:15:00', '2025-10-15 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(111, 6, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD clicking', 'Hard drive clicking - imminent failure', NULL, 'High', 'Resolved', '2025-10-16 00:45:00', '2025-10-20 07:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(112, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight failure', 'Display backlight failure', NULL, 'High', 'Resolved', '2025-10-21 05:00:00', '2025-10-24 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(113, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard spill', 'Keyboard spill damage', NULL, 'Medium', 'Resolved', '2025-10-25 06:30:00', '2025-10-27 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(114, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power cable frayed', 'Power cable frayed', NULL, 'Medium', 'Resolved', '2025-10-28 01:00:00', '2025-10-29 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(115, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DC jack issue', 'Laptop not charging - DC jack issue', NULL, 'High', 'Resolved', '2025-10-30 02:45:00', '2025-10-30 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(116, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan bearing worn', 'Fan bearing worn out', NULL, 'Medium', 'Resolved', '2025-10-30 08:00:00', '2025-10-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(117, 3, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU dying', 'Graphics glitches - GPU dying', NULL, 'High', 'Resolved', '2025-10-31 07:30:00', '2025-10-31 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(118, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CMOS battery', 'CMOS battery replacement needed', NULL, 'Low', 'Resolved', '2025-10-31 09:15:00', '2025-10-31 10:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(119, 6, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD wear critical', 'SSD wear level critical', NULL, 'High', 'Resolved', '2025-11-02 00:30:00', '2025-11-08 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(120, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor OSD broken', 'Monitor OSD buttons broken', NULL, 'Low', 'Resolved', '2025-11-09 02:00:00', '2025-11-11 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(121, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Thermal sensor dead', 'Thermal sensor malfunction', NULL, 'Medium', 'Resolved', '2025-11-12 05:30:00', '2025-11-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(122, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer head clogged', 'Printer head clogged', NULL, 'Medium', 'Resolved', '2025-11-16 01:15:00', '2025-11-18 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(123, 2, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU memory issue', 'GPU memory artifacts', NULL, 'High', 'Resolved', '2025-11-19 03:00:00', '2025-11-23 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(124, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case latch broken', 'Case panel latch broken', NULL, 'Low', 'Resolved', '2025-11-24 06:00:00', '2025-11-25 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(125, 3, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Slot damaged', 'Expansion slot damaged', NULL, 'Medium', 'Resolved', '2025-11-26 02:30:00', '2025-11-28 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(126, 8, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dust buildup', 'Dust buildup causing overheating', NULL, 'Medium', 'Resolved', '2025-11-29 00:45:00', '2025-11-29 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(127, 6, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen flickering', 'Screen flickering - inverter issue', NULL, 'High', 'Resolved', '2025-11-29 08:30:00', '2025-11-30 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(128, 4, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB-C loose', 'USB-C port loose connection', NULL, 'Medium', 'Resolved', '2025-11-30 07:00:00', '2025-11-30 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(129, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power surge damage', 'Power surge damage', NULL, 'High', 'Resolved', '2025-11-30 09:30:00', '2025-11-30 10:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(130, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Pump failure', 'Liquid cooling pump failure', NULL, 'High', 'Resolved', '2025-11-30 11:00:00', '2025-11-30 12:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(131, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SMART errors', 'HDD S.M.A.R.T. errors', NULL, 'High', 'Resolved', '2025-12-01 01:00:00', '2025-12-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(132, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Color calibration', 'Monitor color calibration off', NULL, 'Low', 'Resolved', '2025-12-07 02:30:00', '2025-12-09 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(133, 3, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM timing issues', 'RAM timing issues', NULL, 'Medium', 'Resolved', '2025-12-10 05:00:00', '2025-12-13 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(134, 8, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard ghosting', 'Keyboard ghosting keys', NULL, 'Medium', 'Resolved', '2025-12-14 00:45:00', '2025-12-16 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(135, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan speed sensor', 'Fan speed sensor failure', NULL, 'Low', 'Resolved', '2025-12-17 03:15:00', '2025-12-19 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(136, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth drops', 'Bluetooth connectivity drops', NULL, 'Low', 'Resolved', '2025-12-20 06:30:00', '2025-12-22 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(137, 7, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU aging', 'PSU capacitor aging', NULL, 'High', 'Resolved', '2025-12-23 01:00:00', '2025-12-27 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(138, 9, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'No display signal', 'Display port no signal', NULL, 'Medium', 'Resolved', '2025-12-28 02:00:00', '2025-12-29 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(139, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Privacy shutter', 'Webcam privacy shutter stuck', NULL, 'Low', 'Resolved', '2025-12-29 05:00:00', '2025-12-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(140, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU thermal paste', 'GPU thermal paste degraded', NULL, 'High', 'Resolved', '2025-12-30 03:00:00', '2026-02-22 15:10:29', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL),
-(141, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker distortion', 'Speaker distortion at high volume', NULL, 'Low', 'Resolved', '2025-12-30 08:30:00', '2025-12-31 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(142, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery health low', 'Battery health below 50%', NULL, 'Medium', 'Resolved', '2025-12-31 03:00:00', '2025-12-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(143, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Trackpad clicking', 'Trackpad clicking mechanism broken', NULL, 'Medium', 'Resolved', '2025-12-31 07:00:00', '2025-12-31 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(144, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD vibration', 'Hard drive vibration excessive', NULL, 'Medium', 'Resolved', '2025-12-31 10:00:00', '2025-12-31 12:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(145, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor no backlight', 'Monitor no backlight', NULL, 'High', 'In Progress', '2026-01-02 01:00:00', '2026-01-30 07:00:48', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL),
-(146, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM not detected', 'RAM not detected in slot 2', NULL, 'High', 'Resolved', '2026-01-03 02:30:00', '2026-02-05 04:42:20', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL),
-(147, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooler loose', 'CPU cooler loose mounting', NULL, 'Medium', 'Resolved', '2026-01-04 03:00:00', '2026-01-06 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(148, 5, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver crash', 'Network card driver crash', NULL, 'Medium', 'Open', '2026-01-07 05:30:00', '2026-01-07 05:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(149, 3, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Toner low', 'Printer toner low warning', NULL, 'Low', 'Resolved', '2026-01-08 00:45:00', '2026-01-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(150, 8, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB disconnect', 'USB device keeps disconnecting', NULL, 'Medium', 'In Progress', '2026-01-10 06:00:00', '2026-01-10 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(151, 6, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Resolution resets', 'Screen resolution resets on reboot', NULL, 'Low', 'Open', '2026-01-12 01:15:00', '2026-01-12 01:15:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(152, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack issue', 'Audio jack intermittent connection', NULL, 'Low', 'Resolved', '2026-01-13 02:30:00', '2026-01-14 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL),
-(153, 5, 'hardware', 13, 488, '12-04-2025-IK503-HDMI-005', 1176, '', '', '', '', '', '', '', '', 'mali', 'dsasd', NULL, 'Medium', 'In Progress', '2026-01-30 12:22:49', '2026-01-30 12:29:00', 'John Technician', NULL, NULL, NULL, 0, NULL, 1),
-(154, 5, 'hardware', 13, 495, '12-04-2025-IK503-ADAPTER-012', 1296, '', '', '', '', '', '', '', '', 'adsdsa', 'dsasad', NULL, 'Medium', 'In Progress', '2026-01-30 12:28:08', '2026-02-05 04:29:42', 'Kim GAMOTA', NULL, NULL, NULL, 0, NULL, 1),
-(155, 5, 'hardware', 8, 838, '02-02-2026-IK502-CPU-354', 2929, '', '', '', '', '', NULL, '', '', 'OVERHEATING', '', NULL, 'Low', 'In Progress', '2026-02-22 14:55:35', '2026-02-22 14:59:37', 'John Technician', '2026-02-22 14:59:37', 3, NULL, 0, NULL, 1),
-(156, 5, 'hardware', 8, 837, '02-02-2026-IK502-CPU-353', 2927, '', '', '', '', '', NULL, '', '', 'dsada', 'dsadsa', 'uploads/ticket_images/2026-02-24_125934_699d92a6517cf.png', 'Low', 'In Progress', '2026-02-24 11:59:34', '2026-02-24 12:12:21', 'John Technician', '2026-02-24 12:12:21', 3, NULL, 0, NULL, 1);
+INSERT INTO `issues` (`id`, `user_id`, `category`, `room_id`, `pc_id`, `hardware_component`, `component_asset_id`, `hardware_component_other`, `software_name`, `network_issue_type`, `network_issue_type_other`, `laboratory_concern_type`, `laboratory_concern_other`, `other_concern_category`, `other_concern_other`, `title`, `description`, `image_path`, `priority`, `status`, `created_at`, `updated_at`, `assigned_technician`, `assigned_at`, `assigned_by`, `submitted_by`, `is_archived`, `archived_at`, `building_id`, `assignment_status`) VALUES
+(48, 5, 'hardware', 13, 485, '12-04-2025-IK503-CABLE-002', 1117, '', '', '', '', '', '', '', '', 'dsads', '', NULL, 'Medium', 'Closed', '2025-12-04 12:31:22', '2026-01-30 07:12:14', 'John Technician', NULL, NULL, NULL, 0, NULL, 1, NULL),
+(49, 5, 'hardware', 13, 488, '12-04-2025-IK503-CABLE-005', 1171, '', '', '', '', '', '', '', '', 'DSADSA', 'DSADSA', NULL, 'Medium', 'Open', '2025-12-05 15:23:11', '2025-12-05 15:23:11', NULL, NULL, NULL, NULL, 0, NULL, 1, NULL),
+(50, 5, 'hardware', 13, 515, '12-04-2025-IK503-POWERSUPPLY-032', 1667, '', '', '', '', '', '', '', '', 'DAS', 'DSADA', NULL, 'Medium', 'Closed', '2025-12-24 13:32:34', '2026-01-30 07:12:13', 'John Technician', NULL, NULL, NULL, 0, NULL, 1, NULL),
+(51, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor display flickering', 'Monitor display flickering intermittently', NULL, 'Medium', 'Resolved', '2025-01-05 01:15:00', '2025-01-08 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(52, 5, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard malfunction', 'Keyboard keys not responding properly', NULL, 'Low', 'Resolved', '2025-01-12 02:20:00', '2025-01-15 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(53, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse scroll issue', 'Mouse scroll wheel stopped working', NULL, 'Low', 'Resolved', '2025-01-18 05:45:00', '2025-01-20 01:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(54, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PC won\'t boot', 'Computer won\'t boot - power supply issue', NULL, 'High', 'Resolved', '2025-02-02 00:30:00', '2025-02-05 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(55, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer paper jam', 'Printer paper jam - mechanical problem', NULL, 'Medium', 'Resolved', '2025-02-08 03:00:00', '2025-02-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(56, 4, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU overheating', 'CPU overheating - fan failure', NULL, 'High', 'Resolved', '2025-02-14 06:20:00', '2025-02-18 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(57, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Hard drive clicking', 'Hard drive making clicking noise', NULL, 'High', 'Resolved', '2025-02-20 01:00:00', '2025-02-24 07:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(58, 9, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB ports failed', 'USB ports not working', NULL, 'Medium', 'Resolved', '2025-02-26 02:30:00', '2025-02-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(59, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor dead pixels', 'Monitor screen has dead pixels', NULL, 'Low', 'Resolved', '2025-03-03 00:45:00', '2025-03-06 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(60, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM failure', 'RAM failure - system crashes', NULL, 'High', 'Resolved', '2025-03-10 03:30:00', '2025-03-14 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(61, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Projector bulb out', 'Projector bulb burnt out', NULL, 'Medium', 'Resolved', '2025-03-17 05:00:00', '2025-03-20 01:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(62, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery not charging', 'Laptop battery not charging', NULL, 'Medium', 'Resolved', '2025-03-25 07:20:00', '2025-03-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(63, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU artifacts', 'Graphics card artifacts on screen', NULL, 'High', 'Resolved', '2025-04-02 01:00:00', '2025-04-06 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(64, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard damage', 'Keyboard liquid damage', NULL, 'Medium', 'Resolved', '2025-04-08 02:15:00', '2025-04-10 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(65, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Motherboard failure', 'Motherboard failure - no POST', NULL, 'High', 'Resolved', '2025-04-12 00:30:00', '2025-04-18 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(66, 9, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Webcam issue', 'Webcam not detected', NULL, 'Low', 'Resolved', '2025-04-19 03:00:00', '2025-04-22 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(67, 2, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power adapter issue', 'Power adapter overheating', NULL, 'Medium', 'Resolved', '2025-04-24 06:30:00', '2025-04-26 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(68, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker crackling', 'Speakers producing crackling sound', NULL, 'Low', 'Resolved', '2025-04-28 01:45:00', '2025-04-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(69, 3, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD full', 'Hard drive full - storage failure', NULL, 'Medium', 'Resolved', '2025-05-02 02:00:00', '2025-05-05 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(70, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD drive issue', 'CD/DVD drive not reading discs', NULL, 'Low', 'Resolved', '2025-05-07 03:30:00', '2025-05-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(71, 6, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Network card dead', 'Network card failure', NULL, 'High', 'Resolved', '2025-05-11 05:15:00', '2025-05-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(72, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor color issue', 'Monitor color distortion', NULL, 'Medium', 'Resolved', '2025-05-16 01:00:00', '2025-05-19 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(73, 7, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan noise', 'Cooling fan making loud noise', NULL, 'Medium', 'Resolved', '2025-05-21 06:00:00', '2025-05-23 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(74, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BIOS battery', 'BIOS battery dead', NULL, 'Low', 'Resolved', '2025-05-25 02:45:00', '2025-05-27 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(75, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDMI not working', 'HDMI port not working', NULL, 'Medium', 'Resolved', '2025-05-29 00:30:00', '2025-05-31 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(76, 5, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD failure', 'SSD failure - data corruption', NULL, 'High', 'Resolved', '2025-06-03 01:15:00', '2025-06-08 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(77, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchpad dead', 'Touchpad not responsive', NULL, 'Medium', 'Resolved', '2025-06-10 03:00:00', '2025-06-12 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(78, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer leak', 'Printer ink cartridge leaked', NULL, 'Low', 'Resolved', '2025-06-15 05:30:00', '2025-06-17 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(79, 6, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack broken', 'Audio jack broken', NULL, 'Low', 'Resolved', '2025-06-20 02:00:00', '2025-06-22 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(80, 4, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor flickering', 'External monitor flickering', NULL, 'Medium', 'Resolved', '2025-06-26 06:15:00', '2025-06-28 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(81, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Overheating CPU', 'Thermal paste dried out - overheating', NULL, 'High', 'Resolved', '2025-07-02 00:45:00', '2025-07-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(82, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case fan broken', 'Case fan broken', NULL, 'Medium', 'Resolved', '2025-07-08 02:30:00', '2025-07-10 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(83, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM slot issue', 'RAM slot failure', NULL, 'High', 'Resolved', '2025-07-12 05:00:00', '2025-07-16 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(84, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power button stuck', 'Power button stuck', NULL, 'Low', 'Resolved', '2025-07-18 01:15:00', '2025-07-20 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(85, 3, 'software', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver issues', 'Graphics driver causing artifacts', NULL, 'Medium', 'Resolved', '2025-07-21 03:45:00', '2025-07-23 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(86, 8, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB hub dead', 'USB hub malfunction', NULL, 'Low', 'Resolved', '2025-07-24 06:00:00', '2025-07-26 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(87, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mouse receiver lost', 'Wireless mouse receiver lost', NULL, 'Low', 'Resolved', '2025-07-27 02:00:00', '2025-07-29 01:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(88, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor stand issue', 'Monitor stand broken', NULL, 'Low', 'Resolved', '2025-07-30 07:30:00', '2025-07-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(89, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD bad sectors', 'Hard drive bad sectors detected', NULL, 'High', 'Resolved', '2025-08-01 01:00:00', '2025-08-05 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(90, 9, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight dead', 'Keyboard backlight not working', NULL, 'Low', 'Resolved', '2025-08-06 02:30:00', '2025-08-08 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(91, 2, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CPU throttling', 'CPU thermal throttling', NULL, 'High', 'Resolved', '2025-08-09 05:15:00', '2025-08-13 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(92, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SATA cable loose', 'SATA cable loose - boot issues', NULL, 'Medium', 'Resolved', '2025-08-14 00:45:00', '2025-08-16 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(93, 3, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Laptop hinge broken', 'Laptop hinge broken', NULL, 'Medium', 'Resolved', '2025-08-17 03:00:00', '2025-08-20 05:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(94, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer roller worn', 'Printer roller worn out', NULL, 'Medium', 'Resolved', '2025-08-21 06:30:00', '2025-08-23 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(95, 6, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Display cable damaged', 'Display cable damaged', NULL, 'Medium', 'Resolved', '2025-08-24 01:00:00', '2025-08-27 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(96, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth failure', 'Bluetooth adapter failure', NULL, 'Low', 'Resolved', '2025-08-28 02:45:00', '2025-08-30 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(97, 7, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Memory leak', 'Memory leak causing slowdown', NULL, 'Medium', 'Resolved', '2025-08-31 07:00:00', '2025-08-31 08:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(98, 9, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU fan stopped', 'GPU fan not spinning', NULL, 'High', 'Resolved', '2025-09-02 00:30:00', '2025-09-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(99, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU buzzing', 'PSU making buzzing noise', NULL, 'Medium', 'Resolved', '2025-09-07 02:00:00', '2025-09-09 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(100, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen cracked', 'Laptop screen cracked', NULL, 'High', 'Resolved', '2025-09-10 05:00:00', '2025-09-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(101, 3, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Ethernet port damaged', 'Ethernet port damaged', NULL, 'Medium', 'Resolved', '2025-09-16 01:15:00', '2025-09-18 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(102, 8, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery swollen', 'Battery swollen - safety hazard', NULL, 'High', 'Resolved', '2025-09-19 03:00:00', '2025-09-22 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(103, 6, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooling failure', 'Cooling system failure', NULL, 'High', 'Resolved', '2025-09-23 06:30:00', '2025-09-26 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(104, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Touchscreen issue', 'Touchscreen not calibrated', NULL, 'Low', 'Resolved', '2025-09-27 02:00:00', '2025-09-28 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(105, 7, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DVD tray stuck', 'Optical drive tray stuck', NULL, 'Low', 'Resolved', '2025-09-29 05:45:00', '2025-09-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(106, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio crackling', 'Audio crackling - sound card issue', NULL, 'Medium', 'Resolved', '2025-09-30 07:00:00', '2025-09-30 08:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(107, 2, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'VGA port damaged', 'VGA port bent pins', NULL, 'Low', 'Resolved', '2025-09-30 08:45:00', '2025-09-30 09:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(108, 5, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Capacitor bulging', 'Motherboard capacitor bulging', NULL, 'High', 'Resolved', '2025-10-01 01:00:00', '2025-10-07 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(109, 3, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM overheating', 'RAM overheating', NULL, 'High', 'Resolved', '2025-10-08 02:30:00', '2025-10-12 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(110, 8, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'WiFi antenna loose', 'WiFi antenna disconnected', NULL, 'Medium', 'Resolved', '2025-10-13 03:15:00', '2025-10-15 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(111, 6, 'hardware', 13, 515, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD clicking', 'Hard drive clicking - imminent failure', NULL, 'High', 'Resolved', '2025-10-16 00:45:00', '2025-10-20 07:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(112, 4, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Backlight failure', 'Display backlight failure', NULL, 'High', 'Resolved', '2025-10-21 05:00:00', '2025-10-24 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(113, 7, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard spill', 'Keyboard spill damage', NULL, 'Medium', 'Resolved', '2025-10-25 06:30:00', '2025-10-27 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(114, 9, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power cable frayed', 'Power cable frayed', NULL, 'Medium', 'Resolved', '2025-10-28 01:00:00', '2025-10-29 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(115, 2, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'DC jack issue', 'Laptop not charging - DC jack issue', NULL, 'High', 'Resolved', '2025-10-30 02:45:00', '2025-10-30 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(116, 5, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan bearing worn', 'Fan bearing worn out', NULL, 'Medium', 'Resolved', '2025-10-30 08:00:00', '2025-10-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(117, 3, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU dying', 'Graphics glitches - GPU dying', NULL, 'High', 'Resolved', '2025-10-31 07:30:00', '2025-10-31 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(118, 8, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CMOS battery', 'CMOS battery replacement needed', NULL, 'Low', 'Resolved', '2025-10-31 09:15:00', '2025-10-31 10:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(119, 6, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SSD wear critical', 'SSD wear level critical', NULL, 'High', 'Resolved', '2025-11-02 00:30:00', '2025-11-08 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(120, 4, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor OSD broken', 'Monitor OSD buttons broken', NULL, 'Low', 'Resolved', '2025-11-09 02:00:00', '2025-11-11 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(121, 7, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Thermal sensor dead', 'Thermal sensor malfunction', NULL, 'Medium', 'Resolved', '2025-11-12 05:30:00', '2025-11-15 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(122, 9, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Printer head clogged', 'Printer head clogged', NULL, 'Medium', 'Resolved', '2025-11-16 01:15:00', '2025-11-18 02:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(123, 2, 'hardware', 13, 515, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU memory issue', 'GPU memory artifacts', NULL, 'High', 'Resolved', '2025-11-19 03:00:00', '2025-11-23 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(124, 5, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Case latch broken', 'Case panel latch broken', NULL, 'Low', 'Resolved', '2025-11-24 06:00:00', '2025-11-25 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(125, 3, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Slot damaged', 'Expansion slot damaged', NULL, 'Medium', 'Resolved', '2025-11-26 02:30:00', '2025-11-28 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(126, 8, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dust buildup', 'Dust buildup causing overheating', NULL, 'Medium', 'Resolved', '2025-11-29 00:45:00', '2025-11-29 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(127, 6, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Screen flickering', 'Screen flickering - inverter issue', NULL, 'High', 'Resolved', '2025-11-29 08:30:00', '2025-11-30 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(128, 4, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB-C loose', 'USB-C port loose connection', NULL, 'Medium', 'Resolved', '2025-11-30 07:00:00', '2025-11-30 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(129, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Power surge damage', 'Power surge damage', NULL, 'High', 'Resolved', '2025-11-30 09:30:00', '2025-11-30 10:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(130, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Pump failure', 'Liquid cooling pump failure', NULL, 'High', 'Resolved', '2025-11-30 11:00:00', '2025-11-30 12:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(131, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SMART errors', 'HDD S.M.A.R.T. errors', NULL, 'High', 'Resolved', '2025-12-01 01:00:00', '2025-12-06 07:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(132, 5, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Color calibration', 'Monitor color calibration off', NULL, 'Low', 'Resolved', '2025-12-07 02:30:00', '2025-12-09 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(133, 3, 'hardware', 13, 485, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM timing issues', 'RAM timing issues', NULL, 'Medium', 'Resolved', '2025-12-10 05:00:00', '2025-12-13 06:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(134, 8, 'hardware', 13, 488, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keyboard ghosting', 'Keyboard ghosting keys', NULL, 'Medium', 'Resolved', '2025-12-14 00:45:00', '2025-12-16 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(135, 6, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Fan speed sensor', 'Fan speed sensor failure', NULL, 'Low', 'Resolved', '2025-12-17 03:15:00', '2025-12-19 05:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(136, 4, 'network', 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Bluetooth drops', 'Bluetooth connectivity drops', NULL, 'Low', 'Resolved', '2025-12-20 06:30:00', '2025-12-22 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(137, 7, 'hardware', 13, 485, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PSU aging', 'PSU capacitor aging', NULL, 'High', 'Resolved', '2025-12-23 01:00:00', '2025-12-27 08:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(138, 9, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'No display signal', 'Display port no signal', NULL, 'Medium', 'Resolved', '2025-12-28 02:00:00', '2025-12-29 03:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(139, 2, 'hardware', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Privacy shutter', 'Webcam privacy shutter stuck', NULL, 'Low', 'Resolved', '2025-12-29 05:00:00', '2025-12-30 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(140, 5, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GPU thermal paste', 'GPU thermal paste degraded', NULL, 'High', 'Resolved', '2025-12-30 03:00:00', '2026-02-22 15:10:29', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(141, 3, 'hardware', 13, 488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Speaker distortion', 'Speaker distortion at high volume', NULL, 'Low', 'Resolved', '2025-12-30 08:30:00', '2025-12-31 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(142, 8, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Battery health low', 'Battery health below 50%', NULL, 'Medium', 'Resolved', '2025-12-31 03:00:00', '2025-12-31 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(143, 6, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Trackpad clicking', 'Trackpad clicking mechanism broken', NULL, 'Medium', 'Resolved', '2025-12-31 07:00:00', '2025-12-31 09:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(144, 4, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'HDD vibration', 'Hard drive vibration excessive', NULL, 'Medium', 'Resolved', '2025-12-31 10:00:00', '2025-12-31 12:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(145, 7, 'hardware', 13, 515, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monitor no backlight', 'Monitor no backlight', NULL, 'High', 'In Progress', '2026-01-02 01:00:00', '2026-01-30 07:00:48', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(146, 9, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'RAM not detected', 'RAM not detected in slot 2', NULL, 'High', 'Resolved', '2026-01-03 02:30:00', '2026-02-05 04:42:20', 'John Technician', NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(147, 2, 'hardware', 13, 488, NULL, 1171, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cooler loose', 'CPU cooler loose mounting', NULL, 'Medium', 'Resolved', '2026-01-04 03:00:00', '2026-01-06 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(148, 5, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Driver crash', 'Network card driver crash', NULL, 'Medium', 'Open', '2026-01-07 05:30:00', '2026-01-07 05:30:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(149, 3, 'hardware', 13, 485, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Toner low', 'Printer toner low warning', NULL, 'Low', 'Resolved', '2026-01-08 00:45:00', '2026-01-09 02:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(150, 8, 'hardware', 13, 488, NULL, 1667, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'USB disconnect', 'USB device keeps disconnecting', NULL, 'Medium', 'In Progress', '2026-01-10 06:00:00', '2026-01-10 06:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(151, 6, 'software', 13, 515, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Resolution resets', 'Screen resolution resets on reboot', NULL, 'Low', 'Open', '2026-01-12 01:15:00', '2026-01-12 01:15:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(152, 4, 'hardware', 13, 485, NULL, 1117, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Audio jack issue', 'Audio jack intermittent connection', NULL, 'Low', 'Resolved', '2026-01-13 02:30:00', '2026-01-14 03:00:00', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL),
+(153, 5, 'hardware', 13, 488, '12-04-2025-IK503-HDMI-005', 1176, '', '', '', '', '', '', '', '', 'mali', 'dsasd', NULL, 'Medium', 'In Progress', '2026-01-30 12:22:49', '2026-01-30 12:29:00', 'John Technician', NULL, NULL, NULL, 0, NULL, 1, NULL),
+(154, 5, 'hardware', 13, 495, '12-04-2025-IK503-ADAPTER-012', 1296, '', '', '', '', '', '', '', '', 'adsdsa', 'dsasad', NULL, 'Medium', 'In Progress', '2026-01-30 12:28:08', '2026-02-05 04:29:42', 'Kim GAMOTA', NULL, NULL, NULL, 0, NULL, 1, NULL),
+(155, 5, 'hardware', 8, 838, '02-02-2026-IK502-CPU-354', 2929, '', '', '', '', '', NULL, '', '', 'OVERHEATING', '', NULL, 'Low', 'In Progress', '2026-02-22 14:55:35', '2026-02-22 14:59:37', 'John Technician', '2026-02-22 14:59:37', 3, NULL, 0, NULL, 1, NULL),
+(156, 5, 'hardware', 8, 837, '02-02-2026-IK502-CPU-353', 2927, '', '', '', '', '', NULL, '', '', 'dsada', 'dsadsa', 'uploads/ticket_images/2026-02-24_125934_699d92a6517cf.png', 'Low', 'In Progress', '2026-02-24 11:59:34', '2026-02-24 12:12:21', 'John Technician', '2026-02-24 12:12:21', 3, NULL, 0, NULL, 1, NULL),
+(157, 5, 'hardware', 15, 787, '02-02-2026-IC202-SPEAKER-303', 2827, '', '', '', '', '', NULL, '', '', 'dsada', 'dad', 'uploads/ticket_images/2026-02-28_030029_69a24c3d6f932.png', 'Low', 'Open', '2026-02-28 02:00:29', '2026-02-28 02:00:29', NULL, NULL, NULL, NULL, 0, NULL, 16, NULL),
+(158, 5, 'hardware', 8, 837, '02-02-2026-IK502-GPU-353', 2928, '', '', '', '', '', NULL, '', '', 'dsadas', 'dsasa', NULL, 'Low', 'Open', '2026-03-16 02:26:06', '2026-03-16 02:26:06', NULL, NULL, NULL, NULL, 0, NULL, 1, NULL),
+(159, 5, 'hardware', 12, 888, '02-02-2026-IK603-HEADSET-404', 3029, '', '', '', '', '', NULL, '', '', 'dsadsa', 'saddsa', NULL, 'Low', 'Open', '2026-03-16 02:36:01', '2026-03-16 02:36:01', NULL, NULL, NULL, NULL, 0, NULL, 1, NULL),
+(160, 5, 'hardware', 15, 788, '02-02-2026-IC202-STORAGE-304', 2830, '', '', '', '', '', NULL, '', '', 'dsadsa', 'dsa', NULL, 'Low', 'Open', '2026-03-16 02:36:41', '2026-03-16 02:36:41', NULL, NULL, NULL, NULL, 0, NULL, 16, NULL),
+(161, 5, 'hardware', 13, 489, '12-04-2025-IK503-CABLE-006', 1189, '', '', '', '', '', NULL, '', '', 'dsada', 'ddsada', NULL, 'Low', 'Open', '2026-03-16 02:38:49', '2026-03-16 02:38:49', NULL, NULL, NULL, NULL, 0, NULL, 1, NULL),
+(162, 5, 'hardware', 13, 487, '12-04-2025-IK503-COMPUTER TABLE-004', 1155, '', '', '', '', '', NULL, '', '', 'dsadsa', 'dsadsa', NULL, 'Low', 'Open', '2026-03-16 02:39:26', '2026-03-20 03:45:19', 'DASAS dasd', '2026-03-20 03:45:19', 3, NULL, 0, NULL, 1, 'Pending');
 
 -- --------------------------------------------------------
 
@@ -4571,7 +4608,35 @@ INSERT INTO `login_history` (`id`, `user_id`, `login_time`, `ip_address`, `user_
 (196, 3, '2026-02-24 12:07:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
 (197, 2, '2026-02-24 12:12:29', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
 (198, 5, '2026-02-24 12:15:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
-(199, 2, '2026-02-24 12:19:34', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop');
+(199, 2, '2026-02-24 12:19:34', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(200, 5, '2026-02-24 13:58:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(201, 3, '2026-02-24 13:58:44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(202, 5, '2026-02-28 02:00:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(203, 3, '2026-02-28 02:01:00', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(204, 5, '2026-03-09 23:42:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(205, 1, '2026-03-09 23:42:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(206, 5, '2026-03-11 16:25:55', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(207, 1, '2026-03-11 16:26:35', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(208, 2, '2026-03-11 16:28:00', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(209, 1, '2026-03-11 16:28:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'desktop'),
+(210, 1, '2026-03-15 07:49:48', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(211, 1, '2026-03-15 07:57:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(212, 5, '2026-03-15 08:00:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(213, 3, '2026-03-15 08:19:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(214, 5, '2026-03-15 08:33:12', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(215, 5, '2026-03-16 02:05:47', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(216, 5, '2026-03-16 02:23:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(217, 3, '2026-03-16 02:24:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(218, 1, '2026-03-16 03:47:57', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(219, 1, '2026-03-19 08:53:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(220, 5, '2026-03-20 03:04:27', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(221, 5, '2026-03-20 03:06:47', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(222, 5, '2026-03-20 03:33:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(223, 5, '2026-03-20 03:37:53', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', 'mobile'),
+(224, 5, '2026-03-20 03:38:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(225, 3, '2026-03-20 03:38:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(226, 1, '2026-03-20 03:38:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop'),
+(227, 3, '2026-03-20 03:44:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'desktop');
 
 -- --------------------------------------------------------
 
@@ -4749,9 +4814,35 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `relat
 (165, 32, 'Building Assignment', 'You have been assigned to maintain IC', 'info', '', 16, 0, '2026-02-22 15:00:05'),
 (166, 5, 'Ticket #140 - Status Updated', 'Your ticket has been resolved by John Technician.', 'success', 'issue', 140, 1, '2026-02-22 15:10:29'),
 (167, 5, 'Ticket #156 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 156, 1, '2026-02-24 11:59:34'),
-(168, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 156, 0, '2026-02-24 11:59:34'),
+(168, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 156, 1, '2026-02-24 11:59:34'),
 (169, 5, 'Ticket #156 Assigned', 'Your ticket has been assigned to John Technician. They will be working on your issue soon.', 'info', 'issue', 156, 1, '2026-02-24 12:12:21'),
-(170, 2, 'New Ticket Assigned #156', 'You have been assigned to a hardware ticket: \"dsada\". Please review and take action.', 'info', 'issue', 156, 1, '2026-02-24 12:12:21');
+(170, 2, 'New Ticket Assigned #156', 'You have been assigned to a hardware ticket: \"dsada\". Please review and take action.', 'info', 'issue', 156, 1, '2026-02-24 12:12:21'),
+(171, 5, 'Ticket #157 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 157, 1, '2026-02-28 02:00:29'),
+(172, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 157, 1, '2026-02-28 02:00:29'),
+(173, 1, 'New Registration Request', 'kim f. gadsa (Faculty) submitted a registration request and is pending approval.', 'info', 'system', 4, 1, '2026-03-15 07:51:28'),
+(174, 29, 'New Registration Request', 'kim f. gadsa (Faculty) submitted a registration request and is pending approval.', 'info', 'system', 4, 0, '2026-03-15 07:51:28'),
+(175, 5, 'Borrowing Request #6 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 6, 1, '2026-03-15 08:01:19'),
+(176, 5, 'Borrowing Request #7 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 7, 1, '2026-03-15 08:01:49'),
+(177, 3, 'Borrowing Request #8 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 8, 1, '2026-03-15 08:24:57'),
+(178, 3, 'Borrowing Request #9 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 9, 1, '2026-03-15 08:32:29'),
+(179, 5, 'Borrowing Request #10 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 10, 1, '2026-03-15 08:35:02'),
+(180, 5, 'Borrowing Request #11 Submitted', 'Your borrowing request has been submitted successfully and is pending approval.', 'success', 'borrowing', 11, 1, '2026-03-15 08:35:42'),
+(181, 5, 'Ticket #158 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 158, 1, '2026-03-16 02:26:06'),
+(182, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadas', 'info', 'issue', 158, 1, '2026-03-16 02:26:06'),
+(183, 5, 'Ticket #159 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 159, 1, '2026-03-16 02:36:01'),
+(184, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 159, 1, '2026-03-16 02:36:01'),
+(185, 5, 'Ticket #160 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 160, 1, '2026-03-16 02:36:41'),
+(186, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 160, 1, '2026-03-16 02:36:41'),
+(187, 5, 'Ticket #161 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 161, 1, '2026-03-16 02:38:49'),
+(188, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsada', 'info', 'issue', 161, 1, '2026-03-16 02:38:49'),
+(189, 5, 'Ticket #162 Submitted', 'Your ticket has been submitted successfully and is pending assignment.', 'success', 'issue', 162, 1, '2026-03-16 02:39:26'),
+(190, 3, 'New Ticket Submitted', 'Student One submitted a new hardware ticket: dsadsa', 'info', 'issue', 162, 1, '2026-03-16 02:39:26'),
+(191, 1, 'New Registration Request', 'dasda d. dsadsa (Student) submitted a registration request and is pending approval.', 'info', 'system', 5, 1, '2026-03-20 03:40:21'),
+(192, 29, 'New Registration Request', 'dasda d. dsadsa (Student) submitted a registration request and is pending approval.', 'info', 'system', 5, 0, '2026-03-20 03:40:21'),
+(193, 1, 'New Registration Request', 'asdasd d. sadsadsa (Faculty) submitted a registration request and is pending approval.', 'info', 'system', 6, 1, '2026-03-20 03:43:20'),
+(194, 29, 'New Registration Request', 'asdasd d. sadsadsa (Faculty) submitted a registration request and is pending approval.', 'info', 'system', 6, 0, '2026-03-20 03:43:20'),
+(195, 5, 'Ticket #162 Assigned', 'Your ticket has been assigned to DASAS dasd. They will be working on your issue soon.', 'info', 'issue', 162, 0, '2026-03-20 03:45:19'),
+(196, 34, 'New Ticket Assigned #162', 'You have been assigned to a hardware ticket: \"dsadsa\". Please confirm or refuse the assignment in your Tickets page.', 'info', 'issue', 162, 0, '2026-03-20 03:45:19');
 
 -- --------------------------------------------------------
 
@@ -5827,7 +5918,10 @@ CREATE TABLE `registration_requests` (
 INSERT INTO `registration_requests` (`id`, `id_number`, `full_name`, `email`, `password`, `role`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`, `status`, `requested_at`, `reviewed_at`, `reviewed_by`, `rejection_reason`) VALUES
 (1, '22-0350', 'Kim F. Gamot', 'kimgamot@gmail.com', '$2y$10$Dzt2k5eAaoU/gdpTrjFwfOREkczmXd1e0JINpJgvLKspHjrfCqKKm', 'Student', 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6', 'Approved', '2025-12-17 19:58:34', '2025-12-17 20:09:16', 1, NULL),
 (2, '22-0315', 'Kim F. Gamot', 'gamot.kim.fernandez@gmail.com', '$2y$10$zsF0noDLbUAsiP/GvXRme.BR796wOuqcf5TSZ8uoYhklJ1paEHc7W', 'Student', 'What was the name of your first pet?', '$2y$10$b2C2cLLF0g..WscpiY2vJOthvRtWZYhlZ7Y9Wi5lv6uzFCbw4bgku', 'What is your favorite book?', '$2y$10$LTchoj98aJ4YrarukHAkCuplEuQ6PIr5385TKHlL12pdVClSr4wEK', 'Approved', '2026-01-30 20:09:21', '2026-01-30 20:10:10', 1, NULL),
-(3, '22-0320', 'Kimq f. gamot', 'fasdsa@gmail.com', '$2y$10$rIzILwCgHBeKcb5FxcBiaeSQ1bf3v9gkdw.KUeHxRz6TK.KIL8Pyi', 'Student', 'What is your mother\'s maiden name?', '$2y$10$NJc/xWlLjGFOrS/hClXez.S9.T73.vN4/lXxBOZGJM2nMGb3NPxxO', 'What is your favorite book?', '$2y$10$/5FQEUOr./zsJYcZlH5mNOjnxFTXOSa3sou.WOrLCQYHOheW9maky', 'Pending', '2026-02-02 15:03:40', NULL, NULL, NULL);
+(3, '22-0320', 'Kimq f. gamot', 'fasdsa@gmail.com', '$2y$10$rIzILwCgHBeKcb5FxcBiaeSQ1bf3v9gkdw.KUeHxRz6TK.KIL8Pyi', 'Student', 'What is your mother\'s maiden name?', '$2y$10$NJc/xWlLjGFOrS/hClXez.S9.T73.vN4/lXxBOZGJM2nMGb3NPxxO', 'What is your favorite book?', '$2y$10$/5FQEUOr./zsJYcZlH5mNOjnxFTXOSa3sou.WOrLCQYHOheW9maky', 'Pending', '2026-02-02 15:03:40', NULL, NULL, NULL),
+(4, '22-0111', 'kim f. gadsa', 'gasada@gmail.com', '$2y$10$iqqFwfOavh65.TVGPECEKepcfsepVFS/jVURnupQg0Rgq3ZtADn3y', 'Faculty', 'What is your mother\'s maiden name?', '$2y$10$5w5jAlb0jzvbRdj4pNjRBeeUN.v8YVZxQiQZp58MO7fdF21fRi6Be', 'What is the name of your best friend?', '$2y$10$KKEfBqdZ01n0VHPw/kFHS.ltPq1iZj9m5aubrp3Bz4bnMcI1SPk1G', 'Pending', '2026-03-15 15:51:28', NULL, NULL, NULL),
+(5, '22-0222', 'dasda d. dsadsa', 'kim.gamot@gmail.com', '$2y$10$OAJ.jsEIF.n0dkQ/wqqZpeZGa5RGommxD2xDHTrEky/aIVQcvNSi2', 'Student', 'What was the name of your first pet?', '$2y$10$IfYgbKPlL.qXpX2baFnOBuG97/NEGzNVERWZVydK/R0Q6Vp7pjowC', 'What is your favorite book?', '$2y$10$YCv4D.5.Pzy5PmT.xat2TOLZHW/3jRIlgzpErk9hW.kbdqG3tG94e', 'Approved', '2026-03-20 11:40:21', '2026-03-20 11:43:36', 1, NULL),
+(6, '22-022222', 'asdasd d. sadsadsa', 'dsadsa@gmail.com', '$2y$10$iXsb37tKh3gDdGCDBI4KDOMrhSRH21tUhaRT26/ZiIUgLejoc.Oqi', 'Faculty', 'What is your mother\'s maiden name?', '$2y$10$ZhNK3qH4pAOOsdORfPoDkO1WvNyVA/EDlb0qquEGIH5H2/50ygeDm', 'What is your favorite book?', '$2y$10$/VoOzKWEmpzsvZSJdLZlh.evouy8piYZCQfwSjBatAvKpVRdrtwmS', 'Approved', '2026-03-20 11:43:20', '2026-03-20 11:43:40', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -5903,17 +5997,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `id_number`, `password`, `full_name`, `email`, `role`, `status`, `created_at`, `updated_at`, `last_login`, `failed_login_attempts`, `account_locked_until`, `e_signature`, `security_question_1`, `security_answer_1`, `security_question_2`, `security_answer_2`) VALUES
-(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-02-22 23:12:55', '2026-02-22 23:12:55', 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-02-24 20:19:34', '2026-02-24 20:19:34', 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-02-24 20:07:27', '2026-02-24 20:07:27', 0, NULL, 'signature_3_1769775222.png', NULL, NULL, NULL, NULL),
-(4, 'F2024-001', '12345', 'Dr. Jane Faculty', 'faculty@ams.edu', 'Faculty', 'Active', '2025-10-28 21:34:53', '2025-10-28 21:40:57', NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(5, '22-0305', '$2y$10$clCXfgzls8VHen2k.aF6TuvTZ34Ntl.T3oWxfhzTn67A5mEEjI1QW', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-02-24 20:15:01', '2026-02-24 20:15:01', 0, NULL, 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIbGNtcwIQAABtbnRyUkdCIFhZWiAH4gADABQACQAOAB1hY3NwTVNGVAAAAABzYXdzY3RybAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWhhbmSdkQA9QICwPUB0LIGepSKOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNj', NULL, NULL, NULL, NULL),
-(6, 'S2024-002', '12345', 'Student Two', 'student2@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2025-11-21 17:32:50', NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(29, '22-0632', '$2y$10$TGmP8M7lub8Rgxc.RDvUkuLXEX38Gg.eybzS1/WXKECN85tXKkpO6', 'qweqwe qweqwe', 'sd@gmail.com', 'Administrator', 'Active', '2025-11-20 21:04:20', '2025-11-20 21:14:42', NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(30, '22-0350', '$2y$10$cNGBGPw7BYAQ.9d6GdKvXuYXzYdVo2XwfJGo7nMfGgfjNs.5bBv3O', 'Kim F. Gamot', 'kimgamot@gmail.com', 'Student', 'Active', '2025-12-17 20:09:16', '2025-12-17 20:09:54', '2025-12-17 20:09:54', 0, NULL, NULL, 'What was the name of your first pet?', '$2y$10$GVSXzmcJ.DAVfKHTCXCFmu8jOsyugOyIfiUrKzOjpVB9ib9LxvwkG', 'What is your favorite book?', '$2y$10$LiqGYpkLjqzqZV/.Zqscj.Eow93znM5FgNPgCOK042c3zPXWSOQA6'),
-(31, '22-0315', '$2y$10$zsF0noDLbUAsiP/GvXRme.BR796wOuqcf5TSZ8uoYhklJ1paEHc7W', 'Kim F. Gamot', 'gamot.kim.fernandez@gmail.com', 'Student', 'Active', '2026-01-30 20:10:10', '2026-01-30 20:11:49', '2026-01-30 20:10:24', 0, NULL, 'signature_31_1769775109.png', 'What was the name of your first pet?', '$2y$10$b2C2cLLF0g..WscpiY2vJOthvRtWZYhlZ7Y9Wi5lv6uzFCbw4bgku', 'What is your favorite book?', '$2y$10$LTchoj98aJ4YrarukHAkCuplEuQ6PIr5385TKHlL12pdVClSr4wEK'),
-(32, '22-0317', '$2y$10$qJELYchDbjL1IBwX3ol1IOPDYX0AntJzsbB1hPlsYeCcVJJYWuZSe', 'Kim GAMOTA', 'gamotkim96@gmail.com1', 'Technician', 'Active', '2026-02-05 12:28:50', '2026-02-05 12:29:21', '2026-02-05 12:29:21', 0, NULL, NULL, NULL, NULL, NULL, NULL),
-(33, '22-250', '$2y$10$HFrfIG8MH7kGfmFSXNrkdOigRQpHUzSsYV.eza91j0LUESMSNiKBS', 'Kim GAMOTA', 'gamotkim96@gmail.com12', 'Student', 'Active', '2026-02-22 23:13:56', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+(1, '22-0306', '$2y$10$NrA9Ob9vAY4MF436ROTd2ecE2iYcVMFWCtbEGcTdfD7zH.ErqYCV6', 'Admin User', 'admin@ams.edu', 'Administrator', 'Active', '2025-10-28 21:34:53', '2026-03-20 11:38:54', '2026-03-20 11:38:54', 0, NULL, NULL, 'What is your favorite food?', '$2y$10$lvQyon6fji6nk5QFoVl0euymXKv/FgMSbj2OE730IT3kPsBEnJwsO', 'What is your favorite movie?', '$2y$10$t738DBPmICujhNqIKkBHb.VjeZ9xm0v/ZADdjPldGLo4L4i5tIpQm'),
+(2, '22-0307', '$2y$10$on5Q98KdJ3bnnvysSRbsBePxalUzs62G8F76Yk7pZLl8sDdW5WVUu', 'John Technician', 'technician@ams.edu', 'Technician', 'Active', '2025-10-28 21:34:53', '2026-03-20 11:24:14', '2026-03-12 00:28:00', 0, NULL, NULL, 'What is your favorite food?', '$2y$10$lvQyon6fji6nk5QFoVl0euymXKv/FgMSbj2OE730IT3kPsBEnJwsO', 'What is your favorite movie?', '$2y$10$t738DBPmICujhNqIKkBHb.VjeZ9xm0v/ZADdjPldGLo4L4i5tIpQm'),
+(3, '22-0308', '$2y$10$bEBBQUTMdL1tBiviKwv0DubLn8QbWojiqmTVqUJzjxMp/xYH3SFFm', 'Maria Lab Staff', 'labstaff@ams.edu', 'Laboratory Staff', 'Active', '2025-10-28 21:34:53', '2026-03-20 11:44:50', '2026-03-20 11:44:50', 0, NULL, 'signature_3_1769775222.png', 'What is your favorite food?', '$2y$10$lvQyon6fji6nk5QFoVl0euymXKv/FgMSbj2OE730IT3kPsBEnJwsO', 'What is your favorite movie?', '$2y$10$t738DBPmICujhNqIKkBHb.VjeZ9xm0v/ZADdjPldGLo4L4i5tIpQm'),
+(5, '22-0305', '$2y$10$bgBmsm1DLQFcbbiP6ZacUu7FOvzUGDa2oBbJbdju31jCqNrfb.P4y', 'Student One', 'student1@ams.edu', 'Student', 'Active', '2025-10-28 21:34:53', '2026-03-20 11:38:18', '2026-03-20 11:38:18', 0, NULL, 'signature_5_1773627767.png', 'What is your favorite food?', '$2y$10$lvQyon6fji6nk5QFoVl0euymXKv/FgMSbj2OE730IT3kPsBEnJwsO', 'What is your favorite movie?', '$2y$10$t738DBPmICujhNqIKkBHb.VjeZ9xm0v/ZADdjPldGLo4L4i5tIpQm');
 
 --
 -- Indexes for dumped tables
@@ -6090,7 +6177,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=384;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=416;
 
 --
 -- AUTO_INCREMENT for table `assets`
@@ -6102,7 +6189,7 @@ ALTER TABLE `assets`
 -- AUTO_INCREMENT for table `asset_borrowing`
 --
 ALTER TABLE `asset_borrowing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `asset_brand_categories`
@@ -6150,13 +6237,13 @@ ALTER TABLE `building_technicians`
 -- AUTO_INCREMENT for table `issues`
 --
 ALTER TABLE `issues`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=157;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
 
 --
 -- AUTO_INCREMENT for table `login_history`
 --
 ALTER TABLE `login_history`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=200;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=228;
 
 --
 -- AUTO_INCREMENT for table `maintenance_schedules`
@@ -6168,7 +6255,7 @@ ALTER TABLE `maintenance_schedules`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=171;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`
@@ -6186,7 +6273,7 @@ ALTER TABLE `pc_units`
 -- AUTO_INCREMENT for table `registration_requests`
 --
 ALTER TABLE `registration_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `rooms`
@@ -6198,7 +6285,7 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- Constraints for dumped tables
