@@ -1480,25 +1480,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['aj
                     $category_stmt->close();
                 }
                 
-                // Generate QR code
-                $qr_data = json_encode([
-                    'asset_tag' => $asset_tag,
-                    'asset_name' => $asset_name,
-                    'asset_type' => $asset_type,
-                    'room_id' => $room_id,
-                    'room_name' => $room['name'],
-                    'brand' => $brand,
-                    'model' => $model
-                ]);
-                $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qr_data);
-                
                 // Insert asset
+                $qr_code_url = '';
                 $stmt = $conn->prepare("INSERT INTO assets (asset_tag, asset_name, asset_type, brand, model, serial_number, room_id, status, `condition`, qr_code, created_by, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param('ssssssssssii', $asset_tag, $asset_name, $asset_type, $brand, $model, $serial_number, $room_id, $status, $condition, $qr_code_url, $created_by, $category_id);
                 
                 if ($stmt->execute()) {
                     $created_count++;
-                    $created_asset_ids[] = $conn->insert_id;
+                    $new_asset_id = $conn->insert_id;
+                    $created_asset_ids[] = $new_asset_id;
+
+                    // Generate shorter QR code URL after insert to avoid varchar overflow
+                    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+                    $base_path = preg_replace('#/view/LaboratoryStaff/roomassets\.php$#', '', $script_name);
+                    if ($base_path === null || $base_path === $script_name) {
+                        $base_path = rtrim(dirname(dirname($script_name)), '/\\');
+                    }
+
+                    $scan_url = $scheme . '://' . $host . rtrim($base_path, '/\\') . '/view/public/scan_asset.php?id=' . $new_asset_id;
+                    $generated_qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($scan_url);
+
+                    // Final safety fallback for qr_code varchar(255)
+                    if (strlen($generated_qr_url) > 255) {
+                        $generated_qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode((string)$new_asset_id);
+                    }
+
+                    $update_qr_stmt = $conn->prepare("UPDATE assets SET qr_code = ? WHERE id = ?");
+                    if ($update_qr_stmt) {
+                        $update_qr_stmt->bind_param('si', $generated_qr_url, $new_asset_id);
+                        $update_qr_stmt->execute();
+                        $update_qr_stmt->close();
+                    }
                 } else {
                     $failed[] = "Row " . ($row_idx + 2) . ": Failed to insert '{$asset_tag}'";
                 }
