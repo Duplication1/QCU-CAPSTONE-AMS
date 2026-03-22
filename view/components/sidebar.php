@@ -42,11 +42,16 @@ $navigation_items = [
         ],
         [
             'id' => 'analytics',
-            'label' => 'Descriptive Analytics',
+            'label' => 'Analytics',
             'icon' => 'fa-solid fa-chart-column',
             'color' => 'blue',
-            'href' => 'analytics.php',
+            'href' => 'descriptive_analytics.php',
             'submenu' => [
+                [
+                    'id' => 'descriptive-analytics',
+                    'label' => 'Descriptive Analytics',
+                    'href' => 'descriptive_analytics.php'
+                ],
                 [
                     'id' => 'predictive-analytics',
                     'label' => 'Predictive Analytics',
@@ -67,13 +72,6 @@ $navigation_items = [
             'icon' => 'fa-solid fa-gauge',
             'color' => 'blue',
             'href' => 'index.php'
-        ],
-        [
-            'id' => 'analytics',
-            'label' => 'Descriptive Analytics',
-            'icon' => 'fa-solid fa-chart-line',
-            'color' => 'blue',
-            'href' => 'analytics.php'
         ],
         [
             'id' => 'submit-tickets',
