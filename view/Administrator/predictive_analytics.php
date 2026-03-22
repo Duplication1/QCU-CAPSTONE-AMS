@@ -141,7 +141,7 @@ include '../components/layout_header.php';
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                             <div class="flex items-center justify-between p-2 border-b border-gray-200" style="background-color: rgba(30, 58, 138, 0.05);">
                                 <div>
-                                    <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Asset Health Over Time</h3>
+                                    <h3 class="text-sm font-semibold" style="color: #1E3A8A;">Asset Health Forecast</h3>
                                     <p class="text-xs text-gray-500">Past 12 months + 6 months forecast</p>
                                 </div>
                                 <span id="degradationBadge" class="px-2 py-1 text-xs font-medium rounded">-</span>
