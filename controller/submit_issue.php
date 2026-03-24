@@ -112,6 +112,18 @@ $stmt->execute();
 $id = $stmt->insert_id;
 $stmt->close();
 
+// Mark linked asset as non-functional when a ticket is submitted for a specific component
+$assetConditionUpdated = false;
+if ($id > 0 && !empty($component_asset_id)) {
+    $assetConditionStmt = $conn->prepare("UPDATE assets SET `condition` = 'Non-Functional', updated_at = NOW(), updated_by = ? WHERE id = ? AND status NOT IN ('Disposed', 'Archive', 'Lost')");
+    if ($assetConditionStmt) {
+        $assetConditionStmt->bind_param('ii', $user_id, $component_asset_id);
+        $assetConditionStmt->execute();
+        $assetConditionUpdated = $assetConditionStmt->affected_rows > 0;
+        $assetConditionStmt->close();
+    }
+}
+
 // Log the issue submission
 if ($id > 0) {
     try {
@@ -200,6 +212,11 @@ if ($id > 0) {
 
 $conn->close();
 
-echo json_encode(['success'=>true,'ticket_id'=>$id,'message'=>'Issue submitted']);
+echo json_encode([
+    'success' => true,
+    'ticket_id' => $id,
+    'message' => 'Issue submitted',
+    'asset_condition_updated' => $assetConditionUpdated
+]);
 exit;
 ?>

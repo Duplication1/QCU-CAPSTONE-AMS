@@ -49,7 +49,6 @@ $totalAssets = $totalAssetsResult->fetch_assoc()['count'];
 // Assets by Status
 $availableAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'Available'")->fetch_assoc()['count'];
 $inUseAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'In Use'")->fetch_assoc()['count'];
-$maintenanceAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'Under Maintenance'")->fetch_assoc()['count'];
 $disposedAssets = $conn->query("SELECT COUNT(*) as count FROM assets WHERE status = 'Disposed'")->fetch_assoc()['count'];
 
 // Assets by Condition
@@ -88,7 +87,7 @@ $utilizationRate = ($availableAssets + $inUseAssets) > 0 ? round(($inUseAssets /
 $totalIssues = $conn->query("SELECT COUNT(*) as count FROM issues")->fetch_assoc()['count'];
 
 // Pending Issues
-$pendingIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'Pending'")->fetch_assoc()['count'];
+$pendingIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status IN ('Open', 'Pending')")->fetch_assoc()['count'];
 
 // In Progress Issues
 $inProgressIssues = $conn->query("SELECT COUNT(*) as count FROM issues WHERE status = 'In Progress'")->fetch_assoc()['count'];
@@ -228,12 +227,23 @@ include '../components/layout_header.php';
             main { height: calc(100vh - 85px); }
             .kpi-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
             .kpi-card:hover { transform: translateY(-1px); }
+            .dashboard-primary { gap: 0.75rem; }
+            .dashboard-primary .kpi-card { padding: 1rem; }
+            .dashboard-primary .kpi-card p.text-2xl { font-size: 2.1rem; line-height: 1.1; }
+            .dashboard-primary .kpi-card p.text-\[10px\] { font-size: 0.72rem; }
+            .dashboard-secondary { gap: 0.75rem; }
+            .dashboard-secondary > div { padding: 0.85rem 0.95rem; }
+            .dashboard-secondary > div p.text-xl { font-size: 1.5rem; line-height: 1.1; }
+            .dashboard-secondary > div p.text-\[9px\] { font-size: 0.68rem; }
+            .dashboard-secondary > div p.text-\[8px\] { font-size: 0.62rem; }
+            .dashboard-charts { flex: 1; min-height: 0; }
+            .dashboard-chart-card { height: 100%; min-height: 0; }
         </style>
         <!-- Main Content -->
         <main class="px-3 py-2 bg-gray-50 overflow-hidden flex flex-col gap-2" style="height: calc(100vh - 85px);">
 
             <!-- Primary KPI Cards -->
-            <div class="grid grid-cols-5 gap-2 flex-shrink-0">
+            <div class="grid grid-cols-3 gap-2 flex-shrink-0 dashboard-primary">
 
                 <!-- Total Assets -->
                 <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md hover:border-blue-100" onclick="openAssetModal('asset_status','all')">
@@ -245,7 +255,6 @@ include '../components/layout_header.php';
                     </div>
                     <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Total Assets</p>
                     <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($totalAssets); ?></p>
-                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#1e3a8a,#3b82f6);"></div>
                 </div>
 
                 <!-- Available Assets -->
@@ -258,7 +267,6 @@ include '../components/layout_header.php';
                     </div>
                     <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Available</p>
                     <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($availableAssets); ?></p>
-                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#059669,#34d399);"></div>
                 </div>
 
                 <!-- In Use Assets -->
@@ -271,43 +279,12 @@ include '../components/layout_header.php';
                     </div>
                     <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">In Use</p>
                     <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo number_format($inUseAssets); ?></p>
-                    <div class="mt-2 h-0.5 rounded-full" style="background:linear-gradient(to right,#4338ca,#818cf8);"></div>
-                </div>
-
-                <!-- Health Score -->
-                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3">
-                    <div class="flex items-start justify-between mb-2">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-rose-50">
-                            <i class="fas fa-heart-pulse text-sm text-rose-500"></i>
-                        </div>
-                        <span class="text-[9px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">Health</span>
-                    </div>
-                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Health Score</p>
-                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo $assetHealthPercentage; ?><span class="text-sm font-normal text-gray-400">%</span></p>
-                    <div class="mt-2 h-0.5 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-full rounded-full" style="width:<?php echo min($assetHealthPercentage,100); ?>%;background:linear-gradient(to right,#e11d48,#fb7185);"></div>
-                    </div>
-                </div>
-
-                <!-- Utilization Rate -->
-                <div class="kpi-card bg-white rounded-xl shadow-sm border border-gray-100 p-3">
-                    <div class="flex items-start justify-between mb-2">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50">
-                            <i class="fas fa-chart-line text-sm text-amber-500"></i>
-                        </div>
-                        <span class="text-[9px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Usage</span>
-                    </div>
-                    <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider leading-none mb-1">Utilization</p>
-                    <p class="text-2xl font-bold text-gray-800 leading-tight"><?php echo $utilizationRate; ?><span class="text-sm font-normal text-gray-400">%</span></p>
-                    <div class="mt-2 h-0.5 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-full rounded-full" style="width:<?php echo min($utilizationRate,100); ?>%;background:linear-gradient(to right,#d97706,#fbbf24);"></div>
-                    </div>
                 </div>
 
             </div>
 
             <!-- Secondary Metrics Row -->
-            <div class="grid grid-cols-8 gap-2 flex-shrink-0">
+            <div class="grid grid-cols-7 gap-2 flex-shrink-0 dashboard-secondary">
 
                 <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-yellow-200 hover:shadow-sm transition-all" onclick="openAssetModal('borrowing_status','Pending')">
                     <div class="flex items-center gap-1.5 mb-1">
@@ -354,15 +331,6 @@ include '../components/layout_header.php';
                     <p class="text-[8px] text-gray-400 mt-0.5">Issues</p>
                 </div>
 
-                <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2 cursor-pointer hover:border-yellow-200 hover:shadow-sm transition-all" onclick="openAssetModal('asset_status','Under Maintenance')">
-                    <div class="flex items-center gap-1.5 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span>
-                        <p class="text-[9px] text-gray-400 font-medium leading-none truncate">Maintenance</p>
-                    </div>
-                    <p class="text-xl font-bold text-gray-800 leading-none"><?php echo $maintenanceAssets; ?></p>
-                    <p class="text-[8px] text-gray-400 mt-0.5">Assets</p>
-                </div>
-
                 <div class="bg-white rounded-lg border border-gray-100 px-2.5 py-2">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0"></span>
@@ -384,10 +352,10 @@ include '../components/layout_header.php';
             </div>
 
             <!-- Charts Section -->
-            <div class="flex gap-2" style="flex:1;min-height:0;max-height:280px;">
+            <div class="flex gap-2 dashboard-charts">
 
                 <!-- Asset Type Distribution -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0" style="flex:1;">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0 dashboard-chart-card" style="flex:1;">
                     <div class="px-3 pt-2 pb-1.5 border-b border-gray-50 flex-shrink-0 flex items-center justify-between">
                         <div>
                             <h3 class="text-xs font-semibold text-gray-700">Asset Type Distribution</h3>
@@ -401,7 +369,7 @@ include '../components/layout_header.php';
                 </div>
 
                 <!-- Asset Acquisition Trend -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0" style="flex:1;">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-w-0 dashboard-chart-card" style="flex:1;">
                     <div class="px-3 pt-2 pb-1.5 border-b border-gray-50 flex-shrink-0 flex items-center justify-between">
                         <div>
                             <h3 class="text-xs font-semibold text-gray-700">Asset Acquisition Trend</h3>

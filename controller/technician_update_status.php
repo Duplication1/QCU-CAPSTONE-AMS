@@ -44,7 +44,7 @@ try {
     }
 
     // verify ticket exists and assignment — require exact match to assigned technician
-    $s = $conn->prepare("SELECT assigned_technician, user_id, title, status FROM issues WHERE id = ?");
+    $s = $conn->prepare("SELECT assigned_technician, user_id, title, status, component_asset_id FROM issues WHERE id = ?");
     $s->bind_param('i', $ticketId);
     $s->execute();
     $res = $s->get_result()->fetch_assoc();
@@ -56,6 +56,7 @@ try {
     $issueUserId = $res['user_id'] ?? null;
     $issueTitle = $res['title'] ?? 'Your ticket';
     $currentStatus = $res['status'] ?? '';
+    $componentAssetId = !empty($res['component_asset_id']) ? (int)$res['component_asset_id'] : 0;
 
     // Prevent changing status if ticket is already Resolved or Closed
     if (in_array($currentStatus, ['Resolved', 'Closed'])) {
@@ -73,6 +74,17 @@ try {
     $u->execute();
     $affected = $u->affected_rows;
     $u->close();
+
+    // When ticket is resolved/closed, restore linked asset condition to Good
+    if ($affected > 0 && in_array($newStatus, ['Resolved', 'Closed']) && $componentAssetId > 0) {
+        $assetStmt = $conn->prepare("UPDATE assets SET `condition` = 'Good', updated_at = NOW(), updated_by = ? WHERE id = ? AND status NOT IN ('Disposed', 'Archive', 'Lost')");
+        if ($assetStmt) {
+            $updatedBy = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            $assetStmt->bind_param('ii', $updatedBy, $componentAssetId);
+            $assetStmt->execute();
+            $assetStmt->close();
+        }
+    }
 
     // Log activity for ticket status change
     if ($affected > 0 && isset($_SESSION['user_id'])) {
