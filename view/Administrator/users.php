@@ -909,7 +909,7 @@ main {
 </div>
 
 <!-- Toast notification -->
-<div id="globalToast" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-60 hidden">
+<div id="globalToast" class="fixed top-6 right-6 z-60 hidden">
     <div id="globalToastInner" class="px-4 py-2 rounded shadow text-sm"></div>
 </div>
 
@@ -2003,6 +2003,15 @@ function showTopAlert(type, msg, duration = 5000) {
         // Fallback generic text if a JSON blob was passed accidentally
         msg = type === 'success' ? 'Operation completed successfully.' : 'An error occurred.';
     }
+    // Ensure this page's chip container is positioned at top-right
+    let chipContainer = document.getElementById('admin-alert-chip');
+    if (!chipContainer) {
+        chipContainer = document.createElement('div');
+        chipContainer.id = 'admin-alert-chip';
+        document.body.appendChild(chipContainer);
+    }
+    chipContainer.className = 'fixed top-6 right-6 z-[9998] w-full max-w-sm px-4';
+
     // Use the fixed-position chip notification system
     showChip(msg, type, 'admin-alert-chip', duration);
 }
