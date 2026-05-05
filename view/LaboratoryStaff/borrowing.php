@@ -136,6 +136,17 @@ include '../components/layout_header.php';
                         </div>
                     </div>
                 </div>
+                
+                <!-- View-Only Notice -->
+                <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-info-circle text-blue-600 mr-2"></i>
+                        <p class="text-sm text-blue-800">
+                            <strong>Note:</strong> Lab Staff can view borrowing requests but cannot approve, cancel, or process returns. 
+                            Only Administrators can approve asset requests.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- Statistics Cards -->
@@ -356,25 +367,7 @@ include '../components/layout_header.php';
                                                     title="View Details">
                                                 <i class="fa-solid fa-eye"></i>
                                             </button>
-                                            <?php if ($request['status'] === 'Pending'): ?>
-                                            <button onclick="approveRequest(<?php echo $request['id']; ?>)" 
-                                                    class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-[10px] transition-colors"
-                                                    title="Approve">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                            <button onclick="cancelRequest(<?php echo $request['id']; ?>)" 
-                                                    class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] transition-colors"
-                                                    title="Cancel">
-                                                <i class="fa-solid fa-times"></i>
-                                            </button>
-                                            <?php endif; ?>
-                                            <?php if ($request['status'] === 'Approved'): ?>
-                                            <button onclick="returnAsset(<?php echo $request['id']; ?>)" 
-                                                    class="bg-[#1E3A8A] hover:bg-[#152d6b] text-white px-2 py-1 rounded text-[10px] transition-colors"
-                                                    title="Mark as Returned">
-                                                <i class="fa-solid fa-rotate-left"></i>
-                                            </button>
-                                            <?php endif; ?>
+                                            <!-- Lab Staff can only view requests, not approve/cancel/return them -->
                                         </div>
                                     </td>
                                 </tr>
@@ -702,6 +695,10 @@ function closeViewModal() {
     document.getElementById('viewDetailsModal').classList.add('hidden');
 }
 
+// Lab Staff are not permitted to approve, cancel, or return asset requests
+// They may only view requests
+
+/*
 // Approve Request
 async function approveRequest(requestId) {
     const confirmed = await showConfirmModal({
@@ -775,6 +772,7 @@ function returnAsset(requestId) {
     document.getElementById('return_borrowing_id').value = requestId;
     document.getElementById('returnModal').classList.remove('hidden');
 }
+*/
 
 function closeReturnModal() {
     document.getElementById('returnModal').classList.add('hidden');

@@ -480,8 +480,8 @@ if (!$result || $result->num_rows === 0): ?>
   </div>
 </div>
 
-<div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="archiveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+  <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
     <div class="mt-3 text-center">
       <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
         <i class="fa-solid fa-box-archive text-yellow-600 text-xl"></i>

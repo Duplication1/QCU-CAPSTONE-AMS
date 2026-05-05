@@ -401,6 +401,17 @@ main {
                 </button>
             </div>
         </div>
+        
+        <!-- Technician Permissions Notice -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded mb-3">
+            <div class="flex items-center">
+                <i class="fa-solid fa-info-circle text-blue-600 mr-2"></i>
+                <p class="text-sm text-blue-800">
+                    <strong>Note:</strong> Technicians can view assets and update their conditions for maintenance purposes. 
+                    Adding or editing full asset details requires Administrator or Lab Staff access.
+                </p>
+            </div>
+        </div>
 
         <!-- Filters -->
         <div class="bg-white rounded shadow-sm border border-gray-200 p-3 mb-3">

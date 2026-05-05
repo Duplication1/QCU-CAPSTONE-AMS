@@ -3,10 +3,24 @@ session_start();
 require_once '../config/config.php';
 require_once '../model/AssetBorrowing.php';
 
-// Check if user is logged in and has laboratory staff role
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'Laboratory Staff') {
+// Lab Staff are NOT permitted to approve asset requests
+// Only Administrators can approve borrowing requests
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
+    exit();
+}
+
+// Restrict approval to Administrators only
+if ($_SESSION['role'] === 'Laboratory Staff') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Lab Staff are not permitted to approve asset requests. Only Administrators can approve borrowing requests.']);
+    exit();
+}
+
+if ($_SESSION['role'] !== 'Administrator') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Only Administrators can approve borrowing requests']);
     exit();
 }
 
