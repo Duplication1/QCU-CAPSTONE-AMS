@@ -38,6 +38,7 @@ if ($_colCheck && $_colCheck->num_rows === 0) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $ticketId = intval($_POST['ticket_id']);
     $newStatus = $_POST['status'];
+    $updatedBy = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
     $redirectUrl = 'tickets.php';
     if (!empty($_POST['return_url']) && strpos($_POST['return_url'], 'tickets.php') === 0) {
         $redirectUrl = $_POST['return_url'];
@@ -48,6 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         $updateStmt->bind_param('si', $newStatus, $ticketId);
         $updateStmt->execute();
         $updateStmt->close();
+
+        if (in_array($newStatus, ['Resolved', 'Closed'])) {
+            $componentStmt = $conn->prepare("SELECT component_asset_id FROM issues WHERE id = ?");
+            if ($componentStmt) {
+                $componentStmt->bind_param('i', $ticketId);
+                $componentStmt->execute();
+                $componentResult = $componentStmt->get_result()->fetch_assoc();
+                $componentStmt->close();
+
+                $componentAssetId = !empty($componentResult['component_asset_id']) ? (int)$componentResult['component_asset_id'] : 0;
+                if ($componentAssetId > 0) {
+                    $assetStmt = $conn->prepare("UPDATE assets SET `condition` = 'Good', updated_at = NOW(), updated_by = ? WHERE id = ? AND status NOT IN ('Disposed', 'Archive', 'Lost')");
+                    if ($assetStmt) {
+                        $assetStmt->bind_param('ii', $updatedBy, $componentAssetId);
+                        $assetStmt->execute();
+                        $assetStmt->close();
+                    }
+                }
+            }
+        }
 
         $_SESSION['success_message'] = 'Ticket status updated successfully!';
         header("Location: " . $redirectUrl);
