@@ -271,9 +271,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
         // Handle NULL id_number if empty to avoid constraint issues
         $id_number_param = !empty($id_number) ? $id_number : NULL;
         
+        // Handle allowed_login_days for Technicians
+        $allowed_login_days = NULL;
+        if ($role === 'Technician' && isset($_POST['allowed_days']) && is_array($_POST['allowed_days'])) {
+            $allowed_login_days = implode(',', $_POST['allowed_days']);
+        }
+        
         // Fix AUTO_INCREMENT issue: explicitly specify NULL for id to force auto-increment
-        $stmt = $conn->prepare("INSERT INTO users (id, id_number, full_name, email, role, password, status, created_at) VALUES (NULL, ?, ?, ?, ?, ?, 'Active', NOW())");
-        $stmt->bind_param('sssss', $id_number_param, $full, $email, $role, $hash);
+        $stmt = $conn->prepare("INSERT INTO users (id, id_number, full_name, email, role, password, status, allowed_login_days, created_at) VALUES (NULL, ?, ?, ?, ?, ?, 'Active', ?, NOW())");
+        $stmt->bind_param('ssssss', $id_number_param, $full, $email, $role, $hash, $allowed_login_days);
         $ok = $stmt->execute();
         if (!$ok) {
             $err = $stmt->error;
@@ -812,7 +818,7 @@ main {
                             Role <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <select id="add_role" name="role" 
+                            <select id="add_role" name="role" onchange="toggleScheduleSection()"
                                 class="w-full px-3 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all appearance-none bg-white" required>
                                 <option value="">Select a role...</option>
                                 <option value="Administrator">Administrator</option>
@@ -824,6 +830,48 @@ main {
                                 <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
                             </div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Technician Schedule Section (only shown for Technicians) -->
+                <div id="scheduleSection" class="hidden mt-4">
+                    <label class="block text-xs font-medium text-gray-700 mb-2">
+                        Allowed Login Days <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">Select the days when this technician can log in to the system</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Monday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Monday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Tuesday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Tuesday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Wednesday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Wednesday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Thursday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Thursday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Friday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Friday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Saturday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Saturday</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="checkbox" name="allowed_days[]" value="Sunday" class="w-4 h-4 text-[#1E3A8A] border-gray-300 rounded focus:ring-[#1E3A8A]">
+                            <span class="text-sm">Sunday</span>
+                        </label>
+                    </div>
+                    <div id="scheduleError" class="hidden mt-2 text-xs text-red-600 bg-red-50 px-2 py-1.5 rounded flex items-center gap-1.5">
+                        <i class="fa-solid fa-exclamation-circle"></i>
+                        <span>Please select at least one day</span>
                     </div>
                 </div>
             </div>
@@ -1397,6 +1445,15 @@ window.submitAddUser = async function(e) {
                 showToast('Password is required', 'error');
             } else {
                 alert('Password is required');
+            }
+            if (btn) btn.disabled = false;
+            return false;
+        }
+        
+        // Validate schedule for Technicians
+        if (!validateSchedule()) {
+            if (typeof showToast === 'function') {
+                showToast('Please select at least one day for the technician schedule', 'error');
             }
             if (btn) btn.disabled = false;
             return false;
@@ -2766,6 +2823,45 @@ function togglePasswordVisibility(inputId, iconId) {
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
     }
+}
+
+// Toggle schedule section visibility based on role selection
+function toggleScheduleSection() {
+    const roleSelect = document.getElementById('add_role');
+    const scheduleSection = document.getElementById('scheduleSection');
+    
+    if (roleSelect && scheduleSection) {
+        if (roleSelect.value === 'Technician') {
+            scheduleSection.classList.remove('hidden');
+        } else {
+            scheduleSection.classList.add('hidden');
+            // Uncheck all checkboxes when hiding
+            const checkboxes = scheduleSection.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+    }
+}
+
+// Validate schedule selection for Technicians
+function validateSchedule() {
+    const roleSelect = document.getElementById('add_role');
+    const scheduleError = document.getElementById('scheduleError');
+    
+    if (roleSelect && roleSelect.value === 'Technician') {
+        const checkboxes = document.querySelectorAll('input[name="allowed_days[]"]:checked');
+        if (checkboxes.length === 0) {
+            if (scheduleError) {
+                scheduleError.classList.remove('hidden');
+            }
+            return false;
+        } else {
+            if (scheduleError) {
+                scheduleError.classList.add('hidden');
+            }
+            return true;
+        }
+    }
+    return true; // Not a technician, no validation needed
 }
 
 // Filter menu toggle

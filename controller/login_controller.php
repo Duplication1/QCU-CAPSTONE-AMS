@@ -56,6 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $userModel->authenticate($id_number, $password);
     
     if ($user) {
+        // Check if Technician is allowed to login today
+        if ($user['role'] === 'Technician' && !empty($user['allowed_login_days'])) {
+            $currentDay = date('l'); // Get current day name (e.g., "Monday", "Tuesday")
+            $allowedDays = explode(',', $user['allowed_login_days']);
+            
+            if (!in_array($currentDay, $allowedDays)) {
+                $_SESSION['error_message'] = "You are not scheduled to work today. Your allowed days are: " . implode(', ', $allowedDays);
+                header("Location: ../view/login.php");
+                exit();
+            }
+        }
+        
         // Reset failed login attempts on successful login
         $userModel->resetFailedAttempts($id_number);
         // Set session variables
